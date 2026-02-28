@@ -2,7 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ApprenantsClient from './ApprenantsClient'
 
-export default async function ApprenantsPage() {
+export default async function ApprenantsPage({
+  searchParams,
+}: {
+  searchParams: { group?: string }
+}) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -34,6 +38,43 @@ export default async function ApprenantsPage() {
         .in('group_id', groupIds)
     : { data: [] }
 
+  // ── Bornes de la semaine courante (lundi → dimanche) ─────────────────────
+  const now = new Date()
+  const dayOfWeek = now.getDay() // 0=dim, 1=lun…
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7))
+  monday.setHours(0, 0, 0, 0)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  sunday.setHours(23, 59, 59, 999)
+
+  // ── Stats par apprenant : axes + actions ──────────────────────────────────
+  const assignedLearnerIds = [...new Set(members?.map((m) => m.learner_id) ?? [])]
+
+  const [{ data: axesData }, { data: actionsData }] = await Promise.all([
+    assignedLearnerIds.length > 0
+      ? admin.from('axes').select('learner_id').in('learner_id', assignedLearnerIds)
+      : Promise.resolve({ data: [] as Array<{ learner_id: string }> }),
+    assignedLearnerIds.length > 0
+      ? admin.from('actions').select('learner_id, created_at').in('learner_id', assignedLearnerIds)
+      : Promise.resolve({ data: [] as Array<{ learner_id: string; created_at: string }> }),
+  ])
+
+  const statsMap: Record<string, { axesCount: number; actionsTotal: number; actionsThisWeek: number }> = {}
+  assignedLearnerIds.forEach((id) => {
+    const learnerAxes = (axesData ?? []).filter((a) => a.learner_id === id)
+    const learnerActions = (actionsData ?? []).filter((a) => a.learner_id === id)
+    const thisWeek = learnerActions.filter((a) => {
+      const d = new Date(a.created_at)
+      return d >= monday && d <= sunday
+    })
+    statsMap[id] = {
+      axesCount: learnerAxes.length,
+      actionsTotal: learnerActions.length,
+      actionsThisWeek: thisWeek.length,
+    }
+  })
+
   // Construire la liste enrichie
   const learnersWithGroup = (learners ?? []).map((l) => {
     const membership = members?.find((m) => m.learner_id === l.id)
@@ -42,6 +83,7 @@ export default async function ApprenantsPage() {
       ...l,
       groupId: group?.id ?? null,
       groupName: group?.name ?? null,
+      stats: statsMap[l.id] ?? null,
     }
   })
 
@@ -49,6 +91,7 @@ export default async function ApprenantsPage() {
     <ApprenantsClient
       learners={learnersWithGroup}
       groups={groups ?? []}
+      initialGroup={searchParams.group ?? 'all'}
     />
   )
 }

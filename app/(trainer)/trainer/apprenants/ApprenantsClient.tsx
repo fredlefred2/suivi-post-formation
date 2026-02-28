@@ -1,8 +1,15 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { UserCheck, UserMinus } from 'lucide-react'
+import { useState, useTransition, useRef, useEffect } from 'react'
+import Link from 'next/link'
+import { UserCheck, UserMinus, ChevronDown } from 'lucide-react'
 import { assignToGroup, removeFromGroup } from './actions'
+
+type LearnerStats = {
+  axesCount: number
+  actionsTotal: number
+  actionsThisWeek: number
+}
 
 type Learner = {
   id: string
@@ -10,11 +17,22 @@ type Learner = {
   last_name: string
   groupId: string | null
   groupName: string | null
+  stats: LearnerStats | null
 }
 
 type Group = {
   id: string
   name: string
+}
+
+function RadioDot({ active, amber = false }: { active: boolean; amber?: boolean }) {
+  const color = amber ? 'border-amber-500' : 'border-indigo-600'
+  const dot = amber ? 'bg-amber-500' : 'bg-indigo-600'
+  return (
+    <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? color : 'border-gray-300'}`}>
+      {active && <span className={`w-2 h-2 rounded-full ${dot}`} />}
+    </span>
+  )
 }
 
 function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) {
@@ -49,9 +67,36 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
         {learner.first_name[0]}{learner.last_name[0]}
       </div>
 
-      {/* Nom */}
+      {/* Nom + stats */}
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-gray-900">{learner.first_name} {learner.last_name}</p>
+        <Link
+          href={`/trainer/learner/${learner.id}?from=apprenants${learner.groupId ? `&group=${learner.groupId}` : ''}`}
+          className="font-medium text-gray-900 hover:text-indigo-600 hover:underline transition-colors"
+        >
+          {learner.first_name} {learner.last_name}
+        </Link>
+        {learner.stats && (
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            {/* Axes */}
+            <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-full font-medium">
+              🎯 <span>{learner.stats.axesCount} axe{learner.stats.axesCount > 1 ? 's' : ''}</span>
+            </span>
+            {/* Actions totales */}
+            <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 border border-gray-200 px-2 py-0.5 rounded-full font-medium">
+              ⚡ <span>{learner.stats.actionsTotal} action{learner.stats.actionsTotal > 1 ? 's' : ''}</span>
+            </span>
+            {/* Delta cette semaine */}
+            {learner.stats.actionsThisWeek > 0 ? (
+              <span className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">
+                +{learner.stats.actionsThisWeek} cette sem.
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5 rounded-full">
+                0 cette sem.
+              </span>
+            )}
+          </div>
+        )}
         {msg && (
           <p className={`text-xs mt-0.5 ${msg.type === 'error' ? 'text-red-500' : 'text-emerald-600'}`}>
             {msg.text}
@@ -61,11 +106,7 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
 
       {/* Action selon l'état */}
       {learner.groupId ? (
-        // Déjà dans un groupe du formateur
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-1 rounded-full">
-            {learner.groupName}
-          </span>
+        <div className="flex items-center shrink-0">
           <button
             onClick={handleRemove}
             disabled={isPending}
@@ -76,10 +117,9 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
           </button>
         </div>
       ) : (
-        // Sans groupe — afficher le sélecteur
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs bg-gray-100 text-gray-400 px-2 py-1 rounded-full">
-            Sans groupe
+          <span className="text-xs bg-amber-50 text-amber-600 border border-amber-200 px-2 py-1 rounded-full">
+            Non affecté
           </span>
           {groups.length > 0 && (
             <>
@@ -112,12 +152,61 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
 export default function ApprenantsClient({
   learners,
   groups,
+  initialGroup = 'all',
 }: {
   learners: Learner[]
   groups: Group[]
+  initialGroup?: string
 }) {
+  // 'all' | groupId | 'unassigned'
+  const [selectedOption, setSelectedOption] = useState<'all' | string>(initialGroup)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  function selectOption(option: string) {
+    setSelectedOption(option)
+    setDropdownOpen(false)
+  }
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    if (dropdownOpen) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [dropdownOpen])
+
   const unassigned = learners.filter((l) => !l.groupId)
   const assigned = learners.filter((l) => l.groupId)
+
+  // Label du bouton dropdown
+  const selectionLabel =
+    selectedOption === 'all'
+      ? 'Tous les groupes'
+      : selectedOption === 'unassigned'
+      ? '⚠️ Non affectés'
+      : groups.find((g) => g.id === selectedOption)?.name ?? 'Groupe'
+
+  // Learners visibles selon la sélection
+  const filteredByGroup =
+    selectedOption === 'all'
+      ? null // vue groupée
+      : selectedOption === 'unassigned'
+      ? unassigned
+      : learners.filter((l) => l.groupId === selectedOption)
+
+  // Pour la vue "Tous les groupes" : regrouper par groupe
+  const groupedView = selectedOption === 'all'
+    ? groups.map((g) => ({
+        group: g,
+        learners: learners.filter((l) => l.groupId === g.id),
+      })).filter((g) => g.learners.length > 0)
+    : []
+
+  const totalAssigned = assigned.length
+  const totalUnassigned = unassigned.length
 
   return (
     <div className="space-y-6 pb-4">
@@ -125,47 +214,190 @@ export default function ApprenantsClient({
 
       {learners.length === 0 ? (
         <div className="card text-center py-10 text-gray-400 text-sm">
-          Aucun apprenant inscrit pour l'instant.
+          Aucun apprenant inscrit pour l&apos;instant.
         </div>
       ) : (
         <>
-          {/* Sans groupe */}
-          {unassigned.length > 0 && (
-            <div className="card">
-              <h2 className="section-title mb-3">
-                En attente d'affectation
-                <span className="ml-2 text-xs font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                  {unassigned.length}
-                </span>
-              </h2>
-              {groups.length === 0 && (
-                <p className="text-xs text-gray-400 mb-3">
-                  Créez d'abord un groupe pour pouvoir affecter des apprenants.
-                </p>
-              )}
-              <div className="space-y-2">
-                {unassigned.map((l) => (
-                  <LearnerRow key={l.id} learner={l} groups={groups} />
-                ))}
+          {/* ── Dropdown sélection groupe ─────────────────────────────── */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen((o) => !o)}
+              className={`flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-colors shadow-sm min-w-[220px] justify-between ${
+                dropdownOpen
+                  ? 'border-indigo-400 text-indigo-700 ring-2 ring-indigo-100'
+                  : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-700'
+              }`}
+            >
+              <span className="truncate">👥 {selectionLabel}</span>
+              <ChevronDown
+                size={16}
+                className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[260px]">
+
+                {/* Tous les groupes */}
+                <button
+                  onClick={() => selectOption('all')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${
+                    selectedOption === 'all' ? 'bg-indigo-50' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <RadioDot active={selectedOption === 'all'} />
+                  <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
+                    Tous les groupes
+                  </span>
+                  <span className="ml-auto text-xs text-gray-400">{totalAssigned} app.</span>
+                </button>
+
+                {/* Groupes individuels */}
+                <div className="py-1">
+                  {groups.map((g) => {
+                    const count = learners.filter((l) => l.groupId === g.id).length
+                    return (
+                      <button
+                        key={g.id}
+                        onClick={() => selectOption(g.id)}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                          selectedOption === g.id ? 'bg-indigo-50' : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <RadioDot active={selectedOption === g.id} />
+                        <span className={`text-sm ${selectedOption === g.id ? 'text-indigo-700 font-medium' : 'text-gray-700'}`}>
+                          {g.name}
+                        </span>
+                        <span className="ml-auto text-xs text-gray-400">{count} app.</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Non affectés */}
+                <div className="border-t border-gray-100 py-1">
+                  <button
+                    onClick={() => selectOption('unassigned')}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                      selectedOption === 'unassigned' ? 'bg-amber-50' : 'hover:bg-amber-50'
+                    }`}
+                  >
+                    <RadioDot active={selectedOption === 'unassigned'} amber />
+                    <span className={`text-sm font-medium ${selectedOption === 'unassigned' ? 'text-amber-700' : 'text-amber-600'}`}>
+                      ⚠️ Non affectés
+                    </span>
+                    <span className={`ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full border ${
+                      totalUnassigned > 0
+                        ? 'text-amber-700 bg-amber-50 border-amber-200'
+                        : 'text-gray-400 bg-gray-50 border-gray-200'
+                    }`}>
+                      {totalUnassigned}
+                    </span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+          </div>
+
+          {/* ── Vue "Tous les groupes" ────────────────────────────────── */}
+          {selectedOption === 'all' && (
+            <>
+              {/* Non affectés en premier si existants */}
+              {unassigned.length > 0 && (
+                <div className="card border-amber-100">
+                  <h2 className="section-title mb-3">
+                    En attente d&apos;affectation
+                    <span className="ml-2 text-xs font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                      {unassigned.length}
+                    </span>
+                  </h2>
+                  {groups.length === 0 && (
+                    <p className="text-xs text-gray-400 mb-3">
+                      Créez d&apos;abord un groupe pour pouvoir affecter des apprenants.
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {unassigned.map((l) => (
+                      <LearnerRow key={l.id} learner={l} groups={groups} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Un bloc par groupe */}
+              {groupedView.map(({ group, learners: groupLearners }) => (
+                <div key={group.id} className="card">
+                  <h2 className="section-title mb-3">
+                    {group.name}
+                    <span className="ml-2 text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                      {groupLearners.length}
+                    </span>
+                  </h2>
+                  <div className="space-y-2">
+                    {groupLearners.map((l) => (
+                      <LearnerRow key={l.id} learner={l} groups={groups} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {groupedView.length === 0 && unassigned.length === 0 && (
+                <div className="card text-center py-8 text-gray-400 text-sm">
+                  Aucun apprenant dans vos groupes.
+                </div>
+              )}
+            </>
           )}
 
-          {/* Déjà affectés */}
-          {assigned.length > 0 && (
-            <div className="card">
-              <h2 className="section-title mb-3">
-                Dans vos groupes
-                <span className="ml-2 text-xs font-normal bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                  {assigned.length}
-                </span>
-              </h2>
-              <div className="space-y-2">
-                {assigned.map((l) => (
-                  <LearnerRow key={l.id} learner={l} groups={groups} />
-                ))}
+          {/* ── Vue groupe unique ─────────────────────────────────────── */}
+          {selectedOption !== 'all' && selectedOption !== 'unassigned' && (
+            filteredByGroup && filteredByGroup.length > 0 ? (
+              <div className="card">
+                <h2 className="section-title mb-3">
+                  {groups.find((g) => g.id === selectedOption)?.name}
+                  <span className="ml-2 text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                    {filteredByGroup.length}
+                  </span>
+                </h2>
+                <div className="space-y-2">
+                  {filteredByGroup.map((l) => (
+                    <LearnerRow key={l.id} learner={l} groups={groups} />
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="card text-center py-8 text-gray-400 text-sm">
+                Aucun apprenant dans ce groupe.
+              </div>
+            )
+          )}
+
+          {/* ── Vue non affectés ──────────────────────────────────────── */}
+          {selectedOption === 'unassigned' && (
+            unassigned.length > 0 ? (
+              <div className="card border-amber-100">
+                <h2 className="section-title mb-3 text-amber-700">
+                  ⚠️ En attente d&apos;affectation
+                  <span className="ml-2 text-xs font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                    {unassigned.length}
+                  </span>
+                </h2>
+                {groups.length === 0 && (
+                  <p className="text-xs text-gray-400 mb-3">
+                    Créez d&apos;abord un groupe pour pouvoir affecter des apprenants.
+                  </p>
+                )}
+                <div className="space-y-2">
+                  {unassigned.map((l) => (
+                    <LearnerRow key={l.id} learner={l} groups={groups} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="card text-center py-8 text-gray-400 text-sm">
+                ✅ Tous les apprenants sont affectés à un groupe.
+              </div>
+            )
           )}
         </>
       )}

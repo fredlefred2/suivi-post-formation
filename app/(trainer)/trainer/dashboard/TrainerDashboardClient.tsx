@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
-import type { PieEntry } from './WeatherPieChart'
-
-const WeatherPieChart = dynamic(() => import('./WeatherPieChart'), { ssr: false })
+import { WEATHER_COLORS } from '@/lib/types'
 
 export type GroupData = {
   id: string
@@ -40,11 +38,11 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
-const WEATHER_CONFIG = {
-  sunny:  { label: 'Ça roule',  emoji: '☀️', color: '#fbbf24' },
-  cloudy: { label: 'Mitigé',    emoji: '⛅', color: '#94a3b8' },
-  stormy: { label: 'Difficile', emoji: '⛈️', color: '#f87171' },
-}
+const WEATHER_DISPLAY = [
+  { key: 'sunny'  as const, emoji: '☀️', label: 'Ça roule'  },
+  { key: 'cloudy' as const, emoji: '⛅', label: 'Mitigé'    },
+  { key: 'stormy' as const, emoji: '⛈️', label: 'Difficile' },
+]
 
 export default function TrainerDashboardClient({
   groups,
@@ -124,8 +122,8 @@ export default function TrainerDashboardClient({
   )
   const filteredActions = actions.filter((a) => filteredLearnerIds.has(a.learner_id))
 
-  // ── Camembert météo — dernier check-in par apprenant ─────────────────────
-  const pieData: PieEntry[] = useMemo(() => {
+  // ── Météo : dernier check-in par apprenant → comptage + noms ─────────────
+  const weatherSummary = useMemo(() => {
     const latestByLearner: Record<string, CheckinData> = {}
     ;[...filteredCheckins]
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -133,21 +131,23 @@ export default function TrainerDashboardClient({
         if (!latestByLearner[c.learner_id]) latestByLearner[c.learner_id] = c
       })
 
-    const weatherGroups: Record<string, string[]> = { sunny: [], cloudy: [], stormy: [] }
+    const result: Record<'sunny' | 'cloudy' | 'stormy', { count: number; names: string[] }> = {
+      sunny:  { count: 0, names: [] },
+      cloudy: { count: 0, names: [] },
+      stormy: { count: 0, names: [] },
+    }
     Object.entries(latestByLearner).forEach(([lid, c]) => {
-      weatherGroups[c.weather]?.push(learnerNameMap[lid] ?? 'Inconnu')
+      const w = c.weather as 'sunny' | 'cloudy' | 'stormy'
+      if (result[w]) {
+        result[w].count++
+        result[w].names.push(learnerNameMap[lid] ?? 'Inconnu')
+      }
     })
-
-    return (['sunny', 'cloudy', 'stormy'] as const)
-      .filter((k) => weatherGroups[k].length > 0)
-      .map((k) => ({
-        name: WEATHER_CONFIG[k].label,
-        emoji: WEATHER_CONFIG[k].emoji,
-        color: WEATHER_CONFIG[k].color,
-        value: weatherGroups[k].length,
-        learnerNames: weatherGroups[k],
-      }))
+    return result
   }, [filteredCheckins, learnerNameMap])
+
+  const totalWithCheckin = Object.values(weatherSummary).reduce((acc, v) => acc + v.count, 0)
+  const hasAnyCheckin = totalWithCheckin > 0
 
   const recentActions = filteredActions.slice(0, 10)
 
@@ -195,6 +195,7 @@ export default function TrainerDashboardClient({
               <RadioDot active={selectedOption === 'all'} />
               <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
                 Tous les groupes
+                <span className="ml-1 font-normal text-gray-400">({groups.length})</span>
               </span>
               <span className="ml-auto text-xs text-gray-400">
                 {groups.reduce((acc, g) => acc + g.members.length, 0)} app.
@@ -266,15 +267,14 @@ export default function TrainerDashboardClient({
       )}
 
       {/* ── Badges stats ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="card text-center py-4">
-          <p className="text-2xl font-bold text-indigo-600">{filteredGroups.length}</p>
-          <p className="text-xs text-gray-500 mt-1">Groupe{filteredGroups.length > 1 ? 's' : ''}</p>
-        </div>
-        <div className="card text-center py-4">
+      <div className="grid grid-cols-3 gap-3">
+        <Link
+          href={`/trainer/apprenants?group=${selectedOption}`}
+          className="card text-center py-4 hover:border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer"
+        >
           <p className="text-2xl font-bold text-indigo-600">{filteredLearnerIds.size}</p>
           <p className="text-xs text-gray-500 mt-1">Apprenant{filteredLearnerIds.size > 1 ? 's' : ''}</p>
-        </div>
+        </Link>
         <div className="card text-center py-4">
           <p className="text-2xl font-bold text-emerald-600 leading-none">
             {thisWeekCheckins.length}
@@ -290,10 +290,43 @@ export default function TrainerDashboardClient({
 
       {/* ── Tendance météo ─────────────────────────────────────────────── */}
       {selectedOption !== 'unassigned' && (
-        pieData.length > 0 ? (
+        hasAnyCheckin ? (
           <div className="card">
-            <h2 className="section-title mb-4">Tendance météo</h2>
-            <WeatherPieChart data={pieData} />
+            <h2 className="section-title mb-3">Tendance météo</h2>
+            <div className="grid grid-cols-3 gap-3">
+              {WEATHER_DISPLAY.map(({ key, emoji, label }) => {
+                const { count, names } = weatherSummary[key]
+                const pct = totalWithCheckin > 0
+                  ? Math.round((count / totalWithCheckin) * 100)
+                  : 0
+                return (
+                  <div key={key} className="relative group">
+                    <div className={`rounded-lg p-3 text-center ${WEATHER_COLORS[key]}`}>
+                      <p className="text-2xl">{emoji}</p>
+                      <p className="font-bold text-lg leading-tight">{count}</p>
+                      <p className="text-xs mt-0.5 opacity-80">{pct}%</p>
+                      <p className="text-xs mt-1 font-medium">{label}</p>
+                    </div>
+
+                    {/* Tooltip au survol */}
+                    {names.length > 0 && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20
+                                      invisible group-hover:visible opacity-0 group-hover:opacity-100
+                                      transition-opacity duration-150
+                                      bg-gray-900 text-white text-xs rounded-lg px-3 py-2
+                                      shadow-lg pointer-events-none w-max max-w-[200px]">
+                        <p className="font-semibold mb-1">{emoji} {label}</p>
+                        {names.map((name, i) => (
+                          <p key={i} className="leading-snug">· {name}</p>
+                        ))}
+                        {/* Flèche vers le bas */}
+                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         ) : (
           <div className="card text-center py-8 text-gray-400 text-sm">
@@ -334,24 +367,43 @@ export default function TrainerDashboardClient({
       {recentActions.length > 0 && (
         <div className="card">
           <h2 className="section-title mb-4">Dernières actions enregistrées</h2>
-          <div className="space-y-2">
-            {recentActions.map((action) => (
-              <div
-                key={action.id}
-                className="p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
-              >
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="font-medium text-sm text-gray-900">{action.learner_name}</span>
-                  <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">
-                    {action.axe_subject}
-                  </span>
-                  <span className="text-xs text-gray-400 ml-auto whitespace-nowrap">
-                    {formatDate(action.created_at)}
-                  </span>
+          <div className="divide-y divide-gray-50">
+            {recentActions.map((action) => {
+              const initials = action.learner_name
+                .split(' ')
+                .map((n) => n[0] ?? '')
+                .join('')
+                .slice(0, 2)
+                .toUpperCase()
+              return (
+                <div
+                  key={action.id}
+                  className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  {/* Avatar initiales */}
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                    {initials}
+                  </div>
+
+                  {/* Contenu */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 leading-snug">
+                      ⚡ {action.description}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className="text-xs text-gray-500 font-medium">{action.learner_name}</span>
+                      <span className="text-gray-300 text-xs">·</span>
+                      <span className="text-xs bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full">
+                        {action.axe_subject}
+                      </span>
+                      <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
+                        {formatDate(action.created_at)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600">{action.description}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
