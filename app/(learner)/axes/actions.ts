@@ -1,0 +1,82 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+
+export async function createAxe(formData: FormData) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  // Vérifier la limite de 3 axes
+  const { count } = await supabase
+    .from('axes')
+    .select('*', { count: 'exact', head: true })
+    .eq('learner_id', user.id)
+
+  if ((count ?? 0) >= 3) return { error: 'Vous ne pouvez pas avoir plus de 3 axes.' }
+
+  const { error } = await supabase.from('axes').insert({
+    learner_id: user.id,
+    subject: formData.get('subject') as string,
+    description: formData.get('description') as string || null,
+    initial_score: parseInt(formData.get('initial_score') as string),
+    difficulty: formData.get('difficulty') as string,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/axes')
+  revalidatePath('/dashboard')
+}
+
+export async function deleteAxe(axeId: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  await supabase.from('axes').delete().eq('id', axeId).eq('learner_id', user.id)
+  revalidatePath('/axes')
+  revalidatePath('/dashboard')
+}
+
+export async function createAction(formData: FormData) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  const { error } = await supabase.from('actions').insert({
+    axe_id: formData.get('axe_id') as string,
+    learner_id: user.id,
+    description: formData.get('description') as string,
+    completed: true, // Une action ajoutée est directement une action menée
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/axes')
+  revalidatePath('/dashboard')
+}
+
+export async function toggleAction(actionId: string, completed: boolean) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('actions')
+    .update({ completed: !completed })
+    .eq('id', actionId)
+    .eq('learner_id', user.id)
+
+  revalidatePath('/axes')
+  revalidatePath('/dashboard')
+}
+
+export async function deleteAction(actionId: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase.from('actions').delete().eq('id', actionId).eq('learner_id', user.id)
+  revalidatePath('/axes')
+  revalidatePath('/dashboard')
+}

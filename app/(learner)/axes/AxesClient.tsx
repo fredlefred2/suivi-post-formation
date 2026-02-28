@@ -1,0 +1,301 @@
+'use client'
+
+import { useState, useRef, useTransition } from 'react'
+import { Plus, Trash2, Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { createAxe, deleteAxe, createAction, deleteAction } from './actions'
+import type { Axe, Action } from '@/lib/types'
+import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
+
+type AxeWithActions = Axe & { actions: Action[] }
+
+function getMedal(count: number) {
+  if (count === 0) return null
+  if (count <= 2) return { label: 'Bronze',  icon: '🥉', color: 'text-amber-700  bg-amber-50  border-amber-200'  }
+  if (count <= 5) return { label: 'Argent',  icon: '🥈', color: 'text-slate-600  bg-slate-50  border-slate-200'  }
+  if (count <= 8) return { label: 'Or',      icon: '🥇', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' }
+  return               { label: 'Platine',  icon: '🏅', color: 'text-purple-700 bg-purple-50 border-purple-200' }
+}
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+export default function AxesClient({ axes, initialIndex = 0 }: { axes: AxeWithActions[], initialIndex?: number }) {
+  const [showAxeForm, setShowAxeForm] = useState(false)
+  const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const [currentIndex, setCurrentIndex] = useState(initialIndex)
+  const touchStartX = useRef<number>(0)
+
+  // Index sécurisé (évite les débordements si un axe est supprimé)
+  const safeIndex = Math.max(0, Math.min(currentIndex, axes.length - 1))
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    if (delta > 50 && safeIndex < axes.length - 1) setCurrentIndex(safeIndex + 1)
+    if (delta < -50 && safeIndex > 0) setCurrentIndex(safeIndex - 1)
+  }
+
+  async function handleCreateAxe(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError(null)
+    const formData = new FormData(e.currentTarget)
+    startTransition(async () => {
+      const result = await createAxe(formData)
+      if (result?.error) setError(result.error)
+      else {
+        setShowAxeForm(false)
+        // Aller sur le nouvel axe (qui sera à la fin)
+        setCurrentIndex(axes.length)
+      }
+    })
+  }
+
+  async function handleCreateAction(e: React.FormEvent<HTMLFormElement>, axeId: string) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    formData.set('axe_id', axeId)
+    startTransition(async () => {
+      await createAction(formData)
+      setAddActionAxeId(null)
+    })
+  }
+
+  const scoreLabels = ['', 'Débutant', 'En cours', 'Intermédiaire', 'Avancé', 'Expert']
+
+  const currentAxe = axes[safeIndex]
+
+  return (
+    <div className="space-y-6 pb-4">
+      <div className="flex items-center justify-between">
+        <h1 className="page-title">Mes axes de progrès</h1>
+        {axes.length < 3 && (
+          <button onClick={() => setShowAxeForm(true)} className="btn-primary">
+            <Plus size={16} /> Ajouter un axe
+          </button>
+        )}
+      </div>
+
+      <p className="text-sm text-gray-500">
+        {axes.length}/3 axes définis. Chaque axe représente un domaine sur lequel vous souhaitez progresser.
+      </p>
+
+      {/* Formulaire nouvel axe */}
+      {showAxeForm && (
+        <div className="card border-indigo-100 border-2">
+          <h2 className="section-title mb-4">Nouvel axe de progrès</h2>
+          <form onSubmit={handleCreateAxe} className="space-y-4">
+            <div>
+              <label className="label">Sujet / intitulé de l&apos;axe *</label>
+              <input name="subject" required className="input" placeholder="Ex: Déléguer efficacement" />
+            </div>
+            <div>
+              <label className="label">Description (optionnel)</label>
+              <textarea name="description" className="input h-20 resize-none" placeholder="Décrivez ce que vous souhaitez améliorer..." />
+            </div>
+            <div>
+              <label className="label">Niveau de difficulté de cet axe *</label>
+              <p className="text-xs text-gray-400 mb-2">Ce niveau reste fixe et ne sera pas modifié lors des check-ins.</p>
+              <div className="flex gap-3 mt-1">
+                {(['facile', 'moyen', 'difficile'] as const).map((d) => (
+                  <label key={d} className="flex-1 cursor-pointer">
+                    <input type="radio" name="difficulty" value={d} required className="sr-only peer" />
+                    <div className={`text-center py-3 border-2 rounded-lg transition-all border-gray-200 peer-checked:border-current peer-checked:${DIFFICULTY_COLORS[d]}`}>
+                      <p className="text-sm font-semibold">{DIFFICULTY_LABELS[d]}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="label">Autopositionnement initial (1 = débutant, 5 = expert) *</label>
+              <div className="flex gap-2 mt-1">
+                {[1, 2, 3, 4, 5].map((v) => (
+                  <label key={v} className="flex-1 cursor-pointer">
+                    <input type="radio" name="initial_score" value={v} required className="sr-only peer" />
+                    <div className="text-center py-2 border-2 border-gray-200 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 font-semibold transition-all">
+                      {v}
+                    </div>
+                    <p className="text-xs text-center text-gray-400 mt-1">{scoreLabels[v]}</p>
+                  </label>
+                ))}
+              </div>
+            </div>
+            {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+            <div className="flex gap-2">
+              <button type="submit" disabled={isPending} className="btn-primary">
+                {isPending ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
+              <button type="button" onClick={() => { setShowAxeForm(false); setError(null) }} className="btn-secondary">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* État vide */}
+      {axes.length === 0 && !showAxeForm && (
+        <div className="card text-center py-10">
+          <p className="text-gray-400 mb-4">Vous n&apos;avez pas encore défini d&apos;axes de progrès.</p>
+          <button onClick={() => setShowAxeForm(true)} className="btn-primary">
+            <Plus size={16} /> Définir mon premier axe
+          </button>
+        </div>
+      )}
+
+      {/* Carrousel */}
+      {axes.length > 0 && (
+        <div className="space-y-3">
+
+          {/* Barre de navigation : ← dots → */}
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={() => setCurrentIndex(safeIndex - 1)}
+              disabled={safeIndex === 0}
+              className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {axes.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  className={`h-2 rounded-full transition-all duration-200 ${
+                    i === safeIndex
+                      ? 'w-6 bg-indigo-500'
+                      : 'w-2 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={() => setCurrentIndex(safeIndex + 1)}
+              disabled={safeIndex === axes.length - 1}
+              className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          {/* Carte de l'axe courant */}
+          {currentAxe && (() => {
+            const medal = getMedal(currentAxe.actions.length)
+            return (
+              <div
+                className="card"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
+                {/* En-tête */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-semibold text-gray-900">{currentAxe.subject}</h2>
+                    {currentAxe.description && (
+                      <p className="text-sm text-gray-500 mt-0.5">{currentAxe.description}</p>
+                    )}
+                    <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full border mt-1.5 ${DIFFICULTY_COLORS[currentAxe.difficulty]}`}>
+                      {DIFFICULTY_LABELS[currentAxe.difficulty]}
+                    </span>
+                  </div>
+                  {/* Médaille + suppression */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {medal ? (
+                      <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border text-xs font-semibold ${medal.color}`}>
+                        <span className="text-base leading-none">{medal.icon}</span>
+                        <span>{medal.label}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-gray-100 bg-gray-50 text-xs text-gray-400">
+                        <span className="text-base leading-none">🎖️</span>
+                        <span>À gagner</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        startTransition(() => deleteAxe(currentAxe.id))
+                        setCurrentIndex(Math.max(0, safeIndex - 1))
+                      }}
+                      className="text-gray-300 hover:text-red-400 transition-colors p-1"
+                      title="Supprimer cet axe"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Actions menées */}
+                <div className="border-t border-gray-100 pt-3 mt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-gray-700">
+                      Actions menées
+                      {currentAxe.actions.length > 0 && (
+                        <span className="ml-1.5 text-xs font-normal text-gray-400">({currentAxe.actions.length})</span>
+                      )}
+                    </p>
+                    <button
+                      onClick={() => setAddActionAxeId(addActionAxeId === currentAxe.id ? null : currentAxe.id)}
+                      className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Ajouter
+                    </button>
+                  </div>
+
+                  {/* Formulaire d'ajout */}
+                  {addActionAxeId === currentAxe.id && (
+                    <form onSubmit={(e) => handleCreateAction(e, currentAxe.id)} className="flex gap-2 mb-3">
+                      <input
+                        name="description"
+                        required
+                        className="input flex-1"
+                        placeholder="Décrivez l'action menée..."
+                        autoFocus
+                      />
+                      <button type="submit" disabled={isPending} className="btn-primary px-3">
+                        <Check size={15} />
+                      </button>
+                      <button type="button" onClick={() => setAddActionAxeId(null)} className="btn-secondary px-3">
+                        <X size={15} />
+                      </button>
+                    </form>
+                  )}
+
+                  {currentAxe.actions.length === 0 && addActionAxeId !== currentAxe.id && (
+                    <p className="text-xs text-gray-400 italic">Aucune action enregistrée</p>
+                  )}
+
+                  <ul className="space-y-2">
+                    {currentAxe.actions.map((action) => (
+                      <li key={action.id} className="flex items-start gap-2 group">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-1.5" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm text-gray-700">{action.description}</span>
+                          <span className="block text-xs text-gray-400 mt-0.5">{formatDate(action.created_at)}</span>
+                        </div>
+                        <button
+                          onClick={() => startTransition(() => deleteAction(action.id))}
+                          className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all shrink-0 mt-0.5"
+                          title="Supprimer"
+                        >
+                          <X size={14} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )}
+    </div>
+  )
+}
