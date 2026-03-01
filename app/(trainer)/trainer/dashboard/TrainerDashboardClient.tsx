@@ -452,55 +452,60 @@ export default function TrainerDashboardClient({
         )
       )}
 
-      {/* ── Dernières actions ──────────────────────────────────────────── */}
+      {/* ── Dernières actions (rouleau scrollable) ───────────────────── */}
       {recentActions.length > 0 && (
-        <div className="card">
-          <h2 className="section-title mb-4">Dernières actions enregistrées</h2>
-          <div className="divide-y divide-gray-50">
-            {recentActions.map((action) => {
-              const initials = action.learner_name
-                .split(' ')
-                .map((n) => n[0] ?? '')
-                .join('')
-                .slice(0, 2)
-                .toUpperCase()
-              return (
-                <div
-                  key={action.id}
-                  className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                  {/* Avatar initiales */}
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                    {initials}
-                  </div>
+        <div className="card overflow-hidden">
+          <h2 className="section-title mb-3">Dernières actions enregistrées</h2>
+          <div
+            className="overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
+            style={{ maxHeight: '320px' }}
+          >
+            <div className="divide-y divide-gray-50">
+              {recentActions.map((action) => {
+                const initials = action.learner_name
+                  .split(' ')
+                  .map((n) => n[0] ?? '')
+                  .join('')
+                  .slice(0, 2)
+                  .toUpperCase()
+                return (
+                  <div
+                    key={action.id}
+                    className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
+                  >
+                    {/* Avatar initiales */}
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                      {initials}
+                    </div>
 
-                  {/* Contenu */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 leading-snug">
-                      ⚡ {action.description}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <span className="text-xs text-gray-500 font-medium">{action.learner_name}</span>
-                      <span className="text-gray-300 text-xs">·</span>
-                      <span className="text-xs bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full">
-                        {action.axe_subject}
-                      </span>
-                      <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
-                        {formatDate(action.created_at)}
-                      </span>
-                    </div>
-                    {/* Like + Commentaire */}
-                    <div className="mt-1.5">
-                      <ActionFeedback
-                        actionId={action.id}
-                        feedback={action.feedback}
-                        canInteract={true}
-                      />
+                    {/* Contenu */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 leading-snug">
+                        ⚡ {action.description}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="text-xs text-gray-500 font-medium">{action.learner_name}</span>
+                        <span className="text-gray-300 text-xs">·</span>
+                        <span className="text-xs bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full">
+                          {action.axe_subject}
+                        </span>
+                        <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
+                          {formatDate(action.created_at)}
+                        </span>
+                      </div>
+                      {/* Like + Commentaire */}
+                      <div className="mt-1.5">
+                        <ActionFeedback
+                          actionId={action.id}
+                          feedback={action.feedback}
+                          canInteract={true}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
       )}
