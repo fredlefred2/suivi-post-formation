@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useRef, useTransition } from 'react'
-import { Plus, Trash2, Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
-import { createAxe, deleteAxe, createAction, deleteAction } from './actions'
+import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { createAxe, deleteAxe, createAction, updateAction, deleteAction } from './actions'
 import type { Axe, Action, ActionFeedbackData } from '@/lib/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
@@ -29,6 +29,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
+  const [editingActionId, setEditingActionId] = useState<string | null>(null)
+  const [editingText, setEditingText] = useState('')
+  const [deletingActionId, setDeletingActionId] = useState<string | null>(null)
   const touchStartX = useRef<number>(0)
 
   // Index sécurisé (évite les débordements si un axe est supprimé)
@@ -201,9 +204,22 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                     {currentAxe.description && (
                       <p className="text-sm text-gray-500 mt-0.5">{currentAxe.description}</p>
                     )}
-                    <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full border mt-1.5 ${DIFFICULTY_COLORS[currentAxe.difficulty]}`}>
-                      {DIFFICULTY_LABELS[currentAxe.difficulty]}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full border ${DIFFICULTY_COLORS[currentAxe.difficulty]}`}>
+                        {DIFFICULTY_LABELS[currentAxe.difficulty]}
+                      </span>
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${dyn.color}`}>
+                        <span className="text-sm leading-none">{dyn.icon}</span>
+                        <span>{dyn.label}</span>
+                        {dyn.delta > 0 && (
+                          <span className="text-[10px] font-normal opacity-70">+{dyn.delta} pour {
+                            currentAxe.actions.length === 0 ? 'Impulsion' :
+                            currentAxe.actions.length <= 2 ? 'Rythme' :
+                            currentAxe.actions.length <= 5 ? 'Intensité' : 'Propulsion'
+                          }</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   {/* Suppression */}
                   <div className="flex items-center gap-2 shrink-0">
@@ -223,25 +239,12 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                 {/* Actions menées */}
                 <div className="border-t border-gray-100 pt-3 mt-3">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-700">
-                        Actions menées
-                        {currentAxe.actions.length > 0 && (
-                          <span className="ml-1.5 text-xs font-normal text-gray-400">({currentAxe.actions.length})</span>
-                        )}
-                      </p>
-                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${dyn.color}`}>
-                        <span className="text-sm leading-none">{dyn.icon}</span>
-                        <span>{dyn.label}</span>
-                        {dyn.delta > 0 && (
-                          <span className="text-[10px] font-normal opacity-70">+{dyn.delta} pour {
-                            currentAxe.actions.length === 0 ? 'Impulsion' :
-                            currentAxe.actions.length <= 2 ? 'Rythme' :
-                            currentAxe.actions.length <= 5 ? 'Intensité' : 'Propulsion'
-                          }</span>
-                        )}
-                      </div>
-                    </div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Actions menées
+                      {currentAxe.actions.length > 0 && (
+                        <span className="ml-1.5 text-xs font-normal text-gray-400">({currentAxe.actions.length})</span>
+                      )}
+                    </p>
                     <button
                       onClick={() => setAddActionAxeId(addActionAxeId === currentAxe.id ? null : currentAxe.id)}
                       className="btn-primary text-xs px-3 py-1.5"
@@ -274,27 +277,87 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                   )}
 
                   <ul className="space-y-2">
-                    {currentAxe.actions.map((action) => (
-                      <li key={action.id} className="flex items-start gap-2 group">
+                    {[...currentAxe.actions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((action) => (
+                      <li key={action.id} className="flex items-start gap-2">
                         <span className="shrink-0 mt-0.5 text-base">✅</span>
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm text-gray-700">{action.description}</span>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
-                            <ActionFeedback
-                              actionId={action.id}
-                              feedback={feedbackMap[action.id] ?? emptyFeedback}
-                              canInteract={false}
-                            />
-                          </div>
+                          {editingActionId === action.id ? (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault()
+                                startTransition(async () => {
+                                  await updateAction(action.id, editingText)
+                                  setEditingActionId(null)
+                                })
+                              }}
+                              className="flex gap-2"
+                            >
+                              <input
+                                value={editingText}
+                                onChange={(e) => setEditingText(e.target.value)}
+                                className="input flex-1 text-sm"
+                                autoFocus
+                                required
+                              />
+                              <button type="submit" disabled={isPending} className="text-emerald-500 hover:text-emerald-600 p-1">
+                                <Check size={14} />
+                              </button>
+                              <button type="button" onClick={() => setEditingActionId(null)} className="text-gray-400 hover:text-gray-600 p-1">
+                                <X size={14} />
+                              </button>
+                            </form>
+                          ) : (
+                            <>
+                              <span className="text-sm text-gray-700">{action.description}</span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
+                                <ActionFeedback
+                                  actionId={action.id}
+                                  feedback={feedbackMap[action.id] ?? emptyFeedback}
+                                  canInteract={false}
+                                />
+                              </div>
+                            </>
+                          )}
                         </div>
-                        <button
-                          onClick={() => startTransition(() => deleteAction(action.id))}
-                          className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all shrink-0 mt-0.5"
-                          title="Supprimer"
-                        >
-                          <X size={14} />
-                        </button>
+                        {editingActionId !== action.id && (
+                          <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                            <button
+                              onClick={() => { setEditingActionId(action.id); setEditingText(action.description) }}
+                              className="text-gray-300 hover:text-indigo-500 transition-colors p-0.5"
+                              title="Modifier"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                            {deletingActionId === action.id ? (
+                              <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-lg px-2 py-0.5">
+                                <span className="text-xs text-red-600">Supprimer ?</span>
+                                <button
+                                  onClick={() => { startTransition(() => deleteAction(action.id)); setDeletingActionId(null) }}
+                                  className="text-red-500 hover:text-red-700 p-0.5"
+                                  title="Confirmer"
+                                >
+                                  <Check size={13} />
+                                </button>
+                                <button
+                                  onClick={() => setDeletingActionId(null)}
+                                  className="text-gray-400 hover:text-gray-600 p-0.5"
+                                  title="Annuler"
+                                >
+                                  <X size={13} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setDeletingActionId(action.id)}
+                                className="text-gray-300 hover:text-red-400 transition-colors p-0.5"
+                                title="Supprimer"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>

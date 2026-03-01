@@ -71,6 +71,22 @@ export async function toggleAction(actionId: string, completed: boolean) {
   revalidatePath('/dashboard')
 }
 
+export async function updateAction(actionId: string, description: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  const { error } = await supabase
+    .from('actions')
+    .update({ description })
+    .eq('id', actionId)
+    .eq('learner_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/axes')
+  revalidatePath('/dashboard')
+}
+
 export async function deleteAction(actionId: string) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
