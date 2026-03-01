@@ -128,7 +128,7 @@ export default async function DashboardPage() {
       ) : (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="section-title">Mes axes de progrès</h2>
+            <h2 className="section-title">Mes actions de progrès</h2>
             {axes.length < 3 && (
               <Link href="/axes" className="text-sm text-indigo-600 hover:underline">
                 + Ajouter
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className={`grid gap-3 ${axes.length === 1 ? 'grid-cols-1' : axes.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
             {axes.map((axe, index) => {
               const actions = (axe.actions as { id: string }[]) ?? []
               const completedCount = actions.length
@@ -146,48 +146,24 @@ export default async function DashboardPage() {
                 <Link
                   key={axe.id}
                   href={`/axes?index=${index}`}
-                  className="card border-l-4 border-l-indigo-400 py-4 block hover:border-indigo-300 hover:shadow-md transition-all"
+                  className={`card p-3 text-center block hover:shadow-md transition-all ${
+                    medal ? medal.color : 'bg-gray-50 border-gray-200 text-gray-400'
+                  }`}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    {/* Infos axe */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{axe.subject}</h3>
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${DIFFICULTY_COLORS[axe.difficulty as Difficulty]}`}>
-                          {DIFFICULTY_LABELS[axe.difficulty as Difficulty]}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {completedCount} action{completedCount !== 1 ? 's' : ''} menée{completedCount !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Médaille */}
-                    <div className="shrink-0">
-                      {medal ? (
-                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold ${medal.color}`}>
-                          <span className="text-lg leading-none">{medal.icon}</span>
-                          <span>{medal.label}</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-100 bg-gray-50 text-xs text-gray-400">
-                          <span className="text-lg leading-none">🎖️</span>
-                          <span>À gagner</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <span className="text-3xl">{medal ? medal.icon : '🎖️'}</span>
+                  <p className="font-semibold text-sm mt-1.5">{medal ? medal.label : 'À gagner'}</p>
+                  <p className="text-xs mt-1 leading-snug line-clamp-2 opacity-80">{axe.subject}</p>
+                  <p className="text-xs mt-1.5 font-medium">
+                    {completedCount} action{completedCount !== 1 ? 's' : ''}
+                  </p>
                 </Link>
               )
             })}
           </div>
 
-          <Link
-            href="/history"
-            className="flex items-center justify-center gap-1 text-sm text-indigo-600 hover:underline pt-1"
-          >
-            Voir l&apos;évolution complète →
-          </Link>
+          <p className="text-xs text-gray-400 text-center">
+            🥉 Bronze ≤ 2 &nbsp;·&nbsp; 🥈 Argent ≤ 5 &nbsp;·&nbsp; 🥇 Or ≤ 8 &nbsp;·&nbsp; 🏅 Platine &gt; 8
+          </p>
         </div>
       )}
 
