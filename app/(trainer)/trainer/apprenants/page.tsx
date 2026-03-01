@@ -49,7 +49,7 @@ export default async function ApprenantsPage({
   sunday.setHours(23, 59, 59, 999)
 
   // ── Stats par apprenant : axes + actions ──────────────────────────────────
-  const assignedLearnerIds = [...new Set(members?.map((m) => m.learner_id) ?? [])]
+  const assignedLearnerIds = Array.from(new Set(members?.map((m) => m.learner_id) ?? []))
 
   const [{ data: axesData }, { data: actionsData }] = await Promise.all([
     assignedLearnerIds.length > 0

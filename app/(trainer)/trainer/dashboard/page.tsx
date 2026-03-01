@@ -41,7 +41,7 @@ export default async function TrainerDashboardPage() {
     .select('group_id, learner_id')
     .in('group_id', groupIds)
 
-  const learnerIds = [...new Set(membersRaw?.map((m) => m.learner_id) ?? [])]
+  const learnerIds = Array.from(new Set(membersRaw?.map((m) => m.learner_id) ?? []))
 
   // ── 3. Profils des apprenants (membres des groupes) ───────────────────────
   const { data: profiles } = learnerIds.length > 0
