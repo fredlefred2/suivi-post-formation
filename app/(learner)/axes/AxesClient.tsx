@@ -224,7 +224,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                     )}
                     <button
                       onClick={() => {
-                        startTransition(() => deleteAxe(currentAxe.id))
+                        startTransition(() => { deleteAxe(currentAxe.id) })
                         setCurrentIndex(Math.max(0, safeIndex - 1))
                       }}
                       className="text-gray-300 hover:text-red-400 transition-colors p-1"
