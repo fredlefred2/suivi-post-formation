@@ -1,15 +1,16 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { formatWeek, formatDate } from '@/lib/utils'
 import {
   WEATHER_LABELS,
   WEATHER_COLORS,
-  DIFFICULTY_LABELS,
-  DIFFICULTY_COLORS,
 } from '@/lib/types'
+import type { ActionFeedbackData } from '@/lib/types'
 import LearnerChart from './LearnerChart'
 import LearnerNav from './LearnerNav'
+import LearnerAxesSection from './LearnerAxesSection'
 
 // ── Médaille selon le nombre d'actions (identique à AxesClient) ─────────────
 function getMedal(count: number) {
@@ -114,6 +115,49 @@ export default async function LearnerDetailPage({
       : groupId
       ? `/trainer/groups/${groupId}`
       : '/trainer/groups'
+
+  // ── Feedback (likes + commentaires) sur les actions ───────────────────────
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const allActionIds = (axes ?? []).flatMap(
+    (axe) => (axe.actions as ActionRow[]).map((a) => a.id)
+  )
+
+  const [{ data: likesDetailed }, { data: commentsDetailed }] = await Promise.all([
+    allActionIds.length > 0
+      ? admin.from('action_likes')
+          .select('action_id, trainer_id, profiles!inner(first_name, last_name)')
+          .in('action_id', allActionIds)
+      : Promise.resolve({ data: [] as Array<{ action_id: string; trainer_id: string; profiles: { first_name: string; last_name: string } }> }),
+    allActionIds.length > 0
+      ? admin.from('action_comments')
+          .select('id, action_id, trainer_id, content, created_at, profiles!inner(first_name, last_name)')
+          .in('action_id', allActionIds)
+          .order('created_at', { ascending: true })
+      : Promise.resolve({ data: [] as Array<{ id: string; action_id: string; trainer_id: string; content: string; created_at: string; profiles: { first_name: string; last_name: string } }> }),
+  ])
+
+  const feedbackMap: Record<string, ActionFeedbackData> = {}
+  allActionIds.forEach((id) => {
+    const likes = (likesDetailed ?? []).filter((l) => l.action_id === id)
+    const comments = (commentsDetailed ?? []).filter((c) => c.action_id === id)
+    feedbackMap[id] = {
+      likes_count: likes.length,
+      comments_count: comments.length,
+      liked_by_me: likes.some((l) => l.trainer_id === user!.id),
+      likers: likes.map((l) => {
+        const p = l.profiles as unknown as { first_name: string; last_name: string }
+        return { first_name: p.first_name, last_name: p.last_name }
+      }),
+      comments: comments.map((c) => {
+        const p = c.profiles as unknown as { first_name: string; last_name: string }
+        return { id: c.id, content: c.content, created_at: c.created_at, trainer_first_name: p.first_name, trainer_last_name: p.last_name }
+      }),
+    }
+  })
 
   // ── Stats globales ────────────────────────────────────────────────────────
   const totalActions = (axes ?? []).reduce((sum, a) => sum + (a.actions as ActionRow[]).length, 0)
@@ -235,70 +279,18 @@ export default async function LearnerDetailPage({
         </div>
       )}
 
-      {/* ── Axes de progrès + actions ────────────────────────────────────────── */}
+      {/* ── Axes de progrès + actions (avec likes/commentaires) ──────────────── */}
       {axes && axes.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="section-title">🎯 Axes de progrès</h2>
-          {axes.map((axe) => {
-            const actions = (axe.actions as ActionRow[]).sort(
-              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            )
-            const medal = getMedal(actions.length)
-
-            return (
-              <div key={axe.id} className="card">
-                {/* En-tête axe */}
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-base">{axe.subject}</h3>
-                    {axe.description && (
-                      <p className="text-sm text-gray-500 mt-0.5">{axe.description}</p>
-                    )}
-                    <span
-                      className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full border mt-1.5 ${
-                        DIFFICULTY_COLORS[axe.difficulty as keyof typeof DIFFICULTY_COLORS]
-                      }`}
-                    >
-                      {DIFFICULTY_LABELS[axe.difficulty as keyof typeof DIFFICULTY_LABELS]}
-                    </span>
-                  </div>
-                  {/* Médaille */}
-                  <div
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold shrink-0 ${
-                      medal ? medal.color : 'bg-gray-50 border-gray-200 text-gray-400'
-                    }`}
-                  >
-                    <span className="text-base leading-none">{medal ? medal.icon : '🎖️'}</span>
-                    <span>{medal ? medal.label : 'À gagner'}</span>
-                  </div>
-                </div>
-
-                {/* Liste des actions */}
-                <div className="border-t border-gray-100 pt-3">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Actions menées
-                    <span className="ml-1.5 text-xs font-normal text-gray-400">({actions.length})</span>
-                  </p>
-                  {actions.length === 0 ? (
-                    <p className="text-xs text-gray-400 italic">Aucune action enregistrée</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {actions.map((action) => (
-                        <li key={action.id} className="flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-[7px]" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-700">{action.description}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">{shortDate(action.created_at)}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <LearnerAxesSection
+          axes={(axes ?? []).map((axe) => ({
+            id: axe.id,
+            subject: axe.subject,
+            description: axe.description,
+            difficulty: axe.difficulty,
+            actions: axe.actions as ActionRow[],
+          }))}
+          feedbackMap={feedbackMap}
+        />
       )}
 
       {/* ── Historique météo ─────────────────────────────────────────────────── */}

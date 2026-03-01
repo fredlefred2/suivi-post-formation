@@ -4,6 +4,8 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 import { WEATHER_COLORS } from '@/lib/types'
+import type { ActionFeedbackData } from '@/lib/types'
+import ActionFeedback from '@/app/components/ActionFeedback'
 
 export type GroupData = {
   id: string
@@ -26,6 +28,7 @@ export type ActionData = {
   learner_id: string
   learner_name: string
   axe_subject: string
+  feedback: ActionFeedbackData
 }
 
 export type UnassignedLearner = {
@@ -399,6 +402,14 @@ export default function TrainerDashboardClient({
                       <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
                         {formatDate(action.created_at)}
                       </span>
+                    </div>
+                    {/* Like + Commentaire */}
+                    <div className="mt-1.5">
+                      <ActionFeedback
+                        actionId={action.id}
+                        feedback={action.feedback}
+                        canInteract={true}
+                      />
                     </div>
                   </div>
                 </div>

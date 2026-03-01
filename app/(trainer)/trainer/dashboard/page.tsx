@@ -90,6 +90,55 @@ export default async function TrainerDashboardPage() {
         .order('created_at', { ascending: false })
     : { data: [] as Array<{ id: string; description: string; created_at: string; learner_id: string; axes: { subject: string } | null }> }
 
+  const allActionIds = (actionsRaw ?? []).map((a) => a.id)
+  const recentActionIds = allActionIds.slice(0, 10)
+
+  // Fetch feedback (likes + commentaires) pour les 10 dernières actions
+  const [{ data: likesDetailed }, { data: commentsDetailed }] = await Promise.all([
+    recentActionIds.length > 0
+      ? admin.from('action_likes')
+          .select('action_id, trainer_id, profiles!inner(first_name, last_name)')
+          .in('action_id', recentActionIds)
+      : Promise.resolve({ data: [] as Array<{ action_id: string; trainer_id: string; profiles: { first_name: string; last_name: string } }> }),
+    recentActionIds.length > 0
+      ? admin.from('action_comments')
+          .select('id, action_id, trainer_id, content, created_at, profiles!inner(first_name, last_name)')
+          .in('action_id', recentActionIds)
+          .order('created_at', { ascending: true })
+      : Promise.resolve({ data: [] as Array<{ id: string; action_id: string; trainer_id: string; content: string; created_at: string; profiles: { first_name: string; last_name: string } }> }),
+  ])
+
+  const trainerId = user!.id
+
+  // Construire feedbackMap
+  type FeedbackEntry = { likes_count: number; comments_count: number; liked_by_me: boolean; likers: Array<{ first_name: string; last_name: string }>; comments: Array<{ id: string; content: string; created_at: string; trainer_first_name: string; trainer_last_name: string }> }
+  const feedbackMap: Record<string, FeedbackEntry> = {}
+  recentActionIds.forEach((id) => {
+    const likes = (likesDetailed ?? []).filter((l) => l.action_id === id)
+    const comments = (commentsDetailed ?? []).filter((c) => c.action_id === id)
+    feedbackMap[id] = {
+      likes_count: likes.length,
+      comments_count: comments.length,
+      liked_by_me: likes.some((l) => l.trainer_id === trainerId),
+      likers: likes.map((l) => {
+        const p = l.profiles as unknown as { first_name: string; last_name: string }
+        return { first_name: p.first_name, last_name: p.last_name }
+      }),
+      comments: comments.map((c) => {
+        const p = c.profiles as unknown as { first_name: string; last_name: string }
+        return {
+          id: c.id,
+          content: c.content,
+          created_at: c.created_at,
+          trainer_first_name: p.first_name,
+          trainer_last_name: p.last_name,
+        }
+      }),
+    }
+  })
+
+  const emptyFeedback: FeedbackEntry = { likes_count: 0, comments_count: 0, liked_by_me: false, likers: [], comments: [] }
+
   const actions: ActionData[] = (actionsRaw ?? []).map((a) => ({
     id: a.id,
     description: a.description,
@@ -99,6 +148,7 @@ export default async function TrainerDashboardPage() {
       ? `${profileMap[a.learner_id].first_name} ${profileMap[a.learner_id].last_name}`
       : 'Inconnu',
     axe_subject: (a.axes as { subject: string } | null)?.subject ?? 'Axe inconnu',
+    feedback: feedbackMap[a.id] ?? emptyFeedback,
   }))
 
   // ── 6. Apprenants non affectés à aucun groupe ─────────────────────────────

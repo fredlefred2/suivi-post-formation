@@ -3,8 +3,9 @@
 import { useState, useRef, useTransition } from 'react'
 import { Plus, Trash2, Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { createAxe, deleteAxe, createAction, deleteAction } from './actions'
-import type { Axe, Action } from '@/lib/types'
+import type { Axe, Action, ActionFeedbackData } from '@/lib/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
+import ActionFeedback from '@/app/components/ActionFeedback'
 
 type AxeWithActions = Axe & { actions: Action[] }
 
@@ -20,7 +21,9 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default function AxesClient({ axes, initialIndex = 0 }: { axes: AxeWithActions[], initialIndex?: number }) {
+const emptyFeedback: ActionFeedbackData = { likes_count: 0, comments_count: 0, liked_by_me: false, likers: [], comments: [] }
+
+export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData> }) {
   const [showAxeForm, setShowAxeForm] = useState(false)
   const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -278,7 +281,14 @@ export default function AxesClient({ axes, initialIndex = 0 }: { axes: AxeWithAc
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-1.5" />
                         <div className="flex-1 min-w-0">
                           <span className="text-sm text-gray-700">{action.description}</span>
-                          <span className="block text-xs text-gray-400 mt-0.5">{formatDate(action.created_at)}</span>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
+                            <ActionFeedback
+                              actionId={action.id}
+                              feedback={feedbackMap[action.id] ?? emptyFeedback}
+                              canInteract={false}
+                            />
+                          </div>
                         </div>
                         <button
                           onClick={() => startTransition(() => deleteAction(action.id))}

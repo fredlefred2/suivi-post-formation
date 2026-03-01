@@ -87,3 +87,34 @@ export const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   moyen: 'bg-amber-50 text-amber-700 border-amber-200',
   difficile: 'bg-red-50 text-red-700 border-red-200',
 }
+
+// ── Feedback sur les actions (likes & commentaires) ──
+
+export type ActionLike = {
+  id: string
+  action_id: string
+  trainer_id: string
+  created_at: string
+}
+
+export type ActionComment = {
+  id: string
+  action_id: string
+  trainer_id: string
+  content: string
+  created_at: string
+}
+
+export type ActionFeedbackData = {
+  likes_count: number
+  comments_count: number
+  liked_by_me: boolean
+  likers: Array<{ first_name: string; last_name: string }>
+  comments: Array<{
+    id: string
+    content: string
+    created_at: string
+    trainer_first_name: string
+    trainer_last_name: string
+  }>
+}
