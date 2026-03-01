@@ -20,7 +20,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
 
   const handleToggleLike = useCallback(() => {
     if (!canInteract) return
-    startTransition(() => toggleLike(actionId))
+    startTransition(() => { toggleLike(actionId) })
   }, [canInteract, actionId, startTransition])
 
   const handleSubmitComment = useCallback(() => {

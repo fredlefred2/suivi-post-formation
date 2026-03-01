@@ -57,7 +57,7 @@ export default function WeatherPieChart({ data }: { data: PieEntry[] }) {
         <Tooltip content={<CustomTooltip />} />
         <Legend
           formatter={(_, entry) => {
-            const e = (entry as { payload: PieEntry }).payload
+            const e = (entry as unknown as { payload: PieEntry }).payload
             return `${e.emoji} ${e.name}`
           }}
           wrapperStyle={{ fontSize: '12px' }}

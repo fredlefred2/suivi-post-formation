@@ -83,7 +83,7 @@ export default async function LearnerDetailPage({
 
     learnersInGroup = (gMembers ?? [])
       .map((m) => {
-        const p = m.profiles as { first_name: string; last_name: string }
+        const p = m.profiles as unknown as { first_name: string; last_name: string }
         return { id: m.learner_id, name: `${p.first_name} ${p.last_name}` }
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
