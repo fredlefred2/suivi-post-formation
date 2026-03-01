@@ -57,6 +57,15 @@ function getOverallWeatherEmoji(score: number) {
   return '☀️'                        // Ça roule
 }
 
+// Médaille pour le scoring
+function getMedalForCount(count: number) {
+  if (count === 0) return { icon: '—', level: 0 }
+  if (count <= 2) return { icon: '🥉', level: 1 }
+  if (count <= 5) return { icon: '🥈', level: 2 }
+  if (count <= 8) return { icon: '🥇', level: 3 }
+  return { icon: '🏅', level: 4 }
+}
+
 export default function TrainerDashboardClient({
   groups,
   checkins,
@@ -64,6 +73,7 @@ export default function TrainerDashboardClient({
   currentWeek,
   currentYear,
   unassignedLearners = [],
+  learnerAxesMap = {},
 }: {
   groups: GroupData[]
   checkins: CheckinData[]
@@ -71,6 +81,7 @@ export default function TrainerDashboardClient({
   currentWeek: number
   currentYear: number
   unassignedLearners?: UnassignedLearner[]
+  learnerAxesMap?: Record<string, number[]>
 }) {
   // 'all' = tous les groupes | groupId = un seul groupe | 'unassigned' = non affectés
   const [selectedOption, setSelectedOption] = useState<'all' | string>('all')
@@ -360,6 +371,58 @@ export default function TrainerDashboardClient({
           </div>
         )
       )}
+
+      {/* ── Scoring apprenants ─────────────────────────────────────────── */}
+      {selectedOption !== 'unassigned' && filteredLearnerIds.size > 0 && (() => {
+        const scoringData = Array.from(filteredLearnerIds).map((lid) => {
+          const axesCounts = learnerAxesMap[lid] ?? []
+          const totalActions = axesCounts.reduce((a, b) => a + b, 0)
+          const medals = [0, 1, 2].map((i) => getMedalForCount(axesCounts[i] ?? 0))
+          const totalLevel = medals.reduce((a, m) => a + m.level, 0)
+          return {
+            id: lid,
+            name: learnerNameMap[lid] ?? 'Inconnu',
+            totalActions,
+            medals,
+            totalLevel,
+          }
+        })
+        .sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
+
+        return scoringData.length > 0 ? (
+          <div className="card">
+            <h2 className="section-title mb-3">Classement</h2>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-gray-400 border-b border-gray-100">
+                  <th className="text-left pb-2 font-medium">#</th>
+                  <th className="text-left pb-2 font-medium">Apprenant</th>
+                  <th className="text-center pb-2 font-medium">Actions</th>
+                  <th className="text-center pb-2 font-medium">Axe 1</th>
+                  <th className="text-center pb-2 font-medium">Axe 2</th>
+                  <th className="text-center pb-2 font-medium">Axe 3</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scoringData.map((learner, idx) => (
+                  <tr key={learner.id} className="border-b border-gray-50 last:border-0">
+                    <td className="py-1.5 text-xs text-gray-400 w-6">{idx + 1}</td>
+                    <td className="py-1.5 font-medium text-gray-800 truncate max-w-[140px]">
+                      <Link href={`/trainer/learner/${learner.id}`} className="hover:text-indigo-600 transition-colors">
+                        {learner.name}
+                      </Link>
+                    </td>
+                    <td className="py-1.5 text-center font-semibold text-gray-700">{learner.totalActions}</td>
+                    {learner.medals.map((m, i) => (
+                      <td key={i} className="py-1.5 text-center text-base">{m.icon}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null
+      })()}
 
       {/* ── Liste non affectés ─────────────────────────────────────────── */}
       {selectedOption === 'unassigned' && (

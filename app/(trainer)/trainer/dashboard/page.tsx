@@ -153,7 +153,23 @@ export default async function TrainerDashboardPage() {
     feedback: feedbackMap[a.id] ?? emptyFeedback,
   }))
 
-  // ── 6. Apprenants non affectés à aucun groupe ─────────────────────────────
+  // ── 6. Axes par apprenant (pour le scoring) ──────────────────────────────
+  const { data: axesRaw } = learnerIds.length > 0
+    ? await admin
+        .from('axes')
+        .select('id, learner_id, actions(id)')
+        .in('learner_id', learnerIds)
+        .order('created_at')
+    : { data: [] as Array<{ id: string; learner_id: string; actions: { id: string }[] }> }
+
+  // Structure : { learnerId: [nbActionsAxe1, nbActionsAxe2, nbActionsAxe3] }
+  const learnerAxesMap: Record<string, number[]> = {}
+  ;(axesRaw ?? []).forEach((axe) => {
+    if (!learnerAxesMap[axe.learner_id]) learnerAxesMap[axe.learner_id] = []
+    learnerAxesMap[axe.learner_id].push((axe.actions as { id: string }[])?.length ?? 0)
+  })
+
+  // ── 7. Apprenants non affectés à aucun groupe ─────────────────────────────
   // Tous les learner_id présents dans group_members (tous formateurs confondus)
   const { data: allGroupMembers } = await admin
     .from('group_members')
@@ -181,6 +197,7 @@ export default async function TrainerDashboardPage() {
         currentWeek={week}
         currentYear={year}
         unassignedLearners={unassignedLearners}
+        learnerAxesMap={learnerAxesMap}
       />
     </div>
   )
