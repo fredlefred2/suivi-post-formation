@@ -13,13 +13,13 @@ const WEATHER_ICONS: Record<string, string> = {
   stormy: '⛈️',
 }
 
-// Calcul de la médaille selon le nombre d'actions menées
-function getMedal(count: number) {
-  if (count === 0) return null
-  if (count <= 2) return { label: 'Bronze',  icon: '🥉', color: 'text-amber-700  bg-amber-50  border-amber-200'  }
-  if (count <= 5) return { label: 'Argent',  icon: '🥈', color: 'text-slate-600  bg-slate-50  border-slate-200'  }
-  if (count <= 8) return { label: 'Or',      icon: '🥇', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' }
-  return               { label: 'Platine',  icon: '🏅', color: 'text-purple-700 bg-purple-50 border-purple-200' }
+// Calcul de la dynamique d'action selon le nombre d'actions menées
+function getDynamique(count: number) {
+  if (count === 0) return { label: 'Ancrage',     icon: '📍', color: 'text-gray-400   bg-gray-50   border-gray-200'   }
+  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-700   bg-teal-50   border-teal-200'   }
+  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-700   bg-blue-50   border-blue-200'   }
+  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-700 bg-orange-50 border-orange-200' }
+  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200' }
 }
 
 export default async function DashboardPage() {
@@ -142,18 +142,16 @@ export default async function DashboardPage() {
             {axes.map((axe, index) => {
               const actions = (axe.actions as { id: string }[]) ?? []
               const completedCount = actions.length
-              const medal = getMedal(completedCount)
+              const dyn = getDynamique(completedCount)
 
               return (
                 <Link
                   key={axe.id}
                   href={`/axes?index=${index}`}
-                  className={`card p-3 text-center block hover:shadow-md transition-all ${
-                    medal ? medal.color : 'bg-gray-50 border-gray-200 text-gray-400'
-                  }`}
+                  className={`card p-3 text-center block hover:shadow-md transition-all ${dyn.color}`}
                 >
-                  <span className="text-3xl">{medal ? medal.icon : '🎖️'}</span>
-                  <p className="font-semibold text-sm mt-1.5">{medal ? medal.label : 'À gagner'}</p>
+                  <span className="text-3xl">{dyn.icon}</span>
+                  <p className="font-semibold text-sm mt-1.5">{dyn.label}</p>
                   <p className="text-xs mt-1 leading-snug line-clamp-2 opacity-80">{axe.subject}</p>
                   <p className="text-xs mt-1.5 font-medium">
                     {completedCount} action{completedCount !== 1 ? 's' : ''}
@@ -164,7 +162,7 @@ export default async function DashboardPage() {
           </div>
 
           <p className="text-xs text-gray-400 text-center">
-            🥉 Bronze ≤ 2 &nbsp;·&nbsp; 🥈 Argent ≤ 5 &nbsp;·&nbsp; 🥇 Or ≤ 8 &nbsp;·&nbsp; 🏅 Platine &gt; 8
+            📍 Ancrage &nbsp;·&nbsp; 👣 Impulsion ≤ 2 &nbsp;·&nbsp; 🥁 Rythme ≤ 5 &nbsp;·&nbsp; 🔥 Intensité ≤ 8 &nbsp;·&nbsp; 🚀 Propulsion &gt; 8
           </p>
         </div>
       )}

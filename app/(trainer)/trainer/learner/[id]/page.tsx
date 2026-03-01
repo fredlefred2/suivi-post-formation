@@ -14,13 +14,13 @@ import LearnerChart from './LearnerChart'
 import LearnerNav from './LearnerNav'
 import LearnerAxesSection from './LearnerAxesSection'
 
-// ── Médaille selon le nombre d'actions (identique à AxesClient) ─────────────
-function getMedal(count: number) {
+// ── Dynamique d'action selon le nombre d'actions ────────────────────────────
+function getDynamique(count: number) {
   if (count === 0) return null
-  if (count <= 2) return { label: 'Bronze',  icon: '🥉', color: 'text-amber-700  bg-amber-50  border-amber-200'  }
-  if (count <= 5) return { label: 'Argent',  icon: '🥈', color: 'text-slate-600  bg-slate-50  border-slate-200'  }
-  if (count <= 8) return { label: 'Or',      icon: '🥇', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' }
-  return               { label: 'Platine',  icon: '🏅', color: 'text-purple-700 bg-purple-50 border-purple-200' }
+  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-700   bg-teal-50   border-teal-200'   }
+  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-700   bg-blue-50   border-blue-200'   }
+  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-700 bg-orange-50 border-orange-200' }
+  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200' }
 }
 
 // Date courte ex. "3 juin 2024"
@@ -195,7 +195,7 @@ export default async function LearnerDetailPage({
 
   // ── Stats globales ────────────────────────────────────────────────────────
   const totalActions = (axes ?? []).reduce((sum, a) => sum + (a.actions as ActionRow[]).length, 0)
-  const axesWithMedal = (axes ?? []).filter((a) => getMedal((a.actions as ActionRow[]).length))
+  const axesEnAction = (axes ?? []).filter((a) => getDynamique((a.actions as ActionRow[]).length))
 
   // ── Données graphique ─────────────────────────────────────────────────────
   const chartData = (checkins ?? []).map((ci) => {
@@ -276,31 +276,31 @@ export default async function LearnerDetailPage({
           <span className="inline-flex items-center gap-1 text-xs bg-sky-50 text-sky-700 border border-sky-100 px-2.5 py-1 rounded-full font-medium">
             📅 {(checkins ?? []).length} check-in{(checkins ?? []).length > 1 ? 's' : ''}
           </span>
-          {axesWithMedal.length > 0 && (
+          {axesEnAction.length > 0 && (
             <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-1 rounded-full font-medium">
-              🏅 {axesWithMedal.length} médaille{axesWithMedal.length > 1 ? 's' : ''}
+              🚀 {axesEnAction.length} axe{axesEnAction.length > 1 ? 's' : ''} en action
             </span>
           )}
         </div>
       </div>
 
-      {/* ── Médailles ───────────────────────────────────────────────────────── */}
+      {/* ── Dynamique d'action ─────────────────────────────────────────────── */}
       {axes && axes.length > 0 && (
         <div className="card">
-          <h2 className="section-title mb-4">🏅 Récompenses</h2>
+          <h2 className="section-title mb-4">⚡ Dynamique d&apos;action</h2>
           <div className={`grid gap-3 ${axes.length === 1 ? 'grid-cols-1' : axes.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
             {axes.map((axe) => {
               const actionsCount = (axe.actions as ActionRow[]).length
-              const medal = getMedal(actionsCount)
+              const dyn = getDynamique(actionsCount)
               return (
                 <div
                   key={axe.id}
                   className={`rounded-xl border p-3 text-center ${
-                    medal ? medal.color : 'bg-gray-50 border-gray-200 text-gray-400'
+                    dyn ? dyn.color : 'bg-gray-50 border-gray-200 text-gray-400'
                   }`}
                 >
-                  <span className="text-3xl">{medal ? medal.icon : '🎖️'}</span>
-                  <p className="font-semibold text-sm mt-1.5">{medal ? medal.label : 'À gagner'}</p>
+                  <span className="text-3xl">{dyn ? dyn.icon : '📍'}</span>
+                  <p className="font-semibold text-sm mt-1.5">{dyn ? dyn.label : 'Ancrage'}</p>
                   <p className="text-xs mt-0.5 leading-snug line-clamp-2 opacity-80">{axe.subject}</p>
                   <p className="text-xs mt-1 font-medium">
                     {actionsCount} action{actionsCount > 1 ? 's' : ''}
@@ -310,7 +310,7 @@ export default async function LearnerDetailPage({
             })}
           </div>
           <p className="text-xs text-gray-400 mt-3 text-center">
-            🥉 Bronze ≤ 2 &nbsp;·&nbsp; 🥈 Argent ≤ 5 &nbsp;·&nbsp; 🥇 Or ≤ 8 &nbsp;·&nbsp; 🏅 Platine &gt; 8
+            📍 Ancrage &nbsp;·&nbsp; 👣 Impulsion ≤ 2 &nbsp;·&nbsp; 🥁 Rythme ≤ 5 &nbsp;·&nbsp; 🔥 Intensité ≤ 8 &nbsp;·&nbsp; 🚀 Propulsion &gt; 8
           </p>
         </div>
       )}

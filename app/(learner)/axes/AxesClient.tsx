@@ -9,12 +9,12 @@ import ActionFeedback from '@/app/components/ActionFeedback'
 
 type AxeWithActions = Axe & { actions: Action[] }
 
-function getMedal(count: number) {
-  if (count === 0) return { label: 'Bronze',  icon: '🎖️', color: 'text-gray-400 bg-gray-50 border-gray-200', delta: 1 }
-  if (count <= 2) return { label: 'Bronze',  icon: '🥉', color: 'text-amber-700  bg-amber-50  border-amber-200', delta: 3 - count }
-  if (count <= 5) return { label: 'Argent',  icon: '🥈', color: 'text-slate-600  bg-slate-50  border-slate-200', delta: 6 - count }
-  if (count <= 8) return { label: 'Or',      icon: '🥇', color: 'text-yellow-700 bg-yellow-50 border-yellow-200', delta: 9 - count }
-  return               { label: 'Platine',  icon: '🏅', color: 'text-purple-700 bg-purple-50 border-purple-200', delta: 0 }
+function getDynamique(count: number) {
+  if (count === 0) return { label: 'Ancrage',     icon: '📍', color: 'text-gray-400   bg-gray-50   border-gray-200',   delta: 1 }
+  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-700   bg-teal-50   border-teal-200',   delta: 3 - count }
+  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-700   bg-blue-50   border-blue-200',   delta: 6 - count }
+  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-700 bg-orange-50 border-orange-200', delta: 9 - count }
+  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200', delta: 0 }
 }
 
 function formatDate(dateStr: string) {
@@ -187,7 +187,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
 
           {/* Carte de l'axe courant */}
           {currentAxe && (() => {
-            const medal = getMedal(currentAxe.actions.length)
+            const dyn = getDynamique(currentAxe.actions.length)
             return (
               <div
                 className="card"
@@ -230,14 +230,14 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                           <span className="ml-1.5 text-xs font-normal text-gray-400">({currentAxe.actions.length})</span>
                         )}
                       </p>
-                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${medal.color}`}>
-                        <span className="text-sm leading-none">{medal.icon}</span>
-                        <span>{medal.label}</span>
-                        {medal.delta > 0 && (
-                          <span className="text-[10px] font-normal opacity-70">+{medal.delta} pour {
-                            currentAxe.actions.length === 0 ? 'Bronze' :
-                            currentAxe.actions.length <= 2 ? 'Argent' :
-                            currentAxe.actions.length <= 5 ? 'Or' : 'Platine'
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${dyn.color}`}>
+                        <span className="text-sm leading-none">{dyn.icon}</span>
+                        <span>{dyn.label}</span>
+                        {dyn.delta > 0 && (
+                          <span className="text-[10px] font-normal opacity-70">+{dyn.delta} pour {
+                            currentAxe.actions.length === 0 ? 'Impulsion' :
+                            currentAxe.actions.length <= 2 ? 'Rythme' :
+                            currentAxe.actions.length <= 5 ? 'Intensité' : 'Propulsion'
                           }</span>
                         )}
                       </div>

@@ -57,13 +57,13 @@ function getOverallWeatherEmoji(score: number) {
   return '☀️'                        // Ça roule
 }
 
-// Médaille pour le scoring
-function getMedalForCount(count: number) {
-  if (count === 0) return { icon: '—', level: 0 }
-  if (count <= 2) return { icon: '🥉', level: 1 }
-  if (count <= 5) return { icon: '🥈', level: 2 }
-  if (count <= 8) return { icon: '🥇', level: 3 }
-  return { icon: '🏅', level: 4 }
+// Dynamique d'action pour le scoring
+function getDynamiqueForCount(count: number) {
+  if (count === 0) return { icon: '📍', level: 0 }
+  if (count <= 2) return { icon: '👣', level: 1 }
+  if (count <= 5) return { icon: '🥁', level: 2 }
+  if (count <= 8) return { icon: '🔥', level: 3 }
+  return { icon: '🚀', level: 4 }
 }
 
 export default function TrainerDashboardClient({
@@ -388,13 +388,13 @@ export default function TrainerDashboardClient({
         const scoringData = Array.from(filteredLearnerIds).map((lid) => {
           const axesCounts = learnerAxesMap[lid] ?? []
           const totalActions = axesCounts.reduce((a, b) => a + b, 0)
-          const medals = [0, 1, 2].map((i) => getMedalForCount(axesCounts[i] ?? 0))
-          const totalLevel = medals.reduce((a, m) => a + m.level, 0)
+          const dyns = [0, 1, 2].map((i) => getDynamiqueForCount(axesCounts[i] ?? 0))
+          const totalLevel = dyns.reduce((a, m) => a + m.level, 0)
           return {
             id: lid,
             name: learnerNameMap[lid] ?? 'Inconnu',
             totalActions,
-            medals,
+            dyns,
             totalLevel,
           }
         })
@@ -424,7 +424,7 @@ export default function TrainerDashboardClient({
                       </Link>
                     </td>
                     <td className="py-1.5 text-center font-semibold text-gray-700">{learner.totalActions}</td>
-                    {learner.medals.map((m, i) => (
+                    {learner.dyns.map((m, i) => (
                       <td key={i} className="py-1.5 text-center text-base">{m.icon}</td>
                     ))}
                   </tr>

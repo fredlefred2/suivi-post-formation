@@ -14,14 +14,14 @@ type AxeData = {
   actions: ActionRow[]
 }
 
-type Medal = { label: string; icon: string; color: string } | null
+type Dynamique = { label: string; icon: string; color: string } | null
 
-function getMedal(count: number): Medal {
+function getDynamique(count: number): Dynamique {
   if (count === 0) return null
-  if (count <= 2) return { label: 'Bronze',  icon: '🥉', color: 'text-amber-700  bg-amber-50  border-amber-200'  }
-  if (count <= 5) return { label: 'Argent',  icon: '🥈', color: 'text-slate-600  bg-slate-50  border-slate-200'  }
-  if (count <= 8) return { label: 'Or',      icon: '🥇', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' }
-  return               { label: 'Platine',  icon: '🏅', color: 'text-purple-700 bg-purple-50 border-purple-200' }
+  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-700   bg-teal-50   border-teal-200'   }
+  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-700   bg-blue-50   border-blue-200'   }
+  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-700 bg-orange-50 border-orange-200' }
+  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200' }
 }
 
 function shortDate(dateStr: string) {
@@ -53,7 +53,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
         const actions = [...axe.actions].sort(
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
-        const medal = getMedal(actions.length)
+        const dyn = getDynamique(actions.length)
 
         return (
           <div key={axe.id} className="card">
@@ -72,14 +72,14 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
                   {DIFFICULTY_LABELS[axe.difficulty as keyof typeof DIFFICULTY_LABELS]}
                 </span>
               </div>
-              {/* Médaille */}
+              {/* Dynamique */}
               <div
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold shrink-0 ${
-                  medal ? medal.color : 'bg-gray-50 border-gray-200 text-gray-400'
+                  dyn ? dyn.color : 'bg-gray-50 border-gray-200 text-gray-400'
                 }`}
               >
-                <span className="text-base leading-none">{medal ? medal.icon : '🎖️'}</span>
-                <span>{medal ? medal.label : 'À gagner'}</span>
+                <span className="text-base leading-none">{dyn ? dyn.icon : '📍'}</span>
+                <span>{dyn ? dyn.label : 'Ancrage'}</span>
               </div>
             </div>
 
