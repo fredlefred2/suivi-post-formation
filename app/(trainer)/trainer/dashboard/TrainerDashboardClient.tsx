@@ -42,10 +42,20 @@ function formatDate(dateStr: string) {
 }
 
 const WEATHER_DISPLAY = [
-  { key: 'sunny'  as const, emoji: '☀️', label: 'Ça roule'  },
-  { key: 'cloudy' as const, emoji: '⛅', label: 'Mitigé'    },
-  { key: 'stormy' as const, emoji: '⛈️', label: 'Difficile' },
+  { key: 'sunny'  as const, emoji: '☀️'  },
+  { key: 'cloudy' as const, emoji: '⛅'  },
+  { key: 'stormy' as const, emoji: '🌧️' },
 ]
+
+const WEATHER_POINTS: Record<string, number> = { stormy: 0, cloudy: 1, sunny: 2 }
+
+function getOverallWeatherEmoji(score: number) {
+  if (score < 0.4)  return '🌧️'     // Difficile
+  if (score < 0.8)  return '🌥️'     // Nuage gris
+  if (score < 1.2)  return '⛅'      // Mitigé
+  if (score <= 1.6) return '🌤️'     // Soleil avec petits nuages
+  return '☀️'                        // Ça roule
+}
 
 export default function TrainerDashboardClient({
   groups,
@@ -293,45 +303,58 @@ export default function TrainerDashboardClient({
 
       {/* ── Tendance météo ─────────────────────────────────────────────── */}
       {selectedOption !== 'unassigned' && (
-        hasAnyCheckin ? (
-          <div className="card">
-            <h2 className="section-title mb-3">Tendance météo</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {WEATHER_DISPLAY.map(({ key, emoji, label }) => {
-                const { count, names } = weatherSummary[key]
-                const pct = totalWithCheckin > 0
-                  ? Math.round((count / totalWithCheckin) * 100)
-                  : 0
-                return (
-                  <div key={key} className="relative group">
-                    <div className={`rounded-lg p-3 text-center ${WEATHER_COLORS[key]}`}>
-                      <p className="text-2xl">{emoji}</p>
-                      <p className="font-bold text-lg leading-tight">{count}</p>
-                      <p className="text-xs mt-0.5 opacity-80">{pct}%</p>
-                      <p className="text-xs mt-1 font-medium">{label}</p>
-                    </div>
+        hasAnyCheckin ? (() => {
+          const overallScore = totalWithCheckin > 0
+            ? Object.entries(weatherSummary).reduce((acc, [key, { count }]) => acc + count * (WEATHER_POINTS[key] ?? 0), 0) / totalWithCheckin
+            : 0
+          const overallEmoji = getOverallWeatherEmoji(overallScore)
 
-                    {/* Tooltip au survol */}
-                    {names.length > 0 && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20
-                                      invisible group-hover:visible opacity-0 group-hover:opacity-100
-                                      transition-opacity duration-150
-                                      bg-gray-900 text-white text-xs rounded-lg px-3 py-2
-                                      shadow-lg pointer-events-none w-max max-w-[200px]">
-                        <p className="font-semibold mb-1">{emoji} {label}</p>
-                        {names.map((name, i) => (
-                          <p key={i} className="leading-snug">· {name}</p>
-                        ))}
-                        {/* Flèche vers le bas */}
-                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+          return (
+            <div className="card">
+              <h2 className="section-title mb-3">Tendance météo</h2>
+              <div className="flex items-center gap-4">
+                {/* Détail par météo — vertical */}
+                <div className="flex flex-col gap-2 flex-1">
+                  {WEATHER_DISPLAY.map(({ key, emoji }) => {
+                    const { count, names } = weatherSummary[key]
+                    const pct = totalWithCheckin > 0
+                      ? Math.round((count / totalWithCheckin) * 100)
+                      : 0
+                    return (
+                      <div key={key} className="relative group">
+                        <div className="flex items-center gap-3 rounded-lg px-3 py-2 bg-gray-50">
+                          <span className="text-xl">{emoji}</span>
+                          <span className="font-bold text-gray-800">{count}</span>
+                          <span className="text-xs text-gray-400">({pct}%)</span>
+                        </div>
+
+                        {/* Tooltip au survol */}
+                        {names.length > 0 && (
+                          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-20
+                                          invisible group-hover:visible opacity-0 group-hover:opacity-100
+                                          transition-opacity duration-150
+                                          bg-gray-900 text-white text-xs rounded-lg px-3 py-2
+                                          shadow-lg pointer-events-none w-max max-w-[200px]">
+                            {names.map((name, i) => (
+                              <p key={i} className="leading-snug">· {name}</p>
+                            ))}
+                            <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+
+                {/* Météo générale — grosse icône */}
+                <div className="flex flex-col items-center justify-center px-4">
+                  <span className="text-7xl leading-none">{overallEmoji}</span>
+                  <p className="text-xs text-gray-400 mt-2 text-center">Météo générale</p>
+                </div>
+              </div>
             </div>
-          </div>
-        ) : (
+          )
+        })() : (
           <div className="card text-center py-8 text-gray-400 text-sm">
             Aucun check-in enregistré pour la sélection
           </div>
