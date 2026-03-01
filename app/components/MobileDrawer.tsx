@@ -9,7 +9,6 @@ import {
   GraduationCap, Users,
 } from 'lucide-react'
 
-// Nav items définis côté client — pas de passage de fonctions depuis le serveur
 const learnerNavItems = [
   { href: '/dashboard',  label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/axes',       label: 'Mes axes',         icon: Target           },
@@ -34,12 +33,10 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
   const navItems = variant === 'trainer' ? trainerNavItems : learnerNavItems
   const isTrainer = variant === 'trainer'
 
-  // Fermer à chaque navigation
   useEffect(() => {
     setOpen(false)
   }, [pathname])
 
-  // Bloquer le scroll du body quand le drawer est ouvert
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -47,12 +44,11 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
 
   return (
     <>
-      {/* Bouton hamburger — mobile uniquement */}
       <button
         onClick={() => setOpen(true)}
-        className={`sm:hidden p-2 rounded-lg transition-colors ${
+        className={`sm:hidden p-2 rounded-xl transition-all duration-200 ${
           isTrainer
-            ? 'text-indigo-200 hover:text-white hover:bg-indigo-600'
+            ? 'text-indigo-200 hover:text-white hover:bg-white/15'
             : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
         }`}
         aria-label="Ouvrir le menu"
@@ -60,29 +56,31 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
         <Menu size={22} />
       </button>
 
-      {/* Overlay + Drawer */}
       {open && (
         <div className="fixed inset-0 z-50 sm:hidden">
-          {/* Fond semi-transparent */}
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-indigo-950/50 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
 
-          {/* Panneau latéral */}
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-2xl flex flex-col animate-slide-in">
+          <div className="absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col animate-slide-in" style={{
+            boxShadow: '8px 0 40px rgba(49, 46, 129, 0.15)',
+          }}>
             {/* En-tête */}
-            <div className={`flex items-center justify-between px-4 h-14 border-b border-gray-100 ${
-              isTrainer ? 'bg-indigo-700' : 'bg-white'
-            }`}>
-              <span className={`font-semibold text-sm ${isTrainer ? 'text-white' : 'text-gray-900'}`}>
+            <div className="flex items-center justify-between px-5 h-16" style={{
+              background: isTrainer
+                ? 'linear-gradient(135deg, #1e1b4b, #4338ca)'
+                : '#ffffff',
+              borderBottom: isTrainer ? 'none' : '1px solid #e5e7eb',
+            }}>
+              <span className={`font-semibold text-sm tracking-tight ${isTrainer ? 'text-white' : 'text-gray-900'}`}>
                 {isTrainer ? '🧑‍🏫 Navigation' : '🎯 Navigation'}
               </span>
               <button
                 onClick={() => setOpen(false)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 rounded-xl transition-all duration-200 ${
                   isTrainer
-                    ? 'text-indigo-200 hover:text-white hover:bg-indigo-600'
+                    ? 'text-indigo-200 hover:text-white hover:bg-white/15'
                     : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
                 }`}
                 aria-label="Fermer le menu"
@@ -92,20 +90,24 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
             </div>
 
             {/* Liens */}
-            <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto">
+            <nav className="flex-1 px-3 pt-5 space-y-1 overflow-y-auto">
               {navItems.map(({ href, label, icon: Icon }) => {
                 const isActive = pathname === href || pathname.startsWith(href + '/')
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-700'
+                        ? 'text-indigo-700 bg-indigo-50'
+                        : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-700'
                     }`}
+                    style={isActive ? {
+                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.12)',
+                      borderLeft: '3px solid #6366f1',
+                    } : {}}
                   >
-                    <Icon size={18} />
+                    <Icon size={18} className={isActive ? 'text-indigo-500' : 'text-gray-400'} />
                     {label}
                   </Link>
                 )
