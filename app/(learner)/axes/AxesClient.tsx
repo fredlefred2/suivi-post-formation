@@ -10,11 +10,11 @@ import ActionFeedback from '@/app/components/ActionFeedback'
 type AxeWithActions = Axe & { actions: Action[] }
 
 function getMedal(count: number) {
-  if (count === 0) return null
-  if (count <= 2) return { label: 'Bronze',  icon: '🥉', color: 'text-amber-700  bg-amber-50  border-amber-200'  }
-  if (count <= 5) return { label: 'Argent',  icon: '🥈', color: 'text-slate-600  bg-slate-50  border-slate-200'  }
-  if (count <= 8) return { label: 'Or',      icon: '🥇', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' }
-  return               { label: 'Platine',  icon: '🏅', color: 'text-purple-700 bg-purple-50 border-purple-200' }
+  if (count === 0) return { label: 'Bronze',  icon: '🎖️', color: 'text-gray-400 bg-gray-50 border-gray-200', delta: 1 }
+  if (count <= 2) return { label: 'Bronze',  icon: '🥉', color: 'text-amber-700  bg-amber-50  border-amber-200', delta: 3 - count }
+  if (count <= 5) return { label: 'Argent',  icon: '🥈', color: 'text-slate-600  bg-slate-50  border-slate-200', delta: 6 - count }
+  if (count <= 8) return { label: 'Or',      icon: '🥇', color: 'text-yellow-700 bg-yellow-50 border-yellow-200', delta: 9 - count }
+  return               { label: 'Platine',  icon: '🏅', color: 'text-purple-700 bg-purple-50 border-purple-200', delta: 0 }
 }
 
 function formatDate(dateStr: string) {
@@ -76,17 +76,13 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
   return (
     <div className="space-y-6 pb-4">
       <div className="flex items-center justify-between">
-        <h1 className="page-title">Mes axes de progrès</h1>
+        <h1 className="page-title">Mes actions de progrès</h1>
         {axes.length < 3 && (
           <button onClick={() => setShowAxeForm(true)} className="btn-primary">
             <Plus size={16} /> Ajouter un axe
           </button>
         )}
       </div>
-
-      <p className="text-sm text-gray-500">
-        {axes.length}/3 axes définis. Chaque axe représente un domaine sur lequel vous souhaitez progresser.
-      </p>
 
       {/* Formulaire nouvel axe */}
       {showAxeForm && (
@@ -209,19 +205,8 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                       {DIFFICULTY_LABELS[currentAxe.difficulty]}
                     </span>
                   </div>
-                  {/* Médaille + suppression */}
+                  {/* Suppression */}
                   <div className="flex items-center gap-2 shrink-0">
-                    {medal ? (
-                      <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border text-xs font-semibold ${medal.color}`}>
-                        <span className="text-base leading-none">{medal.icon}</span>
-                        <span>{medal.label}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-gray-100 bg-gray-50 text-xs text-gray-400">
-                        <span className="text-base leading-none">🎖️</span>
-                        <span>À gagner</span>
-                      </div>
-                    )}
                     <button
                       onClick={() => {
                         startTransition(() => { deleteAxe(currentAxe.id) })
@@ -237,18 +222,31 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
 
                 {/* Actions menées */}
                 <div className="border-t border-gray-100 pt-3 mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-gray-700">
-                      Actions menées
-                      {currentAxe.actions.length > 0 && (
-                        <span className="ml-1.5 text-xs font-normal text-gray-400">({currentAxe.actions.length})</span>
-                      )}
-                    </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-gray-700">
+                        Actions menées
+                        {currentAxe.actions.length > 0 && (
+                          <span className="ml-1.5 text-xs font-normal text-gray-400">({currentAxe.actions.length})</span>
+                        )}
+                      </p>
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${medal.color}`}>
+                        <span className="text-sm leading-none">{medal.icon}</span>
+                        <span>{medal.label}</span>
+                        {medal.delta > 0 && (
+                          <span className="text-[10px] font-normal opacity-70">+{medal.delta} pour {
+                            currentAxe.actions.length === 0 ? 'Bronze' :
+                            currentAxe.actions.length <= 2 ? 'Argent' :
+                            currentAxe.actions.length <= 5 ? 'Or' : 'Platine'
+                          }</span>
+                        )}
+                      </div>
+                    </div>
                     <button
                       onClick={() => setAddActionAxeId(addActionAxeId === currentAxe.id ? null : currentAxe.id)}
-                      className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
+                      className="btn-primary text-xs px-3 py-1.5"
                     >
-                      <Plus size={12} /> Ajouter
+                      <Plus size={14} /> Ajouter
                     </button>
                   </div>
 
@@ -278,7 +276,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                   <ul className="space-y-2">
                     {currentAxe.actions.map((action) => (
                       <li key={action.id} className="flex items-start gap-2 group">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-1.5" />
+                        <span className="shrink-0 mt-0.5 text-base">✅</span>
                         <div className="flex-1 min-w-0">
                           <span className="text-sm text-gray-700">{action.description}</span>
                           <div className="flex items-center gap-2 mt-0.5">

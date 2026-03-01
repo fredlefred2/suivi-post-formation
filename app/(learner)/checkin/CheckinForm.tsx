@@ -84,41 +84,10 @@ export default function CheckinForm({ axes }: { axes: Axe[] }) {
         />
       </div>
 
-      {/* Scores des axes */}
-      <div className="card">
-        <h2 className="section-title mb-1">Autopositionnement de la semaine *</h2>
-        <p className="text-sm text-gray-400 mb-4">Où en êtes-vous sur chacun de vos axes ?</p>
-        <div className="space-y-6">
-          {axes.map((axe) => (
-            <div key={axe.id}>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="font-medium text-gray-800">{axe.subject}</p>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${DIFFICULTY_COLORS[axe.difficulty]}`}>
-                  {DIFFICULTY_LABELS[axe.difficulty]}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 mb-3">Score initial : {axe.initial_score}/5</p>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((v) => (
-                  <label key={v} className="flex-1 cursor-pointer">
-                    <input
-                      type="radio"
-                      name={`score_${axe.id}`}
-                      value={v}
-                      required
-                      className="sr-only peer"
-                    />
-                    <div className="text-center py-2.5 border-2 border-gray-200 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 font-semibold text-sm transition-all hover:border-gray-300">
-                      {v}
-                    </div>
-                    <p className="text-xs text-center text-gray-400 mt-1 hidden sm:block">{scoreLabels[v]}</p>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Axes (hidden scores — kept for form submission) */}
+      {axes.map((axe) => (
+        <input key={`score_default_${axe.id}`} type="hidden" name={`score_${axe.id}`} value={axe.initial_score} />
+      ))}
 
       {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 

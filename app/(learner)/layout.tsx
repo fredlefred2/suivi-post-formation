@@ -7,7 +7,7 @@ import MobileDrawer from '@/app/components/MobileDrawer'
 
 const navItems = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-  { href: '/axes', label: 'Mes axes', icon: Target },
+  { href: '/axes', label: 'Mes actions', icon: Target },
   { href: '/checkin', label: 'Check-in', icon: ClipboardCheck },
   { href: '/history', label: 'Historique', icon: History },
 ]
