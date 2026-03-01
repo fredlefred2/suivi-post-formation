@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
 import { formatWeek } from '@/lib/utils'
 import { WEATHER_LABELS, WEATHER_COLORS } from '@/lib/types'
