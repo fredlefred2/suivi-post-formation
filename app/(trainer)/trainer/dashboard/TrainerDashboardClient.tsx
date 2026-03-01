@@ -140,6 +140,17 @@ export default function TrainerDashboardClient({
     return map
   }, [groups, unassignedLearners])
 
+  // Mapping apprenant → groupe (pour les liens du scoring)
+  const learnerGroupMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    groups.forEach((g) =>
+      g.members.forEach((m) => {
+        map[m.learner_id] = g.id
+      })
+    )
+    return map
+  }, [groups])
+
   const filteredCheckins = checkins.filter((c) => filteredLearnerIds.has(c.learner_id))
   const thisWeekCheckins = filteredCheckins.filter(
     (c) => c.week_number === currentWeek && c.year === currentYear
@@ -408,7 +419,7 @@ export default function TrainerDashboardClient({
                   <tr key={learner.id} className="border-b border-gray-50 last:border-0">
                     <td className="py-1.5 text-xs text-gray-400 w-6">{idx + 1}</td>
                     <td className="py-1.5 font-medium text-gray-800 truncate max-w-[140px]">
-                      <Link href={`/trainer/learner/${learner.id}`} className="hover:text-indigo-600 transition-colors">
+                      <Link href={`/trainer/learner/${learner.id}?from=apprenants&group=${learnerGroupMap[learner.id] ?? ''}`} className="hover:text-indigo-600 transition-colors">
                         {learner.name}
                       </Link>
                     </td>

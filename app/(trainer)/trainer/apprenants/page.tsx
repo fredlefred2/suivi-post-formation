@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
-import ApprenantsClient from './ApprenantsClient'
 
 export default async function ApprenantsPage({
   searchParams,
@@ -12,18 +11,6 @@ export default async function ApprenantsPage({
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-
-  // Tous les apprenants (via admin pour contourner le RLS)
-  const { data: learners } = await admin
-    .from('profiles')
-    .select('id, first_name, last_name')
-    .eq('role', 'learner')
-    .order('last_name')
-
   // Groupes de ce formateur
   const { data: groups } = await supabase
     .from('groups')
@@ -31,69 +18,55 @@ export default async function ApprenantsPage({
     .eq('trainer_id', user!.id)
     .order('name')
 
-  // Membres actuels des groupes du formateur
-  const groupIds = groups?.map((g) => g.id) ?? []
-  const { data: members } = groupIds.length > 0
-    ? await supabase
-        .from('group_members')
-        .select('learner_id, group_id')
-        .in('group_id', groupIds)
-    : { data: [] }
+  if (!groups || groups.length === 0) {
+    redirect('/trainer/groups')
+  }
 
-  // ── Bornes de la semaine courante (lundi → dimanche) ─────────────────────
-  const now = new Date()
-  const dayOfWeek = now.getDay() // 0=dim, 1=lun…
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7))
-  monday.setHours(0, 0, 0, 0)
-  const sunday = new Date(monday)
-  sunday.setDate(monday.getDate() + 6)
-  sunday.setHours(23, 59, 59, 999)
+  const groupIds = groups.map((g) => g.id)
 
-  // ── Stats par apprenant : axes + actions ──────────────────────────────────
-  const assignedLearnerIds = Array.from(new Set(members?.map((m) => m.learner_id) ?? []))
+  // Tous les membres de tous les groupes du formateur
+  const { data: allMembers } = await supabase
+    .from('group_members')
+    .select('learner_id, group_id, profiles!inner(first_name, last_name)')
+    .in('group_id', groupIds)
 
-  const [{ data: axesData }, { data: actionsData }] = await Promise.all([
-    assignedLearnerIds.length > 0
-      ? admin.from('axes').select('learner_id').in('learner_id', assignedLearnerIds)
-      : Promise.resolve({ data: [] as Array<{ learner_id: string }> }),
-    assignedLearnerIds.length > 0
-      ? admin.from('actions').select('learner_id, created_at').in('learner_id', assignedLearnerIds)
-      : Promise.resolve({ data: [] as Array<{ learner_id: string; created_at: string }> }),
-  ])
+  if (!allMembers || allMembers.length === 0) {
+    redirect('/trainer/groups')
+  }
 
-  const statsMap: Record<string, { axesCount: number; actionsTotal: number; actionsThisWeek: number }> = {}
-  assignedLearnerIds.forEach((id) => {
-    const learnerAxes = (axesData ?? []).filter((a) => a.learner_id === id)
-    const learnerActions = (actionsData ?? []).filter((a) => a.learner_id === id)
-    const thisWeek = learnerActions.filter((a) => {
-      const d = new Date(a.created_at)
-      return d >= monday && d <= sunday
-    })
-    statsMap[id] = {
-      axesCount: learnerAxes.length,
-      actionsTotal: learnerActions.length,
-      actionsThisWeek: thisWeek.length,
+  // Déterminer le groupe cible
+  let targetGroupId = searchParams.group
+  if (!targetGroupId || targetGroupId === 'all' || targetGroupId === 'unassigned' || !groupIds.includes(targetGroupId)) {
+    targetGroupId = ''
+  }
+
+  // Chercher les membres du groupe cible
+  let groupMembers = targetGroupId
+    ? allMembers.filter((m) => m.group_id === targetGroupId)
+    : []
+
+  // Si pas de membres dans le groupe cible, trouver le premier groupe avec des membres
+  if (groupMembers.length === 0) {
+    for (const g of groups) {
+      const gm = allMembers.filter((m) => m.group_id === g.id)
+      if (gm.length > 0) {
+        groupMembers = gm
+        targetGroupId = g.id
+        break
+      }
     }
+  }
+
+  if (groupMembers.length === 0 || !targetGroupId) {
+    redirect('/trainer/groups')
+  }
+
+  // Trier alphabétiquement et rediriger vers le premier apprenant
+  const sorted = groupMembers.sort((a, b) => {
+    const pa = a.profiles as unknown as { first_name: string; last_name: string }
+    const pb = b.profiles as unknown as { first_name: string; last_name: string }
+    return `${pa.first_name} ${pa.last_name}`.localeCompare(`${pb.first_name} ${pb.last_name}`, 'fr')
   })
 
-  // Construire la liste enrichie
-  const learnersWithGroup = (learners ?? []).map((l) => {
-    const membership = members?.find((m) => m.learner_id === l.id)
-    const group = membership ? groups?.find((g) => g.id === membership.group_id) : null
-    return {
-      ...l,
-      groupId: group?.id ?? null,
-      groupName: group?.name ?? null,
-      stats: statsMap[l.id] ?? null,
-    }
-  })
-
-  return (
-    <ApprenantsClient
-      learners={learnersWithGroup}
-      groups={groups ?? []}
-      initialGroup={searchParams.group ?? 'all'}
-    />
-  )
+  redirect(`/trainer/learner/${sorted[0].learner_id}?from=apprenants&group=${targetGroupId}`)
 }

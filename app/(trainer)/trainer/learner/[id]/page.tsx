@@ -68,30 +68,47 @@ export default async function LearnerDetailPage({
 
   if (!profile) notFound()
 
-  // ── Carousel : liste ordonnée des apprenants du groupe ────────────────────
-  type LearnerEntry = { id: string; name: string }
-  let learnersInGroup: LearnerEntry[] = []
-  let currentIndex = -1
+  // ── Groupes du formateur (pour le sélecteur) ───────────────────────────────
+  const { data: allGroupsRaw } = await supabase
+    .from('groups')
+    .select('id, name')
+    .eq('trainer_id', user!.id)
+    .order('name')
 
+  const allGroupIds = (allGroupsRaw ?? []).map((g) => g.id)
+
+  // Membres de tous les groupes (pour comptage + carousel)
+  const { data: allGroupMembers } = allGroupIds.length > 0
+    ? await supabase
+        .from('group_members')
+        .select('learner_id, group_id, profiles!inner(first_name, last_name)')
+        .in('group_id', allGroupIds)
+    : { data: [] as Array<{ learner_id: string; group_id: string; profiles: { first_name: string; last_name: string } }> }
+
+  // Groupes avec comptage pour le sélecteur
+  const groupsForSelector = (allGroupsRaw ?? []).map((g) => ({
+    id: g.id,
+    name: g.name,
+    count: (allGroupMembers ?? []).filter((m) => m.group_id === g.id).length,
+  }))
+
+  // ── Carousel : groupe courant ──────────────────────────────────────────────
+  // Utiliser le groupe passé en paramètre, sinon le groupe de l'apprenant
   const groupId = searchParams.group && searchParams.group !== 'all' && searchParams.group !== 'unassigned'
     ? searchParams.group
-    : null
+    : (membership.group_id as string)
 
-  if (groupId) {
-    const { data: gMembers } = await supabase
-      .from('group_members')
-      .select('learner_id, profiles!inner(first_name, last_name)')
-      .eq('group_id', groupId)
+  // Apprenants du groupe courant, triés alphabétiquement
+  type LearnerEntry = { id: string; name: string }
+  const learnersInGroup: LearnerEntry[] = (allGroupMembers ?? [])
+    .filter((m) => m.group_id === groupId)
+    .map((m) => {
+      const p = m.profiles as unknown as { first_name: string; last_name: string }
+      return { id: m.learner_id, name: `${p.first_name} ${p.last_name}` }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
 
-    learnersInGroup = (gMembers ?? [])
-      .map((m) => {
-        const p = m.profiles as unknown as { first_name: string; last_name: string }
-        return { id: m.learner_id, name: `${p.first_name} ${p.last_name}` }
-      })
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-
-    currentIndex = learnersInGroup.findIndex((l) => l.id === params.id)
-  }
+  const currentIndex = learnersInGroup.findIndex((l) => l.id === params.id)
 
   const prevLearner = currentIndex > 0 ? learnersInGroup[currentIndex - 1] : null
   const nextLearner = currentIndex >= 0 && currentIndex < learnersInGroup.length - 1
@@ -100,23 +117,38 @@ export default async function LearnerDetailPage({
 
   function buildLearnerUrl(learnerId: string) {
     const qs = new URLSearchParams()
-    if (groupId) qs.set('group', groupId)
+    qs.set('group', groupId)
     if (searchParams.from) qs.set('from', searchParams.from)
     return `/trainer/learner/${learnerId}?${qs.toString()}`
   }
 
   const prevUrl = prevLearner ? buildLearnerUrl(prevLearner.id) : null
   const nextUrl = nextLearner ? buildLearnerUrl(nextLearner.id) : null
+  const allUrls = learnersInGroup.map((l) => buildLearnerUrl(l.id))
 
   // ── Lien retour ───────────────────────────────────────────────────────────
   const backHref =
     searchParams.from === 'apprenants'
-      ? groupId
-        ? `/trainer/apprenants?group=${groupId}`
-        : '/trainer/apprenants'
+      ? '/trainer/dashboard'
       : groupId
       ? `/trainer/groups/${groupId}`
       : '/trainer/groups'
+
+  // ── Actions de la semaine ───────────────────────────────────────────────────
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7))
+  monday.setHours(0, 0, 0, 0)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  sunday.setHours(23, 59, 59, 999)
+
+  const allLearnerActions = (axes ?? []).flatMap((axe) => axe.actions as ActionRow[])
+  const actionsThisWeek = allLearnerActions.filter((a) => {
+    const d = new Date(a.created_at)
+    return d >= monday && d <= sunday
+  }).length
 
   // ── Feedback (likes + commentaires) sur les actions ───────────────────────
   const admin = createAdminClient(
@@ -194,17 +226,18 @@ export default async function LearnerDetailPage({
 
       {/* ── Bouton retour ───────────────────────────────────────────────────── */}
       <Link href={backHref} className="text-sm text-indigo-600 hover:underline inline-block">
-        ← Retour
+        ← {searchParams.from === 'apprenants' ? 'Tableau de bord' : 'Retour'}
       </Link>
 
       {/* ── Carousel + contenu ──────────────────────────────────────────────── */}
       <LearnerNav
         prevUrl={prevUrl}
         nextUrl={nextUrl}
-        currentIndex={currentIndex}
+        currentIndex={currentIndex >= 0 ? currentIndex : 0}
         total={learnersInGroup.length}
-        prevName={prevLearner?.name}
-        nextName={nextLearner?.name}
+        allUrls={allUrls}
+        groups={groupsForSelector}
+        currentGroupId={groupId}
       >
       <div className="space-y-6">
 
@@ -231,6 +264,15 @@ export default async function LearnerDetailPage({
           <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1 rounded-full font-medium">
             ⚡ {totalActions} action{totalActions > 1 ? 's' : ''}
           </span>
+          {actionsThisWeek > 0 ? (
+            <span className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-semibold">
+              +{actionsThisWeek} cette sem.
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs bg-gray-50 text-gray-400 border border-gray-200 px-2.5 py-1 rounded-full">
+              0 cette sem.
+            </span>
+          )}
           <span className="inline-flex items-center gap-1 text-xs bg-sky-50 text-sky-700 border border-sky-100 px-2.5 py-1 rounded-full font-medium">
             📅 {(checkins ?? []).length} check-in{(checkins ?? []).length > 1 ? 's' : ''}
           </span>
