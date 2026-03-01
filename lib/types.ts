@@ -78,7 +78,7 @@ export const WEATHER_COLORS: Record<Weather, string> = {
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   facile: '🟢 Facile',
-  moyen: '🟡 Moyen',
+  moyen: '🟡 Intermédiaire',
   difficile: '🔴 Difficile',
 }
 
