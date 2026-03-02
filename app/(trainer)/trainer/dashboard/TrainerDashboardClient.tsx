@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import Link from 'next/link'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, UserPlus, Trash2, X } from 'lucide-react'
 import { WEATHER_COLORS } from '@/lib/types'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
+import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
 
 export type GroupData = {
   id: string
@@ -87,6 +88,9 @@ export default function TrainerDashboardClient({
   const [selectedOption, setSelectedOption] = useState<'all' | string>('all')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [assigningLearnerId, setAssigningLearnerId] = useState<string | null>(null)
+  const [deletingLearnerId, setDeletingLearnerId] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   function selectOption(option: string) {
     setSelectedOption(option)
@@ -440,18 +444,61 @@ export default function TrainerDashboardClient({
         unassignedLearners.length > 0 ? (
           <div className="card border-amber-100">
             <h2 className="section-title mb-3 text-amber-700">⚠️ Apprenants non affectés</h2>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {unassignedLearners.map((l) => (
-                <div
-                  key={l.id}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-100"
-                >
-                  <span className="text-sm font-medium text-gray-800">
-                    {l.first_name} {l.last_name}
-                  </span>
-                  <span className="ml-auto text-xs text-amber-600 bg-white border border-amber-200 px-2 py-0.5 rounded-full">
-                    Non affecté
-                  </span>
+                <div key={l.id}>
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-100">
+                    <span className="text-sm font-medium text-gray-800">
+                      {l.first_name} {l.last_name}
+                    </span>
+                    <span className="text-xs text-amber-600 bg-white border border-amber-200 px-2 py-0.5 rounded-full">
+                      Non affecté
+                    </span>
+                    <div className="ml-auto flex items-center gap-2">
+                      <button
+                        onClick={() => setAssigningLearnerId(assigningLearnerId === l.id ? null : l.id)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+                      >
+                        <UserPlus size={14} />
+                        Affecter
+                      </button>
+                      <button
+                        onClick={() => setDeletingLearnerId(l.id)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dropdown inline : liste des groupes */}
+                  {assigningLearnerId === l.id && (
+                    <div className="mt-1 ml-4 p-2 bg-white border border-indigo-100 rounded-lg shadow-sm">
+                      <p className="text-xs text-gray-500 mb-1.5 font-medium">Affecter à :</p>
+                      <div className="space-y-1">
+                        {groups.map((g) => (
+                          <button
+                            key={g.id}
+                            disabled={isPending}
+                            onClick={() => {
+                              startTransition(async () => {
+                                await assignToGroup(l.id, g.id)
+                                setAssigningLearnerId(null)
+                              })
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition-colors disabled:opacity-50"
+                          >
+                            {g.name}
+                            <span className="text-xs text-gray-400 ml-1">({g.members.length} app.)</span>
+                          </button>
+                        ))}
+                        {groups.length === 0 && (
+                          <p className="text-xs text-gray-400 px-3 py-2">Aucun groupe créé</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -462,6 +509,50 @@ export default function TrainerDashboardClient({
           </div>
         )
       )}
+
+      {/* ── Popup confirmation suppression apprenant ──────────────────── */}
+      {deletingLearnerId && (() => {
+        const learner = unassignedLearners.find((l) => l.id === deletingLearnerId)
+        if (!learner) return null
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/30" onClick={() => setDeletingLearnerId(null)} />
+            <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full">
+              <button onClick={() => setDeletingLearnerId(null)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
+              <div className="p-6 text-center">
+                <span className="text-4xl">🗑️</span>
+                <h3 className="text-lg font-bold text-gray-800 mt-3">Supprimer cet apprenant ?</h3>
+                <p className="text-sm text-gray-500 mt-2">
+                  Vous allez supprimer définitivement <strong className="text-gray-700">{learner.first_name} {learner.last_name}</strong> ainsi que toutes ses données (axes, actions, check-ins).
+                </p>
+                <p className="text-xs text-red-500 mt-2 font-medium">Cette action est irréversible.</p>
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={() => setDeletingLearnerId(null)}
+                    className="btn-secondary flex-1"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    disabled={isPending}
+                    onClick={() => {
+                      startTransition(async () => {
+                        await deleteLearner(deletingLearnerId)
+                        setDeletingLearnerId(null)
+                      })
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+                  >
+                    {isPending ? 'Suppression...' : 'Supprimer'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Dernières actions (rouleau scrollable) ───────────────────── */}
       {recentActions.length > 0 && (
