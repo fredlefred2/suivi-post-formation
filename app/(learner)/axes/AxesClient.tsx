@@ -40,6 +40,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
   const [editingActionId, setEditingActionId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
   const [deletingActionId, setDeletingActionId] = useState<string | null>(null)
+  const [deletingAxeStep, setDeletingAxeStep] = useState<0 | 1 | 2>(0) // 0=fermé, 1=avertissement, 2=confirmation
   const touchStartX = useRef<number>(0)
 
   // Index sécurisé (évite les débordements si un axe est supprimé)
@@ -232,10 +233,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                   {/* Suppression */}
                   <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => {
-                        startTransition(() => { deleteAxe(currentAxe.id) })
-                        setCurrentIndex(Math.max(0, safeIndex - 1))
-                      }}
+                      onClick={() => setDeletingAxeStep(1)}
                       className="text-gray-300 hover:text-red-400 transition-colors p-1"
                       title="Supprimer cet axe"
                     >
@@ -372,7 +370,69 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
         </div>
       )}
 
-      {/* Modale de suppression */}
+      {/* Modale suppression axe — Étape 1 : Avertissement */}
+      {deletingAxeStep === 1 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDeletingAxeStep(0)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <span className="text-xl">⚠️</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Attention</h3>
+                <p className="text-sm text-gray-500">Cette opération va supprimer l&apos;intégralité de l&apos;axe de progrès, toutes ses actions et tous les commentaires associés.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setDeletingAxeStep(0)} className="btn-secondary px-5">
+                Annuler
+              </button>
+              <button
+                onClick={() => setDeletingAxeStep(2)}
+                className="px-5 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors"
+              >
+                J&apos;ai compris
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale suppression axe — Étape 2 : Confirmation définitive */}
+      {deletingAxeStep === 2 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDeletingAxeStep(0)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 size={20} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Confirmer la suppression</h3>
+                <p className="text-sm text-gray-500">L&apos;axe « {currentAxe?.subject} » sera définitivement supprimé. Cette action est irréversible.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setDeletingAxeStep(0)} className="btn-secondary px-5">
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  startTransition(() => { deleteAxe(currentAxe!.id) })
+                  setCurrentIndex(Math.max(0, safeIndex - 1))
+                  setDeletingAxeStep(0)
+                }}
+                className="px-5 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+              >
+                Supprimer définitivement
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale de suppression d'action */}
       {deletingActionId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDeletingActionId(null)} />
