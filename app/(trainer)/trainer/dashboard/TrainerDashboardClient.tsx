@@ -451,9 +451,6 @@ export default function TrainerDashboardClient({
                     <span className="text-sm font-medium text-gray-800">
                       {l.first_name} {l.last_name}
                     </span>
-                    <span className="text-xs text-amber-600 bg-white border border-amber-200 px-2 py-0.5 rounded-full">
-                      Non affecté
-                    </span>
                     <div className="ml-auto flex items-center gap-2">
                       <button
                         onClick={() => setAssigningLearnerId(assigningLearnerId === l.id ? null : l.id)}
