@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentWeek, formatWeek } from '@/lib/utils'
 import { WEATHER_LABELS, DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
-import { CheckCircle2, AlertCircle, Target, Zap, CalendarCheck } from 'lucide-react'
+import { AlertCircle, Target, Zap, CalendarCheck } from 'lucide-react'
 import type { Difficulty } from '@/lib/types'
 
 const WEATHER_ICONS: Record<string, string> = {
@@ -72,8 +72,8 @@ export default async function DashboardPage() {
         <p className="text-sm text-gray-500 mt-1">{formatWeek(week, year)}</p>
       </div>
 
-      {/* Alerte check-in */}
-      {!checkinDone ? (
+      {/* Alerte check-in (uniquement si non réalisé) */}
+      {!checkinDone && (
         <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-50 border border-amber-100">
           <AlertCircle className="text-amber-500 shrink-0" size={24} />
           <div className="flex-1">
@@ -81,16 +81,6 @@ export default async function DashboardPage() {
             <p className="text-sm text-amber-600">Prenez 2 minutes pour faire le point</p>
           </div>
           <Link href="/checkin" className="btn-primary shrink-0">Faire</Link>
-        </div>
-      ) : (
-        <div className="rounded-xl p-4 flex items-center gap-4 bg-emerald-50 border border-emerald-100">
-          <CheckCircle2 className="text-emerald-500 shrink-0" size={24} />
-          <div>
-            <p className="font-medium text-emerald-800">Check-in de la semaine effectué</p>
-            <p className="text-sm text-emerald-600">
-              Météo : {WEATHER_LABELS[thisWeekCheckin.weather as keyof typeof WEATHER_LABELS]}
-            </p>
-          </div>
         </div>
       )}
 
@@ -177,6 +167,18 @@ export default async function DashboardPage() {
             </Link>
           </div>
           <div className="card p-4">
+            {checkinDone && (() => {
+              const today = new Date()
+              const dayOfWeek = today.getDay()
+              const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek
+              const nextMonday = new Date(today)
+              nextMonday.setDate(today.getDate() + daysUntilMonday)
+              return (
+                <p className="text-sm text-gray-500 mb-3">
+                  ✅ Check-in de cette semaine effectué — Prochain : <span className="font-medium text-gray-700">{nextMonday.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                </p>
+              )
+            })()}
             <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide">
               {allCheckins.map((checkin) => (
                 <div key={checkin.id} className="flex flex-col items-center gap-1 shrink-0">

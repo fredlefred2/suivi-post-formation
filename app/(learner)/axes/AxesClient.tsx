@@ -17,6 +17,14 @@ function getDynamique(count: number) {
   return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200', delta: 0 }
 }
 
+// Icône de phase selon le rang chronologique de l'action (1-indexed)
+function getActionPhaseIcon(rank: number) {
+  if (rank <= 2) return '👣'
+  if (rank <= 5) return '🥁'
+  if (rank <= 8) return '🔥'
+  return '🚀'
+}
+
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -276,95 +284,123 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                     <p className="text-xs text-gray-400 italic">Aucune action enregistrée</p>
                   )}
 
-                  <ul className="space-y-2">
-                    {[...currentAxe.actions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((action) => (
-                      <li key={action.id} className="flex items-start gap-2">
-                        <span className="shrink-0 mt-0.5 text-base">✅</span>
-                        <div className="flex-1 min-w-0">
-                          {editingActionId === action.id ? (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault()
-                                startTransition(async () => {
-                                  await updateAction(action.id, editingText)
-                                  setEditingActionId(null)
-                                })
-                              }}
-                              className="flex gap-2"
-                            >
-                              <input
-                                value={editingText}
-                                onChange={(e) => setEditingText(e.target.value)}
-                                className="input flex-1 text-sm"
-                                autoFocus
-                                required
-                              />
-                              <button type="submit" disabled={isPending} className="text-emerald-500 hover:text-emerald-600 p-1">
-                                <Check size={14} />
-                              </button>
-                              <button type="button" onClick={() => setEditingActionId(null)} className="text-gray-400 hover:text-gray-600 p-1">
-                                <X size={14} />
-                              </button>
-                            </form>
-                          ) : (
-                            <>
-                              <span className="text-sm text-gray-700">{action.description}</span>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
-                                <ActionFeedback
-                                  actionId={action.id}
-                                  feedback={feedbackMap[action.id] ?? emptyFeedback}
-                                  canInteract={false}
-                                />
+                  {(() => {
+                    // Tri chronologique pour attribuer les rangs, puis affichage antéchronologique
+                    const chronoSorted = [...currentAxe.actions].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                    const rankMap = new Map(chronoSorted.map((a, i) => [a.id, i + 1]))
+                    const displaySorted = [...currentAxe.actions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+                    return (
+                      <ul className="space-y-2">
+                        {displaySorted.map((action) => {
+                          const rank = rankMap.get(action.id) ?? 1
+                          return (
+                            <li key={action.id} className="flex items-start gap-2">
+                              <span className="shrink-0 mt-0.5 text-base">{getActionPhaseIcon(rank)}</span>
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm text-gray-700">{action.description}</span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
+                                  <ActionFeedback
+                                    actionId={action.id}
+                                    feedback={feedbackMap[action.id] ?? emptyFeedback}
+                                    canInteract={false}
+                                  />
+                                </div>
                               </div>
-                            </>
-                          )}
-                        </div>
-                        {editingActionId !== action.id && (
-                          <div className="flex items-center gap-1 shrink-0 mt-0.5">
-                            <button
-                              onClick={() => { setEditingActionId(action.id); setEditingText(action.description) }}
-                              className="text-gray-300 hover:text-indigo-500 transition-colors p-0.5"
-                              title="Modifier"
-                            >
-                              <Pencil size={13} />
-                            </button>
-                            {deletingActionId === action.id ? (
-                              <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-lg px-2 py-0.5">
-                                <span className="text-xs text-red-600">Supprimer ?</span>
+                              <div className="flex items-center gap-1 shrink-0 mt-0.5">
                                 <button
-                                  onClick={() => { startTransition(() => deleteAction(action.id)); setDeletingActionId(null) }}
-                                  className="text-red-500 hover:text-red-700 p-0.5"
-                                  title="Confirmer"
+                                  onClick={() => { setEditingActionId(action.id); setEditingText(action.description) }}
+                                  className="text-gray-300 hover:text-indigo-500 transition-colors p-0.5"
+                                  title="Modifier"
                                 >
-                                  <Check size={13} />
+                                  <Pencil size={13} />
                                 </button>
                                 <button
-                                  onClick={() => setDeletingActionId(null)}
-                                  className="text-gray-400 hover:text-gray-600 p-0.5"
-                                  title="Annuler"
+                                  onClick={() => setDeletingActionId(action.id)}
+                                  className="text-gray-300 hover:text-red-400 transition-colors p-0.5"
+                                  title="Supprimer"
                                 >
-                                  <X size={13} />
+                                  <Trash2 size={13} />
                                 </button>
                               </div>
-                            ) : (
-                              <button
-                                onClick={() => setDeletingActionId(action.id)}
-                                className="text-gray-300 hover:text-red-400 transition-colors p-0.5"
-                                title="Supprimer"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )
+                  })()}
                 </div>
               </div>
             )
           })()}
+        </div>
+      )}
+      {/* Modale d'édition */}
+      {editingActionId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setEditingActionId(null)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <h3 className="font-semibold text-gray-900 text-lg">Modifier l&apos;action</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                startTransition(async () => {
+                  await updateAction(editingActionId, editingText)
+                  setEditingActionId(null)
+                })
+              }}
+              className="space-y-4"
+            >
+              <textarea
+                value={editingText}
+                onChange={(e) => setEditingText(e.target.value)}
+                className="input w-full h-24 resize-none"
+                autoFocus
+                required
+              />
+              <div className="flex gap-3 justify-end">
+                <button type="button" onClick={() => setEditingActionId(null)} className="btn-secondary px-5">
+                  Annuler
+                </button>
+                <button type="submit" disabled={isPending} className="btn-primary px-5">
+                  {isPending ? 'Enregistrement...' : 'Valider'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modale de suppression */}
+      {deletingActionId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDeletingActionId(null)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 size={20} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Supprimer cette action ?</h3>
+                <p className="text-sm text-gray-500">Cette action sera définitivement supprimée.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setDeletingActionId(null)} className="btn-secondary px-5">
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  startTransition(() => deleteAction(deletingActionId))
+                  setDeletingActionId(null)
+                }}
+                className="px-5 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
