@@ -8,9 +8,9 @@ import type { Difficulty } from '@/lib/types'
 type Axe = { id: string; subject: string; initial_score: number; difficulty: Difficulty }
 
 const weatherOptions = [
-  { value: 'sunny', emoji: '☀️', label: 'Ça roule !', color: 'border-yellow-400 bg-yellow-50' },
-  { value: 'cloudy', emoji: '⛅', label: 'Mitigé', color: 'border-blue-400 bg-blue-50' },
-  { value: 'stormy', emoji: '⛈️', label: 'Difficile', color: 'border-gray-400 bg-gray-50' },
+  { value: 'sunny', emoji: '☀️', label: 'Ça roule !', color: 'border-amber-400 bg-amber-100' },
+  { value: 'cloudy', emoji: '⛅', label: 'Mitigé', color: 'border-sky-400 bg-sky-100' },
+  { value: 'stormy', emoji: '⛈️', label: 'Difficile', color: 'border-red-400 bg-red-100' },
 ]
 
 const scoreLabels = ['', 'Débutant', 'En cours', 'Intermédiaire', 'Avancé', 'Expert']

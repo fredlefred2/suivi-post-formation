@@ -118,7 +118,7 @@ export default async function GroupDetailPage({ params }: { params: { id: string
           <h2 className="section-title">Apprenants ({learnersData.length})</h2>
           <Link
             href="/trainer/apprenants"
-            className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors border border-indigo-200"
+            className="flex items-center gap-1.5 text-xs text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors border border-indigo-300"
           >
             <UserPlus size={14} />
             Gérer les apprenants
@@ -133,9 +133,9 @@ export default async function GroupDetailPage({ params }: { params: { id: string
               <Link
                 key={learner.id}
                 href={`/trainer/learner/${learner.id}?group=${params.id}`}
-                className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-indigo-300 hover:bg-indigo-100/50 transition-colors"
               >
-                <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-semibold flex items-center justify-center text-sm shrink-0">
+                <div className="w-9 h-9 rounded-full bg-indigo-200 text-indigo-800 font-semibold flex items-center justify-center text-sm shrink-0">
                   {learner.first_name[0]}{learner.last_name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -149,7 +149,7 @@ export default async function GroupDetailPage({ params }: { params: { id: string
                     {WEATHER_LABELS[learner.thisWeekCheckin.weather as keyof typeof WEATHER_LABELS]}
                   </span>
                 ) : (
-                  <span className="text-xs bg-gray-100 text-gray-400 px-2 py-1 rounded-full shrink-0">
+                  <span className="text-xs bg-gray-200 text-gray-500 px-2 py-1 rounded-full shrink-0">
                     Pas encore fait
                   </span>
                 )}

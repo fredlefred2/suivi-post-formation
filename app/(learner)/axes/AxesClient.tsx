@@ -10,11 +10,11 @@ import ActionFeedback from '@/app/components/ActionFeedback'
 type AxeWithActions = Axe & { actions: Action[] }
 
 function getDynamique(count: number) {
-  if (count === 0) return { label: 'Ancrage',     icon: '📍', color: 'text-gray-400   bg-gray-50   border-gray-200',   delta: 1 }
-  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-700   bg-teal-50   border-teal-200',   delta: 3 - count }
-  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-700   bg-blue-50   border-blue-200',   delta: 6 - count }
-  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-700 bg-orange-50 border-orange-200', delta: 9 - count }
-  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200', delta: 0 }
+  if (count === 0) return { label: 'Ancrage',     icon: '📍', color: 'text-gray-500   bg-gray-100  border-gray-300',   delta: 1 }
+  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-800   bg-teal-100  border-teal-300',   delta: 3 - count }
+  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-800   bg-blue-100  border-blue-300',   delta: 6 - count }
+  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-800 bg-orange-100 border-orange-300', delta: 9 - count }
+  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-800 bg-purple-100 border-purple-300', delta: 0 }
 }
 
 // Icône de phase selon le rang chronologique de l'action (1-indexed)
@@ -129,7 +129,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
                 {[1, 2, 3, 4, 5].map((v) => (
                   <label key={v} className="flex-1 cursor-pointer">
                     <input type="radio" name="initial_score" value={v} required className="sr-only peer" />
-                    <div className="text-center py-2 border-2 border-gray-200 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 font-semibold transition-all">
+                    <div className="text-center py-2 border-2 border-gray-200 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-100 peer-checked:text-indigo-800 font-semibold transition-all">
                       {v}
                     </div>
                     <p className="text-xs text-center text-gray-400 mt-1">{scoreLabels[v]}</p>

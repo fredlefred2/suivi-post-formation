@@ -16,11 +16,11 @@ const WEATHER_ICONS: Record<string, string> = {
 
 // Calcul de la dynamique d'action selon le nombre d'actions menées
 function getDynamique(count: number) {
-  if (count === 0) return { label: 'Ancrage',     icon: '📍', color: 'text-gray-400   bg-gray-50   border-gray-200'   }
-  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-700   bg-teal-50   border-teal-200'   }
-  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-700   bg-blue-50   border-blue-200'   }
-  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-700 bg-orange-50 border-orange-200' }
-  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200' }
+  if (count === 0) return { label: 'Ancrage',     icon: '📍', color: 'text-gray-500   bg-gray-100  border-gray-300'   }
+  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-800   bg-teal-100  border-teal-300'   }
+  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-800   bg-blue-100  border-blue-300'   }
+  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-800 bg-orange-100 border-orange-300' }
+  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-800 bg-purple-100 border-purple-300' }
 }
 
 export default async function DashboardPage() {
@@ -75,11 +75,11 @@ export default async function DashboardPage() {
 
       {/* Alerte check-in (uniquement si non réalisé) */}
       {!checkinDone && (
-        <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-50 border border-amber-100">
-          <AlertCircle className="text-amber-500 shrink-0" size={24} />
+        <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-100 border border-amber-300">
+          <AlertCircle className="text-amber-600 shrink-0" size={24} />
           <div className="flex-1">
-            <p className="font-medium text-amber-800">Check-in de la semaine en attente</p>
-            <p className="text-sm text-amber-600">Prenez 2 minutes pour faire le point</p>
+            <p className="font-medium text-amber-900">Check-in de la semaine en attente</p>
+            <p className="text-sm text-amber-700">Prenez 2 minutes pour faire le point</p>
           </div>
           <Link href="/checkin" className="btn-primary shrink-0">Faire</Link>
         </div>
@@ -87,26 +87,26 @@ export default async function DashboardPage() {
 
       {/* Badges stats */}
       <div className="grid grid-cols-3 gap-3">
-        <Link href="/axes" className="card text-center py-4 px-2 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors">
-          <Target className="mx-auto text-indigo-500 mb-1.5" size={20} />
-          <p className="text-2xl font-bold text-gray-900 leading-none">
+        <Link href="/axes" className="card text-center py-4 px-2 hover:border-indigo-300 hover:bg-indigo-100/60 transition-colors">
+          <Target className="mx-auto text-indigo-600 mb-1.5" size={20} />
+          <p className="text-2xl font-bold text-indigo-700 leading-none">
             {axes?.length ?? 0}
             <span className="text-sm font-normal text-gray-400">/3</span>
           </p>
-          <p className="text-xs text-gray-500 mt-1">Axes définis</p>
+          <p className="text-xs text-gray-600 mt-1">Axes définis</p>
         </Link>
-        <Link href="/axes" className="card text-center py-4 px-2 hover:border-amber-200 hover:bg-amber-50/50 transition-colors">
-          <Zap className="mx-auto text-amber-500 mb-1.5" size={20} />
-          <p className="text-2xl font-bold text-gray-900 leading-none">{totalCompletedActions}</p>
-          <p className="text-xs text-gray-500 mt-1">Actions menées</p>
+        <Link href="/axes" className="card text-center py-4 px-2 hover:border-amber-300 hover:bg-amber-100/60 transition-colors">
+          <Zap className="mx-auto text-amber-600 mb-1.5" size={20} />
+          <p className="text-2xl font-bold text-amber-700 leading-none">{totalCompletedActions}</p>
+          <p className="text-xs text-gray-600 mt-1">Actions menées</p>
         </Link>
-        <Link href="/history" className="card text-center py-4 px-2 hover:border-emerald-200 hover:bg-emerald-50/50 transition-colors">
-          <CalendarCheck className="mx-auto text-emerald-500 mb-1.5" size={20} />
-          <p className="text-2xl font-bold text-gray-900 leading-none">
+        <Link href="/history" className="card text-center py-4 px-2 hover:border-emerald-300 hover:bg-emerald-100/60 transition-colors">
+          <CalendarCheck className="mx-auto text-emerald-600 mb-1.5" size={20} />
+          <p className="text-2xl font-bold text-emerald-700 leading-none">
             {totalCheckins}
             <span className="text-sm font-normal text-gray-400">/{weeksSinceStart}</span>
           </p>
-          <p className="text-xs text-gray-500 mt-1">Check-ins</p>
+          <p className="text-xs text-gray-600 mt-1">Check-ins</p>
         </Link>
       </div>
 

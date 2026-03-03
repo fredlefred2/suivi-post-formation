@@ -5,7 +5,7 @@
 @layer base {
   body {
     @apply text-gray-900 antialiased;
-    background: linear-gradient(135deg, #f0f0ff 0%, #e8e0ff 25%, #f5f3ff 50%, #e0ecff 75%, #f0f0ff 100%);
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 25%, #e0e7ff 50%, #c7d2fe 75%, #ede9fe 100%);
     background-attachment: fixed;
     min-height: 100vh;
   }
@@ -15,11 +15,11 @@
   /* ──────── Cards — ombres fortes + bordure accent ──────── */
   .card {
     @apply bg-white rounded-2xl p-6;
-    border: 1px solid rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.15);
     box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.04),
-      0 4px 16px rgba(99, 102, 241, 0.08),
-      0 12px 40px rgba(99, 102, 241, 0.05);
+      0 1px 2px rgba(0, 0, 0, 0.05),
+      0 4px 16px rgba(99, 102, 241, 0.12),
+      0 12px 40px rgba(99, 102, 241, 0.08);
     transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
   }
   .card:hover {
@@ -37,12 +37,12 @@
            text-white text-sm font-semibold rounded-xl
            transition-all duration-300
            disabled:opacity-50 disabled:cursor-not-allowed;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35), 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1);
   }
   .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #8b5cf6 100%);
-    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.45), 0 2px 6px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #7c3aed 100%);
+    box-shadow: 0 6px 25px rgba(79, 70, 229, 0.5), 0 2px 6px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
   }
   .btn-primary:active:not(:disabled) {
@@ -66,9 +66,9 @@
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
-           bg-red-50 hover:bg-red-100
-           text-red-700 text-sm font-medium rounded-xl
-           border border-red-200 hover:border-red-300
+           bg-red-100 hover:bg-red-200
+           text-red-800 text-sm font-medium rounded-xl
+           border border-red-300 hover:border-red-400
            transition-all duration-300;
   }
 
@@ -96,7 +96,7 @@
   /* ──────── Titres gradient — bien visible ──────── */
   .page-title {
     @apply text-2xl font-extrabold;
-    background: linear-gradient(135deg, #312e81 0%, #6366f1 40%, #8b5cf6 70%, #a78bfa 100%);
+    background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 35%, #7c3aed 65%, #9333ea 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

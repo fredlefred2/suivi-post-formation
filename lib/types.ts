@@ -71,9 +71,9 @@ export const WEATHER_LABELS: Record<Weather, string> = {
 }
 
 export const WEATHER_COLORS: Record<Weather, string> = {
-  sunny: 'bg-yellow-100 text-yellow-800',
-  cloudy: 'bg-blue-100 text-blue-800',
-  stormy: 'bg-red-100 text-red-800',
+  sunny: 'bg-amber-200 text-amber-900',
+  cloudy: 'bg-sky-200 text-sky-900',
+  stormy: 'bg-red-200 text-red-900',
 }
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
@@ -83,9 +83,9 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
 }
 
 export const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  facile: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  moyen: 'bg-amber-50 text-amber-700 border-amber-200',
-  difficile: 'bg-red-50 text-red-700 border-red-200',
+  facile: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+  moyen: 'bg-amber-100 text-amber-800 border-amber-300',
+  difficile: 'bg-red-100 text-red-800 border-red-300',
 }
 
 // ── Feedback sur les actions (likes & commentaires) ──

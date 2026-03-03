@@ -77,9 +77,9 @@ export default function AxesCarousel({ axes }: { axes: AxeItem[] }) {
 
             {/* Barre de progression */}
             <div className="mt-3 relative">
-              <div className="h-3 bg-white/50 rounded-full overflow-hidden">
+              <div className="h-3 bg-white/60 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-current opacity-40 transition-all duration-500"
+                  className="h-full rounded-full bg-current opacity-60 transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>

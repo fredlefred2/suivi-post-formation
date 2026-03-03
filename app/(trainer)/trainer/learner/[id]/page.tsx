@@ -17,10 +17,10 @@ import LearnerAxesSection from './LearnerAxesSection'
 // ── Dynamique d'action selon le nombre d'actions ────────────────────────────
 function getDynamique(count: number) {
   if (count === 0) return null
-  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-700   bg-teal-50   border-teal-200'   }
-  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-700   bg-blue-50   border-blue-200'   }
-  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-700 bg-orange-50 border-orange-200' }
-  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200' }
+  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-800   bg-teal-100  border-teal-300'   }
+  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-800   bg-blue-100  border-blue-300'   }
+  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-800 bg-orange-100 border-orange-300' }
+  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-800 bg-purple-100 border-purple-300' }
 }
 
 // Date courte ex. "3 juin 2024"
@@ -251,33 +251,33 @@ export default async function LearnerDetailPage({
               &nbsp;·&nbsp;Membre depuis le {shortDate(profile.created_at)}
             </p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 font-bold text-lg flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-full bg-indigo-200 text-indigo-800 font-bold text-lg flex items-center justify-center shrink-0">
             {profile.first_name[0]}{profile.last_name[0]}
           </div>
         </div>
 
         {/* Badges de synthèse */}
         <div className="flex gap-2 mt-3 flex-wrap">
-          <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full font-medium">
+          <span className="inline-flex items-center gap-1 text-xs bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded-full font-medium">
             🎯 {(axes ?? []).length} axe{(axes ?? []).length > 1 ? 's' : ''}
           </span>
-          <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1 rounded-full font-medium">
+          <span className="inline-flex items-center gap-1 text-xs bg-gray-200 text-gray-700 border border-gray-300 px-2.5 py-1 rounded-full font-medium">
             ⚡ {totalActions} action{totalActions > 1 ? 's' : ''}
           </span>
           {actionsThisWeek > 0 ? (
-            <span className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-semibold">
+            <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full font-semibold">
               +{actionsThisWeek} cette sem.
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs bg-gray-50 text-gray-400 border border-gray-200 px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-500 border border-gray-300 px-2.5 py-1 rounded-full">
               0 cette sem.
             </span>
           )}
-          <span className="inline-flex items-center gap-1 text-xs bg-sky-50 text-sky-700 border border-sky-100 px-2.5 py-1 rounded-full font-medium">
+          <span className="inline-flex items-center gap-1 text-xs bg-sky-100 text-sky-800 border border-sky-200 px-2.5 py-1 rounded-full font-medium">
             📅 {(checkins ?? []).length} check-in{(checkins ?? []).length > 1 ? 's' : ''}
           </span>
           {axesEnAction.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-1 rounded-full font-medium">
+            <span className="inline-flex items-center gap-1 text-xs bg-purple-100 text-purple-800 border border-purple-200 px-2.5 py-1 rounded-full font-medium">
               🚀 {axesEnAction.length} axe{axesEnAction.length > 1 ? 's' : ''} en action
             </span>
           )}
@@ -296,7 +296,7 @@ export default async function LearnerDetailPage({
                 <div
                   key={axe.id}
                   className={`rounded-xl border p-3 text-center ${
-                    dyn ? dyn.color : 'bg-gray-50 border-gray-200 text-gray-400'
+                    dyn ? dyn.color : 'bg-gray-100 border-gray-300 text-gray-500'
                   }`}
                 >
                   <p className="font-bold text-sm leading-snug line-clamp-2">{axe.subject}</p>

@@ -63,7 +63,7 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
       {/* Avatar */}
-      <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-semibold flex items-center justify-center text-sm shrink-0">
+      <div className="w-9 h-9 rounded-full bg-indigo-200 text-indigo-800 font-semibold flex items-center justify-center text-sm shrink-0">
         {learner.first_name[0]}{learner.last_name[0]}
       </div>
 
@@ -78,20 +78,20 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
         {learner.stats && (
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             {/* Axes */}
-            <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-full font-medium">
+            <span className="inline-flex items-center gap-1 text-xs bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full font-medium">
               🎯 <span>{learner.stats.axesCount} axe{learner.stats.axesCount > 1 ? 's' : ''}</span>
             </span>
             {/* Actions totales */}
-            <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 border border-gray-200 px-2 py-0.5 rounded-full font-medium">
+            <span className="inline-flex items-center gap-1 text-xs bg-gray-200 text-gray-700 border border-gray-300 px-2 py-0.5 rounded-full font-medium">
               ⚡ <span>{learner.stats.actionsTotal} action{learner.stats.actionsTotal > 1 ? 's' : ''}</span>
             </span>
             {/* Delta cette semaine */}
             {learner.stats.actionsThisWeek > 0 ? (
-              <span className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">
+              <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full font-semibold">
                 +{learner.stats.actionsThisWeek} cette sem.
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-xs bg-gray-50 text-gray-400 border border-gray-200 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-500 border border-gray-300 px-2 py-0.5 rounded-full">
                 0 cette sem.
               </span>
             )}
@@ -111,14 +111,14 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
             onClick={handleRemove}
             disabled={isPending}
             title="Retirer du groupe"
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
           >
             <UserMinus size={16} />
           </button>
         </div>
       ) : (
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs bg-amber-50 text-amber-600 border border-amber-200 px-2 py-1 rounded-full">
+          <span className="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-2 py-1 rounded-full">
             Non affecté
           </span>
           {groups.length > 0 && (
@@ -137,7 +137,7 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
                 onClick={handleAssign}
                 disabled={isPending || !selectedGroup}
                 title="Affecter au groupe"
-                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-40"
+                className="p-1.5 text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors disabled:opacity-40"
               >
                 <UserCheck size={16} />
               </button>
@@ -288,8 +288,8 @@ export default function ApprenantsClient({
                     </span>
                     <span className={`ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full border ${
                       totalUnassigned > 0
-                        ? 'text-amber-700 bg-amber-50 border-amber-200'
-                        : 'text-gray-400 bg-gray-50 border-gray-200'
+                        ? 'text-amber-800 bg-amber-100 border-amber-300'
+                        : 'text-gray-500 bg-gray-100 border-gray-300'
                     }`}>
                       {totalUnassigned}
                     </span>
@@ -304,10 +304,10 @@ export default function ApprenantsClient({
             <>
               {/* Non affectés en premier si existants */}
               {unassigned.length > 0 && (
-                <div className="card border-amber-100">
+                <div className="card border-amber-200">
                   <h2 className="section-title mb-3">
                     En attente d&apos;affectation
-                    <span className="ml-2 text-xs font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                    <span className="ml-2 text-xs font-normal bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">
                       {unassigned.length}
                     </span>
                   </h2>
@@ -375,10 +375,10 @@ export default function ApprenantsClient({
           {/* ── Vue non affectés ──────────────────────────────────────── */}
           {selectedOption === 'unassigned' && (
             unassigned.length > 0 ? (
-              <div className="card border-amber-100">
+              <div className="card border-amber-200">
                 <h2 className="section-title mb-3 text-amber-700">
                   ⚠️ En attente d&apos;affectation
-                  <span className="ml-2 text-xs font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                  <span className="ml-2 text-xs font-normal bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">
                     {unassigned.length}
                   </span>
                 </h2>

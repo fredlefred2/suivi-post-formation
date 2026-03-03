@@ -99,8 +99,8 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
                     href={href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'text-indigo-700 bg-indigo-50'
-                        : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-700'
+                        ? 'text-indigo-800 bg-indigo-100'
+                        : 'text-gray-500 hover:bg-indigo-100 hover:text-indigo-800'
                     }`}
                     style={isActive ? {
                       boxShadow: '0 2px 8px rgba(99, 102, 241, 0.12)',

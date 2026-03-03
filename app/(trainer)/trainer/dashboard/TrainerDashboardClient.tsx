@@ -278,8 +278,8 @@ export default function TrainerDashboardClient({
                 </span>
                 <span className={`ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full border ${
                   unassignedLearners.length > 0
-                    ? 'text-amber-700 bg-amber-50 border-amber-200'
-                    : 'text-gray-400 bg-gray-50 border-gray-200'
+                    ? 'text-amber-800 bg-amber-100 border-amber-300'
+                    : 'text-gray-500 bg-gray-100 border-gray-300'
                 }`}>
                   {unassignedLearners.length}
                 </span>
@@ -291,9 +291,9 @@ export default function TrainerDashboardClient({
 
       {/* ── Alerte apprenants non affectés ─────────────────────────────── */}
       {unassignedLearners.length > 0 && selectedOption !== 'unassigned' && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm">
+        <div className="flex items-center gap-3 px-4 py-3 bg-amber-100 border border-amber-300 rounded-xl text-sm">
           <span className="text-lg">⚠️</span>
-          <span className="text-amber-800">
+          <span className="text-amber-900">
             <strong>{unassignedLearners.length}</strong> apprenant{unassignedLearners.length > 1 ? 's' : ''} non affecté{unassignedLearners.length > 1 ? 's' : ''} à aucun groupe.
           </span>
           <button
@@ -309,21 +309,21 @@ export default function TrainerDashboardClient({
       <div className="grid grid-cols-3 gap-3">
         <Link
           href={`/trainer/apprenants?group=${selectedOption}`}
-          className="card text-center py-4 hover:border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer"
+          className="card text-center py-4 hover:border-indigo-300 hover:bg-indigo-100/60 transition-colors cursor-pointer"
         >
-          <p className="text-2xl font-bold text-indigo-600">{filteredLearnerIds.size}</p>
-          <p className="text-xs text-gray-500 mt-1">Apprenant{filteredLearnerIds.size > 1 ? 's' : ''}</p>
+          <p className="text-2xl font-bold text-indigo-700">{filteredLearnerIds.size}</p>
+          <p className="text-xs text-gray-600 mt-1">Apprenant{filteredLearnerIds.size > 1 ? 's' : ''}</p>
         </Link>
         <div className="card text-center py-4">
-          <p className="text-2xl font-bold text-emerald-600 leading-none">
+          <p className="text-2xl font-bold text-emerald-700 leading-none">
             {thisWeekCheckins.length}
             <span className="text-sm font-normal text-gray-400">/{filteredLearnerIds.size}</span>
           </p>
-          <p className="text-xs text-gray-500 mt-1">Check-ins S{currentWeek}</p>
+          <p className="text-xs text-gray-600 mt-1">Check-ins S{currentWeek}</p>
         </div>
         <div className="card text-center py-4">
-          <p className="text-2xl font-bold text-amber-600">{filteredActions.length}</p>
-          <p className="text-xs text-gray-500 mt-1">Actions menées</p>
+          <p className="text-2xl font-bold text-amber-700">{filteredActions.length}</p>
+          <p className="text-xs text-gray-600 mt-1">Actions menées</p>
         </div>
       </div>
 
@@ -348,7 +348,7 @@ export default function TrainerDashboardClient({
                       : 0
                     return (
                       <div key={key} className="relative group">
-                        <div className="flex items-center gap-3 rounded-lg px-3 py-2 bg-gray-50">
+                        <div className="flex items-center gap-3 rounded-lg px-3 py-2 bg-gray-100">
                           <span className="text-xl">{emoji}</span>
                           <span className="font-bold text-gray-800">{count}</span>
                           <span className="text-xs text-gray-400">({pct}%)</span>
@@ -442,26 +442,26 @@ export default function TrainerDashboardClient({
       {/* ── Liste non affectés ─────────────────────────────────────────── */}
       {selectedOption === 'unassigned' && (
         unassignedLearners.length > 0 ? (
-          <div className="card border-amber-100">
-            <h2 className="section-title mb-3 text-amber-700">⚠️ Apprenants non affectés</h2>
+          <div className="card border-amber-200">
+            <h2 className="section-title mb-3 text-amber-800">⚠️ Apprenants non affectés</h2>
             <div className="space-y-2">
               {unassignedLearners.map((l) => (
                 <div key={l.id}>
-                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-100">
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-amber-100 border border-amber-200">
                     <span className="text-sm font-medium text-gray-800">
                       {l.first_name} {l.last_name}
                     </span>
                     <div className="ml-auto flex items-center gap-2">
                       <button
                         onClick={() => setAssigningLearnerId(assigningLearnerId === l.id ? null : l.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-indigo-800 bg-indigo-100 border border-indigo-300 rounded-lg hover:bg-indigo-200 transition-colors"
                       >
                         <UserPlus size={14} />
                         Affecter
                       </button>
                       <button
                         onClick={() => setDeletingLearnerId(l.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-lg hover:bg-red-200 transition-colors"
                       >
                         <Trash2 size={14} />
                         Supprimer
@@ -573,7 +573,7 @@ export default function TrainerDashboardClient({
                     className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
                   >
                     {/* Avatar initiales */}
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                       {initials}
                     </div>
 
@@ -585,7 +585,7 @@ export default function TrainerDashboardClient({
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         <span className="text-xs text-gray-500 font-medium">{action.learner_name}</span>
                         <span className="text-gray-300 text-xs">·</span>
-                        <span className="text-xs bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full">
+                        <span className="text-xs bg-indigo-100 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded-full">
                           {action.axe_subject}
                         </span>
                         <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">

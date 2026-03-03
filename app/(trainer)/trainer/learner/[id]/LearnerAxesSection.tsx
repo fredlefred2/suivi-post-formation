@@ -18,10 +18,10 @@ type Dynamique = { label: string; icon: string; color: string } | null
 
 function getDynamique(count: number): Dynamique {
   if (count === 0) return null
-  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-700   bg-teal-50   border-teal-200'   }
-  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-700   bg-blue-50   border-blue-200'   }
-  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-700 bg-orange-50 border-orange-200' }
-  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-700 bg-purple-50 border-purple-200' }
+  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-800   bg-teal-100  border-teal-300'   }
+  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-800   bg-blue-100  border-blue-300'   }
+  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-800 bg-orange-100 border-orange-300' }
+  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-800 bg-purple-100 border-purple-300' }
 }
 
 function shortDate(dateStr: string) {
@@ -75,7 +75,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
               {/* Dynamique */}
               <div
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold shrink-0 ${
-                  dyn ? dyn.color : 'bg-gray-50 border-gray-200 text-gray-400'
+                  dyn ? dyn.color : 'bg-gray-100 border-gray-300 text-gray-500'
                 }`}
               >
                 <span className="text-base leading-none">{dyn ? dyn.icon : '📍'}</span>
@@ -95,7 +95,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
                 <ul className="space-y-2">
                   {actions.map((action) => (
                     <li key={action.id} className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-[7px]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-[7px]" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-700">{action.description}</p>
                         <div className="flex items-center gap-2 mt-0.5">

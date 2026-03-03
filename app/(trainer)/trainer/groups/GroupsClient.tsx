@@ -155,7 +155,7 @@ export default function GroupsClient({
                                   reassigningLearnerId === m.learner_id ? null : m.learner_id
                                 )}
                                 disabled={isPending}
-                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-indigo-800 bg-indigo-100 border border-indigo-300 rounded-lg hover:bg-indigo-200 transition-colors disabled:opacity-50"
                               >
                                 <UserPlus size={14} />
                                 Affecter
@@ -166,7 +166,7 @@ export default function GroupsClient({
                                   setDeletingLearnerGroupId(group.id)
                                 }}
                                 disabled={isPending}
-                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
                               >
                                 <Trash2 size={14} />
                                 Supprimer
