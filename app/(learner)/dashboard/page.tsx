@@ -140,11 +140,12 @@ export default async function DashboardPage() {
                   href={`/axes?index=${index}`}
                   className={`card p-3 text-center block hover:shadow-md transition-all ${dyn.color}`}
                 >
-                  <span className="text-3xl">{dyn.icon}</span>
-                  <p className="font-semibold text-sm mt-1.5">{dyn.label}</p>
-                  <p className="text-xs mt-1 leading-snug line-clamp-2 opacity-80">{axe.subject}</p>
+                  <p className="font-bold text-sm leading-snug line-clamp-2">{axe.subject}</p>
                   <p className="text-xs mt-1.5 font-medium">
                     {completedCount} action{completedCount !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-xs mt-1.5 opacity-80">
+                    {dyn.icon} {dyn.label}
                   </p>
                 </Link>
               )

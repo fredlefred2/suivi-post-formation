@@ -299,11 +299,12 @@ export default async function LearnerDetailPage({
                     dyn ? dyn.color : 'bg-gray-50 border-gray-200 text-gray-400'
                   }`}
                 >
-                  <span className="text-3xl">{dyn ? dyn.icon : '📍'}</span>
-                  <p className="font-semibold text-sm mt-1.5">{dyn ? dyn.label : 'Ancrage'}</p>
-                  <p className="text-xs mt-0.5 leading-snug line-clamp-2 opacity-80">{axe.subject}</p>
-                  <p className="text-xs mt-1 font-medium">
+                  <p className="font-bold text-sm leading-snug line-clamp-2">{axe.subject}</p>
+                  <p className="text-xs mt-1.5 font-medium">
                     {actionsCount} action{actionsCount > 1 ? 's' : ''}
+                  </p>
+                  <p className="text-xs mt-1.5 opacity-80">
+                    {dyn ? dyn.icon : '📍'} {dyn ? dyn.label : 'Ancrage'}
                   </p>
                 </div>
               )
