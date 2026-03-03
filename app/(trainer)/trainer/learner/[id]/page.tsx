@@ -1,16 +1,14 @@
 export const dynamic = 'force-dynamic'
 
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { formatWeek, formatDate } from '@/lib/utils'
+import { formatWeek } from '@/lib/utils'
 import {
   WEATHER_LABELS,
   WEATHER_COLORS,
 } from '@/lib/types'
 import type { ActionFeedbackData } from '@/lib/types'
-import LearnerChart from './LearnerChart'
 import LearnerNav from './LearnerNav'
 import LearnerAxesSection from './LearnerAxesSection'
 
@@ -33,7 +31,6 @@ function shortDate(dateStr: string) {
 }
 
 type ActionRow = { id: string; description: string; completed: boolean; created_at: string }
-type ScoreRow  = { score: number; week_number: number; year: number }
 
 export default async function LearnerDetailPage({
   params,
@@ -62,7 +59,7 @@ export default async function LearnerDetailPage({
     { data: checkins },
   ] = await Promise.all([
     supabase.from('profiles').select('first_name, last_name, created_at').eq('id', params.id).single(),
-    supabase.from('axes').select('*, actions(*), axis_scores(*)').eq('learner_id', params.id).order('created_at'),
+    supabase.from('axes').select('*, actions(*)').eq('learner_id', params.id).order('created_at'),
     supabase.from('checkins').select('*').eq('learner_id', params.id).order('year').order('week_number'),
   ])
 
@@ -125,14 +122,6 @@ export default async function LearnerDetailPage({
   const prevUrl = prevLearner ? buildLearnerUrl(prevLearner.id) : null
   const nextUrl = nextLearner ? buildLearnerUrl(nextLearner.id) : null
   const allUrls = learnersInGroup.map((l) => buildLearnerUrl(l.id))
-
-  // ── Lien retour ───────────────────────────────────────────────────────────
-  const backHref =
-    searchParams.from === 'apprenants'
-      ? '/trainer/dashboard'
-      : groupId
-      ? `/trainer/groups/${groupId}`
-      : '/trainer/groups'
 
   // ── Actions de la semaine ───────────────────────────────────────────────────
   const now = new Date()
@@ -197,37 +186,14 @@ export default async function LearnerDetailPage({
   const totalActions = (axes ?? []).reduce((sum, a) => sum + (a.actions as ActionRow[]).length, 0)
   const axesEnAction = (axes ?? []).filter((a) => getDynamique((a.actions as ActionRow[]).length))
 
-  // ── Données graphique ─────────────────────────────────────────────────────
-  const chartData = (checkins ?? []).map((ci) => {
-    const point: Record<string, unknown> = {
-      label: `S${ci.week_number}`,
-      week: ci.week_number,
-      year: ci.year,
-    }
-    for (const axe of axes ?? []) {
-      const score = (axe.axis_scores as ScoreRow[])
-        ?.find((s) => s.week_number === ci.week_number && s.year === ci.year)
-      if (score) point[axe.subject.substring(0, 15)] = score.score
-    }
-    return point
-  })
-  const axeNames = (axes ?? []).map((a) => a.subject.substring(0, 15))
-
   // ── Météo count pour résumé ───────────────────────────────────────────────
   const weatherCount = {
     sunny:  (checkins ?? []).filter((c) => c.weather === 'sunny').length,
     cloudy: (checkins ?? []).filter((c) => c.weather === 'cloudy').length,
     stormy: (checkins ?? []).filter((c) => c.weather === 'stormy').length,
   }
-  const groupName = (membership.groups as unknown as { name: string })?.name
-
   return (
     <div className="space-y-6 pb-4">
-
-      {/* ── Bouton retour ───────────────────────────────────────────────────── */}
-      <Link href={backHref} className="text-sm text-indigo-600 hover:underline inline-block">
-        ← {searchParams.from === 'apprenants' ? 'Tableau de bord' : 'Retour'}
-      </Link>
 
       {/* ── Carousel + contenu ──────────────────────────────────────────────── */}
       <LearnerNav
@@ -243,24 +209,20 @@ export default async function LearnerDetailPage({
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-indigo-200 text-indigo-800 font-bold text-lg flex items-center justify-center shrink-0">
+            {profile.first_name[0]}{profile.last_name[0]}
+          </div>
           <div>
             <h1 className="page-title">{profile.first_name} {profile.last_name}</h1>
             <p className="text-xs text-gray-400 mt-0.5">
-              Groupe : <span className="font-medium text-gray-600">{groupName}</span>
-              &nbsp;·&nbsp;Membre depuis le {shortDate(profile.created_at)}
+              Membre depuis le {shortDate(profile.created_at)}
             </p>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-indigo-200 text-indigo-800 font-bold text-lg flex items-center justify-center shrink-0">
-            {profile.first_name[0]}{profile.last_name[0]}
           </div>
         </div>
 
         {/* Badges de synthèse */}
         <div className="flex gap-2 mt-3 flex-wrap">
-          <span className="inline-flex items-center gap-1 text-xs bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded-full font-medium">
-            🎯 {(axes ?? []).length} axe{(axes ?? []).length > 1 ? 's' : ''}
-          </span>
           <span className="inline-flex items-center gap-1 text-xs bg-gray-200 text-gray-700 border border-gray-300 px-2.5 py-1 rounded-full font-medium">
             ⚡ {totalActions} action{totalActions > 1 ? 's' : ''}
           </span>
@@ -310,17 +272,6 @@ export default async function LearnerDetailPage({
               )
             })}
           </div>
-          <p className="text-xs text-gray-400 mt-3 text-center">
-            📍 Ancrage &nbsp;·&nbsp; 👣 Impulsion ≤ 2 &nbsp;·&nbsp; 🥁 Rythme ≤ 5 &nbsp;·&nbsp; 🔥 Intensité ≤ 8 &nbsp;·&nbsp; 🚀 Propulsion &gt; 8
-          </p>
-        </div>
-      )}
-
-      {/* ── Graphique d'évolution ────────────────────────────────────────────── */}
-      {chartData.length > 1 && axeNames.length > 0 && (
-        <div className="card">
-          <h2 className="section-title mb-4">📈 Évolution des scores</h2>
-          <LearnerChart data={chartData} axeNames={axeNames} />
         </div>
       )}
 
