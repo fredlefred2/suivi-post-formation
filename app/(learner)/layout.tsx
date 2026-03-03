@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/(auth)/actions'
 import { LayoutDashboard, Target, ClipboardCheck, History, LogOut } from 'lucide-react'
 import MobileDrawer from '@/app/components/MobileDrawer'
+import BottomNav from '@/app/components/BottomNav'
 
 const navItems = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
@@ -49,7 +50,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
             </span>
           </div>
           <form action={logout}>
-            <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg">
+            <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">
               <LogOut size={18} />
             </button>
           </form>
@@ -63,7 +64,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
         <nav className="space-y-1 px-3">
           {navItems.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}
-              className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-500 hover:text-indigo-800 hover:bg-indigo-100 rounded-xl transition-all duration-200 font-medium group">
+              className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-500 hover:text-indigo-800 hover:bg-indigo-100 rounded-xl transition-all duration-200 font-medium group active:scale-[0.97]">
               <Icon size={17} className="text-gray-400 group-hover:text-indigo-600 transition-colors" />
               {label}
             </Link>
@@ -78,20 +79,11 @@ export default async function LearnerLayout({ children }: { children: React.Reac
         </div>
       </main>
 
-      {/* ── Bottom nav mobile (fond noir) ── */}
-      <nav className="bg-gray-950 sm:hidden fixed bottom-0 left-0 right-0 z-10" style={{
-        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)',
-      }}>
-        <div className="flex">
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href}
-              className="flex-1 flex flex-col items-center py-2.5 text-xs text-gray-400 hover:text-white transition-all font-medium">
-              <Icon size={20} />
-              <span className="mt-0.5">{label === 'Mes actions' ? 'Actions' : label.split(' ').pop()}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
+      {/* ── Bottom nav mobile (fond noir + active state) ── */}
+      <BottomNav items={navItems.map((item) => ({
+        ...item,
+        shortLabel: item.label === 'Mes actions' ? 'Actions' : item.label === 'Tableau de bord' ? 'Accueil' : item.label,
+      }))} />
       <div className="h-16 sm:hidden" />
     </div>
   )

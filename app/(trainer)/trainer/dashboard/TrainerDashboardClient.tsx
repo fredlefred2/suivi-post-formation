@@ -327,6 +327,40 @@ export default function TrainerDashboardClient({
         </div>
       </div>
 
+      {/* ── KPIs par groupe ──────────────────────────────────────────── */}
+      {selectedOption === 'all' && groups.length > 1 && (
+        <div className="card">
+          <h2 className="section-title mb-3">Vue par groupe</h2>
+          <div className="space-y-2">
+            {groups.map((g) => {
+              const memberIds = new Set(g.members.map((m) => m.learner_id))
+              const groupCheckins = thisWeekCheckins.filter((c) => memberIds.has(c.learner_id))
+              const checkinPct = memberIds.size > 0 ? Math.round((groupCheckins.length / memberIds.size) * 100) : 0
+              const groupActions = actions.filter((a) => memberIds.has(a.learner_id))
+              const avgActions = memberIds.size > 0 ? (groupActions.length / memberIds.size).toFixed(1) : '0'
+              return (
+                <div key={g.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 hover:bg-indigo-50 transition-colors">
+                  <span className="text-sm font-medium text-gray-800 flex-1 truncate">{g.name}</span>
+                  <span className="text-xs text-gray-500">{memberIds.size} app.</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{
+                        width: `${checkinPct}%`,
+                        background: checkinPct === 100 ? '#10b981' : checkinPct > 50 ? '#f59e0b' : '#ef4444',
+                      }} />
+                    </div>
+                    <span className="text-xs font-semibold w-8 text-right" style={{
+                      color: checkinPct === 100 ? '#059669' : checkinPct > 50 ? '#d97706' : '#dc2626',
+                    }}>{checkinPct}%</span>
+                  </div>
+                  <span className="text-xs text-gray-400 w-16 text-right">{avgActions} act/app</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Tendance météo ─────────────────────────────────────────────── */}
       {selectedOption !== 'unassigned' && (
         hasAnyCheckin ? (() => {

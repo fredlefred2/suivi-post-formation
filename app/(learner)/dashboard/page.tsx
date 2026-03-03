@@ -83,6 +83,39 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Barre de progression globale */}
+      {(() => {
+        const axesCount = axes?.length ?? 0
+        const steps = [
+          { label: 'Axes définis', done: axesCount >= 3 },
+          { label: 'Première action', done: totalCompletedActions > 0 },
+          { label: 'Premier check-in', done: totalCheckins > 0 },
+        ]
+        const doneCount = steps.filter((s) => s.done).length
+        const pct = Math.round((doneCount / steps.length) * 100)
+        return pct < 100 ? (
+          <div className="card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold text-gray-700">Votre progression</p>
+              <span className="text-xs font-bold text-indigo-600">{pct}%</span>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-500" style={{
+                width: `${pct}%`,
+                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7)',
+              }} />
+            </div>
+            <div className="flex gap-4 mt-2.5">
+              {steps.map((s, i) => (
+                <span key={i} className={`text-xs ${s.done ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
+                  {s.done ? '✓' : '○'} {s.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null
+      })()}
+
       {/* Badges stats */}
       <div className="grid grid-cols-3 gap-3">
         <Link href="/axes" className="card text-center py-4 px-2 hover:border-indigo-300 hover:bg-indigo-100/60 transition-colors">
@@ -110,11 +143,27 @@ export default async function DashboardPage() {
 
       {/* Axes de progrès */}
       {!axes || axes.length === 0 ? (
-        <div className="card text-center py-8">
-          <p className="text-gray-500 text-sm mb-3">
-            Vous n&apos;avez pas encore défini vos axes de progrès
-          </p>
-          <Link href="/axes" className="btn-primary">Définir mes 3 axes</Link>
+        <div className="card text-center py-8 space-y-4">
+          <div className="text-5xl">🚀</div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">Bienvenue sur Progress +</h2>
+            <p className="text-sm text-gray-500 mt-1">Pour commencer, definissez vos 3 axes de progres.</p>
+          </div>
+          <div className="flex flex-col gap-2 text-left max-w-xs mx-auto">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">1</span>
+              <span className="text-gray-600">Choisissez 3 axes de progres</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 font-bold text-xs flex items-center justify-center shrink-0">2</span>
+              <span className="text-gray-400">Ajoutez des actions concretes</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 font-bold text-xs flex items-center justify-center shrink-0">3</span>
+              <span className="text-gray-400">Faites votre check-in chaque vendredi</span>
+            </div>
+          </div>
+          <Link href="/axes" className="btn-primary">Definir mes axes</Link>
         </div>
       ) : (
         <div className="space-y-3">
