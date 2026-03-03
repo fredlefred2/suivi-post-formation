@@ -46,11 +46,7 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className={`sm:hidden p-2 rounded-xl transition-all duration-200 ${
-          isTrainer
-            ? 'text-indigo-200 hover:text-white hover:bg-white/15'
-            : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
-        }`}
+        className="sm:hidden p-2 rounded-xl transition-all duration-200 text-indigo-200 hover:text-white hover:bg-white/15"
         aria-label="Ouvrir le menu"
       >
         <Menu size={22} />
@@ -68,21 +64,14 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
           }}>
             {/* En-tête */}
             <div className="flex items-center justify-between px-5 h-16" style={{
-              background: isTrainer
-                ? 'linear-gradient(135deg, #1e1b4b, #4338ca)'
-                : '#ffffff',
-              borderBottom: isTrainer ? 'none' : '1px solid #e5e7eb',
+              background: 'linear-gradient(135deg, #1e1b4b, #4338ca)',
             }}>
-              <span className={`font-semibold text-sm tracking-tight ${isTrainer ? 'text-white' : 'text-gray-900'}`}>
-                {isTrainer ? '🧑‍🏫 Navigation' : '🎯 Navigation'}
+              <span className="font-semibold text-sm tracking-tight text-white">
+                {isTrainer ? '🧑‍🏫 Navigation' : '🚀 Navigation'}
               </span>
               <button
                 onClick={() => setOpen(false)}
-                className={`p-2 rounded-xl transition-all duration-200 ${
-                  isTrainer
-                    ? 'text-indigo-200 hover:text-white hover:bg-white/15'
-                    : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
-                }`}
+                className="p-2 rounded-xl transition-all duration-200 text-indigo-200 hover:text-white hover:bg-white/15"
                 aria-label="Fermer le menu"
               >
                 <X size={20} />

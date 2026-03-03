@@ -30,9 +30,9 @@ export default function LoginPage() {
 
       <div className="w-full max-w-sm relative z-10 animate-fade-in">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4 drop-shadow-lg">🎯</div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Suivi post-formation</h1>
-          <p className="text-sm text-indigo-200/70 mt-1.5">Connectez-vous pour continuer</p>
+          <div className="text-5xl mb-4 drop-shadow-lg">🚀</div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Progress +</h1>
+          <p className="text-sm text-indigo-200/70 mt-1.5">Transformez vos formations en actions concrètes</p>
         </div>
 
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-glass-lg border border-white/20 p-6">

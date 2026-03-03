@@ -9,8 +9,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Suivi post-formation',
-  description: 'Suivez votre progression après votre formation en management',
+  title: 'Progress +',
+  description: 'Transformez vos formations en actions concrètes',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

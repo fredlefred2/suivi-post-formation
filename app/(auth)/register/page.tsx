@@ -43,9 +43,9 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-sm relative z-10 animate-fade-in">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4 drop-shadow-lg">🎯</div>
+          <div className="text-5xl mb-4 drop-shadow-lg">🚀</div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Créer un compte</h1>
-          <p className="text-sm text-indigo-200/70 mt-1.5">Rejoignez le suivi post-formation</p>
+          <p className="text-sm text-indigo-200/70 mt-1.5">Rejoignez Progress + et passez à l&apos;action</p>
         </div>
 
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-glass-lg border border-white/20 p-6">

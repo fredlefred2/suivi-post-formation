@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentWeek, formatWeek } from '@/lib/utils'
+import { getCurrentWeek, formatWeek, expectedCheckins } from '@/lib/utils'
 import { WEATHER_LABELS, DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import { AlertCircle, Target, Zap, CalendarCheck } from 'lucide-react'
 import type { Difficulty } from '@/lib/types'
@@ -54,10 +54,8 @@ export default async function DashboardPage() {
   const checkinDone = !!thisWeekCheckin
   const totalCheckins = allCheckins?.length ?? 0
 
-  // Semaines écoulées depuis l'inscription (minimum 1)
-  const weeksSinceStart = profile?.created_at
-    ? Math.max(1, Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1)
-    : 1
+  // Nombre de check-ins attendus (basé sur le 2e vendredi après inscription)
+  const expected = profile?.created_at ? expectedCheckins(profile.created_at) : 0
 
   // Total actions menées — toutes les actions sont considérées comme menées
   const totalCompletedActions = axes?.reduce((acc, axe) => {
@@ -104,7 +102,7 @@ export default async function DashboardPage() {
           <CalendarCheck className="mx-auto text-emerald-600 mb-1.5" size={20} />
           <p className="text-2xl font-bold text-emerald-700 leading-none">
             {totalCheckins}
-            <span className="text-sm font-normal text-gray-400">/{weeksSinceStart}</span>
+            {expected > 0 && <span className="text-sm font-normal text-gray-400">/{expected}</span>}
           </p>
           <p className="text-xs text-gray-600 mt-1">Check-ins</p>
         </Link>
@@ -154,12 +152,12 @@ export default async function DashboardPage() {
             {checkinDone && (() => {
               const today = new Date()
               const dayOfWeek = today.getDay()
-              const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek
-              const nextMonday = new Date(today)
-              nextMonday.setDate(today.getDate() + daysUntilMonday)
+              const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7
+              const nextFriday = new Date(today)
+              nextFriday.setDate(today.getDate() + daysUntilFriday)
               return (
                 <p className="text-sm text-gray-500 mb-3">
-                  ✅ Check-in de cette semaine effectué — Prochain : <span className="font-medium text-gray-700">{nextMonday.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                  ✅ Check-in de cette semaine effectué — Prochain : <span className="font-medium text-gray-700">{nextFriday.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                 </p>
               )
             })()}

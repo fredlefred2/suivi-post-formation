@@ -33,22 +33,23 @@ export default async function LearnerLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ── Header blanc + barre gradient visible ── */}
-      <header className="bg-white sticky top-0 z-10" style={{
-        boxShadow: '0 2px 15px rgba(99, 102, 241, 0.08)',
+      {/* ── Header gradient violet (même style que formateur) ── */}
+      <header className="text-white sticky top-0 z-10" style={{
+        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 60%, #6366f1 100%)',
+        boxShadow: '0 4px 20px rgba(49, 46, 129, 0.3)',
       }}>
-        <div className="h-1" style={{
-          background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899, #f59e0b)',
-        }} />
         <div className="px-4 h-14 flex items-center justify-between sm:pl-52">
           <div className="flex items-center gap-1">
             <MobileDrawer variant="learner" />
-            <span className="font-semibold text-gray-900 text-sm tracking-tight">
-              🎯 {profile.first_name} {profile.last_name}
+            <span className="font-semibold text-sm tracking-tight">
+              {profile.first_name} {profile.last_name}
+              <span className="ml-2 text-xs bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full font-medium border border-white/20">
+                Apprenant
+              </span>
             </span>
           </div>
           <form action={logout}>
-            <button type="submit" className="text-gray-400 hover:text-gray-600 transition-all p-2 hover:bg-gray-100 rounded-lg">
+            <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg">
               <LogOut size={18} />
             </button>
           </form>
@@ -56,7 +57,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
       </header>
 
       {/* ── Sidebar desktop ── */}
-      <div className="hidden sm:block fixed left-0 top-[3.75rem] bottom-0 w-48 bg-white border-r border-indigo-100 pt-6" style={{
+      <div className="hidden sm:block fixed left-0 top-14 bottom-0 w-48 bg-white border-r border-indigo-100 pt-6" style={{
         boxShadow: '4px 0 20px rgba(99, 102, 241, 0.06)',
       }}>
         <nav className="space-y-1 px-3">
@@ -77,16 +78,16 @@ export default async function LearnerLayout({ children }: { children: React.Reac
         </div>
       </main>
 
-      {/* ── Bottom nav mobile ── */}
-      <nav className="bg-white border-t border-indigo-100 sm:hidden fixed bottom-0 left-0 right-0 z-10" style={{
-        boxShadow: '0 -4px 20px rgba(99, 102, 241, 0.08)',
+      {/* ── Bottom nav mobile (fond noir) ── */}
+      <nav className="bg-gray-950 sm:hidden fixed bottom-0 left-0 right-0 z-10" style={{
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)',
       }}>
         <div className="flex">
           {navItems.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}
-              className="flex-1 flex flex-col items-center py-2.5 text-xs text-gray-400 hover:text-indigo-700 transition-all font-medium">
+              className="flex-1 flex flex-col items-center py-2.5 text-xs text-gray-400 hover:text-white transition-all font-medium">
               <Icon size={20} />
-              <span className="mt-0.5">{label.split(' ')[0]}</span>
+              <span className="mt-0.5">{label === 'Mes actions' ? 'Actions' : label.split(' ').pop()}</span>
             </Link>
           ))}
         </div>

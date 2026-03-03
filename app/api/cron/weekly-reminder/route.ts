@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { secondFridayAfter } from '@/lib/utils'
 
-// Route protégée par un secret — appelée par Vercel Cron chaque vendredi
+// Route protégée par un secret — appelée par Vercel Cron chaque vendredi à 9h
 export async function GET(request: NextRequest) {
   // Vérification du secret
   const authHeader = request.headers.get('authorization')
@@ -28,14 +29,16 @@ export async function GET(request: NextRequest) {
   const currentWeek = Math.floor((now.getTime() - startOfWeek1.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1
   const currentYear = now.getFullYear()
 
-  // Récupérer tous les apprenants inscrits depuis ≥ 2 semaines
-  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
-
-  const { data: learners } = await supabase
+  // Récupérer tous les apprenants et filtrer ceux dont le 2e vendredi est passé
+  const { data: allLearners } = await supabase
     .from('profiles')
     .select('id, first_name, last_name, created_at')
     .eq('role', 'learner')
-    .lte('created_at', twoWeeksAgo.toISOString())
+
+  const learners = (allLearners ?? []).filter((l) => {
+    const firstEligible = secondFridayAfter(l.created_at)
+    return now >= firstEligible
+  })
 
   if (!learners || learners.length === 0) {
     return NextResponse.json({ message: 'Aucun apprenant éligible', sent: 0 })
