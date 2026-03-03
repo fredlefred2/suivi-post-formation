@@ -138,10 +138,6 @@ export default async function DashboardPage() {
               dyn: getDynamique(((axe.actions as { id: string }[]) ?? []).length),
             }))}
           />
-
-          <p className="text-xs text-gray-400 text-center">
-            📍 Ancrage &nbsp;·&nbsp; 👣 Impulsion ≤ 2 &nbsp;·&nbsp; 🥁 Rythme ≤ 5 &nbsp;·&nbsp; 🔥 Intensité ≤ 8 &nbsp;·&nbsp; 🚀 Propulsion &gt; 8
-          </p>
         </div>
       )}
 
