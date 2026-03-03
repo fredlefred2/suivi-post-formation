@@ -7,9 +7,9 @@ import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 
 const navItems = [
-  { href: '/trainer/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-  { href: '/trainer/apprenants', label: 'Apprenants', icon: GraduationCap },
-  { href: '/trainer/groups', label: 'Groupes', icon: Users },
+  { href: '/trainer/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
+  { href: '/trainer/apprenants', label: 'Apprenants', icon: GraduationCap, iconName: 'GraduationCap' },
+  { href: '/trainer/groups', label: 'Groupes', icon: Users, iconName: 'Users' },
 ]
 
 export default async function TrainerLayout({ children }: { children: React.ReactNode }) {
@@ -79,9 +79,11 @@ export default async function TrainerLayout({ children }: { children: React.Reac
       </main>
 
       {/* ── Bottom nav mobile (fond noir + active state) ── */}
-      <BottomNav items={navItems.map((item) => ({
-        ...item,
-        shortLabel: item.label === 'Tableau de bord' ? 'Accueil' : item.label,
+      <BottomNav items={navItems.map(({ href, label, iconName }) => ({
+        href,
+        label,
+        iconName,
+        shortLabel: label === 'Tableau de bord' ? 'Accueil' : label,
       }))} />
       <div className="h-16 sm:hidden" />
     </div>

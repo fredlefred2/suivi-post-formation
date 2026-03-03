@@ -2,13 +2,26 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import {
+  LayoutDashboard, Target, ClipboardCheck, History,
+  Users, GraduationCap,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+
+const iconMap: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Target,
+  ClipboardCheck,
+  History,
+  Users,
+  GraduationCap,
+}
 
 type NavItem = {
   href: string
   label: string
   shortLabel?: string
-  icon: LucideIcon
+  iconName: string
 }
 
 export default function BottomNav({ items }: { items: NavItem[] }) {
@@ -19,8 +32,10 @@ export default function BottomNav({ items }: { items: NavItem[] }) {
       boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)',
     }}>
       <div className="flex">
-        {items.map(({ href, label, shortLabel, icon: Icon }) => {
+        {items.map(({ href, label, shortLabel, iconName }) => {
+          const Icon = iconMap[iconName]
           const isActive = pathname === href || pathname.startsWith(href + '/')
+          if (!Icon) return null
           return (
             <Link key={href} href={href}
               className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-all duration-150 font-medium active:scale-90 ${

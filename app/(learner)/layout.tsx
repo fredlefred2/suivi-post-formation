@@ -7,10 +7,10 @@ import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 
 const navItems = [
-  { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-  { href: '/axes', label: 'Mes actions', icon: Target },
-  { href: '/checkin', label: 'Check-in', icon: ClipboardCheck },
-  { href: '/history', label: 'Historique', icon: History },
+  { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
+  { href: '/axes', label: 'Mes actions', icon: Target, iconName: 'Target' },
+  { href: '/checkin', label: 'Check-in', icon: ClipboardCheck, iconName: 'ClipboardCheck' },
+  { href: '/history', label: 'Historique', icon: History, iconName: 'History' },
 ]
 
 export default async function LearnerLayout({ children }: { children: React.ReactNode }) {
@@ -80,9 +80,11 @@ export default async function LearnerLayout({ children }: { children: React.Reac
       </main>
 
       {/* ── Bottom nav mobile (fond noir + active state) ── */}
-      <BottomNav items={navItems.map((item) => ({
-        ...item,
-        shortLabel: item.label === 'Mes actions' ? 'Actions' : item.label === 'Tableau de bord' ? 'Accueil' : item.label,
+      <BottomNav items={navItems.map(({ href, label, iconName }) => ({
+        href,
+        label,
+        iconName,
+        shortLabel: label === 'Mes actions' ? 'Actions' : label === 'Tableau de bord' ? 'Accueil' : label,
       }))} />
       <div className="h-16 sm:hidden" />
     </div>
