@@ -6,6 +6,7 @@ import { getCurrentWeek, formatWeek } from '@/lib/utils'
 import { WEATHER_LABELS, DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import { AlertCircle, Target, Zap, CalendarCheck } from 'lucide-react'
 import type { Difficulty } from '@/lib/types'
+import AxesCarousel from './AxesCarousel'
 
 const WEATHER_ICONS: Record<string, string> = {
   sunny: '☀️',
@@ -128,29 +129,15 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <div className={`grid gap-3 ${axes.length === 1 ? 'grid-cols-1' : axes.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {axes.map((axe, index) => {
-              const actions = (axe.actions as { id: string }[]) ?? []
-              const completedCount = actions.length
-              const dyn = getDynamique(completedCount)
-
-              return (
-                <Link
-                  key={axe.id}
-                  href={`/axes?index=${index}`}
-                  className={`card p-3 text-center block hover:shadow-md transition-all ${dyn.color}`}
-                >
-                  <p className="font-bold text-sm leading-snug line-clamp-2">{axe.subject}</p>
-                  <p className="text-xs mt-1.5 font-medium">
-                    {completedCount} action{completedCount !== 1 ? 's' : ''}
-                  </p>
-                  <p className="text-xs mt-1.5 opacity-80">
-                    {dyn.icon} {dyn.label}
-                  </p>
-                </Link>
-              )
-            })}
-          </div>
+          <AxesCarousel
+            axes={axes.map((axe, index) => ({
+              id: axe.id,
+              index,
+              subject: axe.subject,
+              completedCount: ((axe.actions as { id: string }[]) ?? []).length,
+              dyn: getDynamique(((axe.actions as { id: string }[]) ?? []).length),
+            }))}
+          />
 
           <p className="text-xs text-gray-400 text-center">
             📍 Ancrage &nbsp;·&nbsp; 👣 Impulsion ≤ 2 &nbsp;·&nbsp; 🥁 Rythme ≤ 5 &nbsp;·&nbsp; 🔥 Intensité ≤ 8 &nbsp;·&nbsp; 🚀 Propulsion &gt; 8
