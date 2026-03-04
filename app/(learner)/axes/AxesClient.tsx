@@ -2,7 +2,7 @@
 
 import { useState, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Trash2, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
 import { createAxe, deleteAxe, createAction, updateAction, deleteAction } from './actions'
 import type { Axe, Action, ActionFeedbackData } from '@/lib/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
@@ -90,8 +90,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     })
   }
 
-  const scoreLabels = ['', 'Débutant', 'En cours', 'Intermédiaire', 'Avancé', 'Expert']
-
   const currentAxe = axes[safeIndex]
 
   return (
@@ -146,20 +144,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                     <div className={`text-center py-3 border-2 rounded-lg transition-all border-gray-200 peer-checked:border-current peer-checked:${DIFFICULTY_COLORS[d]}`}>
                       <p className="text-sm font-semibold">{DIFFICULTY_LABELS[d]}</p>
                     </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="label">Autopositionnement initial (1 = débutant, 5 = expert) *</label>
-              <div className="flex gap-2 mt-1">
-                {[1, 2, 3, 4, 5].map((v) => (
-                  <label key={v} className="flex-1 cursor-pointer">
-                    <input type="radio" name="initial_score" value={v} required className="sr-only peer" />
-                    <div className="text-center py-2 border-2 border-gray-200 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-100 peer-checked:text-indigo-800 font-semibold transition-all">
-                      {v}
-                    </div>
-                    <p className="text-xs text-center text-gray-400 mt-1">{scoreLabels[v]}</p>
                   </label>
                 ))}
               </div>
@@ -288,26 +272,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                     </button>
                   </div>
 
-                  {/* Formulaire d'ajout */}
-                  {addActionAxeId === currentAxe.id && (
-                    <form onSubmit={(e) => handleCreateAction(e, currentAxe.id)} className="flex gap-2 mb-3">
-                      <input
-                        name="description"
-                        required
-                        className="input flex-1"
-                        placeholder="Décrivez l'action menée..."
-                        autoFocus
-                      />
-                      <button type="submit" disabled={isPending} className="btn-primary px-3">
-                        <Check size={15} />
-                      </button>
-                      <button type="button" onClick={() => setAddActionAxeId(null)} className="btn-secondary px-3">
-                        <X size={15} />
-                      </button>
-                    </form>
-                  )}
-
-                  {currentAxe.actions.length === 0 && addActionAxeId !== currentAxe.id && (
+                  {currentAxe.actions.length === 0 && (
                     <p className="text-xs text-gray-400 italic">Aucune action enregistrée</p>
                   )}
 
@@ -363,6 +328,37 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           })()}
         </div>
       )}
+      {/* Modale ajout d'action */}
+      {addActionAxeId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setAddActionAxeId(null)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <h3 className="font-semibold text-gray-900 text-lg">Nouvelle action</h3>
+            <p className="text-sm text-gray-500">Décrivez une action concrète que vous avez menée pour progresser sur cet axe.</p>
+            <form
+              onSubmit={(e) => handleCreateAction(e, addActionAxeId)}
+              className="space-y-4"
+            >
+              <textarea
+                name="description"
+                required
+                className="input w-full h-24 resize-none"
+                placeholder="Ex: J'ai confié la préparation de la réunion à Julie"
+                autoFocus
+              />
+              <div className="flex gap-3 justify-end">
+                <button type="button" onClick={() => setAddActionAxeId(null)} className="btn-secondary px-5">
+                  Annuler
+                </button>
+                <button type="submit" disabled={isPending} className="btn-primary px-5">
+                  {isPending ? 'Enregistrement...' : 'Ajouter'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modale d'édition */}
       {editingActionId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

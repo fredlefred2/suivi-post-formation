@@ -90,9 +90,7 @@ export async function register(formData: FormData) {
           .select('first_name, last_name')
           .eq('id', trainerId)
           .single()
-        const groupName = trainerProfile
-          ? `Groupe de ${trainerProfile.first_name} ${trainerProfile.last_name}`
-          : 'Groupe par défaut'
+        const groupName = 'Salle d\'attente'
         const { data: newGroup } = await admin
           .from('groups')
           .insert({ name: groupName, trainer_id: trainerId })

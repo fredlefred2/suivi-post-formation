@@ -16,11 +16,12 @@ export async function createAxe(formData: FormData) {
 
   if ((count ?? 0) >= 3) return { error: 'Vous ne pouvez pas avoir plus de 3 axes.' }
 
+  const scoreRaw = formData.get('initial_score') as string | null
   const { error } = await supabase.from('axes').insert({
     learner_id: user.id,
     subject: formData.get('subject') as string,
     description: formData.get('description') as string || null,
-    initial_score: parseInt(formData.get('initial_score') as string),
+    ...(scoreRaw ? { initial_score: parseInt(scoreRaw) } : {}),
     difficulty: formData.get('difficulty') as string,
   })
 
