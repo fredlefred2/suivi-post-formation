@@ -67,5 +67,5 @@ export default async function AxesPage({
     ? Math.max(0, parseInt(searchParams.index) || 0)
     : 0
 
-  return <AxesClient key={initialIndex} axes={axes ?? []} initialIndex={initialIndex} feedbackMap={feedbackMap} onboarding={searchParams.onboarding} />
+  return <AxesClient key={initialIndex} axes={axes ?? []} initialIndex={initialIndex} feedbackMap={feedbackMap} onboarding={searchParams.onboarding} userId={user!.id} />
 }

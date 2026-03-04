@@ -151,4 +151,15 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: #9ca3af;
   }
+
+  /* ──────── Animation onboarding — pulse amber ──────── */
+  @keyframes onboarding-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.7); transform: scale(1); }
+    50% { box-shadow: 0 0 0 10px rgba(251,191,36,0); transform: scale(1.1); }
+  }
+  .onboarding-pulse {
+    animation: onboarding-pulse 1.5s ease-in-out infinite;
+    position: relative;
+    z-index: 10;
+  }
 }

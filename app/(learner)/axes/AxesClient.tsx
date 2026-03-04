@@ -7,6 +7,7 @@ import { createAxe, deleteAxe, createAction, updateAction, deleteAction } from '
 import type { Axe, Action, ActionFeedbackData } from '@/lib/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
+import { acknowledgeStep } from '@/lib/onboarding'
 
 type AxeWithActions = Axe & { actions: Action[] }
 
@@ -32,15 +33,17 @@ function formatDate(dateStr: string) {
 
 const emptyFeedback: ActionFeedbackData = { likes_count: 0, comments_count: 0, liked_by_me: false, likers: [], comments: [] }
 
-export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string }) {
+export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string }) {
   const router = useRouter()
   const isOnboardingCreate = onboarding === 'create'
-  const isOnboardingAction = onboarding === 'action'
+  const isHighlightAdd = onboarding === 'highlight-add'
+  const isHighlightDelete = onboarding === 'highlight-delete'
   const [showAxeForm, setShowAxeForm] = useState(isOnboardingCreate)
-  const [addActionAxeId, setAddActionAxeId] = useState<string | null>(isOnboardingAction && axes.length > 0 ? axes[0].id : null)
+  const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [currentIndex, setCurrentIndex] = useState(initialIndex)
+  // Force index 0 during highlight onboarding modes
+  const [currentIndex, setCurrentIndex] = useState(isHighlightAdd || isHighlightDelete ? 0 : initialIndex)
   const [editingActionId, setEditingActionId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
   const [deletingActionId, setDeletingActionId] = useState<string | null>(null)
@@ -82,7 +85,8 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     formData.set('axe_id', axeId)
     startTransition(async () => {
       await createAction(formData)
-      if (isOnboardingAction) {
+      if (isHighlightAdd) {
+        // Retour au dashboard → step 5 auto-acknowledged → step 6 apparaît
         router.push('/dashboard')
       } else {
         setAddActionAxeId(null)
@@ -114,10 +118,16 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           </p>
         </div>
       )}
-      {isOnboardingAction && (
+      {isHighlightAdd && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
           <span className="text-xl">⚡</span>
-          <p className="text-sm font-semibold text-amber-800">Ajoutez votre première action ci-dessous</p>
+          <p className="text-sm font-semibold text-amber-800">Cliquez sur le bouton « + Ajouter » qui clignote ci-dessous</p>
+        </div>
+      )}
+      {isHighlightDelete && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
+          <span className="text-xl">🗑️</span>
+          <p className="text-sm font-semibold text-amber-800">Cliquez sur l&apos;icône de suppression 🗑️ qui clignote</p>
         </div>
       )}
 
@@ -266,7 +276,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                     </p>
                     <button
                       onClick={() => setAddActionAxeId(addActionAxeId === currentAxe.id ? null : currentAxe.id)}
-                      className="btn-primary text-xs px-3 py-1.5"
+                      className={`btn-primary text-xs px-3 py-1.5 ${isHighlightAdd && safeIndex === 0 ? 'onboarding-pulse' : ''}`}
                     >
                       <Plus size={14} /> Ajouter
                     </button>
@@ -284,8 +294,10 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
 
                     return (
                       <ul className="space-y-2">
-                        {displaySorted.map((action) => {
+                        {displaySorted.map((action, actionIndex) => {
                           const rank = rankMap.get(action.id) ?? 1
+                          // Pulse le bouton supprimer de la 1ère action lors de l'onboarding highlight-delete
+                          const shouldPulseDelete = isHighlightDelete && safeIndex === 0 && actionIndex === 0
                           return (
                             <li key={action.id} className="flex items-start gap-2">
                               <span className="shrink-0 mt-0.5 text-base">{getActionPhaseIcon(rank)}</span>
@@ -310,10 +322,10 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                                 </button>
                                 <button
                                   onClick={() => setDeletingActionId(action.id)}
-                                  className="text-gray-300 hover:text-red-400 transition-colors p-0.5"
+                                  className={`text-gray-300 hover:text-red-400 transition-colors ${shouldPulseDelete ? 'p-1.5 rounded-full onboarding-pulse' : 'p-0.5'}`}
                                   title="Supprimer"
                                 >
-                                  <Trash2 size={13} />
+                                  <Trash2 size={shouldPulseDelete ? 16 : 13} />
                                 </button>
                               </div>
                             </li>
@@ -477,8 +489,17 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               </button>
               <button
                 onClick={() => {
-                  startTransition(() => deleteAction(deletingActionId))
-                  setDeletingActionId(null)
+                  startTransition(async () => {
+                    await deleteAction(deletingActionId)
+                    // Pendant l'onboarding highlight-delete, acquitter l'étape et retourner au dashboard
+                    if (isHighlightDelete && userId) {
+                      acknowledgeStep('edit-delete', userId)
+                      router.push('/dashboard')
+                    }
+                  })
+                  if (!isHighlightDelete) {
+                    setDeletingActionId(null)
+                  }
                 }}
                 className="px-5 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
               >

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { deleteAction } from '@/app/(learner)/axes/actions'
+import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 
 type Props = {
   userId: string
@@ -14,49 +15,28 @@ type Props = {
   children: React.ReactNode
 }
 
-function getStorageKey(userId: string) {
-  return `onboarding_ack_${userId}`
-}
-
-function getAck(userId: string): Record<string, boolean> {
-  if (typeof window === 'undefined') return {}
-  try {
-    return JSON.parse(localStorage.getItem(getStorageKey(userId)) ?? '{}')
-  } catch { return {} }
-}
-
 export default function OnboardingFlow({
   userId, firstName, axesCount, totalActions, totalCheckins,
   firstActionId, children,
 }: Props) {
-  const storageKey = getStorageKey(userId)
+  const router = useRouter()
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
-  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
-    const stored = getAck(userId)
+    const stored = getOnboardingAck(userId)
     // Auto-acknowledge action step when actions exist
     if (totalActions >= 1 && !stored['first-action']) {
       stored['first-action'] = true
-      localStorage.setItem(storageKey, JSON.stringify(stored))
+      acknowledgeStep('first-action', userId)
     }
     setAck(stored)
     setMounted(true)
-  }, [totalActions, userId, storageKey])
+  }, [totalActions, userId])
 
   function acknowledge(stepId: string) {
-    const next = { ...ack, [stepId]: true }
-    setAck(next)
-    localStorage.setItem(storageKey, JSON.stringify(next))
-  }
-
-  function handleDeleteAction() {
-    if (!firstActionId) return
-    startTransition(async () => {
-      await deleteAction(firstActionId)
-      acknowledge('edit-delete')
-    })
+    acknowledgeStep(stepId, userId)
+    setAck((prev) => ({ ...prev, [stepId]: true }))
   }
 
   const steps: {
@@ -150,7 +130,7 @@ export default function OnboardingFlow({
       title: 'Ajoutez votre première action',
       icon: '⚡',
       bravo: '🎉 Parfait ! Vos 3 axes sont définis !',
-      description: 'Chaque axe se nourrit d\'actions concrètes. Le formulaire est prêt : décrivez une action que vous avez menée.',
+      description: 'Chaque axe se nourrit d\'actions concrètes. Vous allez être redirigé vers vos axes : cliquez sur le bouton « Ajouter » qui clignote pour créer votre première action.',
       extra: (
         <div className="bg-amber-50 rounded-xl p-3 mt-3 text-left text-sm text-amber-800">
           <p className="font-medium mb-1">Exemple d&apos;action :</p>
@@ -158,7 +138,10 @@ export default function OnboardingFlow({
         </div>
       ),
       isCompleted: ack['first-action'] ?? false,
-      cta: { label: 'Ajouter une action', href: '/axes?onboarding=action' },
+      cta: {
+        label: 'Allons-y !',
+        action: () => router.push('/axes?onboarding=highlight-add'),
+      },
     },
 
     // ── Étape 6 : Supprimer l'action ──
@@ -167,20 +150,17 @@ export default function OnboardingFlow({
       title: 'Essayez de supprimer',
       icon: '🗑️',
       bravo: '🎉 Bravo ! Première action enregistrée !',
-      description: 'Pas de panique, vous pouvez supprimer ou modifier une action à tout moment. Pour vous entraîner, supprimons l\'action que vous venez de créer.',
-      extra: firstActionId ? (
+      description: 'Pas de panique, vous pouvez supprimer ou modifier une action à tout moment. Pour vous entraîner, supprimez l\'action que vous venez de créer en cliquant sur l\'icône 🗑️ qui clignote.',
+      extra: (
         <div className="bg-red-50 rounded-xl p-3 mt-3 text-sm text-red-800">
-          <p>Cliquez ci-dessous pour supprimer votre action d&apos;essai. Vous pourrez en ajouter de vraies juste après !</p>
-        </div>
-      ) : (
-        <div className="bg-gray-50 rounded-xl p-3 mt-3 text-sm text-gray-600">
-          <p>L&apos;action a déjà été supprimée. Passez à la suite !</p>
+          <p>C&apos;est juste un entraînement : vous pourrez en ajouter de vraies juste après !</p>
         </div>
       ),
       isCompleted: ack['edit-delete'] ?? false,
-      cta: firstActionId
-        ? { label: isPending ? 'Suppression...' : 'Supprimer l\'action', action: handleDeleteAction }
-        : { label: 'Continuer', action: () => acknowledge('edit-delete') },
+      cta: {
+        label: 'Compris !',
+        action: () => router.push('/axes?onboarding=highlight-delete'),
+      },
     },
 
     // ── Étape 7 : Dynamique de progression ──
@@ -294,8 +274,7 @@ export default function OnboardingFlow({
             ) : (
               <button
                 onClick={activeStep.cta.action}
-                disabled={isPending}
-                className={activeStep.id === 'edit-delete' && firstActionId ? 'btn-danger' : 'btn-primary'}
+                className="btn-primary"
               >
                 {activeStep.cta.label}
               </button>
