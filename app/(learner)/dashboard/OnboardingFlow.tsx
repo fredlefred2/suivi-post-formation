@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { deleteAction } from '@/app/(learner)/axes/actions'
 
 type Props = {
+  userId: string
   firstName: string
   axesCount: number
   totalActions: number
@@ -13,38 +14,41 @@ type Props = {
   children: React.ReactNode
 }
 
-const STORAGE_KEY = 'onboarding_ack'
+function getStorageKey(userId: string) {
+  return `onboarding_ack_${userId}`
+}
 
-function getAck(): Record<string, boolean> {
+function getAck(userId: string): Record<string, boolean> {
   if (typeof window === 'undefined') return {}
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
+    return JSON.parse(localStorage.getItem(getStorageKey(userId)) ?? '{}')
   } catch { return {} }
 }
 
 export default function OnboardingFlow({
-  firstName, axesCount, totalActions, totalCheckins,
+  userId, firstName, axesCount, totalActions, totalCheckins,
   firstActionId, children,
 }: Props) {
+  const storageKey = getStorageKey(userId)
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
-    const stored = getAck()
+    const stored = getAck(userId)
     // Auto-acknowledge action step when actions exist
     if (totalActions >= 1 && !stored['first-action']) {
       stored['first-action'] = true
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stored))
+      localStorage.setItem(storageKey, JSON.stringify(stored))
     }
     setAck(stored)
     setMounted(true)
-  }, [totalActions])
+  }, [totalActions, userId, storageKey])
 
   function acknowledge(stepId: string) {
     const next = { ...ack, [stepId]: true }
     setAck(next)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    localStorage.setItem(storageKey, JSON.stringify(next))
   }
 
   function handleDeleteAction() {

@@ -70,6 +70,7 @@ export default async function DashboardPage() {
 
   return (
     <OnboardingFlow
+      userId={user!.id}
       firstName={profile?.first_name ?? ''}
       axesCount={axes?.length ?? 0}
       totalActions={totalCompletedActions}
