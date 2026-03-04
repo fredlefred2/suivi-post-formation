@@ -1,12 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { register } from '../actions'
+import { register, getTrainers } from '../actions'
+
+type Trainer = { id: string; first_name: string; last_name: string }
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [role, setRole] = useState('learner')
+  const [trainers, setTrainers] = useState<Trainer[]>([])
+
+  useEffect(() => {
+    if (role === 'learner') {
+      getTrainers().then((r) => setTrainers(r.trainers))
+    }
+  }, [role])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -22,6 +32,17 @@ export default function RegisterPage() {
       return
     }
 
+    // Validation clé formateur côté client
+    if (role === 'trainer') {
+      const key = (formData.get('trainer_key') as string ?? '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      if (key !== 'theatre') {
+        setError('Clé formateur incorrecte.')
+        setLoading(false)
+        return
+      }
+    }
+
     const result = await register(formData)
     if (result?.error) {
       setError(result.error)
@@ -34,6 +55,7 @@ export default function RegisterPage() {
   const inputClass =
     'w-full border border-white/20 rounded-xl px-4 py-2.5 text-sm bg-white/10 backdrop-blur-sm text-white placeholder:text-indigo-300/50 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 transition-all duration-200'
   const labelClass = 'block text-sm font-medium text-indigo-100 mb-1.5'
+  const selectClass = 'w-full border border-white/20 rounded-xl px-4 py-2.5 text-sm bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 transition-all duration-200 [&>option]:text-gray-900'
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 relative overflow-hidden">
@@ -67,12 +89,37 @@ export default function RegisterPage() {
             </div>
             <div>
               <label htmlFor="role" className={labelClass}>Je suis</label>
-              <select id="role" name="role" required
-                className="w-full border border-white/20 rounded-xl px-4 py-2.5 text-sm bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 transition-all duration-200 [&>option]:text-gray-900">
+              <select id="role" name="role" required value={role} onChange={(e) => setRole(e.target.value)}
+                className={selectClass}>
                 <option value="learner">Apprenant</option>
                 <option value="trainer">Formateur</option>
               </select>
             </div>
+
+            {/* Clé formateur */}
+            {role === 'trainer' && (
+              <div>
+                <label htmlFor="trainer_key" className={labelClass}>Clé formateur *</label>
+                <input id="trainer_key" name="trainer_key" type="text" required
+                  className={inputClass} placeholder="Entrez la clé d'accès formateur" />
+              </div>
+            )}
+
+            {/* Choix du formateur (apprenants) */}
+            {role === 'learner' && trainers.length > 0 && (
+              <div>
+                <label htmlFor="trainer_id" className={labelClass}>Votre formateur</label>
+                <select id="trainer_id" name="trainer_id" className={selectClass}>
+                  <option value="">— Choisissez votre formateur —</option>
+                  {trainers.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.first_name} {t.last_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label htmlFor="password" className={labelClass}>Mot de passe</label>
               <input id="password" name="password" type="password" required minLength={8}

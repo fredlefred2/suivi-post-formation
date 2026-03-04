@@ -7,6 +7,7 @@ import { WEATHER_LABELS, DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/type
 import { AlertCircle, Target, Zap, CalendarCheck } from 'lucide-react'
 import type { Difficulty } from '@/lib/types'
 import AxesCarousel from './AxesCarousel'
+import OnboardingFlow from './OnboardingFlow'
 
 const WEATHER_ICONS: Record<string, string> = {
   sunny: '☀️',
@@ -141,31 +142,16 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      {/* Onboarding guidé */}
+      <OnboardingFlow
+        firstName={profile?.first_name ?? ''}
+        axesCount={axes?.length ?? 0}
+        totalActions={totalCompletedActions}
+        totalCheckins={totalCheckins}
+      />
+
       {/* Axes de progrès */}
-      {!axes || axes.length === 0 ? (
-        <div className="card text-center py-8 space-y-4">
-          <div className="text-5xl">🚀</div>
-          <div>
-            <h2 className="text-lg font-bold text-gray-800">Bienvenue sur Progress +</h2>
-            <p className="text-sm text-gray-500 mt-1">Pour commencer, definissez vos 3 axes de progres.</p>
-          </div>
-          <div className="flex flex-col gap-2 text-left max-w-xs mx-auto">
-            <div className="flex items-center gap-3 text-sm">
-              <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">1</span>
-              <span className="text-gray-600">Choisissez 3 axes de progres</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <span className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 font-bold text-xs flex items-center justify-center shrink-0">2</span>
-              <span className="text-gray-400">Ajoutez des actions concretes</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <span className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 font-bold text-xs flex items-center justify-center shrink-0">3</span>
-              <span className="text-gray-400">Faites votre check-in chaque vendredi</span>
-            </div>
-          </div>
-          <Link href="/axes" className="btn-primary">Definir mes axes</Link>
-        </div>
-      ) : (
+      {axes && axes.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="section-title">Mes actions de progrès</h2>
