@@ -72,28 +72,24 @@ export async function register(formData: FormData) {
       console.error('[register] Erreur création profil:', profileError)
       return { error: 'Erreur lors de la création du profil : ' + profileError.message }
     }
-    // Assignation au groupe du formateur (pour les apprenants)
+    // Assignation au groupe "Salle d'attente" du formateur (pour les apprenants)
     const trainerId = formData.get('trainer_id') as string
     if (role === 'learner' && trainerId) {
-      const { data: existingGroup } = await admin
+      // Chercher la "Salle d'attente" existante du formateur
+      const { data: salleAttente } = await admin
         .from('groups')
         .select('id')
         .eq('trainer_id', trainerId)
-        .order('created_at')
+        .eq('name', 'Salle d\'attente')
         .limit(1)
         .maybeSingle()
 
-      let groupId = existingGroup?.id
+      let groupId = salleAttente?.id
       if (!groupId) {
-        const { data: trainerProfile } = await admin
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', trainerId)
-          .single()
-        const groupName = 'Salle d\'attente'
+        // Créer la "Salle d'attente" pour ce formateur
         const { data: newGroup } = await admin
           .from('groups')
-          .insert({ name: groupName, trainer_id: trainerId })
+          .insert({ name: 'Salle d\'attente', trainer_id: trainerId })
           .select('id')
           .single()
         groupId = newGroup?.id
