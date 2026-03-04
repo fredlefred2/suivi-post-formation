@@ -14,6 +14,7 @@ const learnerNavItems = [
   { href: '/axes',       label: 'Mes actions',      icon: Target           },
   { href: '/checkin',    label: 'Check-in',          icon: ClipboardCheck   },
   { href: '/history',    label: 'Historique',        icon: History          },
+  { href: '/team',       label: 'Team',              icon: Users            },
 ]
 
 const trainerNavItems = [

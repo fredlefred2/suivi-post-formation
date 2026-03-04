@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { Heart, MessageCircle, Send, X } from 'lucide-react'
-import { toggleLike, createComment } from '@/app/(trainer)/trainer/feedback/actions'
+import { toggleLike, createComment } from '@/app/actions/feedback'
 import type { ActionFeedbackData } from '@/lib/types'
 
 type Props = {
