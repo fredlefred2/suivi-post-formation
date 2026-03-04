@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
+import { deleteAction } from '@/app/(learner)/axes/actions'
 
 type Props = {
   firstName: string
   axesCount: number
   totalActions: number
   totalCheckins: number
+  firstActionId?: string | null
+  children: React.ReactNode
 }
 
 const STORAGE_KEY = 'onboarding_ack'
@@ -19,24 +22,24 @@ function getAck(): Record<string, boolean> {
   } catch { return {} }
 }
 
-type Step = {
-  id: string
-  title: string
-  icon: string
-  description: string
-  extra?: React.ReactNode
-  isCompleted: boolean
-  cta: { label: string; href?: string; action?: () => void }
-}
-
-export default function OnboardingFlow({ firstName, axesCount, totalActions, totalCheckins }: Props) {
+export default function OnboardingFlow({
+  firstName, axesCount, totalActions, totalCheckins,
+  firstActionId, children,
+}: Props) {
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
-    setAck(getAck())
+    const stored = getAck()
+    // Auto-acknowledge step 3 when actions exist
+    if (totalActions >= 1 && !stored['first-action']) {
+      stored['first-action'] = true
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stored))
+    }
+    setAck(stored)
     setMounted(true)
-  }, [])
+  }, [totalActions])
 
   function acknowledge(stepId: string) {
     const next = { ...ack, [stepId]: true }
@@ -44,7 +47,15 @@ export default function OnboardingFlow({ firstName, axesCount, totalActions, tot
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
   }
 
-  const steps: Step[] = [
+  function handleDeleteAction() {
+    if (!firstActionId) return
+    startTransition(async () => {
+      await deleteAction(firstActionId)
+      acknowledge('edit-delete')
+    })
+  }
+
+  const steps = [
     {
       id: 'welcome',
       title: `Bienvenue ${firstName} !`,
@@ -52,18 +63,16 @@ export default function OnboardingFlow({ firstName, axesCount, totalActions, tot
       description: 'Progress + vous accompagne pour transformer votre formation en actions concrètes. Le principe est simple :',
       extra: (
         <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
-          <div className="flex items-center gap-3 text-sm">
-            <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">1</span>
-            <span className="text-gray-600">Définissez <strong>3 axes</strong> de progrès</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">2</span>
-            <span className="text-gray-600">Ajoutez des <strong>actions concrètes</strong></span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">3</span>
-            <span className="text-gray-600">Faites votre <strong>check-in</strong> chaque vendredi</span>
-          </div>
+          {[
+            { n: '1', text: <>Définissez <strong>3 axes</strong> de progrès</>, active: true },
+            { n: '2', text: <>Ajoutez des <strong>actions concrètes</strong></>, active: true },
+            { n: '3', text: <>Faites votre <strong>check-in</strong> chaque vendredi</>, active: true },
+          ].map((s) => (
+            <div key={s.n} className="flex items-center gap-3 text-sm">
+              <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
+              <span className="text-gray-600">{s.text}</span>
+            </div>
+          ))}
         </div>
       ),
       isCompleted: axesCount >= 1,
@@ -73,7 +82,7 @@ export default function OnboardingFlow({ firstName, axesCount, totalActions, tot
       id: 'first-axis',
       title: 'Créez votre premier axe',
       icon: '🎯',
-      description: 'Un axe de progrès représente un domaine que vous souhaitez améliorer suite à votre formation. Cliquez sur "Ajouter un axe" et remplissez le formulaire.',
+      description: 'Un axe de progrès représente un domaine que vous souhaitez améliorer. Cliquez sur "Ajouter un axe" et remplissez le formulaire.',
       extra: (
         <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
           <p className="font-medium mb-1">Exemple d&apos;axe :</p>
@@ -87,35 +96,34 @@ export default function OnboardingFlow({ firstName, axesCount, totalActions, tot
       id: 'first-action',
       title: 'Ajoutez votre première action',
       icon: '⚡',
-      description: 'Chaque axe se nourrit d\'actions concrètes que vous menez au quotidien. Allez sur votre axe et cliquez "Ajouter" pour décrire une action réalisée.',
+      description: 'Chaque axe se nourrit d\'actions concrètes. Allez sur votre axe et cliquez "Ajouter" pour décrire une action réalisée.',
       extra: (
         <div className="bg-amber-50 rounded-xl p-3 mt-3 text-left text-sm text-amber-800">
           <p className="font-medium mb-1">Exemple d&apos;action :</p>
           <p className="text-amber-600">« J&apos;ai confié la préparation de la réunion à Julie »</p>
         </div>
       ),
-      isCompleted: totalActions >= 1,
+      isCompleted: ack['first-action'] ?? false,
       cta: { label: 'Ajouter une action', href: '/axes' },
     },
     {
       id: 'edit-delete',
-      title: 'Modifier et supprimer',
-      icon: '✏️',
-      description: 'Vous pouvez modifier ou supprimer une action à tout moment grâce aux icônes crayon et poubelle à côté de chaque action.',
-      extra: (
-        <div className="flex items-center justify-center gap-6 mt-3 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">✏️</span>
-            <span>Modifier</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">🗑️</span>
-            <span>Supprimer</span>
-          </div>
+      title: 'Essayez de supprimer',
+      icon: '🗑️',
+      description: 'Pas de panique ! Vous pouvez supprimer ou modifier une action à tout moment. Pour vous entraîner, supprimons l\'action que vous venez de créer.',
+      extra: firstActionId ? (
+        <div className="bg-red-50 rounded-xl p-3 mt-3 text-sm text-red-800">
+          <p>Cliquez sur le bouton ci-dessous pour supprimer votre action d&apos;essai. Vous pourrez en ajouter de vraies ensuite.</p>
+        </div>
+      ) : (
+        <div className="bg-gray-50 rounded-xl p-3 mt-3 text-sm text-gray-600">
+          <p>L&apos;action a déjà été supprimée. Vous pouvez passer à la suite.</p>
         </div>
       ),
       isCompleted: ack['edit-delete'] ?? false,
-      cta: { label: 'Compris !', action: () => acknowledge('edit-delete') },
+      cta: firstActionId
+        ? { label: isPending ? 'Suppression...' : 'Supprimer l\'action', action: handleDeleteAction }
+        : { label: 'Compris !', action: () => acknowledge('edit-delete') },
     },
     {
       id: 'progression',
@@ -146,7 +154,7 @@ export default function OnboardingFlow({ firstName, axesCount, totalActions, tot
       id: 'checkin',
       title: 'Le check-in hebdomadaire',
       icon: '📋',
-      description: 'Chaque vendredi, prenez 2 minutes pour votre check-in : donnez votre météo de la semaine, notez ce qui a bien fonctionné et les difficultés rencontrées.',
+      description: 'Chaque vendredi, prenez 2 minutes pour votre check-in : donnez votre météo, notez ce qui a bien fonctionné et les difficultés rencontrées.',
       extra: (
         <div className="flex items-center justify-center gap-4 mt-3">
           {[
@@ -166,52 +174,63 @@ export default function OnboardingFlow({ firstName, axesCount, totalActions, tot
     },
   ]
 
-  // Don't render until mounted (need localStorage)
   if (!mounted) return null
 
   const activeIndex = steps.findIndex((s) => !s.isCompleted)
-  // All done → hide onboarding
-  if (activeIndex === -1) return null
+
+  // All done → show normal dashboard
+  if (activeIndex === -1) return <>{children}</>
 
   const activeStep = steps[activeIndex]
 
   return (
-    <div className="card overflow-hidden">
-      {/* Step indicator */}
-      <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-xs font-semibold text-indigo-600">
-          Étape {activeIndex + 1}/{steps.length}
-        </span>
-        <div className="flex items-center gap-1">
-          {steps.map((s, i) => (
-            <div
-              key={s.id}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i < activeIndex ? 'w-3 bg-emerald-400'
-                : i === activeIndex ? 'w-5 bg-indigo-500'
-                : 'w-3 bg-gray-200'
-              }`}
-            />
-          ))}
-        </div>
+    <div className="space-y-6 pb-4">
+      <div>
+        <h1 className="page-title">Bonjour {firstName} 👋</h1>
+        <p className="text-sm text-gray-500 mt-1">Découverte de Progress +</p>
       </div>
 
-      {/* Active step content */}
-      <div key={activeStep.id} className="text-center space-y-3 pt-2 pb-1">
-        <div className="text-5xl">{activeStep.icon}</div>
-        <h2 className="text-lg font-bold text-gray-800">{activeStep.title}</h2>
-        <p className="text-sm text-gray-500 leading-relaxed">{activeStep.description}</p>
-        {activeStep.extra}
-        <div className="pt-2">
-          {activeStep.cta.href ? (
-            <Link href={activeStep.cta.href} className="btn-primary">
-              {activeStep.cta.label}
-            </Link>
-          ) : (
-            <button onClick={activeStep.cta.action} className="btn-primary">
-              {activeStep.cta.label}
-            </button>
-          )}
+      <div className="card overflow-hidden">
+        {/* Step indicator */}
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-xs font-semibold text-indigo-600">
+            Étape {activeIndex + 1}/{steps.length}
+          </span>
+          <div className="flex items-center gap-1">
+            {steps.map((s, i) => (
+              <div
+                key={s.id}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i < activeIndex ? 'w-3 bg-emerald-400'
+                  : i === activeIndex ? 'w-5 bg-indigo-500'
+                  : 'w-3 bg-gray-200'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Active step content */}
+        <div key={activeStep.id} className="text-center space-y-3 pt-2 pb-1">
+          <div className="text-5xl">{activeStep.icon}</div>
+          <h2 className="text-lg font-bold text-gray-800">{activeStep.title}</h2>
+          <p className="text-sm text-gray-500 leading-relaxed">{activeStep.description}</p>
+          {activeStep.extra}
+          <div className="pt-2">
+            {activeStep.cta.href ? (
+              <Link href={activeStep.cta.href} className="btn-primary">
+                {activeStep.cta.label}
+              </Link>
+            ) : (
+              <button
+                onClick={activeStep.cta.action}
+                disabled={isPending}
+                className={activeStep.id === 'edit-delete' && firstActionId ? 'btn-danger' : 'btn-primary'}
+              >
+                {activeStep.cta.label}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

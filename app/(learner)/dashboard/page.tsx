@@ -63,157 +63,163 @@ export default async function DashboardPage() {
     return acc + ((axe.actions as { id: string }[])?.length ?? 0)
   }, 0) ?? 0
 
+  // Première action (pour la suppression dans l'onboarding)
+  const firstActionId = axes?.flatMap((axe) =>
+    ((axe.actions as { id: string }[]) ?? []).map((a) => a.id)
+  )[0] ?? null
+
   return (
-    <div className="space-y-6 pb-4">
+    <OnboardingFlow
+      firstName={profile?.first_name ?? ''}
+      axesCount={axes?.length ?? 0}
+      totalActions={totalCompletedActions}
+      totalCheckins={totalCheckins}
+      firstActionId={firstActionId}
+    >
+      {/* ── Dashboard complet (affiché après l'onboarding) ── */}
+      <div className="space-y-6 pb-4">
 
-      {/* En-tête */}
-      <div>
-        <h1 className="page-title">Bonjour {profile?.first_name} 👋</h1>
-        <p className="text-sm text-gray-500 mt-1">{formatWeek(week, year)}</p>
-      </div>
-
-      {/* Alerte check-in (uniquement si non réalisé) */}
-      {!checkinDone && (
-        <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-100 border border-amber-300">
-          <AlertCircle className="text-amber-600 shrink-0" size={24} />
-          <div className="flex-1">
-            <p className="font-medium text-amber-900">Check-in de la semaine en attente</p>
-            <p className="text-sm text-amber-700">Prenez 2 minutes pour faire le point</p>
-          </div>
-          <Link href="/checkin" className="btn-primary shrink-0">Faire</Link>
+        {/* En-tête */}
+        <div>
+          <h1 className="page-title">Bonjour {profile?.first_name} 👋</h1>
+          <p className="text-sm text-gray-500 mt-1">{formatWeek(week, year)}</p>
         </div>
-      )}
 
-      {/* Barre de progression globale */}
-      {(() => {
-        const axesCount = axes?.length ?? 0
-        const steps = [
-          { label: 'Axes définis', done: axesCount >= 3 },
-          { label: 'Première action', done: totalCompletedActions > 0 },
-          { label: 'Premier check-in', done: totalCheckins > 0 },
-        ]
-        const doneCount = steps.filter((s) => s.done).length
-        const pct = Math.round((doneCount / steps.length) * 100)
-        return pct < 100 ? (
-          <div className="card p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-gray-700">Votre progression</p>
-              <span className="text-xs font-bold text-indigo-600">{pct}%</span>
+        {/* Alerte check-in (uniquement si non réalisé) */}
+        {!checkinDone && (
+          <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-100 border border-amber-300">
+            <AlertCircle className="text-amber-600 shrink-0" size={24} />
+            <div className="flex-1">
+              <p className="font-medium text-amber-900">Check-in de la semaine en attente</p>
+              <p className="text-sm text-amber-700">Prenez 2 minutes pour faire le point</p>
             </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-500" style={{
-                width: `${pct}%`,
-                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7)',
-              }} />
-            </div>
-            <div className="flex gap-4 mt-2.5">
-              {steps.map((s, i) => (
-                <span key={i} className={`text-xs ${s.done ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
-                  {s.done ? '✓' : '○'} {s.label}
-                </span>
-              ))}
-            </div>
+            <Link href="/checkin" className="btn-primary shrink-0">Faire</Link>
           </div>
-        ) : null
-      })()}
+        )}
 
-      {/* Badges stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <Link href="/axes" className="card text-center py-4 px-2 hover:border-indigo-300 hover:bg-indigo-100/60 transition-colors">
-          <Target className="mx-auto text-indigo-600 mb-1.5" size={20} />
-          <p className="text-2xl font-bold text-indigo-700 leading-none">
-            {axes?.length ?? 0}
-            <span className="text-sm font-normal text-gray-400">/3</span>
-          </p>
-          <p className="text-xs text-gray-600 mt-1">Axes définis</p>
-        </Link>
-        <Link href="/axes" className="card text-center py-4 px-2 hover:border-amber-300 hover:bg-amber-100/60 transition-colors">
-          <Zap className="mx-auto text-amber-600 mb-1.5" size={20} />
-          <p className="text-2xl font-bold text-amber-700 leading-none">{totalCompletedActions}</p>
-          <p className="text-xs text-gray-600 mt-1">Actions menées</p>
-        </Link>
-        <Link href="/history" className="card text-center py-4 px-2 hover:border-emerald-300 hover:bg-emerald-100/60 transition-colors">
-          <CalendarCheck className="mx-auto text-emerald-600 mb-1.5" size={20} />
-          <p className="text-2xl font-bold text-emerald-700 leading-none">
-            {totalCheckins}
-            {expected > 0 && <span className="text-sm font-normal text-gray-400">/{expected}</span>}
-          </p>
-          <p className="text-xs text-gray-600 mt-1">Check-ins</p>
-        </Link>
-      </div>
+        {/* Barre de progression globale */}
+        {(() => {
+          const axesCount = axes?.length ?? 0
+          const steps = [
+            { label: 'Axes définis', done: axesCount >= 3 },
+            { label: 'Première action', done: totalCompletedActions > 0 },
+            { label: 'Premier check-in', done: totalCheckins > 0 },
+          ]
+          const doneCount = steps.filter((s) => s.done).length
+          const pct = Math.round((doneCount / steps.length) * 100)
+          return pct < 100 ? (
+            <div className="card p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-gray-700">Votre progression</p>
+                <span className="text-xs font-bold text-indigo-600">{pct}%</span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-500" style={{
+                  width: `${pct}%`,
+                  background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7)',
+                }} />
+              </div>
+              <div className="flex gap-4 mt-2.5">
+                {steps.map((s, i) => (
+                  <span key={i} className={`text-xs ${s.done ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
+                    {s.done ? '✓' : '○'} {s.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null
+        })()}
 
-      {/* Onboarding guidé */}
-      <OnboardingFlow
-        firstName={profile?.first_name ?? ''}
-        axesCount={axes?.length ?? 0}
-        totalActions={totalCompletedActions}
-        totalCheckins={totalCheckins}
-      />
+        {/* Badges stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <Link href="/axes" className="card text-center py-4 px-2 hover:border-indigo-300 hover:bg-indigo-100/60 transition-colors">
+            <Target className="mx-auto text-indigo-600 mb-1.5" size={20} />
+            <p className="text-2xl font-bold text-indigo-700 leading-none">
+              {axes?.length ?? 0}
+              <span className="text-sm font-normal text-gray-400">/3</span>
+            </p>
+            <p className="text-xs text-gray-600 mt-1">Axes définis</p>
+          </Link>
+          <Link href="/axes" className="card text-center py-4 px-2 hover:border-amber-300 hover:bg-amber-100/60 transition-colors">
+            <Zap className="mx-auto text-amber-600 mb-1.5" size={20} />
+            <p className="text-2xl font-bold text-amber-700 leading-none">{totalCompletedActions}</p>
+            <p className="text-xs text-gray-600 mt-1">Actions menées</p>
+          </Link>
+          <Link href="/history" className="card text-center py-4 px-2 hover:border-emerald-300 hover:bg-emerald-100/60 transition-colors">
+            <CalendarCheck className="mx-auto text-emerald-600 mb-1.5" size={20} />
+            <p className="text-2xl font-bold text-emerald-700 leading-none">
+              {totalCheckins}
+              {expected > 0 && <span className="text-sm font-normal text-gray-400">/{expected}</span>}
+            </p>
+            <p className="text-xs text-gray-600 mt-1">Check-ins</p>
+          </Link>
+        </div>
 
-      {/* Axes de progrès */}
-      {axes && axes.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="section-title">Mes actions de progrès</h2>
-            {axes.length < 3 && (
-              <Link href="/axes" className="text-sm text-indigo-600 hover:underline">
-                + Ajouter
+        {/* Axes de progrès */}
+        {axes && axes.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="section-title">Mes actions de progrès</h2>
+              {axes.length < 3 && (
+                <Link href="/axes" className="text-sm text-indigo-600 hover:underline">
+                  + Ajouter
+                </Link>
+              )}
+            </div>
+
+            <AxesCarousel
+              axes={axes.map((axe, index) => ({
+                id: axe.id,
+                index,
+                subject: axe.subject,
+                completedCount: ((axe.actions as { id: string }[]) ?? []).length,
+                dyn: getDynamique(((axe.actions as { id: string }[]) ?? []).length),
+              }))}
+            />
+          </div>
+        )}
+
+        {/* Historique des check-ins */}
+        {allCheckins && allCheckins.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="section-title">Mes check-ins</h2>
+              <Link href="/history" className="text-sm text-indigo-600 hover:underline">
+                Voir tout
               </Link>
-            )}
-          </div>
-
-          <AxesCarousel
-            axes={axes.map((axe, index) => ({
-              id: axe.id,
-              index,
-              subject: axe.subject,
-              completedCount: ((axe.actions as { id: string }[]) ?? []).length,
-              dyn: getDynamique(((axe.actions as { id: string }[]) ?? []).length),
-            }))}
-          />
-        </div>
-      )}
-
-      {/* Historique des check-ins */}
-      {allCheckins && allCheckins.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="section-title">Mes check-ins</h2>
-            <Link href="/history" className="text-sm text-indigo-600 hover:underline">
-              Voir tout
-            </Link>
-          </div>
-          <div className="card p-4">
-            {checkinDone && (() => {
-              const today = new Date()
-              const dayOfWeek = today.getDay()
-              const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7
-              const nextFriday = new Date(today)
-              nextFriday.setDate(today.getDate() + daysUntilFriday)
-              return (
-                <p className="text-sm text-gray-500 mb-3">
-                  ✅ Check-in de cette semaine effectué — Prochain : <span className="font-medium text-gray-700">{nextFriday.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-                </p>
-              )
-            })()}
-            <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide">
-              {allCheckins.map((checkin) => (
-                <div key={checkin.id} className="flex flex-col items-center gap-1 shrink-0">
-                  <span className="text-2xl leading-none">
-                    {WEATHER_ICONS[checkin.weather as string] ?? '❓'}
-                  </span>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
-                    {new Date(checkin.created_at as string).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </span>
-                </div>
-              ))}
+            </div>
+            <div className="card p-4">
+              {checkinDone && (() => {
+                const today = new Date()
+                const dayOfWeek = today.getDay()
+                const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7
+                const nextFriday = new Date(today)
+                nextFriday.setDate(today.getDate() + daysUntilFriday)
+                return (
+                  <p className="text-sm text-gray-500 mb-3">
+                    ✅ Check-in de cette semaine effectué — Prochain : <span className="font-medium text-gray-700">{nextFriday.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                  </p>
+                )
+              })()}
+              <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide">
+                {allCheckins.map((checkin) => (
+                  <div key={checkin.id} className="flex flex-col items-center gap-1 shrink-0">
+                    <span className="text-2xl leading-none">
+                      {WEATHER_ICONS[checkin.weather as string] ?? '❓'}
+                    </span>
+                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                      {new Date(checkin.created_at as string).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </OnboardingFlow>
   )
 }
