@@ -87,7 +87,7 @@ export default function OnboardingFlow({
         </div>
       ),
       isCompleted: axesCount >= 1,
-      cta: { label: 'C\'est parti !', href: '/axes' },
+      cta: { label: 'C\'est parti !', href: '/axes?onboarding=create' },
     },
 
     // ── Étape 2 : Axe 1 ──
@@ -95,7 +95,7 @@ export default function OnboardingFlow({
       id: 'axis-1',
       title: 'Créez votre 1er axe de progrès',
       icon: '🎯',
-      description: 'Un axe représente un domaine que vous souhaitez améliorer suite à votre formation. Cliquez sur "Ajouter un axe" et remplissez le formulaire.',
+      description: 'Un axe représente un domaine que vous souhaitez améliorer suite à votre formation. Remplissez le formulaire qui s\'affichera.',
       extra: (
         <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
           <p className="font-medium mb-1">Exemple d&apos;axe :</p>
@@ -103,7 +103,7 @@ export default function OnboardingFlow({
         </div>
       ),
       isCompleted: axesCount >= 1,
-      cta: { label: 'Créer mon 1er axe', href: '/axes' },
+      cta: { label: 'Créer mon 1er axe', href: '/axes?onboarding=create' },
     },
 
     // ── Étape 3 : Axe 2 ──
@@ -112,7 +112,7 @@ export default function OnboardingFlow({
       title: 'Créez votre 2e axe',
       icon: '🎯',
       bravo: '🎉 Bravo ! Votre 1er axe est créé !',
-      description: 'Excellent début ! Continuez sur votre lancée : ajoutez un deuxième axe de progrès pour élargir votre champ d\'action.',
+      description: 'Excellent début ! Continuez sur votre lancée. Le formulaire est déjà prêt pour vous.',
       extra: (
         <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
           <p className="font-medium mb-1">Idée d&apos;axe :</p>
@@ -120,7 +120,7 @@ export default function OnboardingFlow({
         </div>
       ),
       isCompleted: axesCount >= 2,
-      cta: { label: 'Créer mon 2e axe', href: '/axes' },
+      cta: { label: 'Créer mon 2e axe', href: '/axes?onboarding=create' },
     },
 
     // ── Étape 4 : Axe 3 ──
@@ -129,7 +129,7 @@ export default function OnboardingFlow({
       title: 'Créez votre 3e et dernier axe',
       icon: '🎯',
       bravo: '🎉 Super ! 2 axes déjà définis !',
-      description: 'Plus qu\'un axe et vous aurez posé les bases de votre progression. Choisissez un dernier domaine à travailler.',
+      description: 'Plus qu\'un axe et vous aurez posé les bases de votre progression !',
       extra: (
         <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
           <p className="font-medium mb-1">Idée d&apos;axe :</p>
@@ -137,7 +137,7 @@ export default function OnboardingFlow({
         </div>
       ),
       isCompleted: axesCount >= 3,
-      cta: { label: 'Créer mon 3e axe', href: '/axes' },
+      cta: { label: 'Créer mon 3e axe', href: '/axes?onboarding=create' },
     },
 
     // ── Étape 5 : Première action ──
@@ -146,7 +146,7 @@ export default function OnboardingFlow({
       title: 'Ajoutez votre première action',
       icon: '⚡',
       bravo: '🎉 Parfait ! Vos 3 axes sont définis !',
-      description: 'Chaque axe se nourrit d\'actions concrètes. Allez sur l\'un de vos axes et cliquez "Ajouter" pour décrire une action que vous avez menée.',
+      description: 'Chaque axe se nourrit d\'actions concrètes. Le formulaire est prêt : décrivez une action que vous avez menée.',
       extra: (
         <div className="bg-amber-50 rounded-xl p-3 mt-3 text-left text-sm text-amber-800">
           <p className="font-medium mb-1">Exemple d&apos;action :</p>
@@ -154,7 +154,7 @@ export default function OnboardingFlow({
         </div>
       ),
       isCompleted: ack['first-action'] ?? false,
-      cta: { label: 'Ajouter une action', href: '/axes' },
+      cta: { label: 'Ajouter une action', href: '/axes?onboarding=action' },
     },
 
     // ── Étape 6 : Supprimer l'action ──

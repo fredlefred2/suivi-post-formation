@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { createAxe, deleteAxe, createAction, updateAction, deleteAction } from './actions'
 import type { Axe, Action, ActionFeedbackData } from '@/lib/types'
@@ -31,9 +32,12 @@ function formatDate(dateStr: string) {
 
 const emptyFeedback: ActionFeedbackData = { likes_count: 0, comments_count: 0, liked_by_me: false, likers: [], comments: [] }
 
-export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData> }) {
-  const [showAxeForm, setShowAxeForm] = useState(false)
-  const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
+export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string }) {
+  const router = useRouter()
+  const isOnboardingCreate = onboarding === 'create'
+  const isOnboardingAction = onboarding === 'action'
+  const [showAxeForm, setShowAxeForm] = useState(isOnboardingCreate)
+  const [addActionAxeId, setAddActionAxeId] = useState<string | null>(isOnboardingAction && axes.length > 0 ? axes[0].id : null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
@@ -63,9 +67,10 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
     startTransition(async () => {
       const result = await createAxe(formData)
       if (result?.error) setError(result.error)
-      else {
+      else if (isOnboardingCreate) {
+        router.push('/dashboard')
+      } else {
         setShowAxeForm(false)
-        // Aller sur le nouvel axe (qui sera à la fin)
         setCurrentIndex(axes.length)
       }
     })
@@ -77,7 +82,11 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
     formData.set('axe_id', axeId)
     startTransition(async () => {
       await createAction(formData)
-      setAddActionAxeId(null)
+      if (isOnboardingAction) {
+        router.push('/dashboard')
+      } else {
+        setAddActionAxeId(null)
+      }
     })
   }
 
@@ -87,9 +96,33 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
 
   return (
     <div className="space-y-6 pb-4">
+      {/* Bandeau onboarding */}
+      {isOnboardingCreate && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 flex items-center gap-3">
+          <span className="text-2xl">🎯</span>
+          <div>
+            <p className="text-sm font-semibold text-indigo-800">
+              {axes.length === 0 && 'Créez votre 1er axe de progrès'}
+              {axes.length === 1 && 'Créez votre 2e axe de progrès'}
+              {axes.length === 2 && 'Créez votre 3e et dernier axe'}
+            </p>
+            <p className="text-xs text-indigo-600">Remplissez le formulaire ci-dessous et validez</p>
+          </div>
+        </div>
+      )}
+      {isOnboardingAction && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+          <span className="text-2xl">⚡</span>
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Ajoutez votre première action</p>
+            <p className="text-xs text-amber-600">Décrivez une action concrète dans le champ ci-dessous et validez</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="page-title">Mes actions de progrès</h1>
-        {axes.length < 3 && (
+        {axes.length < 3 && !isOnboardingCreate && (
           <button onClick={() => setShowAxeForm(true)} className="btn-primary">
             <Plus size={16} /> Ajouter un axe
           </button>
@@ -142,9 +175,11 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {} }:
               <button type="submit" disabled={isPending} className="btn-primary">
                 {isPending ? 'Enregistrement...' : 'Enregistrer'}
               </button>
-              <button type="button" onClick={() => { setShowAxeForm(false); setError(null) }} className="btn-secondary">
-                Annuler
-              </button>
+              {!isOnboardingCreate && (
+                <button type="button" onClick={() => { setShowAxeForm(false); setError(null) }} className="btn-secondary">
+                  Annuler
+                </button>
+              )}
             </div>
           </form>
         </div>
