@@ -21,7 +21,7 @@ export async function createAxe(formData: FormData) {
     learner_id: user.id,
     subject: formData.get('subject') as string,
     description: formData.get('description') as string || null,
-    ...(scoreRaw ? { initial_score: parseInt(scoreRaw) } : {}),
+    initial_score: scoreRaw ? parseInt(scoreRaw) : 1,
     difficulty: formData.get('difficulty') as string,
   })
 
