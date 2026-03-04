@@ -96,30 +96,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
 
   return (
     <div className="space-y-6 pb-4">
-      {/* Bandeau onboarding */}
-      {isOnboardingCreate && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 flex items-center gap-3">
-          <span className="text-2xl">🎯</span>
-          <div>
-            <p className="text-sm font-semibold text-indigo-800">
-              {axes.length === 0 && 'Créez votre 1er axe de progrès'}
-              {axes.length === 1 && 'Créez votre 2e axe de progrès'}
-              {axes.length === 2 && 'Créez votre 3e et dernier axe'}
-            </p>
-            <p className="text-xs text-indigo-600">Remplissez le formulaire ci-dessous et validez</p>
-          </div>
-        </div>
-      )}
-      {isOnboardingAction && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
-          <span className="text-2xl">⚡</span>
-          <div>
-            <p className="text-sm font-semibold text-amber-800">Ajoutez votre première action</p>
-            <p className="text-xs text-amber-600">Décrivez une action concrète dans le champ ci-dessous et validez</p>
-          </div>
-        </div>
-      )}
-
       <div className="flex items-center justify-between">
         <h1 className="page-title">Mes actions de progrès</h1>
         {axes.length < 3 && !isOnboardingCreate && (
@@ -128,6 +104,24 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           </button>
         )}
       </div>
+
+      {/* Bandeau onboarding (sous le titre) */}
+      {isOnboardingCreate && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
+          <span className="text-xl">🎯</span>
+          <p className="text-sm font-semibold text-indigo-800">
+            {axes.length === 0 && 'Créez votre 1er axe de progrès'}
+            {axes.length === 1 && 'Créez votre 2e axe de progrès'}
+            {axes.length === 2 && 'Créez votre 3e et dernier axe'}
+          </p>
+        </div>
+      )}
+      {isOnboardingAction && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
+          <span className="text-xl">⚡</span>
+          <p className="text-sm font-semibold text-amber-800">Ajoutez votre première action ci-dessous</p>
+        </div>
+      )}
 
       {/* Formulaire nouvel axe */}
       {showAxeForm && (
