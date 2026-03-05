@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Users, Zap, TrendingUp, X } from 'lucide-react'
+import { Users, TrendingUp, X } from 'lucide-react'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import type { ActionFeedbackData } from '@/lib/types'
 
@@ -113,6 +113,10 @@ export default function TeamClient({
     : -1
   const overallEmoji = overallScore >= 0 ? getOverallWeatherEmoji(overallScore) : null
 
+  // Indice d'action moyen
+  const avgActions = membersCount > 0 ? Math.round(totalActions / membersCount) : 0
+  const actionIndice = getDynamiqueForCount(avgActions)
+
   // Scoring trié
   const sorted = [...scoringData]
     .map((s) => {
@@ -128,57 +132,51 @@ export default function TeamClient({
 
   return (
     <div className="space-y-6 pb-4">
-      <div>
-        <h1 className="page-title">Team</h1>
-        <p className="text-sm text-gray-500 mt-1">{groupName}</p>
-      </div>
+      <h1 className="page-title">{groupName}</h1>
 
-      {/* ── Météo générale (pleine largeur) ── */}
-      <div className="card text-center py-4">
-        {overallEmoji ? (
-          <div className="flex items-center justify-center gap-4">
-            <span className="text-5xl leading-none">{overallEmoji}</span>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-gray-700">Météo de l&apos;équipe</p>
-              <div className="flex items-center gap-3 mt-1">
-                {weatherCounts.sunny > 0 && (
-                  <span className="text-sm text-gray-500">{'\u2600\u{FE0F}'} {weatherCounts.sunny}</span>
-                )}
-                {weatherCounts.cloudy > 0 && (
-                  <span className="text-sm text-gray-500">{'\u26C5'} {weatherCounts.cloudy}</span>
-                )}
-                {weatherCounts.stormy > 0 && (
-                  <span className="text-sm text-gray-500">{'\u{1F327}\u{FE0F}'} {weatherCounts.stormy}</span>
-                )}
-              </div>
-            </div>
+      {/* ── Bloc 1 : Membres + Météo générale ── */}
+      <div className="card py-5 px-4">
+        <div className="grid grid-cols-2 divide-x divide-gray-100">
+          {/* Membres */}
+          <div className="text-center px-2">
+            <Users size={28} className="mx-auto text-indigo-500 mb-1.5" />
+            <p className="text-3xl font-bold text-gray-800">{membersCount}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Membres</p>
           </div>
-        ) : (
-          <>
-            <span className="text-2xl text-gray-300">-</span>
-            <p className="text-xs text-gray-400 mt-1">Pas encore de check-in</p>
-          </>
-        )}
+          {/* Météo */}
+          <div className="text-center px-2 flex flex-col items-center justify-center">
+            {overallEmoji ? (
+              <>
+                <p className="text-xs text-gray-500 mb-2">Météo générale</p>
+                <span className="text-6xl leading-none">{overallEmoji}</span>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-2">Météo générale</p>
+                <span className="text-5xl text-gray-300">-</span>
+                <p className="text-[11px] text-gray-400 mt-1">Pas de check-in</p>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* ── Membres + Actions + Actions 7j (une seule ligne) ── */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="card text-center py-4 px-2">
-          <Users size={20} className="mx-auto text-indigo-500 mb-1" />
-          <p className="text-2xl font-bold text-gray-800">{membersCount}</p>
-          <p className="text-xs text-gray-500">Membres</p>
-        </div>
-        <div className="card text-center py-4 px-2">
-          <Zap size={20} className="mx-auto text-amber-500 mb-1" />
-          <p className="text-2xl font-bold text-gray-800">{totalActions}</p>
-          <p className="text-xs text-gray-500">Actions</p>
-        </div>
-        <div className="card text-center py-4 px-2">
-          <TrendingUp size={20} className="mx-auto text-emerald-500 mb-1" />
-          <p className={`text-2xl font-bold ${recentActionsCount > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
-            {recentActionsCount > 0 ? `+${recentActionsCount}` : '0'}
-          </p>
-          <p className="text-xs text-gray-500">Actions cette semaine</p>
+      {/* ── Bloc 2 : Actions cette semaine + Indice d'action ── */}
+      <div className="card py-5 px-4">
+        <div className="grid grid-cols-2 divide-x divide-gray-100">
+          {/* Delta actions cette semaine (gauche) */}
+          <div className="text-center px-2">
+            <TrendingUp size={28} className="mx-auto text-emerald-500 mb-1.5" />
+            <p className={`text-3xl font-bold ${recentActionsCount > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
+              {recentActionsCount > 0 ? `+${recentActionsCount}` : '0'}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Actions cette semaine</p>
+          </div>
+          {/* Indice d'action (droite) */}
+          <div className="text-center px-2 flex flex-col items-center justify-center">
+            <span className="text-6xl leading-none">{actionIndice.icon}</span>
+            <p className="text-sm font-semibold text-gray-700 mt-2">{actionIndice.label}</p>
+          </div>
         </div>
       </div>
 
