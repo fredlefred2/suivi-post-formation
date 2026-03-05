@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Users, TrendingUp, X } from 'lucide-react'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import type { ActionFeedbackData } from '@/lib/types'
+import { useCountUp } from '@/lib/useCountUp'
 
 const WEATHER_POINTS: Record<string, number> = { stormy: 0, cloudy: 1, sunny: 2 }
 
@@ -83,6 +84,10 @@ export default function TeamClient({
   const [currentSlide, setCurrentSlide] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Compteurs animés
+  const animatedMembers = useCountUp(membersCount)
+  const animatedDelta = useCountUp(recentActionsCount)
+
   // Auto-scroll toutes les 2s
   useEffect(() => {
     if (recentActions.length <= 1) return
@@ -140,7 +145,7 @@ export default function TeamClient({
           {/* Membres */}
           <div className="text-center px-2">
             <Users size={28} className="mx-auto text-indigo-500 mb-1.5" />
-            <p className="text-3xl font-bold text-gray-800">{membersCount}</p>
+            <p className="text-3xl font-bold text-gray-800">{animatedMembers}</p>
             <p className="text-xs text-gray-500 mt-0.5">Membres</p>
           </div>
           {/* Météo */}
@@ -168,7 +173,7 @@ export default function TeamClient({
           <div className="text-center px-2">
             <TrendingUp size={28} className="mx-auto text-emerald-500 mb-1.5" />
             <p className={`text-3xl font-bold ${recentActionsCount > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
-              {recentActionsCount > 0 ? `+${recentActionsCount}` : '0'}
+              {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">Actions cette semaine</p>
           </div>

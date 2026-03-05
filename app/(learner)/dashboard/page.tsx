@@ -1,28 +1,10 @@
 export const dynamic = 'force-dynamic'
 
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentWeek, formatWeek, expectedCheckins } from '@/lib/utils'
-import { WEATHER_LABELS, DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
-import { AlertCircle, Target, Zap, CalendarCheck } from 'lucide-react'
-import type { Difficulty } from '@/lib/types'
-import AxesCarousel from './AxesCarousel'
+import { getCurrentWeek, expectedCheckins } from '@/lib/utils'
+import { getDynamique } from '@/lib/axeHelpers'
 import OnboardingFlow from './OnboardingFlow'
-
-const WEATHER_ICONS: Record<string, string> = {
-  sunny: '☀️',
-  cloudy: '⛅',
-  stormy: '⛈️',
-}
-
-// Calcul de la dynamique d'action selon le nombre d'actions menées
-function getDynamique(count: number) {
-  if (count === 0) return { label: 'Ancrage',     icon: '📍', color: 'text-gray-500   bg-gray-100  border-gray-300'   }
-  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-800   bg-teal-100  border-teal-300'   }
-  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-800   bg-blue-100  border-blue-300'   }
-  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-800 bg-orange-100 border-orange-300' }
-  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-800 bg-purple-100 border-purple-300' }
-}
+import DashboardClient from './DashboardClient'
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -37,7 +19,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase.from('profiles').select('first_name, created_at').eq('id', user!.id).single(),
     supabase.from('axes')
-      .select('id, subject, difficulty, actions(id)')
+      .select('id, subject, difficulty, actions(id, created_at)')
       .eq('learner_id', user!.id)
       .order('created_at'),
     supabase.from('checkins')
@@ -54,173 +36,74 @@ export default async function DashboardPage() {
 
   const checkinDone = !!thisWeekCheckin
   const totalCheckins = allCheckins?.length ?? 0
-
-  // Nombre de check-ins attendus (basé sur le 2e vendredi après inscription)
   const expected = profile?.created_at ? expectedCheckins(profile.created_at) : 0
 
-  // Total actions menées — toutes les actions sont considérées comme menées
+  // Total actions menées
   const totalCompletedActions = axes?.reduce((acc, axe) => {
     return acc + ((axe.actions as { id: string }[])?.length ?? 0)
   }, 0) ?? 0
+
+  // Delta actions des 7 derniers jours
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const deltaActionsThisWeek = axes?.reduce((acc, axe) => {
+    return acc + ((axe.actions as { id: string; created_at: string }[]) ?? [])
+      .filter(a => a.created_at >= sevenDaysAgo.toISOString()).length
+  }, 0) ?? 0
+
+  // Dernière météo enregistrée
+  const lastWeather = allCheckins?.length
+    ? (allCheckins[allCheckins.length - 1].weather as string | null)
+    : null
 
   // Première action (pour la suppression dans l'onboarding)
   const firstActionId = axes?.flatMap((axe) =>
     ((axe.actions as { id: string }[]) ?? []).map((a) => a.id)
   )[0] ?? null
 
+  // Axes formatés pour le client
+  const axeItems = (axes ?? []).map((axe, index) => {
+    const completedCount = ((axe.actions as { id: string }[]) ?? []).length
+    return {
+      id: axe.id,
+      index,
+      subject: axe.subject,
+      completedCount,
+      dyn: getDynamique(completedCount),
+    }
+  })
+
+  // Étapes de progression
+  const axesCount = axes?.length ?? 0
+  const stepsData = [
+    { label: 'Axes définis', done: axesCount >= 3 },
+    { label: 'Première action', done: totalCompletedActions > 0 },
+    { label: 'Premier check-in', done: totalCheckins > 0 },
+  ]
+
   return (
     <OnboardingFlow
       userId={user!.id}
       firstName={profile?.first_name ?? ''}
-      axesCount={axes?.length ?? 0}
+      axesCount={axesCount}
       totalActions={totalCompletedActions}
       totalCheckins={totalCheckins}
       firstActionId={firstActionId}
     >
-      {/* ── Dashboard complet (affiché après l'onboarding) ── */}
-      <div className="space-y-6 pb-4">
-
-        {/* En-tête */}
-        <div>
-          <h1 className="page-title">Bonjour {profile?.first_name} 👋</h1>
-          <p className="text-sm text-gray-500 mt-1">{formatWeek(week, year)}</p>
-        </div>
-
-        {/* Alerte check-in (uniquement si non réalisé) */}
-        {!checkinDone && (
-          <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-100 border border-amber-300">
-            <AlertCircle className="text-amber-600 shrink-0" size={24} />
-            <div className="flex-1">
-              <p className="font-medium text-amber-900">Check-in de la semaine en attente</p>
-              <p className="text-sm text-amber-700">Prenez 2 minutes pour faire le point</p>
-            </div>
-            <Link href="/checkin" className="btn-primary shrink-0">Faire</Link>
-          </div>
-        )}
-
-        {/* Barre de progression globale */}
-        {(() => {
-          const axesCount = axes?.length ?? 0
-          const steps = [
-            { label: 'Axes définis', done: axesCount >= 3 },
-            { label: 'Première action', done: totalCompletedActions > 0 },
-            { label: 'Premier check-in', done: totalCheckins > 0 },
-          ]
-          const doneCount = steps.filter((s) => s.done).length
-          const pct = Math.round((doneCount / steps.length) * 100)
-          return pct < 100 ? (
-            <div className="card p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold text-gray-700">Votre progression</p>
-                <span className="text-xs font-bold text-indigo-600">{pct}%</span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-500" style={{
-                  width: `${pct}%`,
-                  background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7)',
-                }} />
-              </div>
-              <div className="flex gap-4 mt-2.5">
-                {steps.map((s, i) => (
-                  <span key={i} className={`text-xs ${s.done ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
-                    {s.done ? '✓' : '○'} {s.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null
-        })()}
-
-        {/* Badges stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <Link href="/axes" className="card text-center py-4 px-2 hover:border-indigo-300 hover:bg-indigo-100/60 transition-colors">
-            <Target className="mx-auto text-indigo-600 mb-1.5" size={20} />
-            <p className="text-2xl font-bold text-indigo-700 leading-none">
-              {axes?.length ?? 0}
-              <span className="text-sm font-normal text-gray-400">/3</span>
-            </p>
-            <p className="text-xs text-gray-600 mt-1">Axes définis</p>
-          </Link>
-          <Link href="/axes" className="card text-center py-4 px-2 hover:border-amber-300 hover:bg-amber-100/60 transition-colors">
-            <Zap className="mx-auto text-amber-600 mb-1.5" size={20} />
-            <p className="text-2xl font-bold text-amber-700 leading-none">{totalCompletedActions}</p>
-            <p className="text-xs text-gray-600 mt-1">Actions menées</p>
-          </Link>
-          <Link href="/checkin" className="card text-center py-4 px-2 hover:border-emerald-300 hover:bg-emerald-100/60 transition-colors">
-            <CalendarCheck className="mx-auto text-emerald-600 mb-1.5" size={20} />
-            <p className="text-2xl font-bold text-emerald-700 leading-none">
-              {totalCheckins}
-              {expected > 0 && <span className="text-sm font-normal text-gray-400">/{expected}</span>}
-            </p>
-            <p className="text-xs text-gray-600 mt-1">Check-ins</p>
-          </Link>
-        </div>
-
-        {/* Axes de progrès */}
-        {axes && axes.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="section-title">Mes actions de progrès</h2>
-              {axes.length < 3 && (
-                <Link href="/axes" className="text-sm text-indigo-600 hover:underline">
-                  + Ajouter
-                </Link>
-              )}
-            </div>
-
-            <AxesCarousel
-              axes={axes.map((axe, index) => ({
-                id: axe.id,
-                index,
-                subject: axe.subject,
-                completedCount: ((axe.actions as { id: string }[]) ?? []).length,
-                dyn: getDynamique(((axe.actions as { id: string }[]) ?? []).length),
-              }))}
-            />
-          </div>
-        )}
-
-        {/* Historique des check-ins */}
-        {allCheckins && allCheckins.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="section-title">Mes check-ins</h2>
-              <Link href="/checkin" className="text-sm text-indigo-600 hover:underline">
-                Voir tout
-              </Link>
-            </div>
-            <div className="card p-4">
-              {checkinDone && (() => {
-                const today = new Date()
-                const dayOfWeek = today.getDay()
-                const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7
-                const nextFriday = new Date(today)
-                nextFriday.setDate(today.getDate() + daysUntilFriday)
-                return (
-                  <p className="text-sm text-gray-500 mb-3">
-                    ✅ Check-in de cette semaine effectué — Prochain : <span className="font-medium text-gray-700">{nextFriday.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-                  </p>
-                )
-              })()}
-              <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide">
-                {allCheckins.map((checkin) => (
-                  <div key={checkin.id} className="flex flex-col items-center gap-1 shrink-0">
-                    <span className="text-2xl leading-none">
-                      {WEATHER_ICONS[checkin.weather as string] ?? '❓'}
-                    </span>
-                    <span className="text-xs text-gray-400 whitespace-nowrap">
-                      {new Date(checkin.created_at as string).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <DashboardClient
+        firstName={profile?.first_name ?? ''}
+        week={week}
+        year={year}
+        checkinDone={checkinDone}
+        totalCheckins={totalCheckins}
+        expectedCheckins={expected}
+        totalActions={totalCompletedActions}
+        deltaActionsThisWeek={deltaActionsThisWeek}
+        lastWeather={lastWeather}
+        axesCount={axesCount}
+        axes={axeItems}
+        stepsData={stepsData}
+      />
     </OnboardingFlow>
   )
 }

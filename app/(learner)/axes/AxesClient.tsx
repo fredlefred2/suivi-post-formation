@@ -8,24 +8,9 @@ import type { Axe, Action, ActionFeedbackData } from '@/lib/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import { acknowledgeStep } from '@/lib/onboarding'
+import { MARKERS, getDynamique, getCurrentLevelIndex, getProgress, getCurrentLevel, getActionPhaseIcon } from '@/lib/axeHelpers'
 
 type AxeWithActions = Axe & { actions: Action[] }
-
-function getDynamique(count: number) {
-  if (count === 0) return { label: 'Ancrage',     icon: '📍', color: 'text-gray-500   bg-gray-100  border-gray-300',   delta: 1 }
-  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-800   bg-teal-100  border-teal-300',   delta: 3 - count }
-  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-800   bg-blue-100  border-blue-300',   delta: 6 - count }
-  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-800 bg-orange-100 border-orange-300', delta: 9 - count }
-  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-800 bg-purple-100 border-purple-300', delta: 0 }
-}
-
-// Icône de phase selon le rang chronologique de l'action (1-indexed)
-function getActionPhaseIcon(rank: number) {
-  if (rank <= 2) return '👣'
-  if (rank <= 5) return '🥁'
-  if (rank <= 8) return '🔥'
-  return '🚀'
-}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -219,49 +204,64 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           >
             {axes.map((axe, axeIndex) => {
               const dyn = getDynamique(axe.actions.length)
+              const progress = getProgress(axe.actions.length)
+              const levelIdx = getCurrentLevelIndex(axe.actions.length)
+              const level = getCurrentLevel(axe.actions.length)
               return (
                 <div
                   key={axe.id}
-                  className="card snap-center shrink-0 w-[85vw] max-w-[420px]"
+                  className={`snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl border-2 p-4 ${dyn.color}`}
                 >
-                  {/* En-tête */}
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h2 className="font-semibold text-gray-900">{axe.subject}</h2>
-                      {axe.description && (
-                        <p className="text-sm text-gray-500 mt-0.5">{axe.description}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full border ${DIFFICULTY_COLORS[axe.difficulty]}`}>
-                          {DIFFICULTY_LABELS[axe.difficulty]}
-                        </span>
-                        <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${dyn.color}`}>
-                          <span className="text-sm leading-none">{dyn.icon}</span>
-                          <span>{dyn.label}</span>
-                          {dyn.delta > 0 && (
-                            <span className="text-[10px] font-normal opacity-70">+{dyn.delta} pour {
-                              axe.actions.length === 0 ? 'Impulsion' :
-                              axe.actions.length <= 2 ? 'Rythme' :
-                              axe.actions.length <= 5 ? 'Intensité' : 'Propulsion'
-                            }</span>
-                          )}
-                        </div>
-                      </div>
+                  {/* Ligne 1 : numéro + titre + supprimer */}
+                  <div className="flex items-start gap-3">
+                    <span className="w-9 h-9 rounded-full bg-white/60 border border-current/20 flex items-center justify-center text-base font-bold shrink-0 mt-0.5">
+                      {axeIndex + 1}
+                    </span>
+                    <p className="font-bold text-base leading-snug line-clamp-2 flex-1">{axe.subject}</p>
+                    <button
+                      onClick={() => { setDeletingAxeId(axe.id); setDeletingAxeStep(1) }}
+                      className="opacity-40 hover:opacity-80 transition-opacity p-1 shrink-0"
+                      title="Supprimer cet axe"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  {/* Ligne 2 : actions + niveau */}
+                  <div className="flex items-center gap-2 mt-3">
+                    <span className="text-sm font-semibold">
+                      {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
+                    </span>
+                    <span className="opacity-30">·</span>
+                    <span className="text-lg leading-none">{level.icon}</span>
+                    <span className="text-sm font-medium opacity-80">
+                      Niveau {level.label}
+                    </span>
+                  </div>
+
+                  {/* Barre de progression */}
+                  <div className="mt-3 relative">
+                    <div className="h-3 bg-white/60 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-current opacity-60 transition-all duration-500"
+                        style={{ width: `${progress}%` }}
+                      />
                     </div>
-                    {/* Suppression */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => { setDeletingAxeId(axe.id); setDeletingAxeStep(1) }}
-                        className="text-gray-300 hover:text-red-400 transition-colors p-1"
-                        title="Supprimer cet axe"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                    <div className="relative h-5 mt-0.5">
+                      {MARKERS.map((m, i) => (
+                        <span
+                          key={i}
+                          className={`absolute -translate-x-1/2 text-sm ${i <= levelIdx ? 'opacity-100' : 'opacity-25'}`}
+                          style={{ left: `${m.pos * 100}%` }}
+                        >
+                          {m.icon}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Actions menées */}
-                  <div className="border-t border-gray-100 pt-3 mt-3">
+                  {/* Séparateur + Actions menées */}
+                  <div className="border-t border-current/10 pt-3 mt-2">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium text-gray-700">
                         Actions menées
