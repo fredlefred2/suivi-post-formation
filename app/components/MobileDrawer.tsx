@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Menu, X,
-  LayoutDashboard, Target, ClipboardCheck, History,
+  LayoutDashboard, Target, ClipboardCheck,
   GraduationCap, Users,
 } from 'lucide-react'
 
@@ -13,7 +13,6 @@ const learnerNavItems = [
   { href: '/dashboard',  label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/axes',       label: 'Mes actions',      icon: Target           },
   { href: '/checkin',    label: 'Check-in',          icon: ClipboardCheck   },
-  { href: '/history',    label: 'Historique',        icon: History          },
   { href: '/team',       label: 'Team',              icon: Users            },
 ]
 

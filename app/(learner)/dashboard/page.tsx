@@ -146,7 +146,7 @@ export default async function DashboardPage() {
             <p className="text-2xl font-bold text-amber-700 leading-none">{totalCompletedActions}</p>
             <p className="text-xs text-gray-600 mt-1">Actions menées</p>
           </Link>
-          <Link href="/history" className="card text-center py-4 px-2 hover:border-emerald-300 hover:bg-emerald-100/60 transition-colors">
+          <Link href="/checkin" className="card text-center py-4 px-2 hover:border-emerald-300 hover:bg-emerald-100/60 transition-colors">
             <CalendarCheck className="mx-auto text-emerald-600 mb-1.5" size={20} />
             <p className="text-2xl font-bold text-emerald-700 leading-none">
               {totalCheckins}
@@ -185,7 +185,7 @@ export default async function DashboardPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="section-title">Mes check-ins</h2>
-              <Link href="/history" className="text-sm text-indigo-600 hover:underline">
+              <Link href="/checkin" className="text-sm text-indigo-600 hover:underline">
                 Voir tout
               </Link>
             </div>

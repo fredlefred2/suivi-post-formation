@@ -489,17 +489,16 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               </button>
               <button
                 onClick={() => {
+                  const actionId = deletingActionId
+                  if (!actionId) return
+                  setDeletingActionId(null)
                   startTransition(async () => {
-                    await deleteAction(deletingActionId)
-                    // Pendant l'onboarding highlight-delete, acquitter l'étape et retourner au dashboard
+                    await deleteAction(actionId)
                     if (isHighlightDelete && userId) {
                       acknowledgeStep('edit-delete', userId)
                       router.push('/dashboard')
                     }
                   })
-                  if (!isHighlightDelete) {
-                    setDeletingActionId(null)
-                  }
                 }}
                 className="px-5 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
               >

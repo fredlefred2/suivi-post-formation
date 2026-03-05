@@ -50,6 +50,5 @@ export async function submitCheckin(formData: FormData) {
   }
 
   revalidatePath('/dashboard')
-  revalidatePath('/history')
   revalidatePath('/checkin')
 }

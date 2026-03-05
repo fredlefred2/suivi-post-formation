@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/(auth)/actions'
-import { LayoutDashboard, Target, ClipboardCheck, History, Users, LogOut } from 'lucide-react'
+import { LayoutDashboard, Target, ClipboardCheck, Users, LogOut } from 'lucide-react'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 
@@ -10,7 +10,6 @@ const navItems = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
   { href: '/axes', label: 'Mes actions', icon: Target, iconName: 'Target' },
   { href: '/checkin', label: 'Check-in', icon: ClipboardCheck, iconName: 'ClipboardCheck' },
-  { href: '/history', label: 'Historique', icon: History, iconName: 'History' },
   { href: '/team', label: 'Team', icon: Users, iconName: 'Users' },
 ]
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 
 type Props = {
@@ -214,6 +215,56 @@ export default function OnboardingFlow({
       ),
       isCompleted: ack['checkin'] ?? false,
       cta: { label: 'C\'est parti, je commence !', action: () => acknowledge('checkin') },
+    },
+
+    // ── Étape 9 : Tour des menus ──
+    {
+      id: 'menu-tour',
+      title: 'Votre espace Progress +',
+      icon: '🧭',
+      bravo: '🎉 Félicitations, la prise en main est terminée !',
+      description: 'Retrouvez ces 4 espaces dans le menu en bas de votre écran.',
+      extra: (
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          {[
+            {
+              Icon: LayoutDashboard, label: 'Tableau de bord',
+              desc: 'Votre vue d\'ensemble : progression, stats et actions récentes.',
+              gradient: 'from-indigo-500 to-indigo-600',
+              bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700',
+            },
+            {
+              Icon: Target, label: 'Mes actions',
+              desc: 'Créez et gérez vos actions concrètes pour chaque axe de progrès.',
+              gradient: 'from-amber-500 to-orange-500',
+              bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700',
+            },
+            {
+              Icon: ClipboardCheck, label: 'Check-in',
+              desc: 'Votre bilan hebdo : météo, réussites, difficultés + historique.',
+              gradient: 'from-emerald-500 to-teal-500',
+              bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700',
+            },
+            {
+              Icon: Users, label: 'Team',
+              desc: 'Découvrez la météo de votre équipe et les actions de vos coéquipiers.',
+              gradient: 'from-purple-500 to-pink-500',
+              bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700',
+            },
+          ].map((item, i) => (
+            <div key={item.label} className={`${item.bg} border ${item.border} rounded-xl p-3 text-left`}
+                 style={{ animation: `fade-in 0.3s ease-out ${i * 0.1}s both` }}>
+              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-2`}>
+                <item.Icon size={20} className="text-white" />
+              </div>
+              <p className={`text-sm font-semibold ${item.text} mb-0.5`}>{item.label}</p>
+              <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      ),
+      isCompleted: ack['menu-tour'] ?? false,
+      cta: { label: 'C\'est parti !', action: () => acknowledge('menu-tour') },
     },
   ]
 

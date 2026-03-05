@@ -183,7 +183,12 @@ export default function TeamClient({
       {/* ── Carrousel actions récentes ── */}
       {recentActions.length > 0 && (
         <div className="card">
-          <h2 className="section-title mb-3">Actions récentes</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-title">Actions récentes</h2>
+            <button onClick={handleOpenAll} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline">
+              Voir tout
+            </button>
+          </div>
           <div
             ref={scrollRef}
             className="flex gap-3 overflow-x-auto scrollbar-thin pb-2"
