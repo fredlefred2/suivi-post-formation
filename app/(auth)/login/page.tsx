@@ -30,8 +30,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-sm relative z-10 animate-fade-in">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4 drop-shadow-lg">🚀</div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Progress +</h1>
+          <img src="/yapluka-symbol.png" alt="YAPLUKA" className="w-16 h-16 mx-auto mb-2 drop-shadow-lg" />
+          <h1 className="text-2xl font-bold text-white tracking-tight">YAPLUKA</h1>
           <p className="text-sm text-indigo-200/70 mt-1.5">Transformez vos formations en actions concrètes</p>
         </div>
 
@@ -66,7 +66,7 @@ export default function LoginPage() {
               S&apos;inscrire
             </Link>
           </div>
-          <p className="text-center text-[11px] text-indigo-300/30 mt-4">V21</p>
+          <p className="text-center text-[11px] text-indigo-300/30 mt-4">V22</p>
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Progress +',
+  title: 'YAPLUKA',
   description: 'Transformez vos formations en actions concrètes',
   manifest: '/manifest.json',
   icons: [

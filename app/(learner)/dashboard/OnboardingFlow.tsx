@@ -55,7 +55,7 @@ export default function OnboardingFlow({
       id: 'welcome',
       title: `Bienvenue ${firstName} !`,
       icon: '🚀',
-      description: 'Progress + vous accompagne pour transformer votre formation en actions concrètes. Voici le programme :',
+      description: 'YAPLUKA vous accompagne pour transformer votre formation en actions concrètes. Voici le programme :',
       extra: (
         <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
           {[
@@ -206,7 +206,7 @@ export default function OnboardingFlow({
     // ── Étape 8 : Tour des menus ──
     {
       id: 'menu-tour',
-      title: 'Votre espace Progress +',
+      title: 'Votre espace YAPLUKA',
       icon: '🧭',
       bravo: '🎉 Félicitations, la prise en main est terminée !',
       description: 'Retrouvez ces 4 espaces dans le menu en bas de votre écran.',
@@ -267,7 +267,7 @@ export default function OnboardingFlow({
     <div className="space-y-6 pb-4">
       <div>
         <h1 className="page-title">Bonjour {firstName} 👋</h1>
-        <p className="text-sm text-gray-500 mt-1">Découverte de Progress +</p>
+        <p className="text-sm text-gray-500 mt-1">Découverte de YAPLUKA</p>
       </div>
 
       <div className="card overflow-hidden">

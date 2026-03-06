@@ -116,9 +116,9 @@ export default function InstallPrompt() {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
-          <img src="/icon-192.png" alt="Progress+" className="w-12 h-12 rounded-xl flex-shrink-0" />
+          <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Installer Progress+</p>
+            <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
             <p className="text-xs text-gray-500 mt-0.5">Accès rapide depuis votre écran d&apos;accueil</p>
           </div>
           <button
@@ -141,9 +141,9 @@ export default function InstallPrompt() {
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <img src="/icon-192.png" alt="Progress+" className="w-10 h-10 rounded-xl flex-shrink-0" />
+            <img src="/icon-192.png" alt="YAPLUKA" className="w-10 h-10 rounded-xl flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">Installer Progress+</p>
+              <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
               <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                 Appuyez sur{' '}
                 <span className="inline-flex items-center align-middle">
