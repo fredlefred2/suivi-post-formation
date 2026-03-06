@@ -59,6 +59,7 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const currentGroupName = groups.find((g) => g.id === currentGroupId)?.name
+  const prevIndexRef = useRef(initialIndex)
 
   // ── Scroll detection (pattern AxesClient) ────────────────────────────────
   const handleScroll = useCallback(() => {
@@ -77,6 +78,10 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
         closestDist = dist
         closestIndex = i
       }
+    }
+    if (closestIndex !== prevIndexRef.current) {
+      prevIndexRef.current = closestIndex
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
     setCurrentIndex(closestIndex)
   }, [])
