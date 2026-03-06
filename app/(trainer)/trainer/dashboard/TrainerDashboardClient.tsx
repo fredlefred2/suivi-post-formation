@@ -96,21 +96,30 @@ export default function TrainerDashboardClient({
   initialGroup,
 }: Props) {
   // ── State ──
-  const [selectedOption, setSelectedOption] = useState<string>(() => {
-    if (initialGroup && initialGroup !== 'all' && groups.some(g => g.id === initialGroup)) return initialGroup
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('trainer_selected_group')
-      if (stored && (stored === 'all' || groups.some(g => g.id === stored))) return stored
-    }
-    return 'all'
-  })
+  // Initialiser sans localStorage pour éviter le mismatch d'hydration
+  const [selectedOption, setSelectedOption] = useState<string>(
+    initialGroup && initialGroup !== 'all' && groups.some(g => g.id === initialGroup)
+      ? initialGroup
+      : 'all'
+  )
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showAllActions, setShowAllActions] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Sync localStorage
+  // Restaurer le localStorage APRÈS hydration, puis sync
+  useEffect(() => {
+    if (!initialGroup || initialGroup === 'all') {
+      const stored = localStorage.getItem('trainer_selected_group')
+      if (stored && (stored === 'all' || groups.some(g => g.id === stored))) {
+        setSelectedOption(stored)
+        return
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     localStorage.setItem('trainer_selected_group', selectedOption)
   }, [selectedOption])
