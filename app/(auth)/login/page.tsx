@@ -59,12 +59,13 @@ export default function LoginPage() {
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
-          <p className="text-center text-sm text-indigo-200/60 mt-5">
-            Pas encore de compte ?{' '}
-            <Link href="/register" className="text-indigo-300 hover:text-white font-medium transition-colors hover:underline">
+          <div className="mt-5 text-center">
+            <p className="text-sm text-indigo-200/60 mb-3">Pas encore de compte ?</p>
+            <Link href="/register"
+              className="inline-block w-full px-5 py-2.5 text-sm font-semibold text-indigo-300 border border-indigo-400/40 rounded-xl hover:bg-white/10 hover:text-white transition-all duration-200">
               S&apos;inscrire
             </Link>
-          </p>
+          </div>
           <p className="text-center text-[11px] text-indigo-300/30 mt-4">V19</p>
         </div>
       </div>
