@@ -3,31 +3,18 @@ export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { formatWeek } from '@/lib/utils'
+import { formatWeek, expectedCheckins } from '@/lib/utils'
 import {
-  WEATHER_LABELS,
   WEATHER_COLORS,
 } from '@/lib/types'
 import type { ActionFeedbackData } from '@/lib/types'
 import LearnerNav from './LearnerNav'
 import LearnerAxesSection from './LearnerAxesSection'
 
-// ── Dynamique d'action selon le nombre d'actions ────────────────────────────
-function getDynamique(count: number) {
-  if (count === 0) return null
-  if (count <= 2) return { label: 'Impulsion',   icon: '👣', color: 'text-teal-800   bg-teal-100  border-teal-300'   }
-  if (count <= 5) return { label: 'Rythme',      icon: '🥁', color: 'text-blue-800   bg-blue-100  border-blue-300'   }
-  if (count <= 8) return { label: 'Intensité',   icon: '🔥', color: 'text-orange-800 bg-orange-100 border-orange-300' }
-  return               { label: 'Propulsion',  icon: '🚀', color: 'text-purple-800 bg-purple-100 border-purple-300' }
-}
-
-// Date courte ex. "3 juin 2024"
-function shortDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+const WEATHER_ICONS: Record<string, string> = {
+  sunny: '☀️',
+  cloudy: '⛅',
+  stormy: '⛈️',
 }
 
 type ActionRow = { id: string; description: string; completed: boolean; created_at: string }
@@ -90,7 +77,6 @@ export default async function LearnerDetailPage({
   }))
 
   // ── Carousel : groupe courant ──────────────────────────────────────────────
-  // Utiliser le groupe passé en paramètre, sinon le groupe de l'apprenant
   const groupId = searchParams.group && searchParams.group !== 'all' && searchParams.group !== 'unassigned'
     ? searchParams.group
     : (membership.group_id as string)
@@ -123,7 +109,7 @@ export default async function LearnerDetailPage({
   const nextUrl = nextLearner ? buildLearnerUrl(nextLearner.id) : null
   const allUrls = learnersInGroup.map((l) => buildLearnerUrl(l.id))
 
-  // ── Actions de la semaine ───────────────────────────────────────────────────
+  // ── Stats ──────────────────────────────────────────────────────────────────
   const now = new Date()
   const dayOfWeek = now.getDay()
   const monday = new Date(now)
@@ -134,10 +120,16 @@ export default async function LearnerDetailPage({
   sunday.setHours(23, 59, 59, 999)
 
   const allLearnerActions = (axes ?? []).flatMap((axe) => axe.actions as ActionRow[])
+  const totalActions = allLearnerActions.length
   const actionsThisWeek = allLearnerActions.filter((a) => {
     const d = new Date(a.created_at)
     return d >= monday && d <= sunday
   }).length
+
+  const totalCheckins = (checkins ?? []).length
+  const expected = profile.created_at ? expectedCheckins(profile.created_at) : 0
+  const lastWeather = totalCheckins > 0 ? (checkins![totalCheckins - 1].weather as string) : null
+  const weatherEmoji = lastWeather ? WEATHER_ICONS[lastWeather] ?? '❓' : null
 
   // ── Feedback (likes + commentaires) sur les actions ───────────────────────
   const admin = createAdminClient(
@@ -182,16 +174,13 @@ export default async function LearnerDetailPage({
     }
   })
 
-  // ── Stats globales ────────────────────────────────────────────────────────
-  const totalActions = (axes ?? []).reduce((sum, a) => sum + (a.actions as ActionRow[]).length, 0)
-  const axesEnAction = (axes ?? []).filter((a) => getDynamique((a.actions as ActionRow[]).length))
-
   // ── Météo count pour résumé ───────────────────────────────────────────────
   const weatherCount = {
     sunny:  (checkins ?? []).filter((c) => c.weather === 'sunny').length,
     cloudy: (checkins ?? []).filter((c) => c.weather === 'cloudy').length,
     stormy: (checkins ?? []).filter((c) => c.weather === 'stormy').length,
   }
+
   return (
     <div className="space-y-6 pb-4">
 
@@ -207,79 +196,65 @@ export default async function LearnerDetailPage({
       >
       <div className="space-y-6">
 
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-indigo-200 text-indigo-800 font-bold text-lg flex items-center justify-center shrink-0">
-            {profile.first_name[0]}{profile.last_name[0]}
-          </div>
-          <div>
-            <h1 className="page-title">{profile.first_name} {profile.last_name}</h1>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Membre depuis le {shortDate(profile.created_at)}
-            </p>
-          </div>
-        </div>
+      {/* ── Nom de l'apprenant ─────────────────────────────────────────────── */}
+      <h1 className="page-title">{profile.first_name} {profile.last_name}</h1>
 
-        {/* Badges de synthèse */}
-        <div className="flex gap-2 mt-3 flex-wrap">
-          <span className="inline-flex items-center gap-1 text-xs bg-gray-200 text-gray-700 border border-gray-300 px-2.5 py-1 rounded-full font-medium">
-            ⚡ {totalActions} action{totalActions > 1 ? 's' : ''}
-          </span>
-          {actionsThisWeek > 0 ? (
-            <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full font-semibold">
-              +{actionsThisWeek} cette sem.
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-500 border border-gray-300 px-2.5 py-1 rounded-full">
-              0 cette sem.
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1 text-xs bg-sky-100 text-sky-800 border border-sky-200 px-2.5 py-1 rounded-full font-medium">
-            📅 {(checkins ?? []).length} check-in{(checkins ?? []).length > 1 ? 's' : ''}
-          </span>
-          {axesEnAction.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs bg-purple-100 text-purple-800 border border-purple-200 px-2.5 py-1 rounded-full font-medium">
-              🚀 {axesEnAction.length} axe{axesEnAction.length > 1 ? 's' : ''} en action
-            </span>
-          )}
+      {/* ── Bloc 1 : Check-ins + Dernière météo ───────────────────────────── */}
+      <div className="card py-5 px-4">
+        <div className="grid grid-cols-2 divide-x divide-gray-100">
+          {/* Check-ins */}
+          <div className="text-center px-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-emerald-500 mb-1.5"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+            <p className="text-3xl font-bold text-gray-800">
+              {totalCheckins}
+              {expected > 0 && <span className="text-sm font-normal text-gray-400">/{expected}</span>}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Check-ins</p>
+          </div>
+          {/* Dernière météo */}
+          <div className="text-center px-2 flex flex-col items-center justify-center">
+            {weatherEmoji ? (
+              <>
+                <p className="text-xs text-gray-500 mb-2">Dernière météo</p>
+                <span className="text-6xl leading-none">{weatherEmoji}</span>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-2">Dernière météo</p>
+                <span className="text-5xl text-gray-300">-</span>
+                <p className="text-[11px] text-gray-400 mt-1">Pas de check-in</p>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── Dynamique d'action ─────────────────────────────────────────────── */}
-      {axes && axes.length > 0 && (
-        <div className="card">
-          <h2 className="section-title mb-4">⚡ Dynamique d&apos;action</h2>
-          <div className={`grid gap-3 ${axes.length === 1 ? 'grid-cols-1' : axes.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {axes.map((axe) => {
-              const actionsCount = (axe.actions as ActionRow[]).length
-              const dyn = getDynamique(actionsCount)
-              return (
-                <div
-                  key={axe.id}
-                  className={`rounded-xl border p-3 text-center ${
-                    dyn ? dyn.color : 'bg-gray-100 border-gray-300 text-gray-500'
-                  }`}
-                >
-                  <p className="font-bold text-sm leading-snug line-clamp-2">{axe.subject}</p>
-                  <p className="text-xs mt-1.5 font-medium">
-                    {actionsCount} action{actionsCount > 1 ? 's' : ''}
-                  </p>
-                  <p className="text-xs mt-1.5 opacity-80">
-                    {dyn ? dyn.icon : '📍'} {dyn ? dyn.label : 'Ancrage'}
-                  </p>
-                </div>
-              )
-            })}
+      {/* ── Bloc 2 : Actions + Delta cette semaine ────────────────────────── */}
+      <div className="card py-5 px-4">
+        <div className="grid grid-cols-2 divide-x divide-gray-100">
+          {/* Total actions */}
+          <div className="text-center px-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-amber-500 mb-1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <p className="text-3xl font-bold text-gray-800">{totalActions}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Actions menées</p>
+          </div>
+          {/* Delta cette semaine */}
+          <div className="text-center px-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mx-auto ${actionsThisWeek > 0 ? 'text-emerald-500' : 'text-gray-400'} mb-1.5`}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <p className={`text-3xl font-bold ${actionsThisWeek > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
+              {actionsThisWeek > 0 ? `+${actionsThisWeek}` : '0'}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Cette semaine</p>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* ── Axes de progrès + actions (avec likes/commentaires) ──────────────── */}
+      {/* ── Axes de progrès ────────────────────────────────────────────────── */}
       {axes && axes.length > 0 && (
         <LearnerAxesSection
-          axes={(axes ?? []).map((axe) => ({
+          axes={(axes ?? []).map((axe, i) => ({
             id: axe.id,
+            index: i,
             subject: axe.subject,
             description: axe.description,
             difficulty: axe.difficulty,
@@ -289,7 +264,7 @@ export default async function LearnerDetailPage({
         />
       )}
 
-      {/* ── Historique météo ─────────────────────────────────────────────────── */}
+      {/* ── Historique météo ───────────────────────────────────────────────── */}
       {checkins && checkins.length > 0 && (
         <div className="card">
           <h2 className="section-title mb-4">🌤 Historique météo</h2>
@@ -310,7 +285,7 @@ export default async function LearnerDetailPage({
           </div>
 
           {/* Timeline pills */}
-          <div className="flex flex-wrap gap-1.5 mb-5">
+          <div className="flex flex-wrap gap-1.5">
             {[...checkins].reverse().map((ci) => (
               <span
                 key={ci.id}
@@ -321,40 +296,6 @@ export default async function LearnerDetailPage({
               >
                 {ci.weather === 'sunny' ? '☀️' : ci.weather === 'cloudy' ? '⛅' : '⛈️'} S{ci.week_number}
               </span>
-            ))}
-          </div>
-
-          {/* Détail check-ins */}
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Détail des check-ins</h3>
-          <div className="space-y-3">
-            {[...checkins].reverse().map((ci) => (
-              <div key={ci.id} className="border border-gray-100 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      WEATHER_COLORS[ci.weather as keyof typeof WEATHER_COLORS]
-                    }`}
-                  >
-                    {WEATHER_LABELS[ci.weather as keyof typeof WEATHER_LABELS]}
-                  </span>
-                  <span className="text-xs text-gray-400">{formatWeek(ci.week_number, ci.year)}</span>
-                </div>
-                {ci.what_worked && (
-                  <div className="mb-1.5">
-                    <p className="text-xs font-medium text-emerald-700">✅ Ce qui a bien fonctionné</p>
-                    <p className="text-sm text-gray-700 mt-0.5">{ci.what_worked}</p>
-                  </div>
-                )}
-                {ci.difficulties && (
-                  <div>
-                    <p className="text-xs font-medium text-red-600">⚠️ Difficultés rencontrées</p>
-                    <p className="text-sm text-gray-700 mt-0.5">{ci.difficulties}</p>
-                  </div>
-                )}
-                {!ci.what_worked && !ci.difficulties && (
-                  <p className="text-xs text-gray-400 italic">Aucune note ajoutée</p>
-                )}
-              </div>
             ))}
           </div>
         </div>
