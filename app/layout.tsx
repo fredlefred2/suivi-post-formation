@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { ToastProvider } from '@/app/components/Toast'
+import InstallPrompt from '@/app/components/InstallPrompt'
 import './globals.css'
 
 const inter = Inter({
@@ -27,7 +28,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={inter.variable}>
       <body className={inter.className}>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          {children}
+          <InstallPrompt />
+        </ToastProvider>
       </body>
     </html>
   )
