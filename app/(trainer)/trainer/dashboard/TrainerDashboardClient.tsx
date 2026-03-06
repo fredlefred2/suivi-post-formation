@@ -414,7 +414,7 @@ export default function TrainerDashboardClient({
               return (
                 <Link
                   key={action.id}
-                  href={`/trainer/learner/${action.learner_id}?from=apprenants&group=${learnerGroupMap[action.learner_id] ?? ''}`}
+                  href={`/trainer/apprenants?group=${learnerGroupMap[action.learner_id] ?? ''}&learner=${action.learner_id}`}
                   className={`flex-shrink-0 w-[220px] bg-gradient-to-br ${LEVEL_CARD_COLORS[dyn.level] ?? LEVEL_CARD_COLORS[0]} rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md active:scale-[0.98]`}
                   style={{ scrollSnapAlign: 'start' }}
                 >
@@ -488,7 +488,7 @@ export default function TrainerDashboardClient({
                     <td className="py-1.5 text-xs text-gray-400 w-6">{idx + 1}</td>
                     <td className="py-1.5 font-medium text-gray-800 truncate max-w-[140px]">
                       <Link
-                        href={`/trainer/learner/${learner.id}?from=apprenants&group=${learnerGroupMap[learner.id] ?? ''}`}
+                        href={`/trainer/apprenants?group=${learnerGroupMap[learner.id] ?? ''}&learner=${learner.id}`}
                         className="hover:text-indigo-600 transition-colors"
                       >
                         {learner.name}
@@ -521,7 +521,7 @@ export default function TrainerDashboardClient({
               {filteredActions.slice(0, 20).map((action) => (
                 <Link
                   key={action.id}
-                  href={`/trainer/learner/${action.learner_id}?from=apprenants&group=${learnerGroupMap[action.learner_id] ?? ''}`}
+                  href={`/trainer/apprenants?group=${learnerGroupMap[action.learner_id] ?? ''}&learner=${action.learner_id}`}
                   className="block bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex items-center gap-2 mb-2">
