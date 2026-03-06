@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
+import { LayoutDashboard, Target, ClipboardCheck, Users, Heart, MessageCircle } from 'lucide-react'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 
 type Props = {
@@ -145,12 +145,40 @@ export default function OnboardingFlow({
       },
     },
 
-    // ── Étape 6 : Supprimer l'action ──
+    // ── Étape 6 : Likes & Commentaires ──
+    {
+      id: 'feedback-intro',
+      title: 'Likes & commentaires',
+      icon: '💬',
+      bravo: '🎉 Bravo ! Première action enregistrée !',
+      description: 'Votre formateur et vos coéquipiers peuvent réagir à vos actions. Sous chaque action, vous verrez ces icônes s\'activer :',
+      extra: (
+        <div className="flex flex-col gap-4 mt-4 max-w-xs mx-auto">
+          <div className="flex items-center gap-4 bg-pink-50 border border-pink-200 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-1.5 text-pink-500">
+              <Heart size={22} fill="currentColor" strokeWidth={0} />
+              <span className="text-sm font-semibold">3</span>
+            </div>
+            <p className="text-sm text-pink-700 text-left">Quelqu&apos;un a aimé votre action</p>
+          </div>
+          <div className="flex items-center gap-4 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-1.5 text-indigo-500">
+              <MessageCircle size={22} fill="currentColor" strokeWidth={0} />
+              <span className="text-sm font-semibold">2</span>
+            </div>
+            <p className="text-sm text-indigo-700 text-left">Vous avez reçu des commentaires</p>
+          </div>
+        </div>
+      ),
+      isCompleted: ack['feedback-intro'] ?? false,
+      cta: { label: 'Compris !', action: () => acknowledge('feedback-intro') },
+    },
+
+    // ── Étape 7 : Supprimer l'action ──
     {
       id: 'edit-delete',
       title: 'Essayez de supprimer',
       icon: '🗑️',
-      bravo: '🎉 Bravo ! Première action enregistrée !',
       description: 'Pas de panique, vous pouvez supprimer ou modifier une action à tout moment. Pour vous entraîner, supprimez l\'action que vous venez de créer en cliquant sur l\'icône 🗑️ qui clignote.',
       extra: (
         <div className="bg-red-50 rounded-xl p-3 mt-3 text-sm text-red-800">
