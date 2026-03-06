@@ -242,7 +242,7 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
               <div className="space-y-5">
 
                 {/* Nom */}
-                <h2 className="page-title">{learner.firstName} {learner.lastName}</h2>
+                <h2 className="page-title text-center">{learner.firstName} {learner.lastName}</h2>
 
                 {/* ── Bloc 1 : Check-ins + Dernière météo ──────────────── */}
                 <div className="card py-5 px-4">
