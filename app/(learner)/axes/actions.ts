@@ -45,16 +45,17 @@ export async function createAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Non authentifié' }
 
-  const { error } = await supabase.from('actions').insert({
+  const { data, error } = await supabase.from('actions').insert({
     axe_id: formData.get('axe_id') as string,
     learner_id: user.id,
     description: formData.get('description') as string,
     completed: true, // Une action ajoutée est directement une action menée
-  })
+  }).select('id').single()
 
   if (error) return { error: error.message }
   revalidatePath('/axes')
   revalidatePath('/dashboard')
+  return { id: data.id }
 }
 
 export async function toggleAction(actionId: string, completed: boolean) {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Target, ClipboardCheck, Users, Heart, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 
 type Props = {
@@ -125,74 +125,32 @@ export default function OnboardingFlow({
       cta: { label: 'Créer mon 3e axe', href: '/axes?onboarding=create' },
     },
 
-    // ── Étape 5 : Première action ──
+    // ── Étape 5 : Démo auto des actions ──
     {
       id: 'first-action',
-      title: 'Ajoutez votre première action',
+      title: 'Découvrez la gestion des actions',
       icon: '⚡',
       bravo: '🎉 Parfait ! Vos 3 axes sont définis !',
-      description: 'Chaque axe se nourrit d\'actions concrètes. Vous allez être redirigé vers vos axes : cliquez sur le bouton « Ajouter » qui clignote pour créer votre première action.',
+      description: 'On va vous montrer comment ajouter, modifier et supprimer une action. Tout se fait automatiquement, suivez le guide !',
       extra: (
         <div className="bg-amber-50 rounded-xl p-3 mt-3 text-left text-sm text-amber-800">
-          <p className="font-medium mb-1">Exemple d&apos;action :</p>
-          <p className="text-amber-600">&laquo; J&apos;ai confié la préparation de la réunion à Julie &raquo;</p>
-        </div>
-      ),
-      isCompleted: ack['first-action'] ?? false,
-      cta: {
-        label: 'Allons-y !',
-        action: () => router.push('/axes?onboarding=highlight-add'),
-      },
-    },
-
-    // ── Étape 6 : Likes & Commentaires ──
-    {
-      id: 'feedback-intro',
-      title: 'Likes & commentaires',
-      icon: '💬',
-      bravo: '🎉 Bravo ! Première action enregistrée !',
-      description: 'Votre formateur et vos coéquipiers peuvent réagir à vos actions. Sous chaque action, vous verrez ces icônes s\'activer :',
-      extra: (
-        <div className="flex flex-col gap-4 mt-4 max-w-xs mx-auto">
-          <div className="flex items-center gap-4 bg-pink-50 border border-pink-200 rounded-xl px-4 py-3">
-            <div className="flex items-center gap-1.5 text-pink-500">
-              <Heart size={22} fill="currentColor" strokeWidth={0} />
-              <span className="text-sm font-semibold">3</span>
-            </div>
-            <p className="text-sm text-pink-700 text-left">Quelqu&apos;un a aimé votre action</p>
-          </div>
-          <div className="flex items-center gap-4 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
-            <div className="flex items-center gap-1.5 text-indigo-500">
-              <MessageCircle size={22} fill="currentColor" strokeWidth={0} />
-              <span className="text-sm font-semibold">2</span>
-            </div>
-            <p className="text-sm text-indigo-700 text-left">Vous avez reçu des commentaires</p>
-          </div>
-        </div>
-      ),
-      isCompleted: ack['feedback-intro'] ?? false,
-      cta: { label: 'Compris !', action: () => acknowledge('feedback-intro') },
-    },
-
-    // ── Étape 7 : Supprimer l'action ──
-    {
-      id: 'edit-delete',
-      title: 'Essayez de supprimer',
-      icon: '🗑️',
-      description: 'Pas de panique, vous pouvez supprimer ou modifier une action à tout moment. Pour vous entraîner, supprimez l\'action que vous venez de créer en cliquant sur l\'icône 🗑️ qui clignote.',
-      extra: (
-        <div className="bg-red-50 rounded-xl p-3 mt-3 text-sm text-red-800">
-          <p>C&apos;est juste un entraînement : vous pourrez en ajouter de vraies juste après !</p>
+          <p className="font-medium mb-1">Vous découvrirez :</p>
+          <ul className="space-y-1 text-amber-600">
+            <li>➕ Ajouter une action</li>
+            <li>✏️ Modifier une action</li>
+            <li>❤️ Likes et 💬 commentaires</li>
+            <li>🗑️ Supprimer une action</li>
+          </ul>
         </div>
       ),
       isCompleted: ack['edit-delete'] ?? false,
       cta: {
-        label: 'Compris !',
-        action: () => router.push('/axes?onboarding=highlight-delete'),
+        label: 'C\'est parti !',
+        action: () => router.push('/axes?onboarding=auto-demo'),
       },
     },
 
-    // ── Étape 7 : Dynamique de progression ──
+    // ── Étape 6 : Dynamique de progression ──
     {
       id: 'progression',
       title: 'Votre dynamique de progression',
@@ -220,7 +178,7 @@ export default function OnboardingFlow({
       cta: { label: 'Compris !', action: () => acknowledge('progression') },
     },
 
-    // ── Étape 8 : Check-in hebdomadaire ──
+    // ── Étape 7 : Check-in hebdomadaire ──
     {
       id: 'checkin',
       title: 'Le check-in hebdomadaire',
@@ -245,7 +203,7 @@ export default function OnboardingFlow({
       cta: { label: 'C\'est parti, je commence !', action: () => acknowledge('checkin') },
     },
 
-    // ── Étape 9 : Tour des menus ──
+    // ── Étape 8 : Tour des menus ──
     {
       id: 'menu-tour',
       title: 'Votre espace Progress +',

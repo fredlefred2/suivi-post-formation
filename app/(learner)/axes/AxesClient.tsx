@@ -23,12 +23,17 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const isOnboardingCreate = onboarding === 'create'
   const isHighlightAdd = onboarding === 'highlight-add'
   const isHighlightDelete = onboarding === 'highlight-delete'
+  const isAutoDemo = onboarding === 'auto-demo'
   const [showAxeForm, setShowAxeForm] = useState(isOnboardingCreate)
   const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  // Force index 0 during highlight onboarding modes
-  const [currentIndex, setCurrentIndex] = useState(isHighlightAdd || isHighlightDelete ? 0 : initialIndex)
+  // Force index 0 during highlight/demo onboarding modes
+  const [currentIndex, setCurrentIndex] = useState(isHighlightAdd || isHighlightDelete || isAutoDemo ? 0 : initialIndex)
+  // Auto-demo state
+  const [demoPhase, setDemoPhase] = useState(0) // 0=creating, 1=add, 2=edit, 3=feedback, 4=delete
+  const [demoActionId, setDemoActionId] = useState<string | null>(null)
+  const demoCreatedRef = useRef(false)
   const [editingActionId, setEditingActionId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
   const [deletingActionId, setDeletingActionId] = useState<string | null>(null)
@@ -60,11 +65,56 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     setCurrentIndex(closestIndex)
   }, [])
 
+  // Auto-demo : créer automatiquement une action d'exemple
+  useEffect(() => {
+    if (!isAutoDemo || axes.length === 0 || demoCreatedRef.current) return
+    demoCreatedRef.current = true
+    const fd = new FormData()
+    fd.set('axe_id', axes[0].id)
+    fd.set('description', "J'ai préparé le compte-rendu de la réunion")
+    startTransition(async () => {
+      const result = await createAction(fd)
+      if (result?.id) setDemoActionId(result.id)
+      setDemoPhase(1)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAutoDemo])
+
+  // Auto-demo : finaliser la démo
+  async function finishDemo() {
+    if (demoActionId) {
+      startTransition(async () => {
+        await deleteAction(demoActionId)
+        if (userId) {
+          acknowledgeStep('first-action', userId)
+          acknowledgeStep('feedback-intro', userId)
+          acknowledgeStep('edit-delete', userId)
+        }
+        router.push('/dashboard')
+      })
+    } else {
+      if (userId) {
+        acknowledgeStep('first-action', userId)
+        acknowledgeStep('feedback-intro', userId)
+        acknowledgeStep('edit-delete', userId)
+      }
+      router.push('/dashboard')
+    }
+  }
+
+  // Demo phase data
+  const demoPhases = [
+    { icon: '➕', text: 'Le bouton « Ajouter » permet de créer des actions concrètes pour chaque axe.' },
+    { icon: '✏️', text: 'Le bouton ✏️ permet de modifier le texte d\'une action à tout moment.' },
+    { icon: '💬', text: 'Votre formateur et vos coéquipiers peuvent ❤️ liker et 💬 commenter vos actions.' },
+    { icon: '🗑️', text: 'Le bouton 🗑️ permet de supprimer une action.' },
+  ]
+
   // Scroll initial vers l'index demandé
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container || axes.length === 0) return
-    const targetIndex = isHighlightAdd || isHighlightDelete ? 0 : initialIndex
+    const targetIndex = isHighlightAdd || isHighlightDelete || isAutoDemo ? 0 : initialIndex
     if (targetIndex > 0 && targetIndex < axes.length) {
       const card = container.children[targetIndex] as HTMLElement
       if (card) {
@@ -108,7 +158,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const deletingAxe = deletingAxeId ? axes.find(a => a.id === deletingAxeId) : null
 
   return (
-    <div className="space-y-6 pb-4">
+    <div className={`space-y-6 ${isAutoDemo ? 'pb-28' : 'pb-4'}`}>
       <div className="flex items-center justify-between">
         <h1 className="page-title">Mes actions de progrès</h1>
         {axes.length < 3 && !isOnboardingCreate && (
@@ -139,6 +189,12 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
           <span className="text-xl">🗑️</span>
           <p className="text-sm font-semibold text-amber-800">Cliquez sur l&apos;icône de suppression 🗑️ qui clignote</p>
+        </div>
+      )}
+      {isAutoDemo && demoPhase === 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
+          <span className="text-xl animate-spin">⏳</span>
+          <p className="text-sm font-semibold text-indigo-800">Préparation de la démo...</p>
         </div>
       )}
 
@@ -270,8 +326,8 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                         )}
                       </p>
                       <button
-                        onClick={() => setAddActionAxeId(addActionAxeId === axe.id ? null : axe.id)}
-                        className={`btn-primary text-xs px-3 py-1.5 ${isHighlightAdd && axeIndex === 0 ? 'onboarding-pulse' : ''}`}
+                        onClick={() => { if (!isAutoDemo) setAddActionAxeId(addActionAxeId === axe.id ? null : axe.id) }}
+                        className={`btn-primary text-xs px-3 py-1.5 ${(isHighlightAdd || (isAutoDemo && demoPhase === 1)) && axeIndex === 0 ? 'onboarding-pulse' : ''}`}
                       >
                         <Plus size={14} /> Ajouter
                       </button>
@@ -291,8 +347,10 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                         <ul className="space-y-2">
                           {displaySorted.map((action, actionIndex) => {
                             const rank = rankMap.get(action.id) ?? 1
-                            // Pulse le bouton supprimer de la 1ère action lors de l'onboarding highlight-delete
-                            const shouldPulseDelete = isHighlightDelete && axeIndex === 0 && actionIndex === 0
+                            // Pulse conditionnels pour l'onboarding
+                            const shouldPulseEdit = isAutoDemo && demoPhase === 2 && axeIndex === 0 && actionIndex === 0
+                            const shouldPulseFeedback = isAutoDemo && demoPhase === 3 && axeIndex === 0 && actionIndex === 0
+                            const shouldPulseDelete = (isHighlightDelete || (isAutoDemo && demoPhase === 4)) && axeIndex === 0 && actionIndex === 0
                             return (
                               <li key={action.id} className="flex items-start gap-2">
                                 <span className="shrink-0 mt-0.5 text-base">{getActionPhaseIcon(rank)}</span>
@@ -300,23 +358,25 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                                   <span className="text-sm text-gray-700">{action.description}</span>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
-                                    <ActionFeedback
-                                      actionId={action.id}
-                                      feedback={feedbackMap[action.id] ?? emptyFeedback}
-                                      canInteract={false}
-                                    />
+                                    <div className={shouldPulseFeedback ? 'rounded-lg onboarding-pulse px-1' : ''}>
+                                      <ActionFeedback
+                                        actionId={action.id}
+                                        feedback={feedbackMap[action.id] ?? emptyFeedback}
+                                        canInteract={false}
+                                      />
+                                    </div>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0 mt-0.5">
                                   <button
-                                    onClick={() => { setEditingActionId(action.id); setEditingText(action.description) }}
-                                    className="text-gray-300 hover:text-indigo-500 transition-colors p-0.5"
+                                    onClick={() => { if (!isAutoDemo) { setEditingActionId(action.id); setEditingText(action.description) } }}
+                                    className={`text-gray-300 hover:text-indigo-500 transition-colors ${shouldPulseEdit ? 'p-1.5 rounded-full onboarding-pulse' : 'p-0.5'}`}
                                     title="Modifier"
                                   >
-                                    <Pencil size={13} />
+                                    <Pencil size={shouldPulseEdit ? 16 : 13} />
                                   </button>
                                   <button
-                                    onClick={() => setDeletingActionId(action.id)}
+                                    onClick={() => { if (!isAutoDemo) setDeletingActionId(action.id) }}
                                     className={`text-gray-300 hover:text-red-400 transition-colors ${shouldPulseDelete ? 'p-1.5 rounded-full onboarding-pulse' : 'p-0.5'}`}
                                     title="Supprimer"
                                   >
@@ -486,6 +546,29 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                 Supprimer définitivement
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bandeau auto-demo fixe en bas */}
+      {isAutoDemo && demoPhase >= 1 && demoPhase <= 4 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in-up">
+            <span className="text-2xl shrink-0">{demoPhases[demoPhase - 1].icon}</span>
+            <p className="text-sm text-gray-700 flex-1">{demoPhases[demoPhase - 1].text}</p>
+            <button
+              onClick={() => {
+                if (demoPhase < 4) {
+                  setDemoPhase(demoPhase + 1)
+                } else {
+                  finishDemo()
+                }
+              }}
+              disabled={isPending}
+              className="btn-primary text-xs px-4 py-2 shrink-0"
+            >
+              {isPending ? '...' : demoPhase < 4 ? 'Suivant →' : 'Compris !'}
+            </button>
           </div>
         </div>
       )}
