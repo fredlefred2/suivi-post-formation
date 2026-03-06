@@ -111,7 +111,7 @@ export default function DashboardClient({
       {pct < 100 && (
         <div className="card p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-gray-700">Votre progression</p>
+            <p className="text-sm font-semibold text-gray-700">Votre onboarding</p>
             <span className="text-xs font-bold text-indigo-600">{pct}%</span>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
