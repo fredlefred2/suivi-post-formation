@@ -37,6 +37,20 @@ export default async function TeamPage() {
   const groupId = membership.group_id
   const group = membership.groups as unknown as { id: string; name: string }
 
+  // ── Salle d'attente → accès bloqué ──
+  if (group.name === "Salle d'attente") {
+    return (
+      <div className="space-y-4">
+        <h1 className="page-title">Team</h1>
+        <div className="card text-center py-10 space-y-3">
+          <span className="text-5xl">⏳</span>
+          <p className="text-gray-700 font-medium">Vous êtes en salle d&apos;attente</p>
+          <p className="text-sm text-gray-400">Votre formateur va bientôt vous affecter à un groupe. L&apos;espace Team sera alors accessible.</p>
+        </div>
+      </div>
+    )
+  }
+
   // ── Membres du groupe ──
   const { data: membersRaw } = await admin
     .from('group_members')
