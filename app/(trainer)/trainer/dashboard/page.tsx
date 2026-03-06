@@ -6,7 +6,11 @@ import { getCurrentWeek } from '@/lib/utils'
 import TrainerDashboardClient from './TrainerDashboardClient'
 import type { GroupData, CheckinData, ActionData, UnassignedLearner } from './TrainerDashboardClient'
 
-export default async function TrainerDashboardPage() {
+export default async function TrainerDashboardPage({
+  searchParams,
+}: {
+  searchParams: { group?: string }
+}) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { week, year } = getCurrentWeek()
@@ -28,7 +32,6 @@ export default async function TrainerDashboardPage() {
   if (groupIds.length === 0) {
     return (
       <div className="space-y-6 pb-4">
-        <h1 className="page-title">Tableau de bord formateur</h1>
         <div className="card text-center py-12 text-gray-400">
           <p className="text-4xl mb-3">👥</p>
           <p>Vous n&apos;avez pas encore créé de groupe.</p>
@@ -83,14 +86,14 @@ export default async function TrainerDashboardPage() {
     created_at: c.created_at,
   }))
 
-  // ── 5. Actions récentes avec axes ─────────────────────────────────────────
+  // ── 5. Actions avec axes ──────────────────────────────────────────────────
   const { data: actionsRaw } = learnerIds.length > 0
     ? await admin
         .from('actions')
-        .select('id, description, created_at, learner_id, axes(subject)')
+        .select('id, description, created_at, learner_id, axe_id, axes(subject, actions(id))')
         .in('learner_id', learnerIds)
         .order('created_at', { ascending: false })
-    : { data: [] as Array<{ id: string; description: string; created_at: string; learner_id: string; axes: { subject: string } | null }> }
+    : { data: [] as Array<{ id: string; description: string; created_at: string; learner_id: string; axe_id: string; axes: { subject: string; actions: { id: string }[] } | null }> }
 
   const allActionIds = (actionsRaw ?? []).map((a) => a.id)
   const recentActionIds = allActionIds.slice(0, 10)
@@ -112,7 +115,6 @@ export default async function TrainerDashboardPage() {
 
   const trainerId = user!.id
 
-  // Construire feedbackMap
   type FeedbackEntry = { likes_count: number; comments_count: number; liked_by_me: boolean; likers: Array<{ first_name: string; last_name: string }>; comments: Array<{ id: string; content: string; created_at: string; trainer_first_name: string; trainer_last_name: string }> }
   const feedbackMap: Record<string, FeedbackEntry> = {}
   recentActionIds.forEach((id) => {
@@ -141,17 +143,23 @@ export default async function TrainerDashboardPage() {
 
   const emptyFeedback: FeedbackEntry = { likes_count: 0, comments_count: 0, liked_by_me: false, likers: [], comments: [] }
 
-  const actions: ActionData[] = (actionsRaw ?? []).map((a) => ({
-    id: a.id,
-    description: a.description,
-    created_at: a.created_at,
-    learner_id: a.learner_id,
-    learner_name: profileMap[a.learner_id]
-      ? `${profileMap[a.learner_id].first_name} ${profileMap[a.learner_id].last_name}`
-      : 'Inconnu',
-    axe_subject: (a.axes as { subject: string } | null)?.subject ?? 'Axe inconnu',
-    feedback: feedbackMap[a.id] ?? emptyFeedback,
-  }))
+  const actions: ActionData[] = (actionsRaw ?? []).map((a) => {
+    const axeData = a.axes as unknown as { subject: string; actions: { id: string }[] } | null
+    return {
+      id: a.id,
+      description: a.description,
+      created_at: a.created_at,
+      learner_id: a.learner_id,
+      learner_name: profileMap[a.learner_id]
+        ? `${profileMap[a.learner_id].first_name} ${profileMap[a.learner_id].last_name}`
+        : 'Inconnu',
+      learner_first_name: profileMap[a.learner_id]?.first_name ?? '',
+      learner_last_name: profileMap[a.learner_id]?.last_name ?? '',
+      axe_subject: axeData?.subject ?? 'Axe inconnu',
+      axe_action_count: axeData?.actions?.length ?? 0,
+      feedback: feedbackMap[a.id] ?? emptyFeedback,
+    }
+  })
 
   // ── 6. Axes par apprenant (pour le scoring) ──────────────────────────────
   const { data: axesRaw } = learnerIds.length > 0
@@ -162,22 +170,19 @@ export default async function TrainerDashboardPage() {
         .order('created_at')
     : { data: [] as Array<{ id: string; learner_id: string; actions: { id: string }[] }> }
 
-  // Structure : { learnerId: [nbActionsAxe1, nbActionsAxe2, nbActionsAxe3] }
   const learnerAxesMap: Record<string, number[]> = {}
   ;(axesRaw ?? []).forEach((axe) => {
     if (!learnerAxesMap[axe.learner_id]) learnerAxesMap[axe.learner_id] = []
     learnerAxesMap[axe.learner_id].push((axe.actions as { id: string }[])?.length ?? 0)
   })
 
-  // ── 7. Apprenants non affectés à aucun groupe ─────────────────────────────
-  // Tous les learner_id présents dans group_members (tous formateurs confondus)
+  // ── 7. Apprenants non affectés ─────────────────────────────────────────
   const { data: allGroupMembers } = await admin
     .from('group_members')
     .select('learner_id')
 
   const allAssignedIds = new Set(allGroupMembers?.map((m) => m.learner_id) ?? [])
 
-  // Tous les profils avec role = learner
   const { data: allLearnerProfiles } = await admin
     .from('profiles')
     .select('id, first_name, last_name')
@@ -188,17 +193,15 @@ export default async function TrainerDashboardPage() {
     .filter((p) => !allAssignedIds.has(p.id))
 
   return (
-    <div className="space-y-6 pb-4">
-      <h1 className="page-title">Tableau de bord formateur</h1>
-      <TrainerDashboardClient
-        groups={groups}
-        checkins={checkins}
-        actions={actions}
-        currentWeek={week}
-        currentYear={year}
-        unassignedLearners={unassignedLearners}
-        learnerAxesMap={learnerAxesMap}
-      />
-    </div>
+    <TrainerDashboardClient
+      groups={groups}
+      checkins={checkins}
+      actions={actions}
+      currentWeek={week}
+      currentYear={year}
+      unassignedLearners={unassignedLearners}
+      learnerAxesMap={learnerAxesMap}
+      initialGroup={searchParams.group}
+    />
   )
 }

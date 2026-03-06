@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ChevronDown } from 'lucide-react'
-import { WEATHER_COLORS } from '@/lib/types'
+import { ChevronDown, Users, TrendingUp, X, ClipboardCheck } from 'lucide-react'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
+import { useCountUp } from '@/lib/useCountUp'
 
 export type GroupData = {
   id: string
@@ -27,7 +27,10 @@ export type ActionData = {
   created_at: string
   learner_id: string
   learner_name: string
+  learner_first_name: string
+  learner_last_name: string
   axe_subject: string
+  axe_action_count: number
   feedback: ActionFeedbackData
 }
 
@@ -37,33 +40,49 @@ export type UnassignedLearner = {
   last_name: string
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-}
-
-const WEATHER_DISPLAY = [
-  { key: 'sunny'  as const, emoji: '☀️'  },
-  { key: 'cloudy' as const, emoji: '⛅'  },
-  { key: 'stormy' as const, emoji: '🌧️' },
-]
-
 const WEATHER_POINTS: Record<string, number> = { stormy: 0, cloudy: 1, sunny: 2 }
 
 function getOverallWeatherEmoji(score: number) {
-  if (score < 0.4)  return '🌧️'     // Difficile
-  if (score < 0.8)  return '🌥️'     // Nuage gris
-  if (score < 1.2)  return '⛅'      // Mitigé
-  if (score <= 1.6) return '🌤️'     // Soleil avec petits nuages
-  return '☀️'                        // Ça roule
+  if (score < 0.4) return '🌧️'
+  if (score < 0.8) return '🌥️'
+  if (score < 1.2) return '⛅'
+  if (score <= 1.6) return '🌤️'
+  return '☀️'
 }
 
-// Dynamique d'action pour le scoring
 function getDynamiqueForCount(count: number) {
-  if (count === 0) return { icon: '📍', level: 0 }
-  if (count <= 2) return { icon: '👣', level: 1 }
-  if (count <= 5) return { icon: '🥁', level: 2 }
-  if (count <= 8) return { icon: '🔥', level: 3 }
-  return { icon: '🚀', level: 4 }
+  if (count === 0) return { icon: '📍', level: 0, label: 'Ancrage' }
+  if (count <= 2) return { icon: '👣', level: 1, label: 'Impulsion' }
+  if (count <= 5) return { icon: '🥁', level: 2, label: 'Rythme' }
+  if (count <= 8) return { icon: '🔥', level: 3, label: 'Intensité' }
+  return { icon: '🚀', level: 4, label: 'Propulsion' }
+}
+
+const LEVEL_CARD_COLORS: Record<number, string> = {
+  0: 'from-gray-50 to-gray-100',
+  1: 'from-teal-50 to-emerald-50',
+  2: 'from-blue-50 to-indigo-50',
+  3: 'from-orange-50 to-amber-50',
+  4: 'from-purple-50 to-fuchsia-50',
+}
+
+const LEVEL_AVATAR_COLORS: Record<number, string> = {
+  0: 'bg-gray-200 text-gray-700',
+  1: 'bg-teal-200 text-teal-700',
+  2: 'bg-blue-200 text-blue-700',
+  3: 'bg-orange-200 text-orange-700',
+  4: 'bg-purple-200 text-purple-700',
+}
+
+type Props = {
+  groups: GroupData[]
+  checkins: CheckinData[]
+  actions: ActionData[]
+  currentWeek: number
+  currentYear: number
+  unassignedLearners?: UnassignedLearner[]
+  learnerAxesMap?: Record<string, number[]>
+  initialGroup?: string
 }
 
 export default function TrainerDashboardClient({
@@ -74,25 +93,34 @@ export default function TrainerDashboardClient({
   currentYear,
   unassignedLearners = [],
   learnerAxesMap = {},
-}: {
-  groups: GroupData[]
-  checkins: CheckinData[]
-  actions: ActionData[]
-  currentWeek: number
-  currentYear: number
-  unassignedLearners?: UnassignedLearner[]
-  learnerAxesMap?: Record<string, number[]>
-}) {
-  // 'all' = tous les groupes | groupId = un seul groupe | 'unassigned' = non affectés
-  const [selectedOption, setSelectedOption] = useState<'all' | string>('all')
+  initialGroup,
+}: Props) {
+  // ── State ──
+  const [selectedOption, setSelectedOption] = useState<string>(() => {
+    if (initialGroup && initialGroup !== 'all' && groups.some(g => g.id === initialGroup)) return initialGroup
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('trainer_selected_group')
+      if (stored && (stored === 'all' || groups.some(g => g.id === stored))) return stored
+    }
+    return 'all'
+  })
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [showAllActions, setShowAllActions] = useState(false)
+  const [currentSlide, setCurrentSlide] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Sync localStorage
+  useEffect(() => {
+    localStorage.setItem('trainer_selected_group', selectedOption)
+  }, [selectedOption])
+
   function selectOption(option: string) {
     setSelectedOption(option)
     setDropdownOpen(false)
   }
 
-  // Fermeture du dropdown au clic extérieur
+  // Fermeture dropdown au clic extérieur
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -103,96 +131,133 @@ export default function TrainerDashboardClient({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [dropdownOpen])
 
-  // Label du bouton dropdown
   const selectionLabel =
     selectedOption === 'all'
       ? 'Tous les groupes'
       : groups.find((g) => g.id === selectedOption)?.name ?? 'Groupe'
 
-  // ── Données filtrées ──────────────────────────────────────────────────────
-  const filteredGroups =
-    selectedOption === 'all'
-      ? groups
-      : groups.filter((g) => g.id === selectedOption)
+  // ── Données filtrées ──
+  const filteredGroups = selectedOption === 'all' ? groups : groups.filter((g) => g.id === selectedOption)
 
   const filteredLearnerIds = useMemo(() => {
     return new Set(filteredGroups.flatMap((g) => g.members.map((m) => m.learner_id)))
   }, [filteredGroups])
 
-  const learnerNameMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    groups.forEach((g) =>
-      g.members.forEach((m) => {
-        map[m.learner_id] = `${m.first_name} ${m.last_name}`
-      })
-    )
-    unassignedLearners.forEach((l) => {
-      map[l.id] = `${l.first_name} ${l.last_name}`
-    })
-    return map
-  }, [groups, unassignedLearners])
-
-  // Mapping apprenant → groupe (pour les liens du scoring)
   const learnerGroupMap = useMemo(() => {
     const map: Record<string, string> = {}
-    groups.forEach((g) =>
-      g.members.forEach((m) => {
-        map[m.learner_id] = g.id
-      })
-    )
+    groups.forEach((g) => g.members.forEach((m) => { map[m.learner_id] = g.id }))
+    return map
+  }, [groups])
+
+  const learnerNameMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    groups.forEach((g) => g.members.forEach((m) => { map[m.learner_id] = `${m.first_name} ${m.last_name}` }))
     return map
   }, [groups])
 
   const filteredCheckins = checkins.filter((c) => filteredLearnerIds.has(c.learner_id))
-  const thisWeekCheckins = filteredCheckins.filter(
-    (c) => c.week_number === currentWeek && c.year === currentYear
-  )
+  const thisWeekCheckins = filteredCheckins.filter((c) => c.week_number === currentWeek && c.year === currentYear)
   const filteredActions = actions.filter((a) => filteredLearnerIds.has(a.learner_id))
 
-  // ── Météo : dernier check-in par apprenant → comptage + noms ─────────────
+  // Actions 7 derniers jours
+  const sevenDaysAgo = useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString()
+  }, [])
+  const recentActionsFiltered = filteredActions.filter((a) => a.created_at >= sevenDaysAgo)
+
+  // Actions pour le carousel (les 10 plus récentes filtrées)
+  const carouselActions = filteredActions.slice(0, 10)
+
+  // ── Météo générale ──
   const weatherSummary = useMemo(() => {
     const latestByLearner: Record<string, CheckinData> = {}
     ;[...filteredCheckins]
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .forEach((c) => {
-        if (!latestByLearner[c.learner_id]) latestByLearner[c.learner_id] = c
-      })
+      .forEach((c) => { if (!latestByLearner[c.learner_id]) latestByLearner[c.learner_id] = c })
 
-    const result: Record<'sunny' | 'cloudy' | 'stormy', { count: number; names: string[] }> = {
-      sunny:  { count: 0, names: [] },
-      cloudy: { count: 0, names: [] },
-      stormy: { count: 0, names: [] },
-    }
-    Object.entries(latestByLearner).forEach(([lid, c]) => {
+    const counts = { sunny: 0, cloudy: 0, stormy: 0 }
+    Object.values(latestByLearner).forEach((c) => {
       const w = c.weather as 'sunny' | 'cloudy' | 'stormy'
-      if (result[w]) {
-        result[w].count++
-        result[w].names.push(learnerNameMap[lid] ?? 'Inconnu')
-      }
+      if (counts[w] !== undefined) counts[w]++
     })
-    return result
-  }, [filteredCheckins, learnerNameMap])
+    return counts
+  }, [filteredCheckins])
 
-  const totalWithCheckin = Object.values(weatherSummary).reduce((acc, v) => acc + v.count, 0)
-  const hasAnyCheckin = totalWithCheckin > 0
+  const totalWithCheckin = weatherSummary.sunny + weatherSummary.cloudy + weatherSummary.stormy
+  const overallScore = totalWithCheckin > 0
+    ? Object.entries(weatherSummary).reduce((acc, [key, count]) => acc + count * (WEATHER_POINTS[key] ?? 0), 0) / totalWithCheckin
+    : -1
+  const overallEmoji = overallScore >= 0 ? getOverallWeatherEmoji(overallScore) : null
 
-  const recentActions = filteredActions.slice(0, 10)
+  // ── Indice d'action moyen ──
+  const avgActions = filteredLearnerIds.size > 0
+    ? Math.round(filteredActions.length / filteredLearnerIds.size)
+    : 0
+  const actionIndice = getDynamiqueForCount(avgActions)
+
+  // ── Check-ins manquants ──
+  const thisWeekCheckinLearnerIds = new Set(thisWeekCheckins.map((c) => c.learner_id))
+  const missingCheckinMembers = useMemo(() => {
+    return filteredGroups.flatMap((g) => g.members)
+      .filter((m) => !thisWeekCheckinLearnerIds.has(m.learner_id))
+  }, [filteredGroups, thisWeekCheckinLearnerIds])
+  const missingCount = missingCheckinMembers.length
+
+  // ── Compteurs animés ──
+  const animatedMembers = useCountUp(filteredLearnerIds.size)
+  const animatedDelta = useCountUp(recentActionsFiltered.length)
+
+  // ── Auto-scroll carousel ──
+  useEffect(() => {
+    if (carouselActions.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselActions.length)
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [carouselActions.length])
+
+  useEffect(() => {
+    if (!scrollRef.current) return
+    const cardWidth = 220
+    const gap = 12
+    scrollRef.current.scrollTo({
+      left: currentSlide * (cardWidth + gap),
+      behavior: 'smooth',
+    })
+  }, [currentSlide])
+
+  const handleOpenAll = useCallback(() => setShowAllActions(true), [])
+
+  // ── Scoring ──
+  const sorted = useMemo(() => {
+    return Array.from(filteredLearnerIds).map((lid) => {
+      const axesCounts = learnerAxesMap[lid] ?? []
+      const totalActions = axesCounts.reduce((a, b) => a + b, 0)
+      const dyns = [0, 1, 2].map((i) => getDynamiqueForCount(axesCounts[i] ?? 0))
+      const totalLevel = dyns.reduce((a, m) => a + m.level, 0)
+      return { id: lid, name: learnerNameMap[lid] ?? 'Inconnu', totalActions, dyns, totalLevel }
+    }).sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
+  }, [filteredLearnerIds, learnerAxesMap, learnerNameMap])
+
+  function getInitials(first: string, last: string) {
+    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
+  }
 
   // Petit point radio visuel
   function RadioDot({ active }: { active: boolean }) {
     return (
-      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-        active ? 'border-indigo-600' : 'border-gray-300'
-      }`}>
+      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? 'border-indigo-600' : 'border-gray-300'}`}>
         {active && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
       </span>
     )
   }
 
-  return (
-    <div className="space-y-6">
+  const apprenantLink = `/trainer/apprenants?group=${selectedOption}`
 
-      {/* ── Dropdown sélection groupe ───────────────────────────────────── */}
+  return (
+    <div className="space-y-6 pb-4">
+
+      {/* ── Dropdown sélection groupe ── */}
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen((o) => !o)}
@@ -203,21 +268,14 @@ export default function TrainerDashboardClient({
           }`}
         >
           <span className="truncate">📊 {selectionLabel}</span>
-          <ChevronDown
-            size={16}
-            className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-          />
+          <ChevronDown size={16} className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {dropdownOpen && (
           <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[260px]">
-
-            {/* Tous les groupes */}
             <button
               onClick={() => selectOption('all')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${
-                selectedOption === 'all' ? 'bg-indigo-50' : 'hover:bg-gray-50'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${selectedOption === 'all' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
             >
               <RadioDot active={selectedOption === 'all'} />
               <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
@@ -228,8 +286,6 @@ export default function TrainerDashboardClient({
                 {groups.reduce((acc, g) => acc + g.members.length, 0)} app.
               </span>
             </button>
-
-            {/* Groupes individuels */}
             <div className="py-1">
               {groups.map((g) => {
                 const isSalleAttente = g.name === 'Salle d\'attente'
@@ -260,108 +316,161 @@ export default function TrainerDashboardClient({
         )}
       </div>
 
-      {/* ── Badges stats ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-3">
-        <Link
-          href={`/trainer/apprenants?group=${selectedOption}`}
-          className="card text-center py-4 hover:border-indigo-300 hover:bg-indigo-100/60 transition-colors cursor-pointer"
-        >
-          <p className="text-2xl font-bold text-indigo-700">{filteredLearnerIds.size}</p>
-          <p className="text-xs text-gray-600 mt-1">Apprenant{filteredLearnerIds.size > 1 ? 's' : ''}</p>
-        </Link>
-        <div className="card text-center py-4">
-          <p className="text-2xl font-bold text-emerald-700 leading-none">
-            {thisWeekCheckins.length}
-            <span className="text-sm font-normal text-gray-400">/{filteredLearnerIds.size}</span>
-          </p>
-          <p className="text-xs text-gray-600 mt-1">Check-ins S{currentWeek}</p>
-        </div>
-        <div className="card text-center py-4">
-          <p className="text-2xl font-bold text-amber-700">{filteredActions.length}</p>
-          <p className="text-xs text-gray-600 mt-1">Actions menées</p>
+      {/* ── Bloc 1 : Membres + Météo générale ── */}
+      <div className="card py-5 px-4">
+        <div className="grid grid-cols-2 divide-x divide-gray-100">
+          <Link href={apprenantLink} className="text-center px-2 hover:opacity-80 transition-opacity">
+            <Users size={28} className="mx-auto text-indigo-500 mb-1.5" />
+            <p className="text-3xl font-bold text-gray-800">{animatedMembers}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Membre{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
+          </Link>
+          <div className="text-center px-2 flex flex-col items-center justify-center">
+            {overallEmoji ? (
+              <>
+                <p className="text-xs text-gray-500 mb-2">Météo générale</p>
+                <span className="text-6xl leading-none">{overallEmoji}</span>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-2">Météo générale</p>
+                <span className="text-5xl text-gray-300">-</span>
+                <p className="text-[11px] text-gray-400 mt-1">Pas de check-in</p>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── Tendance météo ─────────────────────────────────────────────── */}
-      {selectedOption !== 'unassigned' && (
-        hasAnyCheckin ? (() => {
-          const overallScore = totalWithCheckin > 0
-            ? Object.entries(weatherSummary).reduce((acc, [key, { count }]) => acc + count * (WEATHER_POINTS[key] ?? 0), 0) / totalWithCheckin
-            : 0
-          const overallEmoji = getOverallWeatherEmoji(overallScore)
-
-          return (
-            <div className="card">
-              <h2 className="section-title mb-3">Tendance météo</h2>
-              <div className="flex items-center gap-4">
-                {/* Détail par météo — vertical */}
-                <div className="flex flex-col gap-2 flex-1">
-                  {WEATHER_DISPLAY.map(({ key, emoji }) => {
-                    const { count, names } = weatherSummary[key]
-                    const pct = totalWithCheckin > 0
-                      ? Math.round((count / totalWithCheckin) * 100)
-                      : 0
-                    return (
-                      <div key={key} className="relative group">
-                        <div className="flex items-center gap-3 rounded-lg px-3 py-2 bg-gray-100">
-                          <span className="text-xl">{emoji}</span>
-                          <span className="font-bold text-gray-800">{count}</span>
-                          <span className="text-xs text-gray-400">({pct}%)</span>
-                        </div>
-
-                        {/* Tooltip au survol */}
-                        {names.length > 0 && (
-                          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-20
-                                          invisible group-hover:visible opacity-0 group-hover:opacity-100
-                                          transition-opacity duration-150
-                                          bg-gray-900 text-white text-xs rounded-lg px-3 py-2
-                                          shadow-lg pointer-events-none w-max max-w-[200px]">
-                            {names.map((name, i) => (
-                              <p key={i} className="leading-snug">· {name}</p>
-                            ))}
-                            <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Météo générale — grosse icône */}
-                <div className="flex flex-col items-center justify-center px-4">
-                  <span className="text-7xl leading-none">{overallEmoji}</span>
-                  <p className="text-xs text-gray-400 mt-2 text-center">Météo générale</p>
-                </div>
-              </div>
-            </div>
-          )
-        })() : (
-          <div className="card text-center py-8 text-gray-400 text-sm">
-            Aucun check-in enregistré pour la sélection
+      {/* ── Bloc 2 : Actions cette semaine + Indice d'action ── */}
+      <Link href={apprenantLink} className="card py-5 px-4 block hover:border-indigo-200 transition-colors">
+        <div className="grid grid-cols-2 divide-x divide-gray-100">
+          <div className="text-center px-2">
+            <TrendingUp size={28} className="mx-auto text-emerald-500 mb-1.5" />
+            <p className={`text-3xl font-bold ${recentActionsFiltered.length > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
+              {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Actions cette semaine</p>
           </div>
-        )
+          <div className="text-center px-2 flex flex-col items-center justify-center">
+            <span className="text-6xl leading-none">{actionIndice.icon}</span>
+            <p className="text-sm font-semibold text-gray-700 mt-2">{actionIndice.label}</p>
+          </div>
+        </div>
+      </Link>
+
+      {/* ── Bloc 3 : Check-ins manquants ── */}
+      <div className="card py-5 px-4">
+        <div className="grid grid-cols-2 divide-x divide-gray-100">
+          <div className="text-center px-2 flex flex-col items-center justify-center">
+            {missingCount === 0 ? (
+              <>
+                <span className="text-4xl leading-none mb-1">✅</span>
+                <p className="text-lg font-bold text-emerald-600">100%</p>
+                <p className="text-xs text-gray-500 mt-0.5">Check-ins complets</p>
+              </>
+            ) : (
+              <>
+                <ClipboardCheck size={32} className="text-indigo-400 mb-1" />
+                <p className="text-lg font-bold text-gray-800">{missingCount} en attente</p>
+                <p className="text-xs text-gray-500 mt-0.5">sur {filteredLearnerIds.size} apprenant{filteredLearnerIds.size > 1 ? 's' : ''}</p>
+              </>
+            )}
+          </div>
+          <div className="px-3 flex flex-col justify-center">
+            {missingCount === 0 ? (
+              <p className="text-sm text-emerald-600 text-center">Tous les check-ins sont à jour ✅</p>
+            ) : (
+              <div className="space-y-0.5 max-h-[80px] overflow-y-auto scrollbar-hide">
+                {missingCheckinMembers.slice(0, 5).map((m) => (
+                  <p key={m.learner_id} className="text-sm text-amber-700 truncate">
+                    · {m.first_name}
+                  </p>
+                ))}
+                {missingCheckinMembers.length > 5 && (
+                  <p className="text-xs text-gray-400 italic">et {missingCheckinMembers.length - 5} autre{missingCheckinMembers.length - 5 > 1 ? 's' : ''}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Carousel actions récentes ── */}
+      {carouselActions.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-title">Actions récentes</h2>
+            <button onClick={handleOpenAll} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline">
+              Voir tout
+            </button>
+          </div>
+          <div
+            ref={scrollRef}
+            className="flex gap-3 overflow-x-auto scrollbar-thin pb-2"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
+            {carouselActions.map((action) => {
+              const dyn = getDynamiqueForCount(action.axe_action_count)
+              return (
+                <Link
+                  key={action.id}
+                  href={`/trainer/learner/${action.learner_id}?from=apprenants&group=${learnerGroupMap[action.learner_id] ?? ''}`}
+                  className={`flex-shrink-0 w-[220px] bg-gradient-to-br ${LEVEL_CARD_COLORS[dyn.level] ?? LEVEL_CARD_COLORS[0]} rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md active:scale-[0.98]`}
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-xs font-bold`}>
+                      {getInitials(action.learner_first_name, action.learner_last_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-gray-700 truncate">
+                        {action.learner_first_name} {action.learner_last_name}
+                      </p>
+                      <p className="text-[10px] text-indigo-500 truncate">{action.axe_subject}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-[10px] text-gray-400">
+                      {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </p>
+                    {(action.feedback.likes_count > 0 || action.feedback.comments_count > 0) && (
+                      <div className="flex items-center gap-2 text-[10px]">
+                        {action.feedback.likes_count > 0 && <span className="text-pink-400">❤️ {action.feedback.likes_count}</span>}
+                        {action.feedback.comments_count > 0 && <span className="text-indigo-400">💬 {action.feedback.comments_count}</span>}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+          {carouselActions.length > 1 && (
+            <div className="flex justify-center gap-1 mt-3">
+              {carouselActions.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === currentSlide % carouselActions.length ? 'w-4 bg-indigo-500' : 'w-1.5 bg-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* ── Scoring apprenants ─────────────────────────────────────────── */}
-      {selectedOption !== 'unassigned' && filteredLearnerIds.size > 0 && (() => {
-        const scoringData = Array.from(filteredLearnerIds).map((lid) => {
-          const axesCounts = learnerAxesMap[lid] ?? []
-          const totalActions = axesCounts.reduce((a, b) => a + b, 0)
-          const dyns = [0, 1, 2].map((i) => getDynamiqueForCount(axesCounts[i] ?? 0))
-          const totalLevel = dyns.reduce((a, m) => a + m.level, 0)
-          return {
-            id: lid,
-            name: learnerNameMap[lid] ?? 'Inconnu',
-            totalActions,
-            dyns,
-            totalLevel,
-          }
-        })
-        .sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
+      {carouselActions.length === 0 && filteredLearnerIds.size > 0 && (
+        <div className="card text-center py-6">
+          <p className="text-gray-400 text-sm">Aucune action enregistrée</p>
+        </div>
+      )}
 
-        return scoringData.length > 0 ? (
-          <div className="card">
-            <h2 className="section-title mb-3">Classement</h2>
+      {/* ── Classement ── */}
+      {filteredLearnerIds.size > 0 && sorted.length > 0 && (
+        <div className="card">
+          <h2 className="section-title mb-3">Classement</h2>
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-gray-400 border-b border-gray-100">
@@ -374,11 +483,14 @@ export default function TrainerDashboardClient({
                 </tr>
               </thead>
               <tbody>
-                {scoringData.map((learner, idx) => (
+                {sorted.map((learner, idx) => (
                   <tr key={learner.id} className="border-b border-gray-50 last:border-0">
                     <td className="py-1.5 text-xs text-gray-400 w-6">{idx + 1}</td>
                     <td className="py-1.5 font-medium text-gray-800 truncate max-w-[140px]">
-                      <Link href={`/trainer/learner/${learner.id}?from=apprenants&group=${learnerGroupMap[learner.id] ?? ''}`} className="hover:text-indigo-600 transition-colors">
+                      <Link
+                        href={`/trainer/learner/${learner.id}?from=apprenants&group=${learnerGroupMap[learner.id] ?? ''}`}
+                        className="hover:text-indigo-600 transition-colors"
+                      >
                         {learner.name}
                       </Link>
                     </td>
@@ -391,70 +503,51 @@ export default function TrainerDashboardClient({
               </tbody>
             </table>
           </div>
-        ) : null
-      })()}
-
-      {/* ── Dernières actions (rouleau scrollable) ───────────────────── */}
-      {recentActions.length > 0 && (
-        <div className="card overflow-hidden">
-          <h2 className="section-title mb-3">Dernières actions enregistrées</h2>
-          <div
-            className="overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
-            style={{ maxHeight: '320px' }}
-          >
-            <div className="divide-y divide-gray-50">
-              {recentActions.map((action) => {
-                const initials = action.learner_name
-                  .split(' ')
-                  .map((n) => n[0] ?? '')
-                  .join('')
-                  .slice(0, 2)
-                  .toUpperCase()
-                return (
-                  <div
-                    key={action.id}
-                    className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-                  >
-                    {/* Avatar initiales */}
-                    <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                      {initials}
-                    </div>
-
-                    {/* Contenu */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 leading-snug">
-                        ⚡ {action.description}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <span className="text-xs text-gray-500 font-medium">{action.learner_name}</span>
-                        <span className="text-gray-300 text-xs">·</span>
-                        <span className="text-xs bg-indigo-100 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded-full">
-                          {action.axe_subject}
-                        </span>
-                        <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
-                          {formatDate(action.created_at)}
-                        </span>
-                      </div>
-                      {/* Like + Commentaire */}
-                      <div className="mt-1.5">
-                        <ActionFeedback
-                          actionId={action.id}
-                          feedback={action.feedback}
-                          canInteract={true}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
         </div>
       )}
 
-      {recentActions.length === 0 && filteredLearnerIds.size > 0 && selectedOption !== 'unassigned' && (
-        <div className="card text-center py-8 text-gray-400 text-sm">
-          Aucune action enregistrée pour la sélection
+      {/* ── Modale : toutes les actions récentes ── */}
+      {showAllActions && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowAllActions(false)} />
+          <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-800">Actions récentes</h3>
+              <button onClick={() => setShowAllActions(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {filteredActions.slice(0, 20).map((action) => (
+                <Link
+                  key={action.id}
+                  href={`/trainer/learner/${action.learner_id}?from=apprenants&group=${learnerGroupMap[action.learner_id] ?? ''}`}
+                  className="block bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-700 flex items-center justify-center text-xs font-bold">
+                      {getInitials(action.learner_first_name, action.learner_last_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-gray-700">
+                        {action.learner_first_name} {action.learner_last_name}
+                      </p>
+                      <p className="text-xs text-indigo-500">{action.axe_subject}</p>
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-2">{action.description}</p>
+                  <ActionFeedback
+                    actionId={action.id}
+                    feedback={action.feedback}
+                    canInteract={true}
+                  />
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

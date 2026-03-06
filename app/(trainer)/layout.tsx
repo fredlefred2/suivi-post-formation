@@ -7,7 +7,7 @@ import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 
 const navItems = [
-  { href: '/trainer/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
+  { href: '/trainer/dashboard', label: 'Accueil', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
   { href: '/trainer/apprenants', label: 'Apprenants', icon: GraduationCap, iconName: 'GraduationCap' },
   { href: '/trainer/groups', label: 'Groupes', icon: Users, iconName: 'Users' },
 ]
@@ -83,7 +83,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
         href,
         label,
         iconName,
-        shortLabel: label === 'Tableau de bord' ? 'Accueil' : label,
+        shortLabel: label,
       }))} />
       <div className="h-16 sm:hidden" />
     </div>
