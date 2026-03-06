@@ -43,22 +43,31 @@ export default function CheckinForm({ axes }: { axes: Axe[] }) {
         <h2 className="section-title mb-1">Comment s&apos;est passée cette semaine ? *</h2>
         <p className="text-sm text-gray-400 mb-4">Votre météo générale</p>
         <div className="grid grid-cols-3 gap-3">
-          {weatherOptions.map((opt) => (
-            <label key={opt.value} className="cursor-pointer">
-              <input
-                type="radio"
-                name="weather"
-                value={opt.value}
-                required
-                className="sr-only peer"
-                onChange={() => setSelectedWeather(opt.value)}
-              />
-              <div className={`text-center py-4 border-2 rounded-xl transition-all peer-checked:${opt.color} peer-checked:border-opacity-100 border-gray-200 hover:border-gray-300`}>
-                <span className="text-3xl">{opt.emoji}</span>
-                <p className="text-sm font-medium mt-2 text-gray-700">{opt.label}</p>
-              </div>
-            </label>
-          ))}
+          {weatherOptions.map((opt) => {
+            const isSelected = selectedWeather === opt.value
+            return (
+              <label key={opt.value} className="cursor-pointer">
+                <input
+                  type="radio"
+                  name="weather"
+                  value={opt.value}
+                  required
+                  className="sr-only"
+                  onChange={() => setSelectedWeather(opt.value)}
+                />
+                <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 ${
+                  isSelected
+                    ? `${opt.color} scale-105 shadow-md ring-2 ring-offset-1 ${
+                        opt.value === 'sunny' ? 'ring-amber-400' : opt.value === 'cloudy' ? 'ring-sky-400' : 'ring-red-400'
+                      }`
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <span className={`text-3xl transition-transform duration-200 inline-block ${isSelected ? 'scale-110' : ''}`}>{opt.emoji}</span>
+                  <p className={`text-sm font-medium mt-2 ${isSelected ? 'text-gray-900' : 'text-gray-500'}`}>{opt.label}</p>
+                </div>
+              </label>
+            )
+          })}
         </div>
       </div>
 
