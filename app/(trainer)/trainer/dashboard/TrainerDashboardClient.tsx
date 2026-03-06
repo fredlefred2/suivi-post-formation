@@ -381,7 +381,7 @@ export default function TrainerDashboardClient({
               <>
                 <ClipboardCheck size={32} className="text-indigo-400 mb-1" />
                 <p className="text-lg font-bold text-gray-800">{missingCount} en attente</p>
-                <p className="text-xs text-gray-500 mt-0.5">sur {filteredLearnerIds.size} apprenant{filteredLearnerIds.size > 1 ? 's' : ''}</p>
+                <p className="text-xs text-gray-500 mt-0.5">sur {filteredLearnerIds.size} participant{filteredLearnerIds.size > 1 ? 's' : ''}</p>
               </>
             )}
           </div>
@@ -484,7 +484,7 @@ export default function TrainerDashboardClient({
               <thead>
                 <tr className="text-xs text-gray-400 border-b border-gray-100">
                   <th className="text-left pb-2 font-medium">#</th>
-                  <th className="text-left pb-2 font-medium">Apprenant</th>
+                  <th className="text-left pb-2 font-medium">Participant</th>
                   <th className="text-center pb-2 font-medium">Actions</th>
                   <th className="text-center pb-2 font-medium">Axe 1</th>
                   <th className="text-center pb-2 font-medium">Axe 2</th>

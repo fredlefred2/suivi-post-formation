@@ -17,7 +17,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
     <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-3 max-w-[220px]">
       <p className="font-semibold text-sm mb-1">{entry.emoji} {entry.name}</p>
       <p className="text-xs text-gray-500 mb-1.5">
-        {entry.value} apprenant{entry.value > 1 ? 's' : ''}
+        {entry.value} participant{entry.value > 1 ? 's' : ''}
       </p>
       {entry.learnerNames.length > 0 && (
         <ul className="text-xs text-gray-700 space-y-0.5">

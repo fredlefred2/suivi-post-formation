@@ -45,7 +45,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
             <span className="font-semibold text-sm tracking-tight">
               {profile.first_name} {profile.last_name}
               <span className="ml-2 text-xs bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full font-medium border border-white/20">
-                Apprenant
+                Participant
               </span>
             </span>
           </div>

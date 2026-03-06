@@ -8,7 +8,7 @@ import BottomNav from '@/app/components/BottomNav'
 
 const navItems = [
   { href: '/trainer/dashboard', label: 'Accueil', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
-  { href: '/trainer/apprenants', label: 'Apprenants', icon: GraduationCap, iconName: 'GraduationCap' },
+  { href: '/trainer/apprenants', label: 'Participants', icon: GraduationCap, iconName: 'GraduationCap' },
   { href: '/trainer/groups', label: 'Groupes', icon: Users, iconName: 'Users' },
 ]
 

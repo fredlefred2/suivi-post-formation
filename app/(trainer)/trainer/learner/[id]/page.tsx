@@ -305,7 +305,7 @@ export default async function LearnerDetailPage({
       {(!checkins || checkins.length === 0) && (!axes || axes.length === 0) && (
         <div className="card text-center py-10">
           <p className="text-4xl mb-3">🌱</p>
-          <p className="text-gray-500 font-medium">Cet apprenant n&apos;a pas encore commencé.</p>
+          <p className="text-gray-500 font-medium">Ce participant n&apos;a pas encore commencé.</p>
           <p className="text-gray-400 text-sm mt-1">Aucun axe ni check-in enregistré pour le moment.</p>
         </div>
       )}

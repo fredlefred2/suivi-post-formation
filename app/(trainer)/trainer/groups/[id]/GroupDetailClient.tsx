@@ -39,7 +39,7 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email de l'apprenant"
+              placeholder="Email du participant"
               className="input text-xs py-1.5 w-64"
               required
               autoFocus

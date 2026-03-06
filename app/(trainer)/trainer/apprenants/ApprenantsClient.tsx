@@ -210,11 +210,11 @@ export default function ApprenantsClient({
 
   return (
     <div className="space-y-6 pb-4">
-      <h1 className="page-title">Apprenants</h1>
+      <h1 className="page-title">Participants</h1>
 
       {learners.length === 0 ? (
         <div className="card text-center py-10 text-gray-400 text-sm">
-          Aucun apprenant inscrit pour l&apos;instant.
+          Aucun participant inscrit pour l&apos;instant.
         </div>
       ) : (
         <>
@@ -313,7 +313,7 @@ export default function ApprenantsClient({
                   </h2>
                   {groups.length === 0 && (
                     <p className="text-xs text-gray-400 mb-3">
-                      Créez d&apos;abord un groupe pour pouvoir affecter des apprenants.
+                      Créez d&apos;abord un groupe pour pouvoir affecter des participants.
                     </p>
                   )}
                   <div className="space-y-2">
@@ -343,7 +343,7 @@ export default function ApprenantsClient({
 
               {groupedView.length === 0 && unassigned.length === 0 && (
                 <div className="card text-center py-8 text-gray-400 text-sm">
-                  Aucun apprenant dans vos groupes.
+                  Aucun participant dans vos groupes.
                 </div>
               )}
             </>
@@ -367,7 +367,7 @@ export default function ApprenantsClient({
               </div>
             ) : (
               <div className="card text-center py-8 text-gray-400 text-sm">
-                Aucun apprenant dans ce groupe.
+                Aucun participant dans ce groupe.
               </div>
             )
           )}
@@ -384,7 +384,7 @@ export default function ApprenantsClient({
                 </h2>
                 {groups.length === 0 && (
                   <p className="text-xs text-gray-400 mb-3">
-                    Créez d&apos;abord un groupe pour pouvoir affecter des apprenants.
+                    Créez d&apos;abord un groupe pour pouvoir affecter des participants.
                   </p>
                 )}
                 <div className="space-y-2">
@@ -395,7 +395,7 @@ export default function ApprenantsClient({
               </div>
             ) : (
               <div className="card text-center py-8 text-gray-400 text-sm">
-                ✅ Tous les apprenants sont affectés à un groupe.
+                ✅ Tous les participants sont affectés à un groupe.
               </div>
             )
           )}

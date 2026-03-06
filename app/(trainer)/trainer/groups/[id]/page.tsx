@@ -115,18 +115,18 @@ export default async function GroupDetailPage({ params }: { params: { id: string
       {/* Liste apprenants */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="section-title">Apprenants ({learnersData.length})</h2>
+          <h2 className="section-title">Participants ({learnersData.length})</h2>
           <Link
             href="/trainer/apprenants"
             className="flex items-center gap-1.5 text-xs text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors border border-indigo-300"
           >
             <UserPlus size={14} />
-            Gérer les apprenants
+            Gérer les participants
           </Link>
         </div>
 
         {learnersData.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-6">Aucun apprenant dans ce groupe.</p>
+          <p className="text-gray-400 text-sm text-center py-6">Aucun participant dans ce groupe.</p>
         ) : (
           <div className="space-y-2">
             {learnersData.map((learner) => (

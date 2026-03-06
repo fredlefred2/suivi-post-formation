@@ -91,7 +91,7 @@ export default function RegisterPage() {
               <label htmlFor="role" className={labelClass}>Je suis</label>
               <select id="role" name="role" required value={role} onChange={(e) => setRole(e.target.value)}
                 className={selectClass}>
-                <option value="learner">Apprenant</option>
+                <option value="learner">Participant</option>
                 <option value="trainer">Formateur</option>
               </select>
             </div>

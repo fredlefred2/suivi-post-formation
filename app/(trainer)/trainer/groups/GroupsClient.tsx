@@ -111,7 +111,7 @@ export default function GroupsClient({
                 <div className="card flex items-center gap-3">
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">{group.name}</p>
-                    <p className="text-sm text-gray-400">{memberCount} apprenant{memberCount > 1 ? 's' : ''}</p>
+                    <p className="text-sm text-gray-400">{memberCount} participant{memberCount > 1 ? 's' : ''}</p>
                   </div>
                   <button
                     onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
@@ -139,7 +139,7 @@ export default function GroupsClient({
                 {isExpanded && (
                   <div className="mt-1 ml-2 mr-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
                     {members.length === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-3">Aucun apprenant dans ce groupe</p>
+                      <p className="text-sm text-gray-400 text-center py-3">Aucun participant dans ce groupe</p>
                     ) : (
                       <div className="space-y-2">
                         {members
@@ -218,7 +218,7 @@ export default function GroupsClient({
             </button>
             <div className="p-6 text-center">
               <span className="text-4xl">🗑️</span>
-              <h3 className="text-lg font-bold text-gray-800 mt-3">Supprimer cet apprenant ?</h3>
+              <h3 className="text-lg font-bold text-gray-800 mt-3">Supprimer ce participant ?</h3>
               <p className="text-sm text-gray-500 mt-2">
                 Vous allez supprimer définitivement <strong className="text-gray-700">{deletingLearner.first_name} {deletingLearner.last_name}</strong> ainsi que toutes ses données (axes, actions, check-ins).
               </p>

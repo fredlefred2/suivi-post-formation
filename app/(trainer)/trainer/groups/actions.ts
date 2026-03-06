@@ -66,7 +66,7 @@ export async function addLearnerToGroup(groupId: string, email: string) {
     .eq('role', 'learner')
     .single()
 
-  if (!learner) return { error: 'Ce compte n\'est pas un apprenant.' }
+  if (!learner) return { error: 'Ce compte n\'est pas un participant.' }
 
   // Ajouter au groupe
   const { error: insertErr } = await supabase.from('group_members').insert({
@@ -75,7 +75,7 @@ export async function addLearnerToGroup(groupId: string, email: string) {
   })
 
   if (insertErr) {
-    if (insertErr.code === '23505') return { error: 'Cet apprenant est déjà dans ce groupe.' }
+    if (insertErr.code === '23505') return { error: 'Ce participant est déjà dans ce groupe.' }
     return { error: insertErr.message }
   }
 
@@ -111,7 +111,7 @@ export async function addLearnerById(groupId: string, learnerId: string) {
     .eq('role', 'learner')
     .single()
 
-  if (!learner) return { error: 'Apprenant introuvable. Vérifiez l\'identifiant.' }
+  if (!learner) return { error: 'Participant introuvable. Vérifiez l\'identifiant.' }
 
   const { error } = await supabase.from('group_members').insert({
     group_id: groupId,
@@ -119,7 +119,7 @@ export async function addLearnerById(groupId: string, learnerId: string) {
   })
 
   if (error) {
-    if (error.code === '23505') return { error: 'Cet apprenant est déjà dans ce groupe.' }
+    if (error.code === '23505') return { error: 'Ce participant est déjà dans ce groupe.' }
     return { error: error.message }
   }
 

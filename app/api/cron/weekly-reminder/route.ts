@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
   })
 
   if (!learners || learners.length === 0) {
-    return NextResponse.json({ message: 'Aucun apprenant éligible', sent: 0 })
+    return NextResponse.json({ message: 'Aucun participant éligible', sent: 0 })
   }
 
   // Filtrer ceux qui n'ont pas fait leur check-in cette semaine
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
   const toRemind = learners.filter((l) => !doneIds.has(l.id))
 
   if (toRemind.length === 0) {
-    return NextResponse.json({ message: 'Tous les apprenants ont fait leur check-in', sent: 0 })
+    return NextResponse.json({ message: 'Tous les participants ont fait leur check-in', sent: 0 })
   }
 
   // Récupérer les emails via auth.admin

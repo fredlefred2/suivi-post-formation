@@ -25,7 +25,7 @@ export async function assignToGroup(learnerId: string, groupId: string) {
   })
 
   if (error) {
-    if (error.code === '23505') return { error: 'Cet apprenant est déjà dans ce groupe.' }
+    if (error.code === '23505') return { error: 'Ce participant est déjà dans ce groupe.' }
     return { error: error.message }
   }
 

@@ -18,7 +18,7 @@ const learnerNavItems = [
 
 const trainerNavItems = [
   { href: '/trainer/dashboard',   label: 'Tableau de bord', icon: LayoutDashboard },
-  { href: '/trainer/apprenants',  label: 'Apprenants',       icon: GraduationCap   },
+  { href: '/trainer/apprenants',  label: 'Participants',     icon: GraduationCap   },
   { href: '/trainer/groups',      label: 'Groupes',          icon: Users           },
 ]
 
