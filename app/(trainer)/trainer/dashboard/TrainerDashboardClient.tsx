@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ChevronDown, Users, TrendingUp, X, ClipboardCheck } from 'lucide-react'
+import { ChevronDown, Users, TrendingUp, X, ClipboardCheck, Download, Loader2 } from 'lucide-react'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import { useCountUp } from '@/lib/useCountUp'
@@ -104,6 +104,7 @@ export default function TrainerDashboardClient({
   )
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showAllActions, setShowAllActions] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -261,12 +262,35 @@ export default function TrainerDashboardClient({
     )
   }
 
+  const handleDownloadReport = useCallback(async () => {
+    if (isDownloading || selectedOption === 'all') return
+    setIsDownloading(true)
+    try {
+      const res = await fetch(`/api/group-report?groupId=${selectedOption}`)
+      if (!res.ok) throw new Error('Erreur téléchargement')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = res.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] ?? 'rapport.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Erreur rapport PDF:', err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }, [isDownloading, selectedOption])
+
   const apprenantLink = `/trainer/apprenants?group=${selectedOption}`
 
   return (
     <div className="space-y-6 pb-4">
 
-      {/* ── Dropdown sélection groupe ── */}
+      {/* ── Dropdown sélection groupe + bouton rapport ── */}
+      <div className="flex items-center gap-2">
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen((o) => !o)}
@@ -323,6 +347,24 @@ export default function TrainerDashboardClient({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Bouton télécharger rapport PDF */}
+      {selectedOption !== 'all' && (
+        <button
+          onClick={handleDownloadReport}
+          disabled={isDownloading}
+          className="flex items-center gap-1.5 px-3 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          title="Télécharger le rapport PDF"
+        >
+          {isDownloading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Download size={16} />
+          )}
+          <span className="hidden sm:inline">{isDownloading ? 'Génération...' : 'Rapport'}</span>
+        </button>
+      )}
       </div>
 
       {/* ── Bloc 1 : Membres + Météo générale ── */}
