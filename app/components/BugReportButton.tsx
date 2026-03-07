@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Bug, X, Send, CheckCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -29,6 +30,7 @@ export default function BugReportButton() {
   // ── Shared state ──
   const [role, setRole] = useState<'learner' | 'trainer' | null>(null)
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   // ── Learner state (formulaire de signalement) ──
   const [message, setMessage] = useState('')
@@ -41,6 +43,11 @@ export default function BugReportButton() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [reports, setReports] = useState<BugReport[]>([])
   const [loadingReports, setLoadingReports] = useState(false)
+
+  // ── Montage (nécessaire pour createPortal) ──
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // ── Initialisation : détecter rôle + unread count ──
   useEffect(() => {
@@ -61,7 +68,6 @@ export default function BugReportButton() {
 
       if (profile?.role === 'trainer') {
         setRole('trainer')
-        // Compter les signalements non lus
         const { count } = await supabase
           .from('bug_reports')
           .select('*', { count: 'exact', head: true })
@@ -126,7 +132,6 @@ export default function BugReportButton() {
 
     const supabase = createClient()
 
-    // Récupérer tous les signalements
     const { data } = await supabase
       .from('bug_reports')
       .select('id, user_name, user_role, message, page, read_at, created_at')
@@ -135,7 +140,6 @@ export default function BugReportButton() {
     setReports(data ?? [])
     setLoadingReports(false)
 
-    // Marquer les non lus comme lus
     if (data?.some(r => r.read_at === null)) {
       await supabase
         .from('bug_reports')
@@ -146,37 +150,47 @@ export default function BugReportButton() {
     }
   }, [])
 
-  // ── Ne rien rendre si pas authentifié ──
-  if (role === null) return null
+  // ── Ne rien rendre si pas monté ou pas authentifié ──
+  if (!mounted || role === null) return null
 
-  // ── Fermer le modal ──
   function handleClose() {
     setOpen(false)
     setSent(false)
     setError(null)
   }
 
-  return (
+  // ── Rendu via Portal (directement dans document.body) ──
+  // Garantit que position:fixed fonctionne toujours,
+  // indépendamment des conteneurs CSS parents.
+  return createPortal(
     <>
       {/* ── Bouton flottant 🐛 ── */}
       <button
         onClick={() => role === 'trainer' ? openTrainerPanel() : setOpen(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40
-                   w-10 h-10 rounded-full
-                   bg-gray-800/60 hover:bg-gray-800/90 backdrop-blur-sm
-                   text-white/70 hover:text-white
+        style={{
+          position: 'fixed',
+          bottom: '5rem',
+          right: '1rem',
+          zIndex: 9998,
+        }}
+        className="w-10 h-10 rounded-full
+                   bg-gray-800/80 hover:bg-gray-800 backdrop-blur-sm
+                   text-white/80 hover:text-white
                    flex items-center justify-center
                    shadow-lg transition-all duration-200
-                   active:scale-90 relative"
+                   active:scale-90"
         aria-label={role === 'trainer' ? 'Voir les signalements' : 'Signaler un bug'}
       >
         <Bug size={18} />
         {/* Pastille rouge (formateur uniquement) */}
         {role === 'trainer' && unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px]
-                           bg-red-500 text-white text-[10px] font-bold
-                           rounded-full flex items-center justify-center
-                           px-1 ring-2 ring-white/20 animate-pulse">
+          <span
+            style={{ position: 'absolute', top: '-4px', right: '-4px' }}
+            className="min-w-[18px] h-[18px]
+                       bg-red-500 text-white text-[10px] font-bold
+                       rounded-full flex items-center justify-center
+                       px-1 ring-2 ring-white/20 animate-pulse"
+          >
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -184,7 +198,10 @@ export default function BugReportButton() {
 
       {/* ── Modal ── */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4">
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999 }}
+          className="flex items-end sm:items-center justify-center px-4 pb-4"
+        >
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -198,7 +215,6 @@ export default function BugReportButton() {
             {/* ═══════════════════════════════════════════ */}
             {role === 'trainer' ? (
               <>
-                {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Bug size={18} className="text-red-500" />
@@ -211,7 +227,6 @@ export default function BugReportButton() {
                   </button>
                 </div>
 
-                {/* Liste */}
                 <div className="max-h-[60vh] overflow-y-auto scrollbar-thin">
                   {loadingReports ? (
                     <div className="p-8 text-center text-gray-400 text-sm">Chargement...</div>
@@ -264,7 +279,6 @@ export default function BugReportButton() {
               /* APPRENANT : Formulaire de signalement       */
               /* ═══════════════════════════════════════════ */
               <>
-                {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Bug size={18} className="text-red-500" />
@@ -336,6 +350,7 @@ export default function BugReportButton() {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   )
 }
