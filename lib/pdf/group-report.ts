@@ -7,13 +7,13 @@ import {
   drawPageHeader,
   drawPageFooter,
   drawCard,
-  drawWeatherBlocks,
   drawWeatherPills,
+  drawWeatherAxis,
+  getWeatherScore,
   drawDynamiqueGaugeWithMarkers,
   drawMetricCard,
   drawSectionTitle,
   checkPageBreak,
-  getDynamiqueForCount,
   getDynamiqueForActions,
   drawIconGroup,
   drawIconSun,
@@ -37,7 +37,8 @@ export type LearnerReportData = {
   lastName: string
   createdAt: string
   axes: string[]
-  axeActionCounts: number[]   // nombre d'actions par axe (pour dynamique par axe)
+  axeActionCounts: number[]
+  axeActions: string[][]      // descriptions des actions par axe
   totalActions: number
   weeksSinceJoin: number
   avgActionsPerWeek: number
@@ -130,11 +131,12 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
   drawIconSun(doc, margin + 3, y - 1, 5)
   y = drawSectionTitle(doc, margin + 10, y, 'Meteo')
 
-  // 3 blocs colorés (comme l'app)
+  // Axe météo à 5 niveaux avec curseur
   const totalWeathers = data.weatherSummary.sunny + data.weatherSummary.cloudy + data.weatherSummary.stormy
   if (totalWeathers > 0) {
-    y = drawWeatherBlocks(doc, margin, y, contentW, data.weatherSummary)
-    y += 6
+    const groupWeatherScore = getWeatherScore(data.weatherSummary)
+    y = drawWeatherAxis(doc, margin, y, contentW, groupWeatherScore)
+    y += 4
 
     // Timeline pills météo
     if (data.weatherHistory.length > 0) {
@@ -176,7 +178,7 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
   doc.setTextColor(...COLORS.textMedium)
   doc.text('Indice de dynamique du groupe', margin, y)
   y += 5
-  const groupDyn = getDynamiqueForCount(data.avgActionsPerWeek)
+  const groupDyn = getDynamiqueForActions(data.avgActionsPerAxe)
   y = drawDynamiqueGaugeWithMarkers(doc, margin, y, contentW, groupDyn.level)
   y += 6
 
@@ -265,64 +267,17 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
     )
     ly += 4
 
-    // ── Axes de travail ──
-    ly = drawSectionTitle(doc, margin, ly, 'Axes de travail')
-    if (learner.axes.length > 0) {
-      learner.axes.forEach((axe, i) => {
-        const dyn = getDynamiqueForActions(learner.axeActionCounts[i] ?? 0)
-        const actionCount = learner.axeActionCounts[i] ?? 0
-
-        doc.setFontSize(9)
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(...COLORS.textDark)
-        doc.text(`${i + 1}. ${axe}`, margin + 2, ly)
-
-        // Niveau à droite
-        doc.setFontSize(8)
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(dyn.color[0], dyn.color[1], dyn.color[2])
-        doc.text(`${actionCount} actions - ${dyn.label}`, pageW - margin, ly, { align: 'right' })
-
-        ly += 6
-      })
-    } else {
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'italic')
-      doc.setTextColor(...COLORS.textLight)
-      doc.text('Aucun axe defini', margin, ly)
-      ly += 5
-    }
-    ly += 3
-
-    // ── Cartes métriques individuelles ──
-    const indivCardW = (contentW - 4) / 2
-    const indivCardH = 30
-    drawMetricCard(doc, margin, ly, indivCardW, indivCardH, 'Actions totales', String(learner.totalActions))
-    drawMetricCard(doc, margin + indivCardW + 4, ly, indivCardW, indivCardH, 'Actions / sem.', learner.avgActionsPerWeek.toFixed(1))
-    ly += indivCardH + 5
-
-    // ── Dynamique individuelle ──
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(...COLORS.textMedium)
-    doc.text('Dynamique', margin, ly)
-    ly += 5
-    const learnerDyn = getDynamiqueForCount(learner.avgActionsPerWeek)
-    ly = drawDynamiqueGaugeWithMarkers(doc, margin, ly, contentW, learnerDyn.level)
-    ly += 4
-
-    // ── Météo ──
-    ly = checkPageBreak(doc, ly, 50)
+    // ── Section 1 : Météo ──
+    ly = checkPageBreak(doc, ly, 40)
     drawIconSun(doc, margin + 3, ly - 1, 5)
     ly = drawSectionTitle(doc, margin + 10, ly, 'Meteo')
 
     const learnerTotal = learner.weatherSummary.sunny + learner.weatherSummary.cloudy + learner.weatherSummary.stormy
     if (learnerTotal > 0) {
-      // 3 blocs colorés
-      ly = drawWeatherBlocks(doc, margin, ly, contentW, learner.weatherSummary)
+      const learnerWeatherScore = getWeatherScore(learner.weatherSummary)
+      ly = drawWeatherAxis(doc, margin, ly, contentW, learnerWeatherScore)
       ly += 4
 
-      // Timeline pills
       if (learner.weatherHistory.length > 0) {
         doc.setFontSize(8)
         doc.setFont('helvetica', 'normal')
@@ -340,6 +295,80 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
       ly += 8
     }
 
+    // ── Section 2 : L'Action ──
+    ly = checkPageBreak(doc, ly, 50)
+    drawIconAction(doc, margin + 3, ly - 1, 5)
+    ly = drawSectionTitle(doc, margin + 10, ly, "L'Action")
+
+    // Cartes métriques
+    const indivCardW = (contentW - 4) / 2
+    const indivCardH = 30
+    drawMetricCard(doc, margin, ly, indivCardW, indivCardH, 'Actions totales', String(learner.totalActions))
+    drawMetricCard(doc, margin + indivCardW + 4, ly, indivCardW, indivCardH, 'Actions / sem.', learner.avgActionsPerWeek.toFixed(1))
+    ly += indivCardH + 5
+
+    // Dynamique
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...COLORS.textMedium)
+    doc.text('Dynamique', margin, ly)
+    ly += 5
+    const avgAxeActions = learner.axes.length > 0 ? learner.totalActions / learner.axes.length : 0
+    const learnerDyn = getDynamiqueForActions(avgAxeActions)
+    ly = drawDynamiqueGaugeWithMarkers(doc, margin, ly, contentW, learnerDyn.level)
+    ly += 6
+
+    // Axes de progrès + détail des actions menées
+    if (learner.axes.length > 0) {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...COLORS.textMedium)
+      doc.text('Axes de progres', margin, ly)
+      ly += 6
+
+      learner.axes.forEach((axe, i) => {
+        ly = checkPageBreak(doc, ly, 15)
+        const dyn = getDynamiqueForActions(learner.axeActionCounts[i] ?? 0)
+        const actionCount = learner.axeActionCounts[i] ?? 0
+
+        // Nom de l'axe
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...COLORS.textDark)
+        doc.text(`${i + 1}. ${axe}`, margin + 2, ly)
+
+        // Niveau à droite
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(dyn.color[0], dyn.color[1], dyn.color[2])
+        doc.text(`${actionCount} action${actionCount > 1 ? 's' : ''} - ${dyn.label}`, pageW - margin, ly, { align: 'right' })
+
+        ly += 5
+
+        // Détail des actions
+        const actions = learner.axeActions[i] ?? []
+        if (actions.length > 0) {
+          doc.setFontSize(7.5)
+          doc.setFont('helvetica', 'normal')
+          doc.setTextColor(...COLORS.textMedium)
+          actions.forEach((desc) => {
+            ly = checkPageBreak(doc, ly, 6)
+            const lines = doc.splitTextToSize(`• ${desc}`, contentW - 12)
+            doc.text(lines, margin + 6, ly)
+            ly += lines.length * 3.5 + 1
+          })
+        }
+        ly += 3
+      })
+    } else {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'italic')
+      doc.setTextColor(...COLORS.textLight)
+      doc.text('Aucun axe defini', margin, ly)
+      ly += 5
+    }
+    ly += 3
+
     // ── Ce qui a marché ──
     if (learner.whatWorked.length > 0) {
       ly = checkPageBreak(doc, ly, 15)
@@ -351,11 +380,9 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
         const lines = doc.splitTextToSize(text, contentW - 10)
         const blockH = lines.length * 4 + 4
 
-        // Fond vert clair
         doc.setFillColor(...COLORS.greenBg)
         doc.roundedRect(margin, ly, contentW, blockH, 2, 2, 'F')
 
-        // Indicateur vert à gauche
         doc.setFillColor(...COLORS.green)
         doc.roundedRect(margin, ly, 2, blockH, 1, 1, 'F')
 
@@ -379,11 +406,9 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
         const lines = doc.splitTextToSize(text, contentW - 10)
         const blockH = lines.length * 4 + 4
 
-        // Fond rouge clair
         doc.setFillColor(...COLORS.redBg)
         doc.roundedRect(margin, ly, contentW, blockH, 2, 2, 'F')
 
-        // Indicateur rouge à gauche
         doc.setFillColor(...COLORS.stormy)
         doc.roundedRect(margin, ly, 2, blockH, 1, 1, 'F')
 

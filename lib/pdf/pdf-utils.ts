@@ -558,3 +558,114 @@ export function drawIconWarning(doc: jsPDF, cx: number, cy: number, size = 4) {
   doc.rect(cx - 0.3, cy - size * 0.1, 0.6, size * 0.25, 'F')
   doc.circle(cx, cy + size * 0.15, 0.4, 'F')
 }
+
+// 🌤 Petit nuage + gros soleil
+export function drawIconPartlySunny(doc: jsPDF, cx: number, cy: number, size = 4) {
+  // Gros soleil derrière
+  drawIconSun(doc, cx - size * 0.1, cy - size * 0.1, size * 0.8)
+  // Petit nuage devant en bas à droite
+  doc.setFillColor(180, 210, 240)
+  doc.circle(cx + size * 0.05, cy + size * 0.2, size * 0.18, 'F')
+  doc.circle(cx + size * 0.22, cy + size * 0.15, size * 0.2, 'F')
+  doc.circle(cx + size * 0.15, cy + size * 0.25, size * 0.15, 'F')
+}
+
+// ⛅ Gros nuage + petit soleil
+export function drawIconMostlyCloudy(doc: jsPDF, cx: number, cy: number, size = 4) {
+  // Petit soleil qui dépasse en haut à droite
+  const sunR = size * 0.2
+  doc.setFillColor(...COLORS.sunny)
+  doc.circle(cx + size * 0.3, cy - size * 0.2, sunR, 'F')
+  // Mini rayons
+  doc.setDrawColor(...COLORS.sunny)
+  doc.setLineWidth(0.3)
+  for (let i = 0; i < 5; i++) {
+    const angle = -Math.PI * 0.1 + i * Math.PI * 0.3
+    const x1 = cx + size * 0.3 + Math.cos(angle) * (sunR + size * 0.05)
+    const y1 = cy - size * 0.2 + Math.sin(angle) * (sunR + size * 0.05)
+    const x2 = cx + size * 0.3 + Math.cos(angle) * (sunR + size * 0.15)
+    const y2 = cy - size * 0.2 + Math.sin(angle) * (sunR + size * 0.15)
+    doc.line(x1, y1, x2, y2)
+  }
+  // Gros nuage devant
+  doc.setFillColor(...COLORS.cloudy)
+  doc.circle(cx - size * 0.15, cy + size * 0.05, size * 0.28, 'F')
+  doc.circle(cx + size * 0.1, cy - size * 0.05, size * 0.32, 'F')
+  doc.circle(cx + size * 0.05, cy + size * 0.18, size * 0.22, 'F')
+}
+
+// ═══════════════════════════════════════════
+// SCORE MÉTÉO + AXE MÉTÉO
+// ═══════════════════════════════════════════
+
+// Calcul du score météo moyen (1 = tout va bien → 5 = difficile)
+export function getWeatherScore(summary: { sunny: number; cloudy: number; stormy: number }): number {
+  const total = summary.sunny + summary.cloudy + summary.stormy
+  if (total === 0) return 3 // neutre par défaut
+  return (summary.sunny * 1 + summary.cloudy * 3 + summary.stormy * 5) / total
+}
+
+// Axe météo à 5 niveaux avec curseur
+export function drawWeatherAxis(
+  doc: jsPDF, x: number, y: number, totalW: number,
+  weatherScore: number,
+) {
+  const barH = 7
+  const segCount = 5
+  const segW = totalW / segCount
+  const barY = y + 11
+
+  // Couleurs des segments (gauche = bien → droite = difficile)
+  const segColors: Array<readonly [number, number, number]> = [
+    [187, 247, 208],  // green-200
+    [254, 243, 199],  // amber-100
+    [186, 230, 253],  // sky-200
+    [253, 186, 116],  // orange-200
+    [254, 202, 202],  // red-200
+  ]
+
+  // Icônes au-dessus de chaque segment
+  const iconY = y + 5
+  for (let i = 0; i < 5; i++) {
+    const iconX = x + i * segW + segW / 2
+    if (i === 0) drawIconSun(doc, iconX, iconY, 4)
+    else if (i === 1) drawIconPartlySunny(doc, iconX, iconY, 4)
+    else if (i === 2) drawIconMostlyCloudy(doc, iconX, iconY, 4)
+    else if (i === 3) drawIconCloud(doc, iconX, iconY, 4)
+    else drawIconStorm(doc, iconX, iconY, 4)
+  }
+
+  // Segments de la barre
+  for (let i = 0; i < segCount; i++) {
+    doc.setFillColor(segColors[i][0], segColors[i][1], segColors[i][2])
+    doc.rect(x + i * segW, barY, segW, barH, 'F')
+  }
+
+  // Curseur (triangle pointant vers le haut)
+  const score = Math.max(1, Math.min(5, weatherScore))
+  const cursorX = x + ((score - 1) / 4) * totalW
+  const cursorY = barY + barH + 1
+
+  doc.setFillColor(COLORS.textDark[0], COLORS.textDark[1], COLORS.textDark[2])
+  doc.triangle(
+    cursorX - 2.5, cursorY + 4,
+    cursorX + 2.5, cursorY + 4,
+    cursorX, cursorY,
+    'F',
+  )
+
+  // Labels : positions 0, 2, 4
+  doc.setFontSize(7)
+  doc.setFont('helvetica', 'bold')
+
+  doc.setTextColor(COLORS.green[0], COLORS.green[1], COLORS.green[2])
+  doc.text('Ca roule', x + segW / 2, barY + barH + 9, { align: 'center' })
+
+  doc.setTextColor(COLORS.cloudy[0], COLORS.cloudy[1], COLORS.cloudy[2])
+  doc.text('Mitige', x + 2 * segW + segW / 2, barY + barH + 9, { align: 'center' })
+
+  doc.setTextColor(COLORS.stormy[0], COLORS.stormy[1], COLORS.stormy[2])
+  doc.text('Difficile', x + 4 * segW + segW / 2, barY + barH + 9, { align: 'center' })
+
+  return barY + barH + 13
+}

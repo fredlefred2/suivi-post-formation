@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
         .order('week_number', { ascending: true }),
       admin.from('actions').select('id, learner_id, axe_id, created_at').in('learner_id', learnerIds),
       admin.from('axes')
-        .select('id, learner_id, subject, actions(id)')
+        .select('id, learner_id, subject, actions(id, description)')
         .in('learner_id', learnerIds)
         .order('created_at'),
     ])
@@ -89,11 +89,15 @@ export async function GET(request: NextRequest) {
     })
 
     // ── Axes par apprenant (avec nombre d'actions par axe) ──
-    const learnerAxesMap: Record<string, Array<{ subject: string; actionCount: number }>> = {}
+    const learnerAxesMap: Record<string, Array<{ subject: string; actionCount: number; actionDescriptions: string[] }>> = {}
     axes.forEach((axe) => {
       if (!learnerAxesMap[axe.learner_id]) learnerAxesMap[axe.learner_id] = []
-      const actionCount = (axe.actions as { id: string }[])?.length ?? 0
-      learnerAxesMap[axe.learner_id].push({ subject: axe.subject, actionCount })
+      const axeActions = (axe.actions as { id: string; description: string }[]) ?? []
+      learnerAxesMap[axe.learner_id].push({
+        subject: axe.subject,
+        actionCount: axeActions.length,
+        actionDescriptions: axeActions.map((a) => a.description),
+      })
     })
 
     // ── Agrégation : données du groupe ──
@@ -120,7 +124,7 @@ export async function GET(request: NextRequest) {
       if (!p) {
         return {
           id: lid, firstName: 'Inconnu', lastName: '', createdAt: new Date().toISOString(),
-          axes: [], axeActionCounts: [], totalActions: 0, weeksSinceJoin: 0, avgActionsPerWeek: 0,
+          axes: [], axeActionCounts: [], axeActions: [], totalActions: 0, weeksSinceJoin: 0, avgActionsPerWeek: 0,
           weatherHistory: [], weatherSummary: { sunny: 0, cloudy: 0, stormy: 0 },
           whatWorked: [], difficulties: [],
         }
@@ -160,6 +164,7 @@ export async function GET(request: NextRequest) {
         createdAt: p.createdAt,
         axes: learnerAxes.map((a) => a.subject),
         axeActionCounts: learnerAxes.map((a) => a.actionCount),
+        axeActions: learnerAxes.map((a) => a.actionDescriptions),
         totalActions: learnerActions.length,
         weeksSinceJoin: ws,
         avgActionsPerWeek: avgPerWeek,
