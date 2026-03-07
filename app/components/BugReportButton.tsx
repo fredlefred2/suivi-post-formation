@@ -263,7 +263,7 @@ export default function BugReportButton() {
                             </span>
                             <span className="text-[10px] text-gray-400 font-mono">{report.page}</span>
                           </div>
-                          <p className={`text-sm leading-relaxed line-clamp-3 ${
+                          <p className={`text-sm leading-relaxed ${
                             report.read_at === null ? 'text-gray-700' : 'text-gray-500'
                           }`}>
                             {report.message}
