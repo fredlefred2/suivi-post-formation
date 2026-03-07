@@ -104,12 +104,26 @@ export async function GET(request: NextRequest) {
     const totalActions = allActions.length
     const totalAxes = axes.length
 
-    // Météo du groupe — historique plat (un entry par checkin)
-    const weatherHistory = checkins.map((c) => ({
-      week: c.week_number,
-      year: c.year,
-      weather: c.weather as string,
-    }))
+    // Météo du groupe — moyenne par semaine (agrégation de tous les apprenants)
+    const weekScoreMap = new Map<string, { week: number; year: number; scores: number[] }>()
+    const weatherScoreValue: Record<string, number> = { sunny: 1, cloudy: 3, stormy: 5 }
+    checkins.forEach((c) => {
+      const key = `${c.year}-${c.week_number}`
+      if (!weekScoreMap.has(key)) {
+        weekScoreMap.set(key, { week: c.week_number, year: c.year, scores: [] })
+      }
+      weekScoreMap.get(key)!.scores.push(weatherScoreValue[c.weather as string] ?? 3)
+    })
+    const weatherHistory = Array.from(weekScoreMap.values())
+      .sort((a, b) => a.year - b.year || a.week - b.week)
+      .map((entry) => {
+        const avg = entry.scores.reduce((s, v) => s + v, 0) / entry.scores.length
+        let weather: string
+        if (avg <= 2) weather = 'sunny'
+        else if (avg < 4) weather = 'cloudy'
+        else weather = 'stormy'
+        return { week: entry.week, year: entry.year, weather }
+      })
 
     // Météo globale du groupe
     const groupWeatherSummary = { sunny: 0, cloudy: 0, stormy: 0 }
