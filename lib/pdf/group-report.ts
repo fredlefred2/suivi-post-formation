@@ -15,6 +15,12 @@ import {
   checkPageBreak,
   getDynamiqueForCount,
   getDynamiqueForActions,
+  drawIconGroup,
+  drawIconSun,
+  drawIconAction,
+  drawIconTrophy,
+  drawIconCheck,
+  drawIconWarning,
 } from './pdf-utils'
 
 // ── Types pour les données du rapport ──
@@ -83,7 +89,8 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
   y += 4
 
   // ── Section : L'Équipe ──
-  y = drawSectionTitle(doc, margin, y, "L'Equipe")
+  drawIconGroup(doc, margin + 3, y - 1, 5)
+  y = drawSectionTitle(doc, margin + 10, y, "L'Equipe")
 
   // Card avec nombre + liste des membres
   const memberNames = data.learners.map((l) => `${l.firstName} ${l.lastName}`)
@@ -120,7 +127,8 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
 
   // ── Section : Météo ──
   y = checkPageBreak(doc, y, 60)
-  y = drawSectionTitle(doc, margin, y, 'Meteo')
+  drawIconSun(doc, margin + 3, y - 1, 5)
+  y = drawSectionTitle(doc, margin + 10, y, 'Meteo')
 
   // 3 blocs colorés (comme l'app)
   const totalWeathers = data.weatherSummary.sunny + data.weatherSummary.cloudy + data.weatherSummary.stormy
@@ -148,7 +156,8 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
 
   // ── Section : L'Action ──
   y = checkPageBreak(doc, y, 70)
-  y = drawSectionTitle(doc, margin, y, "L'Action")
+  drawIconAction(doc, margin + 3, y - 1, 5)
+  y = drawSectionTitle(doc, margin + 10, y, "L'Action")
 
   // 4 cartes métriques 2×2
   const mCardW = (contentW - 6) / 2
@@ -173,7 +182,8 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
 
   // ── Section : Classement ──
   y = checkPageBreak(doc, y, 40)
-  y = drawSectionTitle(doc, margin, y, 'Classement')
+  drawIconTrophy(doc, margin + 3, y - 1, 5)
+  y = drawSectionTitle(doc, margin + 10, y, 'Classement')
 
   // Préparer les données de classement (trié comme dans le dashboard)
   const sorted = data.learners.map((l) => {
@@ -303,7 +313,8 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
 
     // ── Météo ──
     ly = checkPageBreak(doc, ly, 50)
-    ly = drawSectionTitle(doc, margin, ly, 'Meteo')
+    drawIconSun(doc, margin + 3, ly - 1, 5)
+    ly = drawSectionTitle(doc, margin + 10, ly, 'Meteo')
 
     const learnerTotal = learner.weatherSummary.sunny + learner.weatherSummary.cloudy + learner.weatherSummary.stormy
     if (learnerTotal > 0) {
@@ -332,7 +343,8 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
     // ── Ce qui a marché ──
     if (learner.whatWorked.length > 0) {
       ly = checkPageBreak(doc, ly, 15)
-      ly = drawSectionTitle(doc, margin, ly, 'Ce qui a marche')
+      drawIconCheck(doc, margin + 3, ly - 1, 5)
+      ly = drawSectionTitle(doc, margin + 10, ly, 'Ce qui a marche')
 
       learner.whatWorked.forEach((text) => {
         ly = checkPageBreak(doc, ly, 10)
@@ -359,7 +371,8 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
     // ── Difficultés rencontrées ──
     if (learner.difficulties.length > 0) {
       ly = checkPageBreak(doc, ly, 15)
-      ly = drawSectionTitle(doc, margin, ly, 'Difficultes rencontrees')
+      drawIconWarning(doc, margin + 3, ly - 1, 5)
+      ly = drawSectionTitle(doc, margin + 10, ly, 'Difficultes rencontrees')
 
       learner.difficulties.forEach((text) => {
         ly = checkPageBreak(doc, ly, 10)

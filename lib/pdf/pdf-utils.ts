@@ -192,7 +192,7 @@ export function drawCard(doc: jsPDF, x: number, y: number, w: number, h: number)
 
 export function drawWeatherBlock(
   doc: jsPDF, x: number, y: number, w: number, h: number,
-  label: string, count: number, total: number,
+  weather: string, label: string, count: number, total: number,
   bgColor: readonly [number, number, number],
   textColor: readonly [number, number, number],
 ) {
@@ -202,21 +202,19 @@ export function drawWeatherBlock(
   doc.setFillColor(bgColor[0], bgColor[1], bgColor[2])
   doc.roundedRect(x, y, w, h, 3, 3, 'F')
 
-  // Label (ex: "Ensoleille")
-  doc.setFontSize(8)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(textColor[0], textColor[1], textColor[2])
-  doc.text(label, x + w / 2, y + 10, { align: 'center' })
+  // Icône météo
+  drawWeatherIcon(doc, x + w / 2, y + 8, weather, 5)
 
   // Count en gros
-  doc.setFontSize(18)
+  doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
+  doc.setTextColor(textColor[0], textColor[1], textColor[2])
   doc.text(String(count), x + w / 2, y + 22, { align: 'center' })
 
   // Pourcentage
-  doc.setFontSize(9)
+  doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
-  doc.text(`${pct}%`, x + w / 2, y + 29, { align: 'center' })
+  doc.text(`${pct}%`, x + w / 2, y + 28, { align: 'center' })
 }
 
 export function drawWeatherBlocks(
@@ -226,11 +224,11 @@ export function drawWeatherBlocks(
   const total = summary.sunny + summary.cloudy + summary.stormy
   const gap = 4
   const blockW = (totalW - gap * 2) / 3
-  const blockH = 34
+  const blockH = 33
 
-  drawWeatherBlock(doc, x, y, blockW, blockH, 'Ensoleille', summary.sunny, total, COLORS.sunnyBg, COLORS.sunnyText)
-  drawWeatherBlock(doc, x + blockW + gap, y, blockW, blockH, 'Mitige', summary.cloudy, total, COLORS.cloudyBg, COLORS.cloudyText)
-  drawWeatherBlock(doc, x + (blockW + gap) * 2, y, blockW, blockH, 'Difficile', summary.stormy, total, COLORS.stormyBg, COLORS.stormyText)
+  drawWeatherBlock(doc, x, y, blockW, blockH, 'sunny', 'Ensoleille', summary.sunny, total, COLORS.sunnyBg, COLORS.sunnyText)
+  drawWeatherBlock(doc, x + blockW + gap, y, blockW, blockH, 'cloudy', 'Mitige', summary.cloudy, total, COLORS.cloudyBg, COLORS.cloudyText)
+  drawWeatherBlock(doc, x + (blockW + gap) * 2, y, blockW, blockH, 'stormy', 'Difficile', summary.stormy, total, COLORS.stormyBg, COLORS.stormyText)
 
   return y + blockH
 }
@@ -262,10 +260,16 @@ export function drawWeatherPills(
   // Reverse pour afficher les plus récentes en premier
   const reversed = [...history].reverse()
 
+  const dotColorMap: Record<string, readonly [number, number, number]> = {
+    sunny: COLORS.sunny,
+    cloudy: COLORS.cloudy,
+    stormy: COLORS.stormy,
+  }
+
   reversed.forEach((wh) => {
     const label = `S${wh.week}`
     doc.setFontSize(7)
-    const pillW = doc.getTextWidth(label) + 6
+    const pillW = doc.getTextWidth(label) + 9 // extra space for dot
 
     // Retour à la ligne si dépassement
     if (cx + pillW > x + maxW) {
@@ -275,16 +279,21 @@ export function drawWeatherPills(
 
     const bg = bgMap[wh.weather] ?? COLORS.border
     const tc = textMap[wh.weather] ?? COLORS.textDark
+    const dotColor = dotColorMap[wh.weather] ?? COLORS.textLight
 
     // Pill arrondie
     doc.setFillColor(bg[0], bg[1], bg[2])
     doc.roundedRect(cx, cy, pillW, pillH, 2, 2, 'F')
 
+    // Mini dot coloré
+    doc.setFillColor(dotColor[0], dotColor[1], dotColor[2])
+    doc.circle(cx + 3.5, cy + pillH / 2, 1.2, 'F')
+
     // Texte
     doc.setFontSize(6.5)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(tc[0], tc[1], tc[2])
-    doc.text(label, cx + pillW / 2, cy + pillH / 2 + 1.5, { align: 'center' })
+    doc.text(label, cx + pillW / 2 + 1.5, cy + pillH / 2 + 1.5, { align: 'center' })
 
     cx += pillW + pillGap
   })
@@ -425,4 +434,127 @@ export function checkPageBreak(doc: jsPDF, currentY: number, neededHeight: numbe
     return 15
   }
   return currentY
+}
+
+// ═══════════════════════════════════════════
+// MINI-ICÔNES DESSINÉES (remplace les emojis)
+// ═══════════════════════════════════════════
+
+// ☀️ Soleil : cercle + 8 rayons
+export function drawIconSun(doc: jsPDF, cx: number, cy: number, size = 4) {
+  const r = size * 0.4
+  const rayLen = size * 0.35
+  const rayStart = r + size * 0.1
+
+  // Cercle central
+  doc.setFillColor(...COLORS.sunny)
+  doc.circle(cx, cy, r, 'F')
+
+  // Rayons
+  doc.setDrawColor(...COLORS.sunny)
+  doc.setLineWidth(0.4)
+  for (let i = 0; i < 8; i++) {
+    const angle = (i * Math.PI) / 4
+    const x1 = cx + Math.cos(angle) * rayStart
+    const y1 = cy + Math.sin(angle) * rayStart
+    const x2 = cx + Math.cos(angle) * (rayStart + rayLen)
+    const y2 = cy + Math.sin(angle) * (rayStart + rayLen)
+    doc.line(x1, y1, x2, y2)
+  }
+}
+
+// ⛅ Nuage : deux cercles superposés
+export function drawIconCloud(doc: jsPDF, cx: number, cy: number, size = 4) {
+  doc.setFillColor(...COLORS.cloudy)
+  doc.circle(cx - size * 0.2, cy, size * 0.35, 'F')
+  doc.circle(cx + size * 0.2, cy - size * 0.1, size * 0.4, 'F')
+  doc.circle(cx + size * 0.15, cy + size * 0.15, size * 0.3, 'F')
+}
+
+// ⛈️ Orage : nuage + éclair
+export function drawIconStorm(doc: jsPDF, cx: number, cy: number, size = 4) {
+  // Nuage gris-rouge
+  doc.setFillColor(180, 80, 80)
+  doc.circle(cx - size * 0.2, cy - size * 0.15, size * 0.3, 'F')
+  doc.circle(cx + size * 0.15, cy - size * 0.2, size * 0.35, 'F')
+
+  // Éclair (zigzag)
+  doc.setDrawColor(...COLORS.sunny)
+  doc.setLineWidth(0.6)
+  doc.line(cx, cy + size * 0.05, cx - size * 0.15, cy + size * 0.3)
+  doc.line(cx - size * 0.15, cy + size * 0.3, cx + size * 0.05, cy + size * 0.3)
+  doc.line(cx + size * 0.05, cy + size * 0.3, cx - size * 0.1, cy + size * 0.55)
+}
+
+// Icône météo générique
+export function drawWeatherIcon(doc: jsPDF, cx: number, cy: number, weather: string, size = 4) {
+  if (weather === 'sunny') drawIconSun(doc, cx, cy, size)
+  else if (weather === 'cloudy') drawIconCloud(doc, cx, cy, size)
+  else drawIconStorm(doc, cx, cy, size)
+}
+
+// 👥 Icône groupe : deux silhouettes simplifiées
+export function drawIconGroup(doc: jsPDF, cx: number, cy: number, size = 4) {
+  doc.setFillColor(...COLORS.primaryLight)
+  // Personne gauche
+  doc.circle(cx - size * 0.25, cy - size * 0.25, size * 0.18, 'F')
+  doc.roundedRect(cx - size * 0.45, cy, size * 0.4, size * 0.35, 1, 1, 'F')
+  // Personne droite
+  doc.circle(cx + size * 0.25, cy - size * 0.25, size * 0.18, 'F')
+  doc.roundedRect(cx + size * 0.05, cy, size * 0.4, size * 0.35, 1, 1, 'F')
+}
+
+// ⚡ Icône action : éclair
+export function drawIconAction(doc: jsPDF, cx: number, cy: number, size = 4) {
+  doc.setFillColor(245, 158, 11) // amber-500
+  // Triangle haut
+  const pts = [
+    cx - size * 0.15, cy + size * 0.1,
+    cx + size * 0.25, cy - size * 0.45,
+    cx + size * 0.05, cy + size * 0.05,
+  ]
+  doc.triangle(pts[0], pts[1], pts[2], pts[3], pts[4], pts[5], 'F')
+  // Triangle bas
+  const pts2 = [
+    cx + size * 0.15, cy - size * 0.1,
+    cx - size * 0.25, cy + size * 0.45,
+    cx - size * 0.05, cy - size * 0.05,
+  ]
+  doc.triangle(pts2[0], pts2[1], pts2[2], pts2[3], pts2[4], pts2[5], 'F')
+}
+
+// 🏆 Icône classement : coupe
+export function drawIconTrophy(doc: jsPDF, cx: number, cy: number, size = 4) {
+  doc.setFillColor(245, 158, 11) // amber-500
+  // Coupe (trapèze arrondi)
+  doc.roundedRect(cx - size * 0.3, cy - size * 0.35, size * 0.6, size * 0.45, 1.5, 1.5, 'F')
+  // Pied
+  doc.setFillColor(180, 130, 20)
+  doc.rect(cx - size * 0.1, cy + size * 0.1, size * 0.2, size * 0.15, 'F')
+  // Base
+  doc.roundedRect(cx - size * 0.2, cy + size * 0.25, size * 0.4, size * 0.08, 1, 1, 'F')
+}
+
+// ✅ Icône check (coche dans un cercle)
+export function drawIconCheck(doc: jsPDF, cx: number, cy: number, size = 4) {
+  doc.setFillColor(...COLORS.green)
+  doc.circle(cx, cy, size * 0.4, 'F')
+  doc.setDrawColor(255, 255, 255)
+  doc.setLineWidth(0.6)
+  doc.line(cx - size * 0.18, cy, cx - size * 0.05, cy + size * 0.15)
+  doc.line(cx - size * 0.05, cy + size * 0.15, cx + size * 0.2, cy - size * 0.15)
+}
+
+// ⚠️ Icône warning (triangle)
+export function drawIconWarning(doc: jsPDF, cx: number, cy: number, size = 4) {
+  doc.setFillColor(...COLORS.stormy)
+  doc.triangle(
+    cx, cy - size * 0.35,
+    cx - size * 0.35, cy + size * 0.25,
+    cx + size * 0.35, cy + size * 0.25,
+    'F',
+  )
+  doc.setFillColor(255, 255, 255)
+  doc.rect(cx - 0.3, cy - size * 0.1, 0.6, size * 0.25, 'F')
+  doc.circle(cx, cy + size * 0.15, 0.4, 'F')
 }
