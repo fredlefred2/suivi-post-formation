@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
 export async function POST(request: NextRequest) {
@@ -44,55 +45,100 @@ export async function POST(request: NextRequest) {
       minute: '2-digit',
     })
 
-    // Envoi email via Resend
-    const resendKey = process.env.RESEND_API_KEY
-    if (!resendKey) {
-      console.error('RESEND_API_KEY non configurée')
-      return NextResponse.json({ error: 'Service email non configuré' }, { status: 500 })
-    }
-
-    const resend = new Resend(resendKey)
-
-    await resend.emails.send({
-      from: 'YAPLUKA <noreply@votre-domaine.fr>',
-      to: 'flacabanne@h3o-rh.fr',
-      subject: `🐛 YAPLUKA — Bug signalé par ${userName}`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
-          <div style="background: linear-gradient(135deg, #1e1b4b, #4338ca); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;">
-            <h2 style="color: white; margin: 0; font-size: 18px;">🐛 Signalement de bug</h2>
-            <p style="color: rgba(255,255,255,0.7); margin: 4px 0 0; font-size: 13px;">YAPLUKA — ${dateStr}</p>
-          </div>
-
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-              <td style="padding: 8px 12px; font-size: 13px; color: #6b7280; border-bottom: 1px solid #f3f4f6; width: 100px;">👤 Signalé par</td>
-              <td style="padding: 8px 12px; font-size: 14px; color: #111827; border-bottom: 1px solid #f3f4f6; font-weight: 600;">${userName} <span style="font-weight: 400; color: #9ca3af;">(${userRole})</span></td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 12px; font-size: 13px; color: #6b7280; border-bottom: 1px solid #f3f4f6;">📧 Email</td>
-              <td style="padding: 8px 12px; font-size: 14px; color: #111827; border-bottom: 1px solid #f3f4f6;">${userEmail}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 12px; font-size: 13px; color: #6b7280; border-bottom: 1px solid #f3f4f6;">📍 Page</td>
-              <td style="padding: 8px 12px; font-size: 14px; color: #111827; border-bottom: 1px solid #f3f4f6; font-family: monospace;">${page || '/'}</td>
-            </tr>
-          </table>
-
-          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
-            <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #991b1b;">💬 Message :</p>
-            <p style="margin: 0; font-size: 14px; color: #1f2937; line-height: 1.6; white-space: pre-wrap;">${message.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-          </div>
-
-          <details style="margin-top: 16px;">
-            <summary style="font-size: 12px; color: #9ca3af; cursor: pointer;">Infos techniques</summary>
-            <p style="font-size: 11px; color: #9ca3af; margin-top: 8px; word-break: break-all;">${(userAgent || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-          </details>
-        </div>
-      `,
+    // Log du signalement (toujours visible dans les logs Vercel)
+    console.log('🐛 BUG REPORT:', {
+      userName, userEmail, userRole,
+      message: message.trim(),
+      page: page || '/',
+      date: dateStr,
     })
 
-    return NextResponse.json({ success: true })
+    let dbSaved = false
+    let emailSent = false
+
+    // ── 1. Sauvegarder en base de données (si la table existe) ──
+    try {
+      const adminSupabase = createSupabaseAdmin(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+
+      const { error: dbError } = await adminSupabase.from('bug_reports').insert({
+        user_id: user.id,
+        user_name: userName,
+        user_email: userEmail,
+        user_role: userRole,
+        message: message.trim(),
+        page: page || '/',
+        user_agent: userAgent || '',
+        created_at: now.toISOString(),
+      })
+
+      if (dbError) {
+        console.warn('DB insert échoué (table absente ?):', dbError.message)
+      } else {
+        dbSaved = true
+      }
+    } catch (dbErr) {
+      console.warn('DB insert exception:', dbErr)
+    }
+
+    // ── 2. Envoyer email via Resend (si configuré) ──
+    const resendKey = process.env.RESEND_API_KEY
+    if (resendKey) {
+      try {
+        const resend = new Resend(resendKey)
+
+        await resend.emails.send({
+          from: 'YAPLUKA <onboarding@resend.dev>',
+          to: 'flacabanne@h3o-rh.fr',
+          subject: `🐛 YAPLUKA — Bug signalé par ${userName}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+              <div style="background: linear-gradient(135deg, #1e1b4b, #4338ca); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;">
+                <h2 style="color: white; margin: 0; font-size: 18px;">🐛 Signalement de bug</h2>
+                <p style="color: rgba(255,255,255,0.7); margin: 4px 0 0; font-size: 13px;">YAPLUKA — ${dateStr}</p>
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 8px 12px; font-size: 13px; color: #6b7280; border-bottom: 1px solid #f3f4f6; width: 100px;">👤 Signalé par</td>
+                  <td style="padding: 8px 12px; font-size: 14px; color: #111827; border-bottom: 1px solid #f3f4f6; font-weight: 600;">${userName} <span style="font-weight: 400; color: #9ca3af;">(${userRole})</span></td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 12px; font-size: 13px; color: #6b7280; border-bottom: 1px solid #f3f4f6;">📧 Email</td>
+                  <td style="padding: 8px 12px; font-size: 14px; color: #111827; border-bottom: 1px solid #f3f4f6;">${userEmail}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 12px; font-size: 13px; color: #6b7280; border-bottom: 1px solid #f3f4f6;">📍 Page</td>
+                  <td style="padding: 8px 12px; font-size: 14px; color: #111827; border-bottom: 1px solid #f3f4f6; font-family: monospace;">${page || '/'}</td>
+                </tr>
+              </table>
+
+              <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+                <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #991b1b;">💬 Message :</p>
+                <p style="margin: 0; font-size: 14px; color: #1f2937; line-height: 1.6; white-space: pre-wrap;">${message.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+              </div>
+
+              <details style="margin-top: 16px;">
+                <summary style="font-size: 12px; color: #9ca3af; cursor: pointer;">Infos techniques</summary>
+                <p style="font-size: 11px; color: #9ca3af; margin-top: 8px; word-break: break-all;">${(userAgent || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+              </details>
+            </div>
+          `,
+        })
+        emailSent = true
+      } catch (emailErr) {
+        console.error('Email bug report échoué:', emailErr)
+      }
+    }
+
+    // Le signalement est au minimum dans les logs Vercel (console.log ci-dessus)
+    return NextResponse.json({
+      success: true,
+      saved: dbSaved,
+      emailed: emailSent,
+    })
   } catch (err) {
     console.error('Erreur bug report:', err)
     return NextResponse.json(
