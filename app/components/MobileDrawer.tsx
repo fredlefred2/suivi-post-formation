@@ -8,6 +8,7 @@ import {
   LayoutDashboard, Target, ClipboardCheck,
   GraduationCap, Users,
 } from 'lucide-react'
+import { useOnboarding } from '@/lib/onboarding-context'
 
 const learnerNavItems = [
   { href: '/dashboard',  label: 'Tableau de bord', icon: LayoutDashboard },
@@ -29,6 +30,8 @@ type Props = {
 export default function MobileDrawer({ variant = 'learner' }: Props) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  let onboardingDisabled = false
+  try { onboardingDisabled = useOnboarding().isOnboarding } catch { /* outside provider (trainer layout) */ }
 
   const navItems = variant === 'trainer' ? trainerNavItems : learnerNavItems
   const isTrainer = variant === 'trainer'
@@ -45,9 +48,10 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
-        className="sm:hidden p-2 rounded-xl transition-all duration-200 text-indigo-200 hover:text-white hover:bg-white/15"
+        onClick={() => !onboardingDisabled && setOpen(true)}
+        className={`sm:hidden p-2 rounded-xl transition-all duration-200 text-indigo-200 hover:text-white hover:bg-white/15 ${onboardingDisabled ? 'opacity-40 pointer-events-none' : ''}`}
         aria-label="Ouvrir le menu"
+        disabled={onboardingDisabled}
       >
         <Menu size={22} />
       </button>

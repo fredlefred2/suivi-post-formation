@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Bug, X, Send, CheckCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useOnboarding } from '@/lib/onboarding-context'
 
 type BugReport = {
   id: string
@@ -27,6 +28,10 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function BugReportButton() {
+  // ── Onboarding check ──
+  let onboardingActive = false
+  try { onboardingActive = useOnboarding().isOnboarding } catch { /* outside provider */ }
+
   // ── Shared state ──
   const [role, setRole] = useState<'learner' | 'trainer' | null>(null)
   const [open, setOpen] = useState(false)
@@ -151,7 +156,7 @@ export default function BugReportButton() {
   }, [])
 
   // ── Ne rien rendre si pas monté ou pas authentifié ──
-  if (!mounted || role === null) return null
+  if (!mounted || role === null || onboardingActive) return null
 
   function handleClose() {
     setOpen(false)

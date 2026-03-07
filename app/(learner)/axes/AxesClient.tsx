@@ -218,8 +218,8 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                 {(['facile', 'moyen', 'difficile'] as const).map((d) => (
                   <label key={d} className="flex-1 cursor-pointer">
                     <input type="radio" name="difficulty" value={d} required className="sr-only peer" />
-                    <div className={`text-center py-3 border-2 rounded-lg transition-all border-gray-200 peer-checked:border-current peer-checked:${DIFFICULTY_COLORS[d]}`}>
-                      <p className="text-sm font-semibold">{DIFFICULTY_LABELS[d]}</p>
+                    <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 border-gray-200 bg-white peer-checked:scale-105 peer-checked:shadow-lg peer-checked:${DIFFICULTY_COLORS[d]}`}>
+                      <p className="text-sm font-bold">{DIFFICULTY_LABELS[d]}</p>
                     </div>
                   </label>
                 ))}

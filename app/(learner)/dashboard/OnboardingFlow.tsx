@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
+import { useOnboarding } from '@/lib/onboarding-context'
 
 type Props = {
   userId: string
@@ -21,6 +22,7 @@ export default function OnboardingFlow({
   firstActionId, children,
 }: Props) {
   const router = useRouter()
+  const { setIsOnboarding } = useOnboarding()
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
 
@@ -200,7 +202,7 @@ export default function OnboardingFlow({
         </div>
       ),
       isCompleted: ack['checkin'] ?? false,
-      cta: { label: 'C\'est parti, je commence !', action: () => acknowledge('checkin') },
+      cta: { label: 'Ok, compris !', action: () => acknowledge('checkin') },
     },
 
     // ── Étape 8 : Tour des menus ──
@@ -254,9 +256,17 @@ export default function OnboardingFlow({
     },
   ]
 
-  if (!mounted) return null
+  // Compute active step
+  const activeIndex = mounted ? steps.findIndex((s) => !s.isCompleted) : -2
+  const isActive = mounted && activeIndex !== -1
 
-  const activeIndex = steps.findIndex((s) => !s.isCompleted)
+  // Sync onboarding state to context (disables nav menus)
+  useEffect(() => {
+    if (mounted) setIsOnboarding(isActive)
+    return () => setIsOnboarding(false)
+  }, [mounted, isActive, setIsOnboarding])
+
+  if (!mounted) return null
 
   // All done → show normal dashboard
   if (activeIndex === -1) return <>{children}</>
