@@ -2,27 +2,44 @@ import jsPDF from 'jspdf'
 
 // ── Couleurs de la marque (RGB) ──
 export const COLORS = {
-  primary: [67, 56, 202] as const,      // indigo-700
-  primaryLight: [99, 102, 241] as const, // indigo-500
-  textDark: [31, 41, 55] as const,       // gray-800
-  textMedium: [107, 114, 128] as const,  // gray-500
-  textLight: [156, 163, 175] as const,   // gray-400
-  sunny: [251, 191, 36] as const,        // amber-400
-  cloudy: [56, 189, 248] as const,       // sky-400
-  stormy: [239, 68, 68] as const,        // red-500
+  primary: [67, 56, 202] as const,        // indigo-700
+  primaryLight: [99, 102, 241] as const,   // indigo-500
+  primaryDark: [30, 27, 75] as const,      // indigo-950
+  purple: [124, 58, 237] as const,         // violet-600
+  purpleLight: [147, 51, 234] as const,    // purple-600
+  textDark: [31, 41, 55] as const,         // gray-800
+  textMedium: [107, 114, 128] as const,    // gray-500
+  textLight: [156, 163, 175] as const,     // gray-400
+  sunny: [251, 191, 36] as const,          // amber-400
+  sunnyBg: [254, 243, 199] as const,       // amber-100
+  sunnyText: [120, 53, 15] as const,       // amber-900
+  cloudy: [56, 189, 248] as const,         // sky-400
+  cloudyBg: [186, 230, 253] as const,      // sky-200
+  cloudyText: [12, 74, 110] as const,      // sky-900
+  stormy: [239, 68, 68] as const,          // red-500
+  stormyBg: [254, 226, 226] as const,      // red-200
+  stormyText: [127, 29, 29] as const,      // red-900
   white: [255, 255, 255] as const,
-  bgLight: [249, 250, 251] as const,     // gray-50
-  bgCard: [238, 242, 255] as const,      // indigo-50
-  border: [229, 231, 235] as const,      // gray-200
+  bgLight: [249, 250, 251] as const,       // gray-50
+  bgCard: [238, 242, 255] as const,        // indigo-50
+  border: [229, 231, 235] as const,        // gray-200
+  cardBorder: [139, 92, 246, 0.15] as const, // violet avec opacité
+  green: [34, 197, 94] as const,           // green-500
+  greenBg: [220, 252, 231] as const,       // green-100
+  redBg: [254, 226, 226] as const,         // red-100
+  teal: [20, 184, 166] as const,           // teal-500
+  blue: [59, 130, 246] as const,           // blue-500
+  orange: [249, 115, 22] as const,         // orange-500
+  purpleDyn: [168, 85, 247] as const,      // purple-500
 }
 
 // ── Échelle de dynamique ──
-const DYNAMIQUE_SCALE = [
-  { label: 'Ancrage', color: [156, 163, 175] as const },    // gray
-  { label: 'Impulsion', color: [20, 184, 166] as const },   // teal
-  { label: 'Rythme', color: [59, 130, 246] as const },      // blue
-  { label: 'Intensité', color: [249, 115, 22] as const },  // orange
-  { label: 'Propulsion', color: [168, 85, 247] as const },  // purple
+export const DYNAMIQUE_SCALE = [
+  { label: 'Ancrage', icon: '~', color: [156, 163, 175] as const },      // gray
+  { label: 'Impulsion', icon: '>', color: [20, 184, 166] as const },     // teal
+  { label: 'Rythme', icon: '>>', color: [59, 130, 246] as const },       // blue
+  { label: 'Intensité', icon: '>>>', color: [249, 115, 22] as const },   // orange
+  { label: 'Propulsion', icon: '!', color: [168, 85, 247] as const },    // purple
 ]
 
 export function getDynamiqueForCount(avgPerWeek: number) {
@@ -33,7 +50,77 @@ export function getDynamiqueForCount(avgPerWeek: number) {
   return { level: 4, ...DYNAMIQUE_SCALE[4] }
 }
 
-// ── Header de page avec barre de marque ──
+// Même logique que getDynamique dans axeHelpers.ts (par nb actions d'un axe)
+export function getDynamiqueForActions(count: number) {
+  if (count === 0) return { level: 0, ...DYNAMIQUE_SCALE[0] }
+  if (count <= 2) return { level: 1, ...DYNAMIQUE_SCALE[1] }
+  if (count <= 5) return { level: 2, ...DYNAMIQUE_SCALE[2] }
+  if (count <= 8) return { level: 3, ...DYNAMIQUE_SCALE[3] }
+  return { level: 4, ...DYNAMIQUE_SCALE[4] }
+}
+
+// ═══════════════════════════════════════════
+// PAGE DE COUVERTURE
+// ═══════════════════════════════════════════
+
+export function drawCoverPage(doc: jsPDF, groupName: string, trainerName: string, dateStr: string) {
+  const w = doc.internal.pageSize.getWidth()
+  const h = doc.internal.pageSize.getHeight()
+
+  // Fond gradient (3 bandes verticales)
+  doc.setFillColor(30, 27, 75)   // indigo-950
+  doc.rect(0, 0, w, h / 3, 'F')
+  doc.setFillColor(67, 56, 202)  // indigo-700
+  doc.rect(0, h / 3, w, h / 3, 'F')
+  doc.setFillColor(99, 102, 241) // indigo-500
+  doc.rect(0, (h / 3) * 2, w, h / 3 + 1, 'F')
+
+  // Cercle décoratif (grand, en haut à droite, semi-transparent)
+  doc.setFillColor(124, 58, 237) // violet
+  doc.circle(w - 30, 50, 60, 'F')
+  doc.setFillColor(147, 51, 234) // purple
+  doc.circle(30, h - 60, 40, 'F')
+
+  // Logo YAPLUKA
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(36)
+  doc.setFont('helvetica', 'bold')
+  doc.text('YAPLUKA', w / 2, h / 2 - 40, { align: 'center' })
+
+  // Ligne décorative
+  doc.setDrawColor(255, 255, 255)
+  doc.setLineWidth(0.5)
+  doc.line(w / 2 - 40, h / 2 - 30, w / 2 + 40, h / 2 - 30)
+
+  // Titre "Rapport de suivi"
+  doc.setFontSize(16)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Rapport de suivi', w / 2, h / 2 - 18, { align: 'center' })
+
+  // Nom du groupe
+  doc.setFontSize(24)
+  doc.setFont('helvetica', 'bold')
+  doc.text(groupName, w / 2, h / 2 + 5, { align: 'center' })
+
+  // Formateur
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'normal')
+  doc.text(`Formateur : ${trainerName}`, w / 2, h / 2 + 25, { align: 'center' })
+
+  // Date
+  doc.setFontSize(11)
+  doc.text(dateStr, w / 2, h / 2 + 35, { align: 'center' })
+
+  // Petit texte en bas
+  doc.setFontSize(8)
+  doc.setTextColor(200, 200, 255)
+  doc.text('Plateforme de suivi post-formation', w / 2, h - 20, { align: 'center' })
+}
+
+// ═══════════════════════════════════════════
+// HEADER / FOOTER
+// ═══════════════════════════════════════════
+
 export function drawPageHeader(doc: jsPDF, title: string, subtitle?: string) {
   const w = doc.internal.pageSize.getWidth()
 
@@ -66,7 +153,6 @@ export function drawPageHeader(doc: jsPDF, title: string, subtitle?: string) {
   return subtitle ? 38 : 32
 }
 
-// ── Footer de page ──
 export function drawPageFooter(doc: jsPDF, pageNum: number, totalPages: number, dateStr: string) {
   const w = doc.internal.pageSize.getWidth()
   const h = doc.internal.pageSize.getHeight()
@@ -81,19 +167,136 @@ export function drawPageFooter(doc: jsPDF, pageNum: number, totalPages: number, 
   doc.text(`Page ${pageNum}/${totalPages}`, w - 15, h - 10, { align: 'right' })
 }
 
-// ── Point météo coloré ──
-export function drawWeatherDot(doc: jsPDF, x: number, y: number, weather: string, radius = 3) {
-  const colorMap: Record<string, readonly [number, number, number]> = {
-    sunny: COLORS.sunny,
-    cloudy: COLORS.cloudy,
-    stormy: COLORS.stormy,
-  }
-  const color = colorMap[weather] ?? COLORS.textLight
-  doc.setFillColor(...color)
-  doc.circle(x, y, radius, 'F')
+// ═══════════════════════════════════════════
+// CARD (simule le style .card de l'app)
+// ═══════════════════════════════════════════
+
+export function drawCard(doc: jsPDF, x: number, y: number, w: number, h: number) {
+  // Ombre subtile
+  doc.setFillColor(230, 230, 240)
+  doc.roundedRect(x + 0.5, y + 0.5, w, h, 4, 4, 'F')
+
+  // Fond blanc
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(x, y, w, h, 4, 4, 'F')
+
+  // Bordure violette subtle
+  doc.setDrawColor(139, 92, 246)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(x, y, w, h, 4, 4, 'S')
 }
 
-// ── Jauge de dynamique (5 segments) ──
+// ═══════════════════════════════════════════
+// BLOCS MÉTÉO (3 blocs colorés comme l'app)
+// ═══════════════════════════════════════════
+
+export function drawWeatherBlock(
+  doc: jsPDF, x: number, y: number, w: number, h: number,
+  label: string, count: number, total: number,
+  bgColor: readonly [number, number, number],
+  textColor: readonly [number, number, number],
+) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0
+
+  // Fond coloré arrondi
+  doc.setFillColor(bgColor[0], bgColor[1], bgColor[2])
+  doc.roundedRect(x, y, w, h, 3, 3, 'F')
+
+  // Label (ex: "Ensoleille")
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(textColor[0], textColor[1], textColor[2])
+  doc.text(label, x + w / 2, y + 10, { align: 'center' })
+
+  // Count en gros
+  doc.setFontSize(18)
+  doc.setFont('helvetica', 'bold')
+  doc.text(String(count), x + w / 2, y + 22, { align: 'center' })
+
+  // Pourcentage
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.text(`${pct}%`, x + w / 2, y + 29, { align: 'center' })
+}
+
+export function drawWeatherBlocks(
+  doc: jsPDF, x: number, y: number, totalW: number,
+  summary: { sunny: number; cloudy: number; stormy: number },
+) {
+  const total = summary.sunny + summary.cloudy + summary.stormy
+  const gap = 4
+  const blockW = (totalW - gap * 2) / 3
+  const blockH = 34
+
+  drawWeatherBlock(doc, x, y, blockW, blockH, 'Ensoleille', summary.sunny, total, COLORS.sunnyBg, COLORS.sunnyText)
+  drawWeatherBlock(doc, x + blockW + gap, y, blockW, blockH, 'Mitige', summary.cloudy, total, COLORS.cloudyBg, COLORS.cloudyText)
+  drawWeatherBlock(doc, x + (blockW + gap) * 2, y, blockW, blockH, 'Difficile', summary.stormy, total, COLORS.stormyBg, COLORS.stormyText)
+
+  return y + blockH
+}
+
+// ═══════════════════════════════════════════
+// PILLS MÉTÉO TIMELINE
+// ═══════════════════════════════════════════
+
+export function drawWeatherPills(
+  doc: jsPDF, x: number, y: number, maxW: number,
+  history: Array<{ week: number; year: number; weather: string }>,
+) {
+  const pillH = 6
+  const pillGap = 2
+  let cx = x
+  let cy = y
+
+  const bgMap: Record<string, readonly [number, number, number]> = {
+    sunny: COLORS.sunnyBg,
+    cloudy: COLORS.cloudyBg,
+    stormy: COLORS.stormyBg,
+  }
+  const textMap: Record<string, readonly [number, number, number]> = {
+    sunny: COLORS.sunnyText,
+    cloudy: COLORS.cloudyText,
+    stormy: COLORS.stormyText,
+  }
+
+  // Reverse pour afficher les plus récentes en premier
+  const reversed = [...history].reverse()
+
+  reversed.forEach((wh) => {
+    const label = `S${wh.week}`
+    doc.setFontSize(7)
+    const pillW = doc.getTextWidth(label) + 6
+
+    // Retour à la ligne si dépassement
+    if (cx + pillW > x + maxW) {
+      cx = x
+      cy += pillH + pillGap
+    }
+
+    const bg = bgMap[wh.weather] ?? COLORS.border
+    const tc = textMap[wh.weather] ?? COLORS.textDark
+
+    // Pill arrondie
+    doc.setFillColor(bg[0], bg[1], bg[2])
+    doc.roundedRect(cx, cy, pillW, pillH, 2, 2, 'F')
+
+    // Texte
+    doc.setFontSize(6.5)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(tc[0], tc[1], tc[2])
+    doc.text(label, cx + pillW / 2, cy + pillH / 2 + 1.5, { align: 'center' })
+
+    cx += pillW + pillGap
+  })
+
+  // Retourner le Y final (bas de la dernière ligne de pills)
+  return cy + pillH + 2
+}
+
+// ═══════════════════════════════════════════
+// JAUGE DYNAMIQUE (5 segments avec labels)
+// ═══════════════════════════════════════════
+
 export function drawDynamiqueGauge(doc: jsPDF, x: number, y: number, level: number, label: string) {
   const segW = 20
   const segH = 6
@@ -107,7 +310,6 @@ export function drawDynamiqueGauge(doc: jsPDF, x: number, y: number, level: numb
     } else {
       doc.setFillColor(229, 231, 235) // gray-200
     }
-    // Arrondi aux extrémités
     doc.roundedRect(sx, y, segW, segH, 2, 2, 'F')
   }
 
@@ -120,25 +322,85 @@ export function drawDynamiqueGauge(doc: jsPDF, x: number, y: number, level: numb
   doc.text(label, labelX, y + segH - 1)
 }
 
-// ── Carte métrique (rectangle arrondi avec label + valeur) ──
-export function drawMetricCard(doc: jsPDF, x: number, y: number, w: number, h: number, label: string, value: string) {
-  doc.setFillColor(...COLORS.bgCard)
-  doc.roundedRect(x, y, w, h, 3, 3, 'F')
+// Jauge avec marqueurs texte en dessous (comme la barre de progression de l'app)
+export function drawDynamiqueGaugeWithMarkers(doc: jsPDF, x: number, y: number, totalW: number, level: number) {
+  const segH = 7
+  const markerLabels = ['Ancrage', 'Impulsion', 'Rythme', 'Intensite', 'Propulsion']
+  const segW = (totalW - 4 * 2) / 5
 
-  doc.setFontSize(9)
+  // Segments
+  for (let i = 0; i < 5; i++) {
+    const sx = x + i * (segW + 2)
+    if (i <= level) {
+      const seg = DYNAMIQUE_SCALE[i]
+      doc.setFillColor(seg.color[0], seg.color[1], seg.color[2])
+    } else {
+      doc.setFillColor(229, 231, 235)
+    }
+    doc.roundedRect(sx, y, segW, segH, 2, 2, 'F')
+  }
+
+  // Labels sous chaque segment
+  doc.setFontSize(6)
   doc.setFont('helvetica', 'normal')
-  doc.setTextColor(...COLORS.textMedium)
-  doc.text(label, x + w / 2, y + 10, { align: 'center' })
+  for (let i = 0; i < 5; i++) {
+    const sx = x + i * (segW + 2) + segW / 2
+    const seg = DYNAMIQUE_SCALE[i]
+    if (i <= level) {
+      doc.setTextColor(seg.color[0], seg.color[1], seg.color[2])
+      doc.setFont('helvetica', 'bold')
+    } else {
+      doc.setTextColor(180, 180, 180)
+      doc.setFont('helvetica', 'normal')
+    }
+    doc.text(markerLabels[i], sx, y + segH + 5, { align: 'center' })
+  }
 
-  doc.setFontSize(16)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(...COLORS.textDark)
-  doc.text(value, x + w / 2, y + 22, { align: 'center' })
+  return y + segH + 8
 }
 
-// ── Titre de section ──
+// ═══════════════════════════════════════════
+// CARTE MÉTRIQUE
+// ═══════════════════════════════════════════
+
+export function drawMetricCard(doc: jsPDF, x: number, y: number, w: number, h: number, label: string, value: string) {
+  // Fond carte
+  drawCard(doc, x, y, w, h)
+
+  // Valeur en gros, centrée
+  doc.setFontSize(18)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...COLORS.textDark)
+  doc.text(value, x + w / 2, y + h / 2 + 1, { align: 'center' })
+
+  // Label en dessous
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(...COLORS.textMedium)
+  doc.text(label, x + w / 2, y + h / 2 + 9, { align: 'center' })
+}
+
+// ═══════════════════════════════════════════
+// MÉTÉO DOT (point coloré)
+// ═══════════════════════════════════════════
+
+export function drawWeatherDot(doc: jsPDF, x: number, y: number, weather: string, radius = 3) {
+  const colorMap: Record<string, readonly [number, number, number]> = {
+    sunny: COLORS.sunny,
+    cloudy: COLORS.cloudy,
+    stormy: COLORS.stormy,
+  }
+  const color = colorMap[weather] ?? COLORS.textLight
+  doc.setFillColor(...color)
+  doc.circle(x, y, radius, 'F')
+}
+
+// ═══════════════════════════════════════════
+// TITRE DE SECTION
+// ═══════════════════════════════════════════
+
 export function drawSectionTitle(doc: jsPDF, x: number, y: number, title: string): number {
-  doc.setFontSize(11)
+  doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...COLORS.primary)
   doc.text(title, x, y)
@@ -149,15 +411,18 @@ export function drawSectionTitle(doc: jsPDF, x: number, y: number, title: string
   doc.setLineWidth(0.5)
   doc.line(x, y + 1.5, x + titleWidth, y + 1.5)
 
-  return y + 7
+  return y + 8
 }
 
-// ── Vérification de dépassement de page ──
+// ═══════════════════════════════════════════
+// VÉRIFICATION SAUT DE PAGE
+// ═══════════════════════════════════════════
+
 export function checkPageBreak(doc: jsPDF, currentY: number, neededHeight: number): number {
-  const maxY = doc.internal.pageSize.getHeight() - 22 // marge basse
+  const maxY = doc.internal.pageSize.getHeight() - 22
   if (currentY + neededHeight > maxY) {
     doc.addPage()
-    return 15 // marge haute de la nouvelle page
+    return 15
   }
   return currentY
 }

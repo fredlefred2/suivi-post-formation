@@ -2,14 +2,19 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import {
   COLORS,
+  DYNAMIQUE_SCALE,
+  drawCoverPage,
   drawPageHeader,
   drawPageFooter,
-  drawWeatherDot,
-  drawDynamiqueGauge,
+  drawCard,
+  drawWeatherBlocks,
+  drawWeatherPills,
+  drawDynamiqueGaugeWithMarkers,
   drawMetricCard,
   drawSectionTitle,
   checkPageBreak,
   getDynamiqueForCount,
+  getDynamiqueForActions,
 } from './pdf-utils'
 
 // ── Types pour les données du rapport ──
@@ -26,6 +31,7 @@ export type LearnerReportData = {
   lastName: string
   createdAt: string
   axes: string[]
+  axeActionCounts: number[]   // nombre d'actions par axe (pour dynamique par axe)
   totalActions: number
   weeksSinceJoin: number
   avgActionsPerWeek: number
@@ -37,52 +43,16 @@ export type LearnerReportData = {
 
 export type GroupReportData = {
   groupName: string
+  trainerName: string
   generatedAt: string
   participantCount: number
+  totalAxes: number
   totalActions: number
   avgActionsPerWeek: number
-  weatherHistory: Array<{
-    week: number
-    year: number
-    sunny: number
-    cloudy: number
-    stormy: number
-  }>
+  avgActionsPerAxe: number
+  weatherHistory: Array<{ week: number; year: number; weather: string }>
   weatherSummary: { sunny: number; cloudy: number; stormy: number }
   learners: LearnerReportData[]
-}
-
-// ── Labels météo pour le PDF (pas d'emoji) ──
-const WEATHER_LABELS: Record<string, string> = {
-  sunny: 'Ensoleillé',
-  cloudy: 'Mitigé',
-  stormy: 'Difficile',
-}
-
-// ── Barre de progression météo ──
-function drawWeatherBar(
-  doc: jsPDF, x: number, y: number, barW: number, barH: number,
-  label: string, pct: number, color: readonly [number, number, number],
-) {
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(...COLORS.textMedium)
-  doc.text(label, x, y + barH / 2 + 1)
-
-  const barX = x + 45
-  // Fond gris
-  doc.setFillColor(...COLORS.border)
-  doc.roundedRect(barX, y, barW, barH, 2, 2, 'F')
-  // Barre colorée
-  if (pct > 0) {
-    doc.setFillColor(color[0], color[1], color[2])
-    doc.roundedRect(barX, y, (barW * pct) / 100, barH, 2, 2, 'F')
-  }
-  // Pourcentage
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(...COLORS.textDark)
-  doc.text(`${pct}%`, barX + barW + 3, y + barH / 2 + 1)
 }
 
 // ── Génération du rapport PDF ──
@@ -99,99 +69,173 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
   })
 
   // ═══════════════════════════════════════════
-  // PAGE 1 : SYNTHÈSE DU GROUPE
+  // PAGE 1 : COUVERTURE
   // ═══════════════════════════════════════════
 
-  let y = drawPageHeader(doc, data.groupName, `Rapport généré le ${dateStr}`)
+  drawCoverPage(doc, data.groupName, data.trainerName, dateStr)
+
+  // ═══════════════════════════════════════════
+  // PAGE 2+ : SYNTHÈSE DU GROUPE
+  // ═══════════════════════════════════════════
+
+  doc.addPage()
+  let y = drawPageHeader(doc, data.groupName, 'Synthese du groupe')
   y += 4
 
-  // ── Cartes métriques ──
-  const cardW = (contentW - 8) / 3
-  const cardH = 30
-  drawMetricCard(doc, margin, y, cardW, cardH, 'Participants', String(data.participantCount))
-  drawMetricCard(doc, margin + cardW + 4, y, cardW, cardH, 'Actions totales', String(data.totalActions))
-  drawMetricCard(doc, margin + (cardW + 4) * 2, y, cardW, cardH, 'Actions / sem.', data.avgActionsPerWeek.toFixed(1))
-  y += cardH + 8
+  // ── Section : L'Équipe ──
+  y = drawSectionTitle(doc, margin, y, "L'Equipe")
 
-  // ── Indice de dynamique du groupe ──
-  y = drawSectionTitle(doc, margin, y, 'Dynamique du groupe')
-  const groupDyn = getDynamiqueForCount(data.avgActionsPerWeek)
-  drawDynamiqueGauge(doc, margin, y, groupDyn.level, groupDyn.label)
-  y += 14
+  // Card avec nombre + liste des membres
+  const memberNames = data.learners.map((l) => `${l.firstName} ${l.lastName}`)
+  const nameRows = Math.ceil(memberNames.length / 2)
+  const teamCardH = 18 + nameRows * 5 + 4
+  drawCard(doc, margin, y, contentW, teamCardH)
 
-  // ── Météo moyenne du groupe ──
-  y = drawSectionTitle(doc, margin, y, 'Météo moyenne')
+  // Nombre de membres en gros
+  doc.setFontSize(22)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...COLORS.primaryLight)
+  doc.text(String(data.participantCount), margin + 10, y + 13)
+
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(...COLORS.textMedium)
+  doc.text(`participant${data.participantCount > 1 ? 's' : ''}`, margin + 22, y + 13)
+
+  // Liste prénoms/noms en 2 colonnes
+  const col1X = margin + 6
+  const col2X = margin + contentW / 2 + 2
+  let nameY = y + 20
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(...COLORS.textDark)
+
+  memberNames.forEach((name, i) => {
+    const nx = i % 2 === 0 ? col1X : col2X
+    const ny = nameY + Math.floor(i / 2) * 5
+    doc.text(`• ${name}`, nx, ny)
+  })
+
+  y += teamCardH + 6
+
+  // ── Section : Météo ──
+  y = checkPageBreak(doc, y, 60)
+  y = drawSectionTitle(doc, margin, y, 'Meteo')
+
+  // 3 blocs colorés (comme l'app)
   const totalWeathers = data.weatherSummary.sunny + data.weatherSummary.cloudy + data.weatherSummary.stormy
   if (totalWeathers > 0) {
-    const sunnyPct = Math.round((data.weatherSummary.sunny / totalWeathers) * 100)
-    const cloudyPct = Math.round((data.weatherSummary.cloudy / totalWeathers) * 100)
-    const stormyPct = Math.round((data.weatherSummary.stormy / totalWeathers) * 100)
+    y = drawWeatherBlocks(doc, margin, y, contentW, data.weatherSummary)
+    y += 6
 
-    // Barres de progression météo
-    const barH = 8
-    const barW = contentW - 60
-    // Ensoleillé
-    drawWeatherBar(doc, margin, y, barW, barH, 'Ensoleillé', sunnyPct, COLORS.sunny)
-    y += barH + 4
-    // Mitigé
-    drawWeatherBar(doc, margin, y, barW, barH, 'Mitigé', cloudyPct, COLORS.cloudy)
-    y += barH + 4
-    // Difficile
-    drawWeatherBar(doc, margin, y, barW, barH, 'Difficile', stormyPct, COLORS.stormy)
-    y += barH + 4
+    // Timeline pills météo
+    if (data.weatherHistory.length > 0) {
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...COLORS.textMedium)
+      doc.text('Historique :', margin, y)
+      y += 4
+      y = drawWeatherPills(doc, margin, y, contentW, data.weatherHistory)
+      y += 4
+    }
   } else {
     doc.setFontSize(9)
     doc.setFont('helvetica', 'italic')
     doc.setTextColor(...COLORS.textLight)
-    doc.text('Aucun check-in enregistré', margin, y + 4)
-    y += 10
+    doc.text('Aucun check-in enregistre', margin, y + 4)
+    y += 12
   }
-  y += 4
 
-  // ── Historique météo par semaine (tableau) ──
-  if (data.weatherHistory.length > 0) {
-    y = drawSectionTitle(doc, margin, y, 'Historique météo par semaine')
+  // ── Section : L'Action ──
+  y = checkPageBreak(doc, y, 70)
+  y = drawSectionTitle(doc, margin, y, "L'Action")
 
-    const tableBody = data.weatherHistory.map((wh) => [
-      `S${wh.week} — ${wh.year}`,
-      String(wh.sunny),
-      String(wh.cloudy),
-      String(wh.stormy),
-    ])
+  // 4 cartes métriques 2×2
+  const mCardW = (contentW - 6) / 2
+  const mCardH = 30
 
-    autoTable(doc, {
-      startY: y,
-      margin: { left: margin, right: margin },
-      head: [['Semaine', 'Ensoleillé', 'Mitigé', 'Difficile']],
-      body: tableBody,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [67, 56, 202],
-        textColor: [255, 255, 255],
-        fontSize: 8,
-        fontStyle: 'bold',
-        halign: 'center',
-      },
-      bodyStyles: {
-        fontSize: 8,
-        textColor: [31, 41, 55],
-        halign: 'center',
-      },
-      columnStyles: {
-        0: { halign: 'left', fontStyle: 'bold' },
-      },
-      alternateRowStyles: { fillColor: [249, 250, 251] },
-      styles: {
-        cellPadding: 2,
-        lineColor: [229, 231, 235],
-        lineWidth: 0.3,
-      },
-    })
+  drawMetricCard(doc, margin, y, mCardW, mCardH, 'Axes de progres', String(data.totalAxes))
+  drawMetricCard(doc, margin + mCardW + 6, y, mCardW, mCardH, 'Actions totales', String(data.totalActions))
+  y += mCardH + 4
+  drawMetricCard(doc, margin, y, mCardW, mCardH, 'Moy. actions / sem.', data.avgActionsPerWeek.toFixed(1))
+  drawMetricCard(doc, margin + mCardW + 6, y, mCardW, mCardH, 'Moy. actions / axe', data.avgActionsPerAxe.toFixed(1))
+  y += mCardH + 6
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    y = (doc as any).lastAutoTable?.finalY ?? y + 20
-    y += 6
-  }
+  // Dynamique du groupe (jauge avec marqueurs)
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...COLORS.textMedium)
+  doc.text('Indice de dynamique du groupe', margin, y)
+  y += 5
+  const groupDyn = getDynamiqueForCount(data.avgActionsPerWeek)
+  y = drawDynamiqueGaugeWithMarkers(doc, margin, y, contentW, groupDyn.level)
+  y += 6
+
+  // ── Section : Classement ──
+  y = checkPageBreak(doc, y, 40)
+  y = drawSectionTitle(doc, margin, y, 'Classement')
+
+  // Préparer les données de classement (trié comme dans le dashboard)
+  const sorted = data.learners.map((l) => {
+    const dyns = [0, 1, 2].map((i) => getDynamiqueForActions(l.axeActionCounts[i] ?? 0))
+    const totalLevel = dyns.reduce((acc, d) => acc + d.level, 0)
+    return { ...l, dyns, totalLevel }
+  }).sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
+
+  // Construire les lignes du tableau
+  const rankBody = sorted.map((l, idx) => [
+    String(idx + 1),
+    `${l.firstName} ${l.lastName}`,
+    String(l.totalActions),
+    l.dyns[0].label,
+    l.dyns[1]?.label ?? '-',
+    l.dyns[2]?.label ?? '-',
+  ])
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [['#', 'Participant', 'Actions', 'Axe 1', 'Axe 2', 'Axe 3']],
+    body: rankBody,
+    theme: 'plain',
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [156, 163, 175],
+      fontSize: 7,
+      fontStyle: 'bold',
+      halign: 'center',
+      cellPadding: { top: 2, bottom: 2, left: 2, right: 2 },
+    },
+    bodyStyles: {
+      fontSize: 8,
+      textColor: [31, 41, 55],
+      cellPadding: { top: 2.5, bottom: 2.5, left: 2, right: 2 },
+    },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 10, fontStyle: 'normal', textColor: [156, 163, 175] },
+      1: { halign: 'left', fontStyle: 'bold' },
+      2: { halign: 'center', cellWidth: 18, fontStyle: 'bold' },
+      3: { halign: 'center', cellWidth: 22 },
+      4: { halign: 'center', cellWidth: 22 },
+      5: { halign: 'center', cellWidth: 22 },
+    },
+    alternateRowStyles: { fillColor: [249, 250, 251] },
+    styles: {
+      lineColor: [229, 231, 235],
+      lineWidth: 0.2,
+    },
+    didParseCell(hookData) {
+      // Colorer les cellules d'axes selon le niveau de dynamique
+      if (hookData.section === 'body' && hookData.column.index >= 3) {
+        const cellText = String(hookData.cell.raw)
+        const dynEntry = DYNAMIQUE_SCALE.find((d) => d.label === cellText)
+        if (dynEntry) {
+          hookData.cell.styles.textColor = [dynEntry.color[0], dynEntry.color[1], dynEntry.color[2]]
+          hookData.cell.styles.fontStyle = 'bold'
+        }
+      }
+    },
+  })
 
   // ═══════════════════════════════════════════
   // PAGES APPRENANTS (1 page par apprenant)
@@ -199,10 +243,15 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
 
   data.learners.forEach((learner) => {
     doc.addPage()
+    const joinDate = new Date(learner.createdAt).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
     let ly = drawPageHeader(
       doc,
       `${learner.firstName} ${learner.lastName}`,
-      `Inscrit(e) depuis le ${new Date(learner.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+      `Inscrit(e) depuis le ${joinDate}`,
     )
     ly += 4
 
@@ -210,108 +259,92 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
     ly = drawSectionTitle(doc, margin, ly, 'Axes de travail')
     if (learner.axes.length > 0) {
       learner.axes.forEach((axe, i) => {
+        const dyn = getDynamiqueForActions(learner.axeActionCounts[i] ?? 0)
+        const actionCount = learner.axeActionCounts[i] ?? 0
+
         doc.setFontSize(9)
-        doc.setFont('helvetica', 'normal')
+        doc.setFont('helvetica', 'bold')
         doc.setTextColor(...COLORS.textDark)
-        const axeText = `${i + 1}. ${axe}`
-        const lines = doc.splitTextToSize(axeText, contentW)
-        doc.text(lines, margin + 2, ly)
-        ly += lines.length * 4.5
-      })
-    } else {
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'italic')
-      doc.setTextColor(...COLORS.textLight)
-      doc.text('Aucun axe défini', margin, ly)
-      ly += 5
-    }
-    ly += 4
+        doc.text(`${i + 1}. ${axe}`, margin + 2, ly)
 
-    // ── Cartes métriques individuelles ──
-    const indivCardW = (contentW - 4) / 2
-    const indivCardH = 28
-    drawMetricCard(doc, margin, ly, indivCardW, indivCardH, 'Actions totales', String(learner.totalActions))
-    drawMetricCard(doc, margin + indivCardW + 4, ly, indivCardW, indivCardH, 'Actions / sem.', learner.avgActionsPerWeek.toFixed(1))
-    ly += indivCardH + 6
+        // Niveau à droite
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(dyn.color[0], dyn.color[1], dyn.color[2])
+        doc.text(`${actionCount} actions - ${dyn.label}`, pageW - margin, ly, { align: 'right' })
 
-    // ── Dynamique individuelle ──
-    ly = drawSectionTitle(doc, margin, ly, 'Dynamique')
-    const learnerDyn = getDynamiqueForCount(learner.avgActionsPerWeek)
-    drawDynamiqueGauge(doc, margin, ly, learnerDyn.level, learnerDyn.label)
-    ly += 14
-
-    // ── Météo moyenne individuelle ──
-    ly = drawSectionTitle(doc, margin, ly, 'Météo moyenne')
-    const learnerTotal = learner.weatherSummary.sunny + learner.weatherSummary.cloudy + learner.weatherSummary.stormy
-    if (learnerTotal > 0) {
-      const items = [
-        { label: 'Ensoleillé', count: learner.weatherSummary.sunny, weather: 'sunny' as const },
-        { label: 'Mitigé', count: learner.weatherSummary.cloudy, weather: 'cloudy' as const },
-        { label: 'Difficile', count: learner.weatherSummary.stormy, weather: 'stormy' as const },
-      ]
-      items.forEach(({ label, count, weather }) => {
-        const pct = Math.round((count / learnerTotal) * 100)
-        drawWeatherDot(doc, margin + 3, ly, weather, 2.5)
-        doc.setFontSize(9)
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(...COLORS.textDark)
-        doc.text(`${label} : ${pct}%  (${count})`, margin + 9, ly + 1)
         ly += 6
       })
     } else {
       doc.setFontSize(9)
       doc.setFont('helvetica', 'italic')
       doc.setTextColor(...COLORS.textLight)
-      doc.text('Aucun check-in', margin, ly)
+      doc.text('Aucun axe defini', margin, ly)
       ly += 5
     }
+    ly += 3
+
+    // ── Cartes métriques individuelles ──
+    const indivCardW = (contentW - 4) / 2
+    const indivCardH = 30
+    drawMetricCard(doc, margin, ly, indivCardW, indivCardH, 'Actions totales', String(learner.totalActions))
+    drawMetricCard(doc, margin + indivCardW + 4, ly, indivCardW, indivCardH, 'Actions / sem.', learner.avgActionsPerWeek.toFixed(1))
+    ly += indivCardH + 5
+
+    // ── Dynamique individuelle ──
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...COLORS.textMedium)
+    doc.text('Dynamique', margin, ly)
+    ly += 5
+    const learnerDyn = getDynamiqueForCount(learner.avgActionsPerWeek)
+    ly = drawDynamiqueGaugeWithMarkers(doc, margin, ly, contentW, learnerDyn.level)
     ly += 4
 
-    // ── Historique météo (dots inline) ──
-    if (learner.weatherHistory.length > 0) {
-      ly = checkPageBreak(doc, ly, 20)
-      ly = drawSectionTitle(doc, margin, ly, 'Historique météo')
+    // ── Météo ──
+    ly = checkPageBreak(doc, ly, 50)
+    ly = drawSectionTitle(doc, margin, ly, 'Meteo')
 
-      const dotR = 3
-      const dotSpacing = 10
-      const maxPerRow = Math.floor(contentW / dotSpacing)
+    const learnerTotal = learner.weatherSummary.sunny + learner.weatherSummary.cloudy + learner.weatherSummary.stormy
+    if (learnerTotal > 0) {
+      // 3 blocs colorés
+      ly = drawWeatherBlocks(doc, margin, ly, contentW, learner.weatherSummary)
+      ly += 4
 
-      learner.weatherHistory.forEach((wh, i) => {
-        const row = Math.floor(i / maxPerRow)
-        const col = i % maxPerRow
-        const dx = margin + col * dotSpacing + dotR
-        const dy = ly + row * (dotR * 2 + 4) + dotR
-
-        drawWeatherDot(doc, dx, dy, wh.weather, dotR)
-      })
-
-      const totalRows = Math.ceil(learner.weatherHistory.length / maxPerRow)
-      ly += totalRows * (dotR * 2 + 4) + 2
-
-      // Légende
-      doc.setFontSize(7)
-      doc.setFont('helvetica', 'normal')
+      // Timeline pills
+      if (learner.weatherHistory.length > 0) {
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(...COLORS.textMedium)
+        doc.text('Historique :', margin, ly)
+        ly += 4
+        ly = drawWeatherPills(doc, margin, ly, contentW, learner.weatherHistory)
+        ly += 4
+      }
+    } else {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'italic')
       doc.setTextColor(...COLORS.textLight)
-      const firstW = learner.weatherHistory[0]
-      const lastW = learner.weatherHistory[learner.weatherHistory.length - 1]
-      doc.text(`S${firstW.week}/${firstW.year} → S${lastW.week}/${lastW.year}`, margin, ly)
-      ly += 6
+      doc.text('Aucun check-in', margin, ly)
+      ly += 8
     }
 
-    // ── Ce qui a marché (check-ins positifs) ──
+    // ── Ce qui a marché ──
     if (learner.whatWorked.length > 0) {
       ly = checkPageBreak(doc, ly, 15)
-      ly = drawSectionTitle(doc, margin, ly, 'Ce qui a marché')
+      ly = drawSectionTitle(doc, margin, ly, 'Ce qui a marche')
 
       learner.whatWorked.forEach((text) => {
         ly = checkPageBreak(doc, ly, 10)
-        doc.setFillColor(...COLORS.bgCard)
         const lines = doc.splitTextToSize(text, contentW - 10)
         const blockH = lines.length * 4 + 4
+
+        // Fond vert clair
+        doc.setFillColor(...COLORS.greenBg)
         doc.roundedRect(margin, ly, contentW, blockH, 2, 2, 'F')
 
-        // Petit indicateur vert
-        doc.setFillColor(34, 197, 94) // green-500
+        // Indicateur vert à gauche
+        doc.setFillColor(...COLORS.green)
         doc.roundedRect(margin, ly, 2, blockH, 1, 1, 'F')
 
         doc.setFontSize(8)
@@ -326,17 +359,19 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
     // ── Difficultés rencontrées ──
     if (learner.difficulties.length > 0) {
       ly = checkPageBreak(doc, ly, 15)
-      ly = drawSectionTitle(doc, margin, ly, 'Difficultés rencontrées')
+      ly = drawSectionTitle(doc, margin, ly, 'Difficultes rencontrees')
 
       learner.difficulties.forEach((text) => {
         ly = checkPageBreak(doc, ly, 10)
         const lines = doc.splitTextToSize(text, contentW - 10)
         const blockH = lines.length * 4 + 4
-        doc.setFillColor(254, 242, 242) // red-50
+
+        // Fond rouge clair
+        doc.setFillColor(...COLORS.redBg)
         doc.roundedRect(margin, ly, contentW, blockH, 2, 2, 'F')
 
-        // Petit indicateur rouge
-        doc.setFillColor(239, 68, 68) // red-500
+        // Indicateur rouge à gauche
+        doc.setFillColor(...COLORS.stormy)
         doc.roundedRect(margin, ly, 2, blockH, 1, 1, 'F')
 
         doc.setFontSize(8)
@@ -348,11 +383,11 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
     }
   })
 
-  // ── Ajout des footers sur toutes les pages ──
+  // ── Ajout des footers sur toutes les pages (sauf page 1 = couverture) ──
   const totalPages = doc.getNumberOfPages()
-  for (let i = 1; i <= totalPages; i++) {
+  for (let i = 2; i <= totalPages; i++) {
     doc.setPage(i)
-    drawPageFooter(doc, i, totalPages, dateStr)
+    drawPageFooter(doc, i - 1, totalPages - 1, dateStr)
   }
 
   return doc

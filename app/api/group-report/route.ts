@@ -40,6 +40,17 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     )
 
+    // ── Récupérer le nom du formateur ──
+    const { data: trainerProfile } = await admin
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('id', user.id)
+      .single()
+
+    const trainerName = trainerProfile
+      ? `${trainerProfile.first_name} ${trainerProfile.last_name}`
+      : 'Formateur'
+
     // ── Membres du groupe ──
     const { data: membersRaw } = await admin
       .from('group_members')
@@ -52,7 +63,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Groupe vide' }, { status: 400 })
     }
 
-    // ── Fetch parallèle : profiles, checkins, actions, axes ──
+    // ── Fetch parallèle : profiles, checkins, actions, axes (avec actions jointes) ──
     const [profilesRes, checkinsRes, actionsRes, axesRes] = await Promise.all([
       admin.from('profiles').select('id, first_name, last_name, created_at').in('id', learnerIds),
       admin.from('checkins')
@@ -60,8 +71,11 @@ export async function GET(request: NextRequest) {
         .in('learner_id', learnerIds)
         .order('year', { ascending: true })
         .order('week_number', { ascending: true }),
-      admin.from('actions').select('id, learner_id, created_at').in('learner_id', learnerIds),
-      admin.from('axes').select('id, learner_id, subject').in('learner_id', learnerIds).order('created_at'),
+      admin.from('actions').select('id, learner_id, axe_id, created_at').in('learner_id', learnerIds),
+      admin.from('axes')
+        .select('id, learner_id, subject, actions(id)')
+        .in('learner_id', learnerIds)
+        .order('created_at'),
     ])
 
     const profiles = profilesRes.data ?? []
@@ -74,30 +88,24 @@ export async function GET(request: NextRequest) {
       profileMap[p.id] = { firstName: p.first_name, lastName: p.last_name, createdAt: p.created_at }
     })
 
-    // ── Agrégation : données du groupe ──
-    const totalActions = allActions.length
-    const totalWeeks = learnerIds.reduce((acc, lid) => {
-      const p = profileMap[lid]
-      if (!p) return acc
-      const ws = weeksSince(p.createdAt)
-      return acc + Math.max(ws, 1)
-    }, 0)
-    const avgActionsPerWeek = totalWeeks > 0 ? totalActions / totalWeeks * learnerIds.length : 0
-
-    // Météo du groupe par semaine
-    const weekMap: Record<string, { sunny: number; cloudy: number; stormy: number; week: number; year: number }> = {}
-    checkins.forEach((c) => {
-      const key = `${c.year}-${c.week_number}`
-      if (!weekMap[key]) {
-        weekMap[key] = { sunny: 0, cloudy: 0, stormy: 0, week: c.week_number, year: c.year }
-      }
-      const w = c.weather as 'sunny' | 'cloudy' | 'stormy'
-      if (weekMap[key][w] !== undefined) weekMap[key][w]++
+    // ── Axes par apprenant (avec nombre d'actions par axe) ──
+    const learnerAxesMap: Record<string, Array<{ subject: string; actionCount: number }>> = {}
+    axes.forEach((axe) => {
+      if (!learnerAxesMap[axe.learner_id]) learnerAxesMap[axe.learner_id] = []
+      const actionCount = (axe.actions as { id: string }[])?.length ?? 0
+      learnerAxesMap[axe.learner_id].push({ subject: axe.subject, actionCount })
     })
 
-    const weatherHistory = Object.values(weekMap).sort((a, b) =>
-      a.year !== b.year ? a.year - b.year : a.week - b.week
-    )
+    // ── Agrégation : données du groupe ──
+    const totalActions = allActions.length
+    const totalAxes = axes.length
+
+    // Météo du groupe — historique plat (un entry par checkin)
+    const weatherHistory = checkins.map((c) => ({
+      week: c.week_number,
+      year: c.year,
+      weather: c.weather as string,
+    }))
 
     // Météo globale du groupe
     const groupWeatherSummary = { sunny: 0, cloudy: 0, stormy: 0 }
@@ -111,22 +119,14 @@ export async function GET(request: NextRequest) {
       const p = profileMap[lid]
       if (!p) {
         return {
-          id: lid,
-          firstName: 'Inconnu',
-          lastName: '',
-          createdAt: new Date().toISOString(),
-          axes: [],
-          totalActions: 0,
-          weeksSinceJoin: 0,
-          avgActionsPerWeek: 0,
-          weatherHistory: [],
-          weatherSummary: { sunny: 0, cloudy: 0, stormy: 0 },
-          whatWorked: [],
-          difficulties: [],
+          id: lid, firstName: 'Inconnu', lastName: '', createdAt: new Date().toISOString(),
+          axes: [], axeActionCounts: [], totalActions: 0, weeksSinceJoin: 0, avgActionsPerWeek: 0,
+          weatherHistory: [], weatherSummary: { sunny: 0, cloudy: 0, stormy: 0 },
+          whatWorked: [], difficulties: [],
         }
       }
 
-      const learnerAxes = axes.filter((a) => a.learner_id === lid).map((a) => a.subject)
+      const learnerAxes = learnerAxesMap[lid] ?? []
       const learnerActions = allActions.filter((a) => a.learner_id === lid)
       const learnerCheckins = checkins.filter((c) => c.learner_id === lid)
 
@@ -158,7 +158,8 @@ export async function GET(request: NextRequest) {
         firstName: p.firstName,
         lastName: p.lastName,
         createdAt: p.createdAt,
-        axes: learnerAxes,
+        axes: learnerAxes.map((a) => a.subject),
+        axeActionCounts: learnerAxes.map((a) => a.actionCount),
         totalActions: learnerActions.length,
         weeksSinceJoin: ws,
         avgActionsPerWeek: avgPerWeek,
@@ -172,21 +173,28 @@ export async function GET(request: NextRequest) {
     // Tri par nom
     learners.sort((a, b) => a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName))
 
+    // ── Calculs moyennes groupe ──
+    const avgWeeksPerLearner = learnerIds.reduce((acc, lid) => {
+      const p = profileMap[lid]
+      return acc + (p ? Math.max(weeksSince(p.createdAt), 1) : 1)
+    }, 0) / Math.max(learnerIds.length, 1)
+
+    const avgActionsPerWeek = avgWeeksPerLearner > 0
+      ? (totalActions / learnerIds.length) / avgWeeksPerLearner
+      : 0
+
+    const avgActionsPerAxe = totalAxes > 0 ? totalActions / totalAxes : 0
+
     // ── Construction des données du rapport ──
     const reportData: GroupReportData = {
       groupName: group.name,
+      trainerName,
       generatedAt: new Date().toISOString(),
       participantCount: learnerIds.length,
+      totalAxes,
       totalActions,
-      avgActionsPerWeek: learnerIds.length > 0
-        ? totalActions / learnerIds.length / Math.max(
-            learnerIds.reduce((acc, lid) => {
-              const p = profileMap[lid]
-              return acc + (p ? Math.max(weeksSince(p.createdAt), 1) : 1)
-            }, 0) / learnerIds.length,
-            1,
-          )
-        : 0,
+      avgActionsPerWeek,
+      avgActionsPerAxe,
       weatherHistory,
       weatherSummary: groupWeatherSummary,
       learners,
