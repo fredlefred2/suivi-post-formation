@@ -179,17 +179,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         )}
       </div>
 
-      {/* Bandeau onboarding (sous le titre) */}
-      {isOnboardingCreate && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
-          <span className="text-xl">🎯</span>
-          <p className="text-sm font-semibold text-indigo-800">
-            {axes.length === 0 && 'Créez votre 1er axe de progrès'}
-            {axes.length === 1 && 'Créez votre 2e axe de progrès'}
-            {axes.length === 2 && 'Créez votre 3e et dernier axe'}
-          </p>
-        </div>
-      )}
       {isHighlightAdd && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
           <span className="text-xl">⚡</span>
