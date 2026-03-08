@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
@@ -56,7 +57,7 @@ export default function OnboardingFlow({
     {
       id: 'welcome',
       title: `Bienvenue ${firstName} !`,
-      icon: '🚀',
+      icon: 'yapluka',
       description: 'YAPLUKA vous accompagne pour transformer votre formation en actions concrètes. Voici le programme :',
       extra: (
         <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
@@ -156,11 +157,11 @@ export default function OnboardingFlow({
     {
       id: 'progression',
       title: 'Votre dynamique de progression',
-      icon: '📈',
+      icon: 'yapluka',
       bravo: '🎉 Bien joué ! Vous maîtrisez la gestion des actions !',
       description: 'Plus vous ajoutez d\'actions, plus votre dynamique monte ! Voici les 5 niveaux que vous pouvez atteindre :',
       extra: (
-        <div className="flex flex-col gap-1.5 mt-3 max-w-xs mx-auto">
+        <div className="flex flex-col gap-1 mt-2 max-w-xs mx-auto w-full">
           {[
             { icon: '📍', label: 'Ancrage', desc: '0 action', color: 'bg-gray-100 text-gray-700' },
             { icon: '👣', label: 'Impulsion', desc: '1-2 actions', color: 'bg-teal-100 text-teal-700' },
@@ -168,10 +169,10 @@ export default function OnboardingFlow({
             { icon: '🔥', label: 'Intensité', desc: '6-8 actions', color: 'bg-orange-100 text-orange-700' },
             { icon: '🚀', label: 'Propulsion', desc: '9+ actions', color: 'bg-purple-100 text-purple-700' },
           ].map((level) => (
-            <div key={level.label} className={`flex items-center gap-3 px-3 py-2 rounded-lg ${level.color}`}>
-              <span className="text-lg">{level.icon}</span>
-              <span className="font-medium text-sm flex-1">{level.label}</span>
-              <span className="text-xs opacity-70">{level.desc}</span>
+            <div key={level.label} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${level.color}`}>
+              <span className="text-base">{level.icon}</span>
+              <span className="font-medium text-xs flex-1">{level.label}</span>
+              <span className="text-[10px] opacity-70">{level.desc}</span>
             </div>
           ))}
         </div>
@@ -209,44 +210,44 @@ export default function OnboardingFlow({
     {
       id: 'menu-tour',
       title: 'Votre espace YAPLUKA',
-      icon: '🧭',
+      icon: 'yapluka',
       bravo: '🎉 Félicitations, la prise en main est terminée !',
       description: 'Retrouvez ces 4 espaces dans le menu en bas de votre écran.',
       extra: (
-        <div className="grid grid-cols-2 gap-3 mt-4">
+        <div className="grid grid-cols-2 gap-2 mt-2 w-full">
           {[
             {
               Icon: LayoutDashboard, label: 'Tableau de bord',
-              desc: 'Votre vue d\'ensemble : progression, stats et actions récentes.',
+              desc: 'Progression, stats et actions récentes.',
               gradient: 'from-indigo-500 to-indigo-600',
               bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700',
             },
             {
               Icon: Target, label: 'Mes actions',
-              desc: 'Créez et gérez vos actions concrètes pour chaque axe de progrès.',
+              desc: 'Gérez vos actions pour chaque axe.',
               gradient: 'from-amber-500 to-orange-500',
               bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700',
             },
             {
               Icon: ClipboardCheck, label: 'Check-in',
-              desc: 'Votre bilan hebdo : météo, réussites, difficultés + historique.',
+              desc: 'Météo, réussites et difficultés.',
               gradient: 'from-emerald-500 to-teal-500',
               bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700',
             },
             {
               Icon: Users, label: 'Team',
-              desc: 'Découvrez la météo de votre équipe et les actions de vos coéquipiers.',
+              desc: 'Météo et actions de vos coéquipiers.',
               gradient: 'from-purple-500 to-pink-500',
               bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700',
             },
           ].map((item, i) => (
-            <div key={item.label} className={`${item.bg} border ${item.border} rounded-xl p-3 text-left`}
+            <div key={item.label} className={`${item.bg} border ${item.border} rounded-xl p-2 text-left`}
                  style={{ animation: `fade-in 0.3s ease-out ${i * 0.1}s both` }}>
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-2`}>
-                <item.Icon size={20} className="text-white" />
+              <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-1`}>
+                <item.Icon size={15} className="text-white" />
               </div>
-              <p className={`text-sm font-semibold ${item.text} mb-0.5`}>{item.label}</p>
-              <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
+              <p className={`text-xs font-semibold ${item.text} mb-0.5`}>{item.label}</p>
+              <p className="text-[10px] text-gray-500 leading-snug">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -283,15 +284,10 @@ export default function OnboardingFlow({
   const activeStep = steps[activeIndex]
 
   return (
-    <div className="space-y-6 pb-4">
-      <div>
-        <h1 className="page-title">Bonjour {firstName} 👋</h1>
-        <p className="text-sm text-gray-500 mt-1">Découverte de YAPLUKA</p>
-      </div>
-
-      <div className="card overflow-hidden">
+    <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+      <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
         {/* Step indicator */}
-        <div className="flex items-center justify-between mb-2 px-1">
+        <div className="flex items-center justify-between mb-2 px-1 shrink-0">
           <span className="text-xs font-semibold text-indigo-600">
             Étape {activeIndex + 1}/{steps.length}
           </span>
@@ -311,31 +307,37 @@ export default function OnboardingFlow({
 
         {/* Bravo banner */}
         {activeStep.bravo && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5 mb-3 text-center">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 mb-2 text-center shrink-0">
             <p className="text-sm font-semibold text-emerald-700">{activeStep.bravo}</p>
           </div>
         )}
 
-        {/* Active step content */}
-        <div key={activeStep.id} className="text-center space-y-3 pt-2 pb-1">
-          <div className="text-5xl">{activeStep.icon}</div>
+        {/* Active step content — centered, fills available space */}
+        <div key={activeStep.id} className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
+          {activeStep.icon === 'yapluka' ? (
+            <Image src="/yapluka-symbol.png" alt="YAPLUKA" width={48} height={45} className="drop-shadow-md" />
+          ) : (
+            <div className="text-4xl">{activeStep.icon}</div>
+          )}
           <h2 className="text-lg font-bold text-gray-800">{activeStep.title}</h2>
           <p className="text-sm text-gray-500 leading-relaxed">{activeStep.description}</p>
           {activeStep.extra}
-          <div className="pt-2">
-            {activeStep.cta.href ? (
-              <Link href={activeStep.cta.href} className="btn-primary">
-                {activeStep.cta.label}
-              </Link>
-            ) : (
-              <button
-                onClick={activeStep.cta.action}
-                className="btn-primary"
-              >
-                {activeStep.cta.label}
-              </button>
-            )}
-          </div>
+        </div>
+
+        {/* CTA button — always visible at bottom */}
+        <div className="pt-3 pb-1 text-center shrink-0">
+          {activeStep.cta.href ? (
+            <Link href={activeStep.cta.href} className="btn-primary">
+              {activeStep.cta.label}
+            </Link>
+          ) : (
+            <button
+              onClick={activeStep.cta.action}
+              className="btn-primary"
+            >
+              {activeStep.cta.label}
+            </button>
+          )}
         </div>
       </div>
     </div>
