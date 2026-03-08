@@ -31,6 +31,11 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
+  // Fichiers statiques PWA — ne jamais intercepter
+  if (pathname === '/sw.js' || pathname === '/manifest.json') {
+    return supabaseResponse
+  }
+
   // Routes publiques
   const publicRoutes = ['/login', '/register']
   const isPublic = publicRoutes.some(r => pathname.startsWith(r))
