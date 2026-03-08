@@ -260,9 +260,9 @@ export default function TeamClient({
         </div>
       )}
 
-      {/* ── Classement ── */}
+      {/* ── Le casting ── */}
       <div className="card">
-        <h2 className="section-title mb-3">Classement</h2>
+        <h2 className="section-title mb-3">Le casting</h2>
         {sorted.length === 0 ? (
           <p className="text-sm text-gray-400 italic">Aucun membre</p>
         ) : (
