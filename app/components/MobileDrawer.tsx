@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
-  Menu, X,
+  X,
   LayoutDashboard, Target, ClipboardCheck,
   GraduationCap, Users,
 } from 'lucide-react'
@@ -53,7 +54,7 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
         aria-label="Ouvrir le menu"
         disabled={onboardingDisabled}
       >
-        <Menu size={22} />
+        <Image src="/yapluka-symbol.png" alt="Menu" width={22} height={21} />
       </button>
 
       {open && (
@@ -70,8 +71,9 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
             <div className="flex items-center justify-between px-5 h-16" style={{
               background: 'linear-gradient(135deg, #1e1b4b, #4338ca)',
             }}>
-              <span className="font-semibold text-sm tracking-tight text-white">
-                {isTrainer ? '🧑‍🏫 Navigation' : '🚀 Navigation'}
+              <span className="font-semibold text-sm tracking-tight text-white flex items-center gap-2">
+                <Image src="/yapluka-symbol.png" alt="YAPLUKA" width={18} height={17} />
+                Navigation
               </span>
               <button
                 onClick={() => setOpen(false)}
