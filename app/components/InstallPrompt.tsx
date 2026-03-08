@@ -149,21 +149,37 @@ export default function InstallPrompt() {
       <div className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <img src="/icon-192.png" alt="YAPLUKA" className="w-10 h-10 rounded-xl flex-shrink-0" />
+            <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                Appuyez sur{' '}
-                <span className="inline-flex items-center align-middle">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-600 inline">
-                    <circle cx="12" cy="5" r="1" fill="currentColor" />
-                    <circle cx="12" cy="12" r="1" fill="currentColor" />
-                    <circle cx="12" cy="19" r="1" fill="currentColor" />
-                  </svg>
-                </span>{' '}
-                <span className="font-medium text-gray-700">Menu</span> puis{' '}
-                <span className="font-medium text-gray-700">&quot;Installer l&apos;application&quot;</span>
-              </p>
+              <p className="text-sm font-semibold text-gray-900 mb-2">Installer YAPLUKA</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+                  <p className="text-xs text-gray-600">
+                    Appuyez sur{' '}
+                    <span className="inline-flex items-center align-middle mx-0.5">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-indigo-600">
+                        <circle cx="12" cy="5" r="2" fill="currentColor" />
+                        <circle cx="12" cy="12" r="2" fill="currentColor" />
+                        <circle cx="12" cy="19" r="2" fill="currentColor" />
+                      </svg>
+                    </span>{' '}
+                    <span className="font-semibold text-gray-800">en haut à droite</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+                  <p className="text-xs text-gray-600">
+                    Choisissez <span className="font-semibold text-gray-800">&quot;Installer l&apos;application&quot;</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+                  <p className="text-xs text-gray-600">
+                    Confirmez avec <span className="font-semibold text-gray-800">&quot;Installer&quot;</span>
+                  </p>
+                </div>
+              </div>
             </div>
             <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
               <X size={18} />
@@ -180,19 +196,36 @@ export default function InstallPrompt() {
       <div className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <img src="/icon-192.png" alt="YAPLUKA" className="w-10 h-10 rounded-xl flex-shrink-0" />
+            <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                Appuyez sur{' '}
-                <span className="inline-flex items-center align-middle">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-600 inline">
-                    <path d="M4 12h16M12 4v16M8 8l4-4 4 4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>{' '}
-                <span className="font-medium text-gray-700">Partager</span> puis{' '}
-                <span className="font-medium text-gray-700">&quot;Sur l&apos;écran d&apos;accueil&quot;</span>
-              </p>
+              <p className="text-sm font-semibold text-gray-900 mb-2">Installer YAPLUKA</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+                  <p className="text-xs text-gray-600">
+                    Appuyez sur{' '}
+                    <span className="inline-flex items-center align-middle mx-0.5">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-600">
+                        <path d="M12 5v14M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                        <rect x="3" y="19" width="18" height="2" rx="1" fill="currentColor" stroke="none" />
+                      </svg>
+                    </span>{' '}
+                    <span className="font-semibold text-gray-800">Partager</span> en bas de l&apos;écran
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+                  <p className="text-xs text-gray-600">
+                    Faites défiler et choisissez <span className="font-semibold text-gray-800">&quot;Sur l&apos;écran d&apos;accueil&quot;</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+                  <p className="text-xs text-gray-600">
+                    Confirmez avec <span className="font-semibold text-gray-800">&quot;Ajouter&quot;</span>
+                  </p>
+                </div>
+              </div>
             </div>
             <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
               <X size={18} />
