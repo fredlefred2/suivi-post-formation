@@ -9,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = 'install_dismissed_at'
-const REPROPOSE_DELAY = 4 * 24 * 60 * 60 * 1000 // 4 jours en ms
+const REPROPOSE_DELAY = 0 // TODO: remettre 4 * 24 * 60 * 60 * 1000 après tests
 
 /** Vérifie si l'app tourne en mode standalone (installée) */
 function isStandalone() {
