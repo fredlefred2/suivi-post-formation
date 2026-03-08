@@ -57,11 +57,12 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
   const [showLikers, setShowLikers] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
-  const [isPending, startTransition] = useTransition()
+  const [isLikePending, startLikeTransition] = useTransition()
+  const [isCommentPending, startCommentTransition] = useTransition()
 
   function handleToggleLike() {
     if (!canInteract) return
-    startTransition(() => { toggleLike(actionId) })
+    startLikeTransition(() => { toggleLike(actionId) })
   }
 
   function handleSubmitComment() {
@@ -69,7 +70,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
     const text = commentText
     setShowComments(false)
     setCommentText('')
-    startTransition(async () => {
+    startCommentTransition(async () => {
       await createComment(actionId, text)
     })
   }
@@ -78,7 +79,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
   const hasComments = feedback.comments_count > 0
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3" onClick={(e) => { e.stopPropagation(); e.preventDefault() }}>
       {/* ── Coeur / Like ── */}
       <button
         onClick={() => {
@@ -88,7 +89,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
             setShowLikers(!showLikers)
           }
         }}
-        disabled={isPending}
+        disabled={isLikePending}
         className={`flex items-center gap-1.5 transition-all duration-200 ${
           feedback.liked_by_me
             ? 'text-pink-500'
@@ -97,7 +98,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
               : hasLikes
                 ? 'text-pink-400 cursor-pointer'
                 : 'text-gray-300'
-        } ${isPending ? 'opacity-50' : ''}`}
+        } ${isLikePending ? 'opacity-50' : ''}`}
         title={canInteract ? (feedback.liked_by_me ? 'Retirer le like' : 'Liker') : 'Voir qui a aimé'}
       >
         <Heart
@@ -205,11 +206,11 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
               </button>
               <button
                 onClick={handleSubmitComment}
-                disabled={isPending || !commentText.trim()}
+                disabled={isCommentPending || !commentText.trim()}
                 className="btn-primary px-4 py-2 text-sm flex items-center gap-1.5 disabled:opacity-40"
               >
                 <Send size={15} />
-                {isPending ? 'Envoi...' : 'Envoyer'}
+                {isCommentPending ? 'Envoi...' : 'Envoyer'}
               </button>
             </div>
           </div>

@@ -570,10 +570,9 @@ export default function TrainerDashboardClient({
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {filteredActions.slice(0, 20).map((action) => (
-                <Link
+                <div
                   key={action.id}
-                  href={`/trainer/apprenants?group=${learnerGroupMap[action.learner_id] ?? ''}&learner=${action.learner_id}`}
-                  className="block bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors"
+                  className="bg-gray-50 rounded-xl p-4"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-700 flex items-center justify-center text-xs font-bold">
@@ -595,7 +594,7 @@ export default function TrainerDashboardClient({
                     feedback={action.feedback}
                     canInteract={true}
                   />
-                </Link>
+                </div>
               ))}
             </div>
           </div>
