@@ -29,10 +29,16 @@ export default function OnboardingFlow({
 
   useEffect(() => {
     const stored = getOnboardingAck(userId)
-    // Auto-acknowledge action step when actions exist
-    if (totalActions >= 1 && !stored['first-action']) {
-      stored['first-action'] = true
-      acknowledgeStep('first-action', userId)
+    // Fallback : si l'apprenant a déjà des actions, il a déjà utilisé l'app
+    // → on auto-complète les étapes 5-8 (stockées uniquement en localStorage)
+    if (totalActions >= 1) {
+      const autoSteps = ['first-action', 'edit-delete', 'progression', 'checkin', 'menu-tour']
+      for (const step of autoSteps) {
+        if (!stored[step]) {
+          stored[step] = true
+          acknowledgeStep(step, userId)
+        }
+      }
     }
     setAck(stored)
     setMounted(true)
