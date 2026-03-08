@@ -8,63 +8,93 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+const DISMISS_KEY = 'install_dismissed_at'
+const REPROPOSE_DELAY = 4 * 24 * 60 * 60 * 1000 // 4 jours en ms
+
+/** Vérifie si l'app tourne en mode standalone (installée) */
+function isStandalone() {
+  if (typeof window === 'undefined') return false
+  if (window.matchMedia('(display-mode: standalone)').matches) return true
+  // @ts-expect-error – Safari specific
+  if (window.navigator.standalone === true) return true
+  return false
+}
+
+/** Vérifie si le dismiss est encore actif (< 4 jours) */
+function isDismissed() {
+  const ts = localStorage.getItem(DISMISS_KEY)
+  if (!ts) return false
+  const elapsed = Date.now() - parseInt(ts, 10)
+  return elapsed < REPROPOSE_DELAY
+}
+
+/** Détecte iOS Safari */
+function isIOSSafari() {
+  const ua = navigator.userAgent
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !('MSStream' in window)
+  const isSafari = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS/.test(ua)
+  return isIOS && isSafari
+}
+
 export default function InstallPrompt() {
-  const [showCustomBanner, setShowCustomBanner] = useState(false)
-  const [showIOSGuide, setShowIOSGuide] = useState(false)
+  const [bannerType, setBannerType] = useState<'native' | 'guide-android' | 'guide-ios' | null>(null)
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    // Already installed as standalone PWA → do nothing
-    if (window.matchMedia('(display-mode: standalone)').matches) return
-    // @ts-expect-error – Safari specific
-    if (window.navigator.standalone === true) return
+    // ── Enregistrer le Service Worker ──
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
 
-    // ── iOS Safari detection ──
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window)
-    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/.test(navigator.userAgent)
+    // ── Déjà installé → rien ──
+    if (isStandalone()) return
 
-    if (isIOS && isSafari) {
-      // Show iOS guide if not dismissed in this session
-      const dismissed = sessionStorage.getItem('ios_install_dismissed')
-      if (!dismissed) {
-        setShowIOSGuide(true)
-      }
+    // ── Dismiss encore actif → rien ──
+    if (isDismissed()) return
+
+    // ── iOS Safari → guide iOS ──
+    if (isIOSSafari()) {
+      setBannerType('guide-ios')
       return
     }
 
-    // ── Android / Chrome: beforeinstallprompt ──
-    const nativeDismissed = localStorage.getItem('install_prompt_dismissed')
+    // ── Android / Chrome : écouter beforeinstallprompt ──
+    let promptReceived = false
 
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault()
+      promptReceived = true
       deferredPromptRef.current = e as BeforeInstallPromptEvent
-
-      // If user previously dismissed the native prompt, show our custom banner
-      if (nativeDismissed) {
-        setShowCustomBanner(true)
-      }
-      // Otherwise, let the native banner appear on its own.
-      // We listen for appinstalled or userChoice below.
+      setBannerType('native')
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
 
-    // If user installs via native prompt → clear flag
+    // Si le prompt natif n'arrive pas après 3s → afficher le guide Android
+    timerRef.current = setTimeout(() => {
+      if (!promptReceived && !isStandalone()) {
+        setBannerType('guide-android')
+      }
+    }, 3000)
+
+    // Écouter l'installation réussie
     const handleInstalled = () => {
-      localStorage.removeItem('install_prompt_dismissed')
-      setShowCustomBanner(false)
+      setBannerType(null)
       deferredPromptRef.current = null
+      localStorage.removeItem(DISMISS_KEY)
     }
     window.addEventListener('appinstalled', handleInstalled)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
       window.removeEventListener('appinstalled', handleInstalled)
+      if (timerRef.current) clearTimeout(timerRef.current)
     }
   }, [])
 
-  // ── Android: trigger deferred native prompt ──
-  async function handleInstallClick() {
+  // ── Clic sur "Installer" (prompt natif) ──
+  async function handleNativeInstall() {
     const prompt = deferredPromptRef.current
     if (!prompt) return
 
@@ -72,47 +102,25 @@ export default function InstallPrompt() {
     const choice = await prompt.userChoice
 
     if (choice.outcome === 'accepted') {
-      localStorage.removeItem('install_prompt_dismissed')
-      setShowCustomBanner(false)
+      localStorage.removeItem(DISMISS_KEY)
+      setBannerType(null)
     } else {
-      // Dismissed again — keep the flag, hide banner for this session
-      localStorage.setItem('install_prompt_dismissed', 'true')
-      setShowCustomBanner(false)
+      dismiss()
     }
     deferredPromptRef.current = null
   }
 
-  // ── First-time native prompt listener ──
-  // We also need to detect when the native prompt (first time) is dismissed
-  // so we can set the flag for future sessions
-  useEffect(() => {
-    const handleFirstNativePrompt = (e: Event) => {
-      const evt = e as BeforeInstallPromptEvent
-      // Listen for the user choice on the native prompt
-      // This runs even if we didn't call prompt() ourselves
-      evt.userChoice.then((choice) => {
-        if (choice.outcome === 'dismissed') {
-          localStorage.setItem('install_prompt_dismissed', 'true')
-        }
-      })
-    }
-
-    window.addEventListener('beforeinstallprompt', handleFirstNativePrompt)
-    return () => window.removeEventListener('beforeinstallprompt', handleFirstNativePrompt)
-  }, [])
-
-  // ── Dismiss handlers ──
-  function dismissCustomBanner() {
-    setShowCustomBanner(false)
+  // ── Dismiss : stocker le timestamp ──
+  function dismiss() {
+    localStorage.setItem(DISMISS_KEY, Date.now().toString())
+    setBannerType(null)
   }
 
-  function dismissIOSGuide() {
-    sessionStorage.setItem('ios_install_dismissed', 'true')
-    setShowIOSGuide(false)
-  }
+  // ── Rien à afficher ──
+  if (!bannerType) return null
 
-  // ── Android custom banner ──
-  if (showCustomBanner) {
+  // ── Bandeau natif Android (beforeinstallprompt capté) ──
+  if (bannerType === 'native') {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
@@ -122,12 +130,12 @@ export default function InstallPrompt() {
             <p className="text-xs text-gray-500 mt-0.5">Accès rapide depuis votre écran d&apos;accueil</p>
           </div>
           <button
-            onClick={handleInstallClick}
+            onClick={handleNativeInstall}
             className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-500 transition-colors flex-shrink-0"
           >
             Installer
           </button>
-          <button onClick={dismissCustomBanner} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+          <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
             <X size={18} />
           </button>
         </div>
@@ -135,8 +143,39 @@ export default function InstallPrompt() {
     )
   }
 
-  // ── iOS guide ──
-  if (showIOSGuide) {
+  // ── Guide Android (prompt natif bloqué par Chrome) ──
+  if (bannerType === 'guide-android') {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <img src="/icon-192.png" alt="YAPLUKA" className="w-10 h-10 rounded-xl flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                Appuyez sur{' '}
+                <span className="inline-flex items-center align-middle">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-600 inline">
+                    <circle cx="12" cy="5" r="1" fill="currentColor" />
+                    <circle cx="12" cy="12" r="1" fill="currentColor" />
+                    <circle cx="12" cy="19" r="1" fill="currentColor" />
+                  </svg>
+                </span>{' '}
+                <span className="font-medium text-gray-700">Menu</span> puis{' '}
+                <span className="font-medium text-gray-700">&quot;Installer l&apos;application&quot;</span>
+              </p>
+            </div>
+            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Guide iOS Safari ──
+  if (bannerType === 'guide-ios') {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
@@ -155,7 +194,7 @@ export default function InstallPrompt() {
                 <span className="font-medium text-gray-700">&quot;Sur l&apos;écran d&apos;accueil&quot;</span>
               </p>
             </div>
-            <button onClick={dismissIOSGuide} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
               <X size={18} />
             </button>
           </div>
