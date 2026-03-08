@@ -62,7 +62,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
 
   function handleToggleLike() {
     if (!canInteract) return
-    startLikeTransition(() => { toggleLike(actionId) })
+    startLikeTransition(async () => { await toggleLike(actionId) })
   }
 
   function handleSubmitComment() {

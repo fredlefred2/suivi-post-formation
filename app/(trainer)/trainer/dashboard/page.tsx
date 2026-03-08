@@ -96,19 +96,18 @@ export default async function TrainerDashboardPage({
     : { data: [] as Array<{ id: string; description: string; created_at: string; learner_id: string; axe_id: string; axes: { subject: string; actions: { id: string }[] } | null }> }
 
   const allActionIds = (actionsRaw ?? []).map((a) => a.id)
-  const recentActionIds = allActionIds.slice(0, 10)
 
-  // Fetch feedback (likes + commentaires) pour les 10 dernières actions
+  // Fetch feedback (likes + commentaires) pour TOUTES les actions
   const [{ data: likesDetailed }, { data: commentsDetailed }] = await Promise.all([
-    recentActionIds.length > 0
+    allActionIds.length > 0
       ? admin.from('action_likes')
           .select('action_id, trainer_id, profiles!inner(first_name, last_name)')
-          .in('action_id', recentActionIds)
+          .in('action_id', allActionIds)
       : Promise.resolve({ data: [] as Array<{ action_id: string; trainer_id: string; profiles: { first_name: string; last_name: string } }> }),
-    recentActionIds.length > 0
+    allActionIds.length > 0
       ? admin.from('action_comments')
           .select('id, action_id, trainer_id, content, created_at, profiles!inner(first_name, last_name)')
-          .in('action_id', recentActionIds)
+          .in('action_id', allActionIds)
           .order('created_at', { ascending: true })
       : Promise.resolve({ data: [] as Array<{ id: string; action_id: string; trainer_id: string; content: string; created_at: string; profiles: { first_name: string; last_name: string } }> }),
   ])
@@ -117,7 +116,7 @@ export default async function TrainerDashboardPage({
 
   type FeedbackEntry = { likes_count: number; comments_count: number; liked_by_me: boolean; likers: Array<{ first_name: string; last_name: string }>; comments: Array<{ id: string; content: string; created_at: string; trainer_first_name: string; trainer_last_name: string }> }
   const feedbackMap: Record<string, FeedbackEntry> = {}
-  recentActionIds.forEach((id) => {
+  allActionIds.forEach((id) => {
     const likes = (likesDetailed ?? []).filter((l) => l.action_id === id)
     const comments = (commentsDetailed ?? []).filter((c) => c.action_id === id)
     feedbackMap[id] = {
