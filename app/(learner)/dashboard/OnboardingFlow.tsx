@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
@@ -265,6 +265,15 @@ export default function OnboardingFlow({
     if (mounted) setIsOnboarding(isActive)
     return () => setIsOnboarding(false)
   }, [mounted, isActive, setIsOnboarding])
+
+  // Scroll to top when onboarding transitions from active → completed
+  const prevActiveRef = useRef<number>(-2)
+  useEffect(() => {
+    if (prevActiveRef.current >= 0 && activeIndex === -1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    prevActiveRef.current = activeIndex
+  }, [activeIndex])
 
   if (!mounted) return null
 

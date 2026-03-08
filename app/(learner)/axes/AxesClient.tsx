@@ -4,10 +4,11 @@ import { useState, useRef, useEffect, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Pencil } from 'lucide-react'
 import { createAxe, deleteAxe, createAction, updateAction, deleteAction } from './actions'
-import type { Axe, Action, ActionFeedbackData } from '@/lib/types'
+import type { Axe, Action, ActionFeedbackData, Difficulty } from '@/lib/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import { acknowledgeStep } from '@/lib/onboarding'
+import { useOnboarding } from '@/lib/onboarding-context'
 import { MARKERS, getDynamique, getCurrentLevelIndex, getProgress, getCurrentLevel, getActionPhaseIcon } from '@/lib/axeHelpers'
 
 type AxeWithActions = Axe & { actions: Action[] }
@@ -20,11 +21,20 @@ const emptyFeedback: ActionFeedbackData = { likes_count: 0, comments_count: 0, l
 
 export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string }) {
   const router = useRouter()
+  const { setIsOnboarding } = useOnboarding()
   const isOnboardingCreate = onboarding === 'create'
   const isHighlightAdd = onboarding === 'highlight-add'
   const isHighlightDelete = onboarding === 'highlight-delete'
   const isAutoDemo = onboarding === 'auto-demo'
+  const isOnboardingMode = isOnboardingCreate || isAutoDemo || isHighlightAdd || isHighlightDelete
   const [showAxeForm, setShowAxeForm] = useState(isOnboardingCreate)
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null)
+
+  // Disable navigation menus during onboarding phases on /axes
+  useEffect(() => {
+    if (isOnboardingMode) setIsOnboarding(true)
+    return () => setIsOnboarding(false)
+  }, [isOnboardingMode, setIsOnboarding])
   const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -135,6 +145,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         router.push('/dashboard')
       } else {
         setShowAxeForm(false)
+        setSelectedDifficulty(null)
         setCurrentIndex(axes.length)
       }
     })
@@ -215,14 +226,25 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               <label className="label">Niveau de difficulté de cet axe *</label>
               <p className="text-xs text-gray-400 mb-2">Ce niveau reste fixe et ne sera pas modifié lors des check-ins.</p>
               <div className="flex gap-3 mt-1">
-                {(['facile', 'moyen', 'difficile'] as const).map((d) => (
-                  <label key={d} className="flex-1 cursor-pointer">
-                    <input type="radio" name="difficulty" value={d} required className="sr-only peer" />
-                    <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 border-gray-200 bg-white peer-checked:scale-105 peer-checked:shadow-lg peer-checked:${DIFFICULTY_COLORS[d]}`}>
-                      <p className="text-sm font-bold">{DIFFICULTY_LABELS[d]}</p>
-                    </div>
-                  </label>
-                ))}
+                {(['facile', 'moyen', 'difficile'] as const).map((d) => {
+                  const isSelected = selectedDifficulty === d
+                  return (
+                    <label key={d} className="flex-1 cursor-pointer">
+                      <input
+                        type="radio" name="difficulty" value={d} required className="sr-only"
+                        checked={selectedDifficulty === d}
+                        onChange={() => setSelectedDifficulty(d)}
+                      />
+                      <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 ${
+                        isSelected
+                          ? `${DIFFICULTY_COLORS[d]} scale-105 shadow-lg`
+                          : 'border-gray-200 bg-white text-gray-600'
+                      }`}>
+                        <p className="text-xs font-bold">{DIFFICULTY_LABELS[d]}</p>
+                      </div>
+                    </label>
+                  )
+                })}
               </div>
             </div>
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
@@ -250,8 +272,8 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         </div>
       )}
 
-      {/* Carrousel scroll-snap */}
-      {axes.length > 0 && (
+      {/* Carrousel scroll-snap (masqué pendant l'onboarding création d'axes) */}
+      {axes.length > 0 && !isOnboardingCreate && (
         <div className="space-y-3">
           <div
             ref={scrollContainerRef}
