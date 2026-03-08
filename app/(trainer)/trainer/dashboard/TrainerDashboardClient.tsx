@@ -517,10 +517,10 @@ export default function TrainerDashboardClient({
         </div>
       )}
 
-      {/* ── Le casting ── */}
+      {/* ── Tous en action ── */}
       {filteredLearnerIds.size > 0 && sorted.length > 0 && (
         <div className="card">
-          <h2 className="section-title mb-3">Le casting</h2>
+          <h2 className="section-title mb-3">Tous en action</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

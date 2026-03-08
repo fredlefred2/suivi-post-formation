@@ -182,10 +182,10 @@ export function generateGroupReport(data: GroupReportData): jsPDF {
   y = drawDynamiqueGaugeWithMarkers(doc, margin, y, contentW, groupDyn.level)
   y += 6
 
-  // ── Section : Le casting ──
+  // ── Section : Tous en action ──
   y = checkPageBreak(doc, y, 40)
   drawIconTrophy(doc, margin + 3, y - 1, 5)
-  y = drawSectionTitle(doc, margin + 10, y, 'Le casting')
+  y = drawSectionTitle(doc, margin + 10, y, 'Tous en action')
 
   // Préparer les données de classement (trié comme dans le dashboard)
   const sorted = data.learners.map((l) => {
