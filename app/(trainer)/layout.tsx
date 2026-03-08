@@ -42,7 +42,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
           <div className="flex items-center gap-1">
             <MobileDrawer variant="trainer" />
             <span className="font-semibold text-sm tracking-tight">
-              🧑‍🏫 {profile.first_name} {profile.last_name}
+              {profile.first_name} {profile.last_name}
               <span className="ml-2 text-xs bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full font-medium border border-white/20">
                 Formateur
               </span>
