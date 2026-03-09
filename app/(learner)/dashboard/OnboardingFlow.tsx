@@ -169,7 +169,7 @@ export default function OnboardingFlow({
       extra: (
         <div className="flex flex-col gap-1 mt-2 max-w-xs mx-auto w-full">
           {[
-            { icon: '📍', label: 'Ancrage', desc: '0 action', color: 'bg-gray-100 text-gray-700' },
+            { icon: '⏳', label: 'Veille', desc: '0 action', color: 'bg-gray-100 text-gray-700' },
             { icon: '👣', label: 'Impulsion', desc: '1-2 actions', color: 'bg-teal-100 text-teal-700' },
             { icon: '🥁', label: 'Rythme', desc: '3-5 actions', color: 'bg-blue-100 text-blue-700' },
             { icon: '🔥', label: 'Intensité', desc: '6-8 actions', color: 'bg-orange-100 text-orange-700' },

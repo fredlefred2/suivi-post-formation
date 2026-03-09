@@ -35,7 +35,7 @@ export const COLORS = {
 
 // ── Échelle de dynamique ──
 export const DYNAMIQUE_SCALE = [
-  { label: 'Ancrage', icon: '~', color: [156, 163, 175] as const },      // gray
+  { label: 'Veille', icon: '~', color: [156, 163, 175] as const },        // gray
   { label: 'Impulsion', icon: '>', color: [20, 184, 166] as const },     // teal
   { label: 'Rythme', icon: '>>', color: [59, 130, 246] as const },       // blue
   { label: 'Intensité', icon: '>>>', color: [249, 115, 22] as const },   // orange
@@ -334,7 +334,7 @@ export function drawDynamiqueGauge(doc: jsPDF, x: number, y: number, level: numb
 // Jauge avec marqueurs texte en dessous (comme la barre de progression de l'app)
 export function drawDynamiqueGaugeWithMarkers(doc: jsPDF, x: number, y: number, totalW: number, level: number) {
   const segH = 7
-  const markerLabels = ['Ancrage', 'Impulsion', 'Rythme', 'Intensite', 'Propulsion']
+  const markerLabels = ['Veille', 'Impulsion', 'Rythme', 'Intensite', 'Propulsion']
   const segW = (totalW - 4 * 2) / 5
 
   // Segments

@@ -51,7 +51,7 @@ function getOverallWeatherEmoji(score: number) {
 }
 
 function getDynamiqueForCount(count: number) {
-  if (count === 0) return { icon: '📍', level: 0, label: 'Ancrage' }
+  if (count === 0) return { icon: '⏳', level: 0, label: 'Veille' }
   if (count <= 2) return { icon: '👣', level: 1, label: 'Impulsion' }
   if (count <= 5) return { icon: '🥁', level: 2, label: 'Rythme' }
   if (count <= 8) return { icon: '🔥', level: 3, label: 'Intensité' }
