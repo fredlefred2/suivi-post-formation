@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       .from('action_likes')
       .select('*', { count: 'exact', head: true })
       .in('action_id', actionIds)
-      .neq('user_id', user.id)
+      .neq('trainer_id', user.id)
       .gt('created_at', since)
 
     // Compter les nouveaux commentaires (pas les miens) depuis `since`
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       .from('action_comments')
       .select('*', { count: 'exact', head: true })
       .in('action_id', actionIds)
-      .neq('user_id', user.id)
+      .neq('trainer_id', user.id)
       .gt('created_at', since)
 
     return NextResponse.json({ count: (likesCount ?? 0) + (commentsCount ?? 0) })
