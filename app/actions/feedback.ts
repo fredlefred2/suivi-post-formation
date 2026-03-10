@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { sendPushToUser } from '@/lib/push'
 
@@ -23,7 +24,7 @@ export async function toggleLike(actionId: string) {
     await supabase.from('action_likes').insert({ action_id: actionId, trainer_id: user.id })
 
     // Push notification (fire-and-forget)
-    notifyActionOwner(supabase, actionId, user.id, 'like').catch(() => {})
+    notifyActionOwner(actionId, user.id, 'like').catch(() => {})
   }
 
   revalidatePath('/trainer/dashboard')
@@ -51,7 +52,7 @@ export async function createComment(actionId: string, content: string) {
   if (error) return { error: error.message }
 
   // Push notification (fire-and-forget)
-  notifyActionOwner(supabase, actionId, user.id, 'comment').catch(() => {})
+  notifyActionOwner(actionId, user.id, 'comment').catch(() => {})
 
   revalidatePath('/trainer/dashboard')
   revalidatePath('/trainer/learner')
@@ -61,11 +62,17 @@ export async function createComment(actionId: string, content: string) {
 }
 
 // ── Notification push interne ──────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function notifyActionOwner(supabase: any, actionId: string, senderId: string, type: 'like' | 'comment') {
+// Utilise un client admin (service role) pour bypasser la RLS
+// afin que les likes/commentaires des apprenants génèrent aussi un push.
+async function notifyActionOwner(actionId: string, senderId: string, type: 'like' | 'comment') {
   try {
-    // Récupérer le propriétaire de l'action
-    const { data: action } = await supabase
+    const admin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+
+    // Récupérer le propriétaire de l'action (admin → pas de RLS)
+    const { data: action } = await admin
       .from('actions')
       .select('learner_id')
       .eq('id', actionId)
@@ -74,7 +81,7 @@ async function notifyActionOwner(supabase: any, actionId: string, senderId: stri
     if (!action || action.learner_id === senderId) return // pas de notif à soi-même
 
     // Récupérer le prénom de l'expéditeur
-    const { data: profile } = await supabase
+    const { data: profile } = await admin
       .from('profiles')
       .select('first_name')
       .eq('id', senderId)
