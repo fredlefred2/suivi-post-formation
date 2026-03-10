@@ -49,15 +49,24 @@ export default function NotificationBell() {
 
       // Compter les non-lues
       const lastSeen = localStorage.getItem(STORAGE_KEY)
+      let unread: number
       if (lastSeen) {
         const lastSeenTime = new Date(lastSeen).getTime()
-        const unread = (notifs ?? []).filter(
+        unread = (notifs ?? []).filter(
           (n: Notification) => new Date(n.createdAt).getTime() > lastSeenTime
         ).length
-        setUnreadCount(unread)
       } else {
-        setUnreadCount((notifs ?? []).length)
+        unread = (notifs ?? []).length
       }
+      setUnreadCount(unread)
+
+      // Synchroniser le badge sur l'icône de l'app (PWA)
+      try {
+        if ('setAppBadge' in navigator) {
+          if (unread > 0) await navigator.setAppBadge(unread)
+          else await navigator.clearAppBadge()
+        }
+      } catch { /* pas en PWA ou non supporté */ }
     } catch {
       // Silencieux
     }
@@ -92,6 +101,10 @@ export default function NotificationBell() {
       // Marquer comme lu
       localStorage.setItem(STORAGE_KEY, new Date().toISOString())
       setUnreadCount(0)
+      // Vider aussi le badge de l'icône app
+      if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge().catch(() => {})
+      }
     }
   }
 

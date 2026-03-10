@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import { ToastProvider } from '@/app/components/Toast'
 import InstallPrompt from '@/app/components/InstallPrompt'
 import BugReportButton from '@/app/components/BugReportButton'
-import BadgeUpdater from '@/app/components/BadgeUpdater'
 import PushManager from '@/app/components/PushManager'
 import './globals.css'
 
@@ -35,7 +34,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <InstallPrompt />
           <BugReportButton />
-          <BadgeUpdater />
           <PushManager />
         </ToastProvider>
       </body>
