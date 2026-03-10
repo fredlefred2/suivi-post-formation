@@ -72,11 +72,20 @@ export default function NotificationBell() {
     }
   }, [])
 
-  // Fetch au montage + polling
+  // Fetch au montage + polling + visibilitychange (synchro immédiate)
   useEffect(() => {
     fetchNotifications()
     const interval = setInterval(fetchNotifications, POLL_INTERVAL)
-    return () => clearInterval(interval)
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchNotifications()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [fetchNotifications])
 
   // Fermer au clic extérieur
@@ -101,9 +110,13 @@ export default function NotificationBell() {
       // Marquer comme lu
       localStorage.setItem(STORAGE_KEY, new Date().toISOString())
       setUnreadCount(0)
-      // Vider aussi le badge de l'icône app
+      // Vider le badge de l'icône app
       if ('clearAppBadge' in navigator) {
         navigator.clearAppBadge().catch(() => {})
+      }
+      // Fermer les notifications push du plateau (bandeau texte)
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_NOTIFICATIONS' })
       }
     }
   }

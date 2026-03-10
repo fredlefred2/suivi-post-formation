@@ -72,6 +72,20 @@ self.addEventListener('push', (event) => {
   )
 })
 
+// ── Message depuis l'app : effacer les notifications du plateau ──
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'CLEAR_NOTIFICATIONS') {
+    event.waitUntil(
+      self.registration.getNotifications().then((notifications) => {
+        notifications.forEach((n) => n.close())
+        if (self.navigator?.clearAppBadge) {
+          return self.navigator.clearAppBadge()
+        }
+      })
+    )
+  }
+})
+
 // ── Click sur notification : ouvre/focus l'app ──
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
