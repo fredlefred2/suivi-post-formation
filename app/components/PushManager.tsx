@@ -80,8 +80,8 @@ export default function PushManager() {
   if (!showPrompt) return null
 
   return (
-    <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-sm animate-fade-in-up">
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3">
+    <div className="fixed top-16 inset-x-0 z-50 flex justify-center px-4 animate-fade-in-up">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 max-w-sm w-full">
         <span className="text-2xl shrink-0">🔔</span>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800">Recevoir les notifications ?</p>
