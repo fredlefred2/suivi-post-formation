@@ -49,8 +49,10 @@ export default function PushManager() {
       return
     }
 
-    // Si pas encore demandé → afficher le bandeau après 5s
+    // Si pas encore demandé → afficher le bandeau après 5s (sauf si refusé < 1 jour)
     if (Notification.permission === 'default') {
+      const dismissed = localStorage.getItem('push_dismissed_at')
+      if (dismissed && Date.now() - Number(dismissed) < 24 * 60 * 60 * 1000) return
       const timer = setTimeout(() => setShowPrompt(true), 5000)
       return () => clearTimeout(timer)
     }
@@ -75,6 +77,7 @@ export default function PushManager() {
 
   const handleDismiss = () => {
     setShowPrompt(false)
+    localStorage.setItem('push_dismissed_at', Date.now().toString())
   }
 
   if (!showPrompt) return null
