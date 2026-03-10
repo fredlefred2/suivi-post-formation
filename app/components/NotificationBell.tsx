@@ -14,6 +14,11 @@ type Notification = {
   createdAt: string
 }
 
+function firstWords(text: string, count = 5): string {
+  const words = text.split(/\s+/).slice(0, count).join(' ')
+  return words + (text.split(/\s+/).length > count ? '…' : '')
+}
+
 function timeAgo(dateStr: string): string {
   const now = Date.now()
   const then = new Date(dateStr).getTime()
@@ -129,7 +134,7 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+        <div className="fixed left-1/2 -translate-x-1/2 top-14 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-800">Notifications</p>
           </div>
@@ -154,19 +159,13 @@ export default function NotificationBell() {
                       isNew ? 'bg-indigo-50/50' : ''
                     }`}
                   >
-                    {/* Ligne 1 : icône + prénom */}
-                    <p className="text-sm font-medium text-gray-800">
+                    <p className="text-sm text-gray-800">
                       {notif.type === 'like' ? '❤️' : '💬'}{' '}
-                      {notif.personName}
-                      <span className="font-normal text-gray-500">
-                        {notif.type === 'like' ? ' a aimé' : ' a commenté'}
-                      </span>
+                      <span className="font-medium">{notif.personName}</span>
+                      {notif.type === 'like' ? ' aime' : ' a commenté'}
+                      {' votre action '}
+                      <span className="text-gray-500">&laquo;&nbsp;{firstWords(notif.actionDescription)}&nbsp;&raquo;</span>
                     </p>
-                    {/* Ligne 2 : action concernée */}
-                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">
-                      {notif.actionDescription}
-                    </p>
-                    {/* Ligne 3 : date relative */}
                     <p className="text-[10px] text-gray-400 mt-0.5">
                       {timeAgo(notif.createdAt)}
                     </p>
