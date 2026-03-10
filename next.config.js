@@ -8,11 +8,10 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        // Pages HTML et API : pas de cache (données personnalisées)
+        source: '/((?!_next/static|_next/image|icon-|manifest|yapluka|sw\\.js).*)',
         headers: [
-          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
-          { key: 'Pragma', value: 'no-cache' },
-          { key: 'Expires', value: '0' },
+          { key: 'Cache-Control', value: 'no-store, must-revalidate' },
         ],
       },
     ]
