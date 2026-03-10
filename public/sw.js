@@ -63,9 +63,11 @@ self.addEventListener('push', (event) => {
   }
   event.waitUntil(
     self.registration.showNotification(title, options)
-      .then(() => {
+      .then(() => self.registration.getNotifications())
+      .then((notifications) => {
+        // Badge = nombre de notifications actuellement affichées
         if (self.navigator?.setAppBadge) {
-          return self.navigator.setAppBadge(data.badgeCount ?? 1)
+          return self.navigator.setAppBadge(notifications.length)
         }
       })
       .catch(() => {})
