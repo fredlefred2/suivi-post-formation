@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { AlertCircle, CalendarCheck, Zap, TrendingUp } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
-import { formatWeek } from '@/lib/utils'
 import { MARKERS, getCurrentLevelIndex, getProgress, getCurrentLevel } from '@/lib/axeHelpers'
 
 const WEATHER_ICONS: Record<string, string> = {
@@ -23,8 +22,6 @@ type AxeItem = {
 
 type Props = {
   firstName: string
-  week: number
-  year: number
   checkinDone: boolean
   totalCheckins: number
   expectedCheckins: number
@@ -38,8 +35,6 @@ type Props = {
 
 export default function DashboardClient({
   firstName,
-  week,
-  year,
   checkinDone,
   totalCheckins,
   expectedCheckins,
@@ -92,7 +87,6 @@ export default function DashboardClient({
       {/* En-tête */}
       <div>
         <h1 className="page-title">Bonjour {firstName} 👋</h1>
-        <p className="text-sm text-gray-500 mt-1">{formatWeek(week, year)}</p>
       </div>
 
       {/* Alerte check-in */}

@@ -92,8 +92,6 @@ export default async function DashboardPage() {
     >
       <DashboardClient
         firstName={profile?.first_name ?? ''}
-        week={week}
-        year={year}
         checkinDone={checkinDone}
         totalCheckins={totalCheckins}
         expectedCheckins={expected}
