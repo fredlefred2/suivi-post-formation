@@ -59,14 +59,6 @@ export default function NotificationBell() {
         unread = (notifs ?? []).length
       }
       setUnreadCount(unread)
-
-      // Synchroniser le badge sur l'icône de l'app (PWA)
-      try {
-        if ('setAppBadge' in navigator) {
-          if (unread > 0) await navigator.setAppBadge(unread)
-          else await navigator.clearAppBadge()
-        }
-      } catch { /* pas en PWA ou non supporté */ }
     } catch {
       // Silencieux
     }
@@ -110,14 +102,6 @@ export default function NotificationBell() {
       // Marquer comme lu
       localStorage.setItem(STORAGE_KEY, new Date().toISOString())
       setUnreadCount(0)
-      // Vider le badge de l'icône app
-      if ('clearAppBadge' in navigator) {
-        navigator.clearAppBadge().catch(() => {})
-      }
-      // Fermer les notifications push du plateau (bandeau texte)
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_NOTIFICATIONS' })
-      }
     }
   }
 

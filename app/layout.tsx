@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import { ToastProvider } from '@/app/components/Toast'
 import InstallPrompt from '@/app/components/InstallPrompt'
 import BugReportButton from '@/app/components/BugReportButton'
-import PushManager from '@/app/components/PushManager'
 import './globals.css'
 
 const inter = Inter({
@@ -34,7 +33,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <InstallPrompt />
           <BugReportButton />
-          <PushManager />
         </ToastProvider>
       </body>
     </html>
