@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
+
+const admin = createAdminClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+)
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,8 +20,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Subscription invalide' }, { status: 400 })
     }
 
-    // Upsert : si l'endpoint existe déjà, on met à jour les clés
-    const { error } = await supabase
+    // Upsert via admin : permet de réassigner l'endpoint quand un autre
+    // utilisateur se connecte sur le même device (user_id change).
+    const { error } = await admin
       .from('push_subscriptions')
       .upsert(
         {
