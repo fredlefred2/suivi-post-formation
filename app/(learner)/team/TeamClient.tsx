@@ -17,27 +17,27 @@ function getOverallWeatherEmoji(score: number) {
 }
 
 function getDynamiqueForCount(count: number) {
-  if (count === 0) return { icon: '\u23F3', level: 0, label: 'Veille' }
-  if (count <= 2) return { icon: '\u{1F463}', level: 1, label: 'Impulsion' }
-  if (count <= 5) return { icon: '\u{1F941}', level: 2, label: 'Rythme' }
-  if (count <= 8) return { icon: '\u{1F525}', level: 3, label: 'Intensité' }
-  return { icon: '\u{1F680}', level: 4, label: 'Propulsion' }
+  if (count === 0) return { icon: '⚪', level: 0, label: 'Veille' }
+  if (count <= 2) return { icon: '👣', level: 1, label: 'Impulsion' }
+  if (count <= 5) return { icon: '🥁', level: 2, label: 'Rythme' }
+  if (count <= 8) return { icon: '🔥', level: 3, label: 'Intensité' }
+  return { icon: '🚀', level: 4, label: 'Propulsion' }
 }
 
 const LEVEL_CARD_COLORS: Record<number, string> = {
-  0: 'from-gray-50 to-gray-100',
-  1: 'from-teal-50 to-emerald-50',
-  2: 'from-blue-50 to-indigo-50',
-  3: 'from-orange-50 to-amber-50',
-  4: 'from-purple-50 to-fuchsia-50',
+  0: 'from-slate-50 to-slate-100',
+  1: 'from-sky-50 to-sky-100',
+  2: 'from-emerald-50 to-emerald-100',
+  3: 'from-orange-50 to-orange-100',
+  4: 'from-rose-50 to-rose-100',
 }
 
 const LEVEL_AVATAR_COLORS: Record<number, string> = {
-  0: 'bg-gray-200 text-gray-700',
-  1: 'bg-teal-200 text-teal-700',
-  2: 'bg-blue-200 text-blue-700',
+  0: 'bg-slate-200 text-slate-700',
+  1: 'bg-sky-200 text-sky-700',
+  2: 'bg-emerald-200 text-emerald-700',
   3: 'bg-orange-200 text-orange-700',
-  4: 'bg-purple-200 text-purple-700',
+  4: 'bg-rose-200 text-rose-700',
 }
 
 type ScoringEntry = {
@@ -179,7 +179,9 @@ export default function TeamClient({
           </div>
           {/* Indice d'action (droite) */}
           <div className="text-center px-2 flex flex-col items-center justify-center">
-            <span className="text-6xl leading-none">{actionIndice.icon}</span>
+            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${LEVEL_AVATAR_COLORS[actionIndice.level] ?? LEVEL_AVATAR_COLORS[0]}`}>
+              <span className="text-4xl leading-none">{actionIndice.icon}</span>
+            </div>
             <p className="text-sm font-semibold text-gray-700 mt-2">{actionIndice.label}</p>
           </div>
         </div>
@@ -209,8 +211,8 @@ export default function TeamClient({
                 style={{ scrollSnapAlign: 'start' }}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-xs font-bold`}>
-                    {getInitials(action.learner_first_name, action.learner_last_name)}
+                  <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-base`}>
+                    {dyn.icon}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold text-gray-700 truncate">
@@ -287,7 +289,9 @@ export default function TeamClient({
                     </td>
                     <td className="py-1.5 text-center font-semibold text-gray-700">{learner.totalActions}</td>
                     {learner.dyns.map((m, i) => (
-                      <td key={i} className="py-1.5 text-center text-base">{m.icon}</td>
+                      <td key={i} className="py-1.5 text-center">
+                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm ${LEVEL_AVATAR_COLORS[m.level] ?? LEVEL_AVATAR_COLORS[0]}`}>{m.icon}</span>
+                      </td>
                     ))}
                   </tr>
                 ))}
@@ -312,11 +316,13 @@ export default function TeamClient({
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {recentActions.map((action) => (
+              {recentActions.map((action) => {
+                const dyn = getDynamiqueForCount(action.axe_action_count)
+                return (
                 <div key={action.id} className="bg-gray-50 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-700 flex items-center justify-center text-xs font-bold">
-                      {getInitials(action.learner_first_name, action.learner_last_name)}
+                    <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-base`}>
+                      {dyn.icon}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-gray-700">
@@ -337,7 +343,7 @@ export default function TeamClient({
                     />
                   )}
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         </div>

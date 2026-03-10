@@ -35,11 +35,11 @@ export const COLORS = {
 
 // ── Échelle de dynamique ──
 export const DYNAMIQUE_SCALE = [
-  { label: 'Veille', icon: '~', color: [156, 163, 175] as const },        // gray
-  { label: 'Impulsion', icon: '>', color: [20, 184, 166] as const },     // teal
-  { label: 'Rythme', icon: '>>', color: [59, 130, 246] as const },       // blue
-  { label: 'Intensité', icon: '>>>', color: [249, 115, 22] as const },   // orange
-  { label: 'Propulsion', icon: '!', color: [168, 85, 247] as const },    // purple
+  { label: 'Veille', icon: '~', color: [100, 116, 139] as const },          // slate
+  { label: 'Impulsion', icon: '>', color: [14, 165, 233] as const },      // sky
+  { label: 'Rythme', icon: '>>', color: [16, 185, 129] as const },        // emerald
+  { label: 'Intensité', icon: '>>>', color: [249, 115, 22] as const },    // orange
+  { label: 'Propulsion', icon: '!', color: [225, 29, 72] as const },      // rose
 ]
 
 export function getDynamiqueForCount(avgPerWeek: number) {
@@ -334,7 +334,7 @@ export function drawDynamiqueGauge(doc: jsPDF, x: number, y: number, level: numb
 // Jauge avec marqueurs texte en dessous (comme la barre de progression de l'app)
 export function drawDynamiqueGaugeWithMarkers(doc: jsPDF, x: number, y: number, totalW: number, level: number) {
   const segH = 7
-  const markerLabels = ['Veille', 'Impulsion', 'Rythme', 'Intensite', 'Propulsion']
+  const markerLabels = ['Veille', 'Impulsion', 'Rythme', 'Intensité', 'Propulsion']
   const segW = (totalW - 4 * 2) / 5
 
   // Segments

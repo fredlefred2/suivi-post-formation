@@ -19,6 +19,19 @@ function formatDate(dateStr: string) {
 
 const emptyFeedback: ActionFeedbackData = { likes_count: 0, comments_count: 0, liked_by_me: false, likers: [], comments: [] }
 
+const ACTION_PHASE_COLORS = [
+  'bg-sky-100',      // rank 1-2 → Impulsion
+  'bg-emerald-100',  // rank 3-5 → Rythme
+  'bg-orange-100',   // rank 6-8 → Intensité
+  'bg-rose-100',     // rank 9+  → Propulsion
+] as const
+function getActionPhaseBg(rank: number) {
+  if (rank <= 2) return ACTION_PHASE_COLORS[0]
+  if (rank <= 5) return ACTION_PHASE_COLORS[1]
+  if (rank <= 8) return ACTION_PHASE_COLORS[2]
+  return ACTION_PHASE_COLORS[3]
+}
+
 export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string }) {
   const router = useRouter()
   const { setIsOnboarding } = useOnboarding()
@@ -300,7 +313,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                       {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
                     </span>
                     <span className="opacity-30">·</span>
-                    <span className="text-lg leading-none">{level.icon}</span>
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{level.icon}</span>
                     <span className="text-sm font-medium opacity-80">
                       Niveau {level.label}
                     </span>
@@ -364,7 +377,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                             const shouldPulseDelete = (isHighlightDelete || (isAutoDemo && demoPhase === 4)) && axeIndex === 0 && actionIndex === 0
                             return (
                               <li key={action.id} className="flex items-start gap-2">
-                                <span className="shrink-0 mt-0.5 text-base">{getActionPhaseIcon(rank)}</span>
+                                <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{getActionPhaseIcon(rank)}</span>
                                 <div className="flex-1 min-w-0">
                                   <span className="text-sm text-gray-700">{action.description}</span>
                                   <div className="flex items-center gap-2 mt-0.5">

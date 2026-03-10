@@ -221,7 +221,7 @@ export default function DashboardClient({
                       {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
                     </span>
                     <span className="text-gray-300">·</span>
-                    <span className="text-lg leading-none">{level.icon}</span>
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{level.icon}</span>
                     <span className="text-sm font-medium opacity-80">
                       Niveau {level.label}
                     </span>

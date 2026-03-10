@@ -13,6 +13,13 @@ import {
   getActionPhaseIcon,
 } from '@/lib/axeHelpers'
 
+function getActionPhaseBg(rank: number) {
+  if (rank <= 2) return 'bg-sky-100'
+  if (rank <= 5) return 'bg-emerald-100'
+  if (rank <= 8) return 'bg-orange-100'
+  return 'bg-rose-100'
+}
+
 type ActionRow = { id: string; description: string; completed: boolean; created_at: string }
 
 type AxeData = {
@@ -105,7 +112,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
                 {actionsCount} action{actionsCount !== 1 ? 's' : ''}
               </span>
               <span className="opacity-30">·</span>
-              <span className="text-lg leading-none">{level.icon}</span>
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{level.icon}</span>
               <span className="text-sm font-medium opacity-80">
                 Niveau {level.label}
               </span>
@@ -152,7 +159,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
                       const rank = rankMap.get(action.id) ?? 1
                       return (
                         <li key={action.id} className="flex items-start gap-2">
-                          <span className="shrink-0 mt-0.5 text-base">
+                          <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">
                             {getActionPhaseIcon(rank)}
                           </span>
                           <div className="flex-1 min-w-0">
