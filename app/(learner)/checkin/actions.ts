@@ -54,6 +54,8 @@ export async function submitCheckin(formData: FormData) {
     }
   }
 
+  // Ne PAS revalider /checkin ici : la célébration doit rester visible
+  // avant la redirection vers /dashboard. La page checkin sera fraîche
+  // au prochain chargement complet (window.location.href).
   revalidatePath('/dashboard')
-  revalidatePath('/checkin')
 }
