@@ -52,7 +52,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           )}
           <button
             onClick={() => router.back()}
-            className="p-2 rounded-full bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-gray-200 transition-colors"
+            className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-900 shadow-md transition-colors"
             aria-label="Fermer"
           >
             <X size={22} strokeWidth={2.5} />

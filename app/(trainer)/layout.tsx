@@ -1,16 +1,16 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/(auth)/actions'
-import { LayoutDashboard, Users, GraduationCap, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 import MessageIcon from '@/app/components/MessageIcon'
+import TrainerSidebar from '@/app/components/TrainerSidebar'
 
 const navItems = [
-  { href: '/trainer/dashboard', label: 'Accueil', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
-  { href: '/trainer/apprenants', label: 'Participants', icon: GraduationCap, iconName: 'GraduationCap' },
-  { href: '/trainer/groups', label: 'Groupes', icon: Users, iconName: 'Users' },
+  { href: '/trainer/dashboard', label: 'Accueil', iconName: 'LayoutDashboard' },
+  { href: '/trainer/apprenants', label: 'Participants', iconName: 'GraduationCap' },
+  { href: '/trainer/groups', label: 'Groupes', iconName: 'Users' },
 ]
 
 export default async function TrainerLayout({ children }: { children: React.ReactNode }) {
@@ -61,19 +61,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
       </header>
 
       {/* ── Sidebar desktop — fond blanc + accent ── */}
-      <div className="hidden sm:block fixed left-0 top-14 bottom-0 w-48 bg-white border-r border-indigo-100 pt-6" style={{
-        boxShadow: '4px 0 20px rgba(99, 102, 241, 0.06)',
-      }}>
-        <nav className="space-y-1 px-3">
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href}
-              className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-500 hover:text-indigo-800 hover:bg-indigo-100 rounded-xl transition-all duration-200 font-medium group active:scale-[0.97]">
-              <Icon size={17} className="text-gray-400 group-hover:text-indigo-600 transition-colors" />
-              {label}
-            </Link>
-          ))}
-        </nav>
-      </div>
+      <TrainerSidebar />
 
       {/* ── Contenu principal ── */}
       <main className="flex-1 px-4 py-6 sm:ml-48">

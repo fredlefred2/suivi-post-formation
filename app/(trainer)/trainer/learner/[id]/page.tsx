@@ -9,7 +9,7 @@ import {
 } from '@/lib/types'
 import type { ActionFeedbackData } from '@/lib/types'
 import Link from 'next/link'
-import { Mail } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import LearnerNav from './LearnerNav'
 import LearnerAxesSection from './LearnerAxesSection'
 
@@ -205,7 +205,7 @@ export default async function LearnerDetailPage({
           href={`/trainer/messages?with=${params.id}`}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors"
         >
-          <Mail size={14} />
+          <MessageCircle size={14} />
           Message
         </Link>
       </div>

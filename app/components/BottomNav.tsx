@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   LayoutDashboard, Target, ClipboardCheck, History,
   Users, GraduationCap,
@@ -27,8 +27,20 @@ type NavItem = {
 
 export default function BottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   let disabled = false
   try { disabled = useOnboarding().isOnboarding } catch { /* outside provider (trainer layout) */ }
+
+  const isTrainer = pathname.startsWith('/trainer')
+
+  function getGroupHref(href: string) {
+    if (!isTrainer) return href
+    const group = searchParams.get('group') || (typeof window !== 'undefined' ? localStorage.getItem('trainer_selected_group') : null)
+    if (group && (href === '/trainer/dashboard' || href === '/trainer/apprenants')) {
+      return `${href}?group=${group}`
+    }
+    return href
+  }
 
   return (
     <nav className={`bg-gray-950 sm:hidden fixed bottom-0 left-0 right-0 z-10 transition-opacity duration-300 ${disabled ? 'opacity-40 pointer-events-none' : ''}`} style={{
@@ -40,7 +52,7 @@ export default function BottomNav({ items }: { items: NavItem[] }) {
           const isActive = pathname === href || pathname.startsWith(href + '/')
           if (!Icon) return null
           return (
-            <Link key={href} href={href}
+            <Link key={href} href={getGroupHref(href)}
               className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-all duration-150 font-medium active:scale-90 ${
                 isActive ? 'text-white' : 'text-gray-500'
               }`}
