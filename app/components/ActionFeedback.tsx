@@ -125,13 +125,11 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
           }
         }}
         className={`flex items-center gap-1.5 transition-colors duration-150 ${
-          optimisticLiked
+          optimisticLiked || hasLikes
             ? 'text-pink-500'
-            : hasLikes
-              ? 'text-pink-300'
-              : canInteract
-                ? 'text-pink-200 hover:text-pink-400'
-                : 'text-pink-200'
+            : canInteract
+              ? 'text-pink-200 hover:text-pink-400'
+              : 'text-pink-200'
         }`}
         title={canInteract ? (optimisticLiked ? 'Retirer le like' : 'Liker') : 'Voir qui a aimé'}
       >
