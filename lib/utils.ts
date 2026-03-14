@@ -73,6 +73,40 @@ export function expectedCheckins(createdAt: string): number {
 }
 
 /**
+ * Calcule le streak (série de semaines consécutives avec check-in).
+ */
+export function calculateStreak(
+  checkins: Array<{ week_number: number; year: number }>,
+  currentWeek: number,
+  currentYear: number
+): number {
+  const weekSet = new Set(checkins.map(c => `${c.year}-${c.week_number}`))
+  if (weekSet.size === 0) return 0
+
+  let streak = 0
+  let w = currentWeek
+  let y = currentYear
+
+  // Si la semaine courante est faite, on la compte
+  if (weekSet.has(`${y}-${w}`)) {
+    streak++
+  }
+
+  // Remonter dans le temps semaine par semaine
+  while (true) {
+    w--
+    if (w <= 0) { y--; w = 52 }
+    if (weekSet.has(`${y}-${w}`)) {
+      streak++
+    } else {
+      break
+    }
+  }
+
+  return streak
+}
+
+/**
  * Retourne la date du 2e vendredi suivant une date d'inscription.
  */
 export function secondFridayAfter(createdAt: string): Date {

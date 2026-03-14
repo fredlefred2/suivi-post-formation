@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentWeek, formatWeek } from '@/lib/utils'
+import { getCurrentWeek, formatWeek, calculateStreak } from '@/lib/utils'
 import { WEATHER_LABELS, WEATHER_COLORS } from '@/lib/types'
 import CheckinForm from './CheckinForm'
 
@@ -91,7 +91,10 @@ export default async function CheckinPage() {
         <h1 className="page-title">Check-in hebdomadaire</h1>
         <p className="text-sm text-gray-500 mt-1">{formatWeek(week, year)}</p>
       </div>
-      <CheckinForm axes={axes} />
+      <CheckinForm axes={axes} streak={calculateStreak(
+        (allCheckins ?? []).map(c => ({ week_number: c.week_number, year: c.year })),
+        week, year
+      )} />
       {historySection}
     </div>
   )

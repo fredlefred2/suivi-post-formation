@@ -9,7 +9,8 @@ import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import { acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
-import { MARKERS, getDynamique, getCurrentLevelIndex, getProgress, getCurrentLevel, getActionPhaseIcon } from '@/lib/axeHelpers'
+import { MARKERS, getDynamique, getCurrentLevelIndex, getProgress, getCurrentLevel, getNextLevel, getActionPhaseIcon } from '@/lib/axeHelpers'
+import { useToast } from '@/app/components/Toast'
 
 type AxeWithActions = Axe & { actions: Action[] }
 
@@ -34,7 +35,9 @@ function getActionPhaseBg(rank: number) {
 
 export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string }) {
   const router = useRouter()
+  const { toast } = useToast()
   const { setIsOnboarding } = useOnboarding()
+  const [levelUpInfo, setLevelUpInfo] = useState<{ icon: string; label: string } | null>(null)
   const isOnboardingCreate = onboarding === 'create'
   const isHighlightAdd = onboarding === 'highlight-add'
   const isHighlightDelete = onboarding === 'highlight-delete'
@@ -168,13 +171,38 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     formData.set('axe_id', axeId)
+
+    // Sauvegarder le count avant pour détecter un changement de niveau
+    const axe = axes.find(a => a.id === axeId)
+    const oldCount = axe?.actions.length ?? 0
+
     startTransition(async () => {
-      await createAction(formData)
+      const result = await createAction(formData)
+      if (result?.error) return
+
       if (isHighlightAdd) {
-        // Retour au dashboard → step 5 auto-acknowledged → step 6 apparaît
         router.push('/dashboard')
+        return
+      }
+
+      setAddActionAxeId(null)
+
+      // Toast avec delta vers le prochain niveau
+      const newCount = oldCount + 1
+      const next = getNextLevel(newCount)
+      if (next) {
+        toast(`✓ Action ajoutée — encore ${next.delta} pour ${next.icon} ${next.label}`)
       } else {
-        setAddActionAxeId(null)
+        toast('✓ Action ajoutée — niveau max atteint ! 🚀')
+      }
+
+      // Célébration si changement de niveau
+      const oldLevel = getCurrentLevelIndex(oldCount)
+      const newLevel = getCurrentLevelIndex(newCount)
+      if (newLevel > oldLevel) {
+        const level = getCurrentLevel(newCount)
+        setLevelUpInfo(level)
+        setTimeout(() => setLevelUpInfo(null), 3000)
       }
     })
   }
@@ -593,6 +621,21 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
             >
               {isPending ? '...' : demoPhase < 4 ? 'Suivant →' : 'Compris !'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Célébration de niveau */}
+      {levelUpInfo && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setLevelUpInfo(null)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xs p-8 text-center">
+            <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
+            <div className="animate-level-up-text">
+              <p className="text-xl font-bold text-gray-900 mb-1">Niveau {levelUpInfo.label}</p>
+              <p className="text-lg font-semibold text-indigo-600">débloqué !</p>
+              <p className="text-sm text-gray-400 mt-3">Continuez comme ça 💪</p>
+            </div>
           </div>
         </div>
       )}

@@ -7,6 +7,8 @@ import type { Difficulty } from '@/lib/types'
 
 type Axe = { id: string; subject: string; initial_score: number; difficulty: Difficulty }
 
+const WEATHER_EMOJI_MAP: Record<string, string> = { sunny: '☀️', cloudy: '⛅', stormy: '⛈️' }
+
 const weatherOptions = [
   { value: 'sunny', emoji: '☀️', label: 'Ça roule !', color: 'border-amber-400 bg-amber-100' },
   { value: 'cloudy', emoji: '⛅', label: 'Mitigé', color: 'border-sky-400 bg-sky-100' },
@@ -15,10 +17,11 @@ const weatherOptions = [
 
 const scoreLabels = ['', 'Débutant', 'En cours', 'Intermédiaire', 'Avancé', 'Expert']
 
-export default function CheckinForm({ axes }: { axes: Axe[] }) {
+export default function CheckinForm({ axes, streak = 0 }: { axes: Axe[]; streak?: number }) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [selectedWeather, setSelectedWeather] = useState<string>('')
+  const [showCelebration, setShowCelebration] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -27,8 +30,35 @@ export default function CheckinForm({ axes }: { axes: Axe[] }) {
     startTransition(async () => {
       const result = await submitCheckin(formData)
       if (result?.error) setError(result.error)
-      else window.location.href = '/dashboard'
+      else {
+        setShowCelebration(true)
+        setTimeout(() => { window.location.href = '/dashboard' }, 4000)
+      }
     })
+  }
+
+  if (showCelebration) {
+    const newStreak = streak + 1
+    return (
+      <div className="card text-center py-10 space-y-4 animate-fade-in-up">
+        <div className="text-6xl">✅</div>
+        <h2 className="text-xl font-bold text-gray-900">Check-in validé !</h2>
+        {selectedWeather && (
+          <p className="text-4xl">{WEATHER_EMOJI_MAP[selectedWeather] ?? ''}</p>
+        )}
+        {newStreak >= 2 ? (
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-2xl">🔥</span>
+            <p className="text-lg font-semibold text-orange-600">{newStreak} semaines d&apos;affilée !</p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">Premier check-in de la série, continuez ! 💪</p>
+        )}
+        <a href="/dashboard" className="btn-primary inline-block mt-2">
+          Retour au dashboard
+        </a>
+      </div>
+    )
   }
 
   return (

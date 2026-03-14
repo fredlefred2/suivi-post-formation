@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentWeek, expectedCheckins } from '@/lib/utils'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { getCurrentWeek, expectedCheckins, calculateStreak } from '@/lib/utils'
 import { getDynamique } from '@/lib/axeHelpers'
 import OnboardingFlow from './OnboardingFlow'
 import DashboardClient from './DashboardClient'
@@ -56,6 +57,68 @@ export default async function DashboardPage() {
     ? (allCheckins[allCheckins.length - 1].weather as string | null)
     : null
 
+  // Streak (semaines consécutives de check-in)
+  const streak = calculateStreak(
+    (allCheckins ?? []).map(c => ({ week_number: c.week_number, year: c.year })),
+    week,
+    year
+  )
+
+  // Actions de la semaine dernière (pour le récap)
+  const twoWeeksAgo = new Date()
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  const lastWeekActions = axes?.reduce((acc, axe) => {
+    return acc + ((axe.actions as { id: string; created_at: string }[]) ?? [])
+      .filter(a => a.created_at >= twoWeeksAgo.toISOString() && a.created_at < oneWeekAgo.toISOString()).length
+  }, 0) ?? 0
+
+  // Rang dans le groupe
+  let rank: number | null = null
+  let groupSize: number | null = null
+  try {
+    const admin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: membership } = await admin
+      .from('group_members')
+      .select('group_id')
+      .eq('learner_id', user!.id)
+      .limit(1)
+      .maybeSingle()
+
+    if (membership) {
+      const { data: membersRaw } = await admin
+        .from('group_members')
+        .select('learner_id')
+        .eq('group_id', membership.group_id)
+
+      const memberIds = (membersRaw ?? []).map(m => m.learner_id)
+
+      if (memberIds.length > 1) {
+        const { data: allAxes } = await admin
+          .from('axes')
+          .select('learner_id, actions(id)')
+          .in('learner_id', memberIds)
+
+        const actionCounts: Record<string, number> = {}
+        memberIds.forEach(id => { actionCounts[id] = 0 })
+        ;(allAxes ?? []).forEach(axe => {
+          const count = ((axe.actions as { id: string }[]) ?? []).length
+          actionCounts[axe.learner_id] = (actionCounts[axe.learner_id] ?? 0) + count
+        })
+
+        const sorted = Object.entries(actionCounts).sort(([, a], [, b]) => b - a)
+        rank = sorted.findIndex(([id]) => id === user!.id) + 1
+        groupSize = memberIds.length
+      }
+    }
+  } catch {
+    // Silently fail — rank is optional
+  }
+
   // Première action (pour la suppression dans l'onboarding)
   const firstActionId = axes?.flatMap((axe) =>
     ((axe.actions as { id: string }[]) ?? []).map((a) => a.id)
@@ -101,6 +164,10 @@ export default async function DashboardPage() {
         axesCount={axesCount}
         axes={axeItems}
         stepsData={stepsData}
+        streak={streak}
+        rank={rank}
+        groupSize={groupSize}
+        lastWeekActions={lastWeekActions}
       />
     </OnboardingFlow>
   )
