@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Heart, MessageCircle, Send, X } from 'lucide-react'
 import { toggleLike, createComment } from '@/app/actions/feedback'
 import type { ActionFeedbackData } from '@/lib/types'
@@ -57,26 +57,61 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
   const [showLikers, setShowLikers] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
-  const [isLikePending, startLikeTransition] = useTransition()
-  const [isCommentPending, startCommentTransition] = useTransition()
+
+  // Optimistic state — mise à jour visuelle INSTANTANÉE
+  const [optimisticLiked, setOptimisticLiked] = useState(feedback.liked_by_me)
+  const [optimisticLikesCount, setOptimisticLikesCount] = useState(feedback.likes_count)
+  const [optimisticCommentsCount, setOptimisticCommentsCount] = useState(feedback.comments_count)
+  const [likePop, setLikePop] = useState(false)
+  const [commentPop, setCommentPop] = useState(false)
+
+  // Sync avec les données serveur quand les props changent
+  useEffect(() => {
+    setOptimisticLiked(feedback.liked_by_me)
+    setOptimisticLikesCount(feedback.likes_count)
+    setOptimisticCommentsCount(feedback.comments_count)
+  }, [feedback.liked_by_me, feedback.likes_count, feedback.comments_count])
+
+  const triggerPop = useCallback((setter: (v: boolean) => void) => {
+    setter(true)
+    setTimeout(() => setter(false), 350)
+  }, [])
 
   function handleToggleLike() {
     if (!canInteract) return
-    startLikeTransition(async () => { await toggleLike(actionId) })
+
+    // Optimistic update IMMÉDIAT — pas de useTransition
+    const wasLiked = optimisticLiked
+    setOptimisticLiked(!wasLiked)
+    setOptimisticLikesCount(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1)
+    triggerPop(setLikePop)
+
+    // Fire and forget
+    toggleLike(actionId).catch(() => {
+      // Rollback en cas d'erreur
+      setOptimisticLiked(wasLiked)
+      setOptimisticLikesCount(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1))
+    })
   }
 
   function handleSubmitComment() {
     if (!canInteract || !commentText.trim()) return
     const text = commentText
+
+    // Optimistic update IMMÉDIAT
+    setOptimisticCommentsCount(prev => prev + 1)
+    triggerPop(setCommentPop)
     setShowComments(false)
     setCommentText('')
-    startCommentTransition(async () => {
-      await createComment(actionId, text)
+
+    // Fire and forget
+    createComment(actionId, text).catch(() => {
+      setOptimisticCommentsCount(prev => Math.max(0, prev - 1))
     })
   }
 
-  const hasLikes = feedback.likes_count > 0
-  const hasComments = feedback.comments_count > 0
+  const hasLikes = optimisticLikesCount > 0
+  const hasComments = optimisticCommentsCount > 0
 
   return (
     <div className="flex items-center gap-3" onClick={(e) => { e.stopPropagation(); e.preventDefault() }}>
@@ -89,24 +124,24 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
             setShowLikers(!showLikers)
           }
         }}
-        disabled={isLikePending}
-        className={`flex items-center gap-1.5 transition-all duration-200 ${
-          feedback.liked_by_me
+        className={`flex items-center gap-1.5 transition-colors duration-150 ${
+          optimisticLiked
             ? 'text-pink-500'
-            : canInteract
-              ? 'text-gray-400 hover:text-pink-500'
-              : hasLikes
-                ? 'text-pink-400 cursor-pointer'
-                : 'text-gray-300'
-        } ${isLikePending ? 'opacity-50' : ''}`}
-        title={canInteract ? (feedback.liked_by_me ? 'Retirer le like' : 'Liker') : 'Voir qui a aimé'}
+            : hasLikes
+              ? 'text-pink-300'
+              : canInteract
+                ? 'text-pink-200 hover:text-pink-400'
+                : 'text-pink-200'
+        }`}
+        title={canInteract ? (optimisticLiked ? 'Retirer le like' : 'Liker') : 'Voir qui a aimé'}
       >
         <Heart
           size={18}
-          fill={hasLikes || feedback.liked_by_me ? 'currentColor' : 'none'}
-          strokeWidth={hasLikes ? 0 : 2}
+          className={likePop ? 'feedback-pop' : ''}
+          fill="currentColor"
+          strokeWidth={0}
         />
-        {hasLikes && <span className="text-sm font-medium">{feedback.likes_count}</span>}
+        {hasLikes && <span className="text-sm font-medium">{optimisticLikesCount}</span>}
       </button>
 
       {/* Modale likers */}
@@ -132,21 +167,22 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
             setShowComments(!showComments)
           }
         }}
-        className={`flex items-center gap-1.5 transition-all duration-200 ${
+        className={`flex items-center gap-1.5 transition-colors duration-150 ${
           hasComments
             ? 'text-indigo-500 hover:text-indigo-600'
             : canInteract
-              ? 'text-gray-400 hover:text-indigo-500'
-              : 'text-gray-300'
+              ? 'text-indigo-200 hover:text-indigo-400'
+              : 'text-indigo-200'
         }`}
         title={canInteract ? 'Commenter' : 'Voir les commentaires'}
       >
         <MessageCircle
           size={18}
-          fill={hasComments ? 'currentColor' : 'none'}
-          strokeWidth={hasComments ? 0 : 2}
+          className={commentPop ? 'feedback-pop' : ''}
+          fill="currentColor"
+          strokeWidth={0}
         />
-        {hasComments && <span className="text-sm font-medium">{feedback.comments_count}</span>}
+        {hasComments && <span className="text-sm font-medium">{optimisticCommentsCount}</span>}
       </button>
 
       {/* Modale commentaires */}
@@ -206,11 +242,11 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
               </button>
               <button
                 onClick={handleSubmitComment}
-                disabled={isCommentPending || !commentText.trim()}
+                disabled={!commentText.trim()}
                 className="btn-primary px-4 py-2 text-sm flex items-center gap-1.5 disabled:opacity-40"
               >
                 <Send size={15} />
-                {isCommentPending ? 'Envoi...' : 'Envoyer'}
+                Envoyer
               </button>
             </div>
           </div>
