@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { submitCheckin } from './actions'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import type { Difficulty } from '@/lib/types'
@@ -18,7 +18,7 @@ const weatherOptions = [
 const scoreLabels = ['', 'Débutant', 'En cours', 'Intermédiaire', 'Avancé', 'Expert']
 
 export default function CheckinForm({ axes, streak = 0 }: { axes: Axe[]; streak?: number }) {
-  const [isPending, startTransition] = useTransition()
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedWeather, setSelectedWeather] = useState<string>('')
   const [showCelebration, setShowCelebration] = useState(false)
@@ -26,15 +26,18 @@ export default function CheckinForm({ axes, streak = 0 }: { axes: Axe[]; streak?
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    setSubmitting(true)
     const formData = new FormData(e.currentTarget)
-    startTransition(async () => {
-      const result = await submitCheckin(formData)
-      if (result?.error) setError(result.error)
-      else {
-        setShowCelebration(true)
-        setTimeout(() => { window.location.href = '/dashboard' }, 4000)
-      }
-    })
+    // Appel direct (sans startTransition) pour que le revalidatePath
+    // ne démonte pas le composant avant la célébration
+    const result = await submitCheckin(formData)
+    if (result?.error) {
+      setError(result.error)
+      setSubmitting(false)
+    } else {
+      setShowCelebration(true)
+      setTimeout(() => { window.location.href = '/dashboard' }, 4000)
+    }
   }
 
   if (showCelebration) {
@@ -52,7 +55,7 @@ export default function CheckinForm({ axes, streak = 0 }: { axes: Axe[]; streak?
             <p className="text-lg font-semibold text-orange-600">{newStreak} semaines d&apos;affilée !</p>
           </div>
         ) : (
-          <p className="text-sm text-gray-500">Premier check-in de la série, continuez ! 💪</p>
+          <p className="text-sm text-gray-500">Premier check-in de la série, continue ! 💪</p>
         )}
         <a href="/dashboard" className="btn-primary inline-block mt-2">
           Retour au dashboard
@@ -130,8 +133,8 @@ export default function CheckinForm({ axes, streak = 0 }: { axes: Axe[]; streak?
 
       {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 
-      <button type="submit" disabled={isPending} className="btn-primary w-full py-3 text-base">
-        {isPending ? 'Enregistrement...' : 'Valider mon check-in ✓'}
+      <button type="submit" disabled={submitting} className="btn-primary w-full py-3 text-base">
+        {submitting ? 'Enregistrement...' : 'Valider mon check-in ✓'}
       </button>
     </form>
   )
