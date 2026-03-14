@@ -58,6 +58,23 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // ── Synchroniser le groupe sélectionné avec localStorage ──
+  useEffect(() => {
+    const stored = localStorage.getItem('trainer_selected_group')
+    // Si le groupe affiché ne correspond pas au localStorage (navigation via menu sans ?group)
+    // et qu'il y a un groupe stocké valide différent, rediriger
+    if (stored && stored !== 'all' && stored !== currentGroupId && groups.some(g => g.id === stored)) {
+      // Vérifier si l'URL n'a pas de ?group explicite (navigation via menu)
+      const url = new URL(window.location.href)
+      if (!url.searchParams.has('group')) {
+        router.replace(`/trainer/apprenants?group=${stored}`)
+        return
+      }
+    }
+    // Sinon, sauvegarder le groupe actuel
+    localStorage.setItem('trainer_selected_group', currentGroupId)
+  }, [currentGroupId, groups, router])
+
   const currentGroupName = groups.find((g) => g.id === currentGroupId)?.name
   const prevIndexRef = useRef(initialIndex)
 
@@ -160,6 +177,7 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                   onClick={() => {
                     setDropdownOpen(false)
                     if (g.id !== currentGroupId) {
+                      localStorage.setItem('trainer_selected_group', g.id)
                       router.push(`/trainer/apprenants?group=${g.id}`)
                     }
                   }}

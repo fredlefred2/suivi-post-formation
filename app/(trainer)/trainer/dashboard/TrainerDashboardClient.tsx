@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChevronDown, Users, TrendingUp, X, ClipboardCheck, Download, Loader2 } from 'lucide-react'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
+import TrainerTeamMessages from '@/app/components/TrainerTeamMessages'
 import { useCountUp } from '@/lib/useCountUp'
 
 export type GroupData = {
@@ -83,6 +84,7 @@ type Props = {
   unassignedLearners?: UnassignedLearner[]
   learnerAxesMap?: Record<string, number[]>
   initialGroup?: string
+  currentUserId: string
 }
 
 export default function TrainerDashboardClient({
@@ -94,6 +96,7 @@ export default function TrainerDashboardClient({
   unassignedLearners = [],
   learnerAxesMap = {},
   initialGroup,
+  currentUserId,
 }: Props) {
   // ── State ──
   // Initialiser sans localStorage pour éviter le mismatch d'hydration
@@ -109,25 +112,21 @@ export default function TrainerDashboardClient({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Restaurer le localStorage APRÈS hydration, puis sync
+  // Restaurer le localStorage APRÈS hydration
   useEffect(() => {
     if (!initialGroup || initialGroup === 'all') {
       const stored = localStorage.getItem('trainer_selected_group')
       if (stored && (stored === 'all' || groups.some(g => g.id === stored))) {
         setSelectedOption(stored)
-        return
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem('trainer_selected_group', selectedOption)
-  }, [selectedOption])
-
   function selectOption(option: string) {
     setSelectedOption(option)
     setDropdownOpen(false)
+    localStorage.setItem('trainer_selected_group', option)
   }
 
   // Fermeture dropdown au clic extérieur
@@ -447,6 +446,11 @@ export default function TrainerDashboardClient({
           </div>
         </div>
       </div>
+
+      {/* ── Messages de la team ── */}
+      {selectedOption !== 'all' && (
+        <TrainerTeamMessages groupId={selectedOption} currentUserId={currentUserId} />
+      )}
 
       {/* ── Carousel actions récentes ── */}
       {carouselActions.length > 0 && (

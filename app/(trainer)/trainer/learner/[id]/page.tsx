@@ -8,6 +8,8 @@ import {
   WEATHER_COLORS,
 } from '@/lib/types'
 import type { ActionFeedbackData } from '@/lib/types'
+import Link from 'next/link'
+import { Mail } from 'lucide-react'
 import LearnerNav from './LearnerNav'
 import LearnerAxesSection from './LearnerAxesSection'
 
@@ -197,7 +199,16 @@ export default async function LearnerDetailPage({
       <div className="space-y-6">
 
       {/* ── Nom de l'apprenant ─────────────────────────────────────────────── */}
-      <h1 className="page-title">{profile.first_name} {profile.last_name}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="page-title">{profile.first_name} {profile.last_name}</h1>
+        <Link
+          href={`/trainer/messages?with=${params.id}`}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors"
+        >
+          <Mail size={14} />
+          Message
+        </Link>
+      </div>
 
       {/* ── Bloc 1 : Check-ins + Dernière météo ───────────────────────────── */}
       <div className="card py-5 px-4">

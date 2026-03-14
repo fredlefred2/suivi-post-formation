@@ -5,6 +5,7 @@ import { logout } from '@/app/(auth)/actions'
 import { LayoutDashboard, Users, GraduationCap, LogOut } from 'lucide-react'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
+import MessageIcon from '@/app/components/MessageIcon'
 
 const navItems = [
   { href: '/trainer/dashboard', label: 'Accueil', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
@@ -48,11 +49,14 @@ export default async function TrainerLayout({ children }: { children: React.Reac
               </span>
             </span>
           </div>
-          <form action={logout}>
-            <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">
-              <LogOut size={18} />
-            </button>
-          </form>
+          <div className="flex items-center gap-1">
+            <MessageIcon variant="trainer" />
+            <form action={logout}>
+              <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">
+                <LogOut size={18} />
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 

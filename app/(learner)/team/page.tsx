@@ -183,6 +183,7 @@ export default async function TeamPage() {
 
   return (
     <TeamClient
+      groupId={groupId}
       groupName={group.name}
       membersCount={members.length}
       totalActions={totalActions}

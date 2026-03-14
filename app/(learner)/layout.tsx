@@ -6,7 +6,9 @@ import { LayoutDashboard, Target, ClipboardCheck, Users, LogOut } from 'lucide-r
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 import NotificationBell from '@/app/components/NotificationBell'
+import MessageIcon from '@/app/components/MessageIcon'
 import { OnboardingProvider } from '@/lib/onboarding-context'
+import TeamMessagePopup from '@/app/components/TeamMessagePopup'
 
 const navItems = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
@@ -53,6 +55,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
               </span>
             </div>
             <div className="flex items-center gap-1">
+              <MessageIcon variant="learner" />
               <NotificationBell />
               <form action={logout}>
                 <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">
@@ -93,6 +96,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
           shortLabel: label === 'Mes actions' ? 'Actions' : label === 'Tableau de bord' ? 'Accueil' : label,
         }))} />
         <div className="h-16 sm:hidden" />
+        <TeamMessagePopup />
       </div>
     </OnboardingProvider>
   )

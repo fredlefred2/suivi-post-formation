@@ -91,6 +91,7 @@ export default function LearnerNav({
                   onClick={() => {
                     setDropdownOpen(false)
                     if (g.id !== currentGroupId) {
+                      localStorage.setItem('trainer_selected_group', g.id)
                       router.push(`/trainer/apprenants?group=${g.id}`)
                     }
                   }}
