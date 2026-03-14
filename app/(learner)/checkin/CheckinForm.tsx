@@ -17,7 +17,7 @@ const weatherOptions = [
 
 const scoreLabels = ['', 'Débutant', 'En cours', 'Intermédiaire', 'Avancé', 'Expert']
 
-export default function CheckinForm({ axes, streak = 0 }: { axes: Axe[]; streak?: number }) {
+export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe[]; weekLabel?: string; streak?: number }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedWeather, setSelectedWeather] = useState<string>('')
@@ -73,8 +73,8 @@ export default function CheckinForm({ axes, streak = 0 }: { axes: Axe[]; streak?
 
       {/* Météo */}
       <div className="card">
-        <h2 className="section-title mb-1">Comment s&apos;est passée cette semaine ? *</h2>
-        <p className="text-sm text-gray-400 mb-4">Votre météo générale</p>
+        <h2 className="section-title mb-1">Comment s&apos;est passée ta semaine ? *</h2>
+        <p className="text-sm text-gray-400 mb-4">{weekLabel ? `${weekLabel} — Ta météo générale` : 'Ta météo générale'}</p>
         <div className="grid grid-cols-3 gap-3">
           {weatherOptions.map((opt) => {
             const isSelected = selectedWeather === opt.value

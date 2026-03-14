@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { getCurrentWeek, expectedCheckins, calculateStreak } from '@/lib/utils'
+import { getCurrentWeek, expectedCheckins, calculateStreak, getCheckinContext } from '@/lib/utils'
 import { getDynamique } from '@/lib/axeHelpers'
 import OnboardingFlow from './OnboardingFlow'
 import DashboardClient from './DashboardClient'
@@ -11,11 +11,12 @@ export default async function DashboardPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { week, year } = getCurrentWeek()
+  const checkinCtx = getCheckinContext()
 
   const [
     { data: profile },
     { data: axes },
-    { data: thisWeekCheckin },
+    { data: checkinForTargetWeek },
     { data: allCheckins },
   ] = await Promise.all([
     supabase.from('profiles').select('first_name, created_at').eq('id', user!.id).single(),
@@ -26,8 +27,8 @@ export default async function DashboardPage() {
     supabase.from('checkins')
       .select('weather')
       .eq('learner_id', user!.id)
-      .eq('week_number', week)
-      .eq('year', year)
+      .eq('week_number', checkinCtx.checkinWeek)
+      .eq('year', checkinCtx.checkinYear)
       .maybeSingle(),
     supabase.from('checkins')
       .select('id, weather, week_number, year, created_at')
@@ -35,7 +36,8 @@ export default async function DashboardPage() {
       .order('created_at', { ascending: true }),
   ])
 
-  const checkinDone = !!thisWeekCheckin
+  // Check-in affiché seulement si fenêtre ouverte (ven→lun) ET pas encore fait
+  const checkinDone = !checkinCtx.isOpen || !!checkinForTargetWeek
   const totalCheckins = allCheckins?.length ?? 0
   const expected = profile?.created_at ? expectedCheckins(profile.created_at) : 0
 
@@ -156,6 +158,7 @@ export default async function DashboardPage() {
       <DashboardClient
         firstName={profile?.first_name ?? ''}
         checkinDone={checkinDone}
+        checkinWeekLabel={checkinCtx.weekLabel}
         totalCheckins={totalCheckins}
         expectedCheckins={expected}
         totalActions={totalCompletedActions}

@@ -23,6 +23,7 @@ type AxeItem = {
 type Props = {
   firstName: string
   checkinDone: boolean
+  checkinWeekLabel: string
   totalCheckins: number
   expectedCheckins: number
   totalActions: number
@@ -40,6 +41,7 @@ type Props = {
 export default function DashboardClient({
   firstName,
   checkinDone,
+  checkinWeekLabel,
   totalCheckins,
   expectedCheckins,
   totalActions,
@@ -112,13 +114,13 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Alerte check-in */}
+      {/* Alerte check-in (visible ven→lun si pas encore fait) */}
       {!checkinDone && (
         <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-100 border border-amber-300">
           <AlertCircle className="text-amber-600 shrink-0" size={24} />
           <div className="flex-1">
-            <p className="font-medium text-amber-900">Check-in de la semaine en attente</p>
-            <p className="text-sm text-amber-700">Prenez 2 minutes pour faire le point</p>
+            <p className="font-medium text-amber-900">Check-in en attente</p>
+            <p className="text-sm text-amber-700">{checkinWeekLabel}</p>
           </div>
           <Link href="/checkin" className="btn-primary shrink-0">Faire</Link>
         </div>
