@@ -174,16 +174,17 @@ export default function BugReportButton() {
         onClick={() => role === 'trainer' ? openTrainerPanel() : setOpen(true)}
         style={{
           position: 'fixed',
-          bottom: '5rem',
-          right: '1rem',
+          top: '50%',
+          right: '-12px',
+          transform: 'translateY(-50%)',
           zIndex: 9998,
         }}
-        className="w-10 h-10 rounded-full
-                   bg-gray-800/80 hover:bg-gray-800 backdrop-blur-sm
-                   text-white/80 hover:text-white
+        className="group w-10 h-10 rounded-full
+                   bg-gray-800/50 hover:bg-gray-800 backdrop-blur-sm
+                   text-white/50 hover:text-white
                    flex items-center justify-center
                    shadow-lg transition-all duration-200
-                   active:scale-90"
+                   active:scale-90 hover:translate-x-[-12px]"
         aria-label={role === 'trainer' ? 'Voir les signalements' : 'Signaler un bug'}
       >
         <Bug size={18} />
