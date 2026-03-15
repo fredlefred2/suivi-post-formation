@@ -125,7 +125,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
         }))} />
         <div className="h-16 sm:hidden" />
         <TeamMessagePopup />
-        <WhatsNewPopup />
+        <WhatsNewPopup userId={user.id} />
       </div>
     </OnboardingProvider>
   )

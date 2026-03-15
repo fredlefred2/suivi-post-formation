@@ -45,12 +45,14 @@ const updates: Update[] = [
   },
 ]
 
-export default function WhatsNewPopup() {
+export default function WhatsNewPopup({ userId }: { userId: string }) {
   const [visible, setVisible] = useState(false)
   const [animating, setAnimating] = useState(false)
 
+  const userKey = `${STORAGE_KEY}_${userId}`
+
   useEffect(() => {
-    const seen = localStorage.getItem(STORAGE_KEY)
+    const seen = localStorage.getItem(userKey)
     if (seen !== CURRENT_VERSION) {
       // Petit délai pour laisser la page charger
       setTimeout(() => {
@@ -58,13 +60,13 @@ export default function WhatsNewPopup() {
         requestAnimationFrame(() => setAnimating(true))
       }, 800)
     }
-  }, [])
+  }, [userKey])
 
   function handleDismiss() {
     setAnimating(false)
     setTimeout(() => {
       setVisible(false)
-      localStorage.setItem(STORAGE_KEY, CURRENT_VERSION)
+      localStorage.setItem(userKey, CURRENT_VERSION)
     }, 300)
   }
 

@@ -51,7 +51,9 @@ export default function RegisterPage() {
     } else {
       // Marquer "Quoi de neuf" comme vu pour les nouveaux inscrits
       // (ils n'ont pas besoin de voir les nouveautés, tout est nouveau pour eux)
-      localStorage.setItem(STORAGE_KEY, CURRENT_VERSION)
+      if (result?.userId) {
+        localStorage.setItem(`${STORAGE_KEY}_${result.userId}`, CURRENT_VERSION)
+      }
       window.location.href = '/'
     }
   }
