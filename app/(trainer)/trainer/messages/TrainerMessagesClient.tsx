@@ -104,6 +104,13 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
     }
   }, [])
 
+  // Verrouiller le scroll du body quand la modale est ouverte
+  useEffect(() => {
+    const original = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = original }
+  }, [])
+
   // Fetch conversations
   useEffect(() => {
     fetchConversations()
@@ -234,9 +241,9 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
     : allLearners
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ height: '100dvh', overscrollBehavior: 'none' }}>
-      {/* Header fixe */}
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-200 bg-white shrink-0">
+    <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
+      {/* Header — TOUJOURS visible */}
+      <div className="flex-none flex items-center gap-3 px-4 py-2.5 border-b border-gray-200 bg-white">
         {selected ? (
           <>
             <button
@@ -277,11 +284,11 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
       {/* Contenu */}
       {selected ? (
         <>
-          {/* Zone messages — seule partie qui scrolle */}
+          {/* Zone messages — SEULE partie qui scrolle */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50"
-            style={{ overscrollBehavior: 'contain' }}
+            className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50"
+            style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
             {loadingChat ? (
               <div className="space-y-3">
@@ -316,8 +323,8 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
             )}
           </div>
 
-          {/* Input fixe en bas — toujours visible */}
-          <div className="px-4 py-2.5 border-t border-gray-200 bg-white shrink-0" style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}>
+          {/* Input — TOUJOURS visible en bas */}
+          <div className="flex-none px-4 py-2.5 border-t border-gray-200 bg-white" style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}>
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}

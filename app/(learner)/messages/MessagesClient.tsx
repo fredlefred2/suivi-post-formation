@@ -42,9 +42,18 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      }
+    })
+  }, [])
+
+  // Verrouiller le scroll du body quand la modale est ouverte
+  useEffect(() => {
+    const original = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = original }
   }, [])
 
   useEffect(() => {
@@ -74,19 +83,7 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
     } catch { /* silencieux */ }
   }
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, scrollToBottom])
-
-  // Scroll to bottom when virtual keyboard opens (input focus)
-  useEffect(() => {
-    const handleResize = () => {
-      // Petit délai pour laisser le clavier se positionner
-      setTimeout(scrollToBottom, 150)
-    }
-    window.visualViewport?.addEventListener('resize', handleResize)
-    return () => window.visualViewport?.removeEventListener('resize', handleResize)
-  }, [scrollToBottom])
+  useEffect(() => { scrollToBottom() }, [messages, scrollToBottom])
 
   async function handleSend() {
     const text = input.trim()
@@ -122,9 +119,12 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ height: '100dvh', overscrollBehavior: 'none' }}>
-      {/* Header fixe */}
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-200 bg-white shrink-0">
+    <div
+      className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden"
+      style={{ height: '100dvh' }}
+    >
+      {/* ── Header ── TOUJOURS visible */}
+      <div className="flex-none flex items-center gap-3 px-4 py-2.5 border-b border-gray-200 bg-white">
         <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">
           {trainerName.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
         </div>
@@ -138,11 +138,11 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
         </button>
       </div>
 
-      {/* Zone messages — seule partie qui scrolle */}
+      {/* ── Messages ── SEULE zone qui scrolle */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50"
-        style={{ overscrollBehavior: 'contain' }}
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50"
+        style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
       >
         {loading ? (
           <div className="space-y-3">
@@ -177,15 +177,18 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
         )}
       </div>
 
-      {/* Input fixe en bas — toujours visible */}
-      <div className="px-4 py-2.5 border-t border-gray-200 bg-white shrink-0" style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}>
+      {/* ── Input ── TOUJOURS visible en bas */}
+      <div
+        className="flex-none px-4 py-2.5 border-t border-gray-200 bg-white"
+        style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}
+      >
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            onFocus={() => setTimeout(scrollToBottom, 200)}
+            onFocus={() => setTimeout(scrollToBottom, 300)}
             placeholder="Ton message…"
             rows={1}
             className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent max-h-24"
