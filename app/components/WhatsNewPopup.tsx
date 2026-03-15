@@ -15,38 +15,33 @@ type Update = {
 const updates: Update[] = [
   {
     icon: '💬',
-    title: 'Messagerie privée',
-    description: 'Tu peux maintenant échanger directement avec ton formateur via la messagerie.',
+    title: 'Échange avec ton formateur',
+    description: 'Tu peux maintenant lui envoyer un message privé directement depuis l\'appli. Clique sur l\'icône message en haut à droite.',
   },
   {
     icon: '📢',
-    title: 'Messages d\'équipe',
-    description: 'Ton formateur peut envoyer des messages à tout le groupe. Tu les verras apparaître à la connexion.',
+    title: 'Messages de ton formateur',
+    description: 'Ton formateur peut t\'envoyer un message à toi et à tout le groupe. Il apparaîtra automatiquement quand tu ouvres l\'appli.',
   },
   {
     icon: '🔥',
-    title: 'Streak & classement',
-    description: 'Suis ta série de check-ins consécutifs et découvre ton classement dans l\'équipe.',
+    title: 'Ta série de check-ins',
+    description: 'Plus tu fais tes check-ins chaque semaine sans en rater, plus ta série grandit ! Tu verras aussi ta place dans le classement de ton groupe.',
   },
   {
     icon: '🚀',
-    title: 'Niveaux de progression',
-    description: 'Veille → Impulsion → Rythme → Intensité → Propulsion : chaque action te fait avancer !',
+    title: 'Monte en puissance',
+    description: 'Chaque action que tu ajoutes te fait progresser : Veille → Impulsion → Rythme → Intensité → Propulsion. À toi de jouer !',
   },
   {
     icon: '❤️',
-    title: 'Likes & commentaires',
-    description: 'Ton formateur peut liker et commenter tes actions pour t\'encourager.',
-  },
-  {
-    icon: '📊',
-    title: 'Récap hebdo',
-    description: 'En début de semaine, un résumé de tes actions de la semaine précédente.',
+    title: 'Encouragements',
+    description: 'Ton formateur peut liker tes actions et te laisser des commentaires pour t\'encourager.',
   },
   {
     icon: '📅',
-    title: 'Check-in amélioré',
-    description: 'Le check-in est maintenant disponible du vendredi au lundi, avec un écran de célébration.',
+    title: 'Check-in du vendredi au lundi',
+    description: 'Chaque vendredi, fais le point sur ta semaine. Tu as jusqu\'au lundi pour le compléter.',
   },
 ]
 
@@ -96,7 +91,7 @@ export default function WhatsNewPopup() {
             <h2 className="text-lg font-bold text-white">Quoi de neuf ?</h2>
             <Sparkles size={22} className="text-amber-300" />
           </div>
-          <p className="text-xs text-indigo-200 mt-1">Version {CURRENT_VERSION}</p>
+          <p className="text-xs text-indigo-200 mt-1">Ton appli a évolué !</p>
         </div>
 
         {/* Updates list — scrollable */}
