@@ -124,7 +124,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
           shortLabel: label === 'Mes actions' ? 'Actions' : label === 'Tableau de bord' ? 'Accueil' : label,
         }))} />
         <div className="h-16 sm:hidden" />
-        <TeamMessagePopup />
+        <TeamMessagePopup userId={user.id} />
         <WhatsNewPopup userId={user.id} />
       </div>
     </OnboardingProvider>

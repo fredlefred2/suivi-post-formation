@@ -17,7 +17,7 @@ type TeamMsg = {
  * Phase 1 : popup non-fermable "Prénom Nom a envoyé un message à l'équipe" + bouton Lire
  * Phase 2 : le message apparaît lettre par lettre, 1s après la fin → auto-dismiss
  */
-export default function TeamMessagePopup() {
+export default function TeamMessagePopup({ userId }: { userId: string }) {
   const [message, setMessage] = useState<TeamMsg | null>(null)
   const [visible, setVisible] = useState(false)
   const [phase, setPhase] = useState<'announce' | 'reading'>('announce')
@@ -31,7 +31,8 @@ export default function TeamMessagePopup() {
       const { message: msg } = await res.json()
       if (!msg) return
 
-      const dismissed = localStorage.getItem(STORAGE_KEY)
+      const userKey = `${STORAGE_KEY}_${userId}`
+      const dismissed = localStorage.getItem(userKey)
       if (dismissed === msg.id) return
 
       setMessage(msg)
@@ -41,7 +42,7 @@ export default function TeamMessagePopup() {
     } catch {
       // Silent
     }
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     fetchLatest()
@@ -82,7 +83,7 @@ export default function TeamMessagePopup() {
   function handleDismiss() {
     setVisible(false)
     if (message) {
-      localStorage.setItem(STORAGE_KEY, message.id)
+      localStorage.setItem(`${STORAGE_KEY}_${userId}`, message.id)
     }
     if (timerRef.current) clearInterval(timerRef.current)
     setMessage(null)
