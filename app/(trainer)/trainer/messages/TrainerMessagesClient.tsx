@@ -336,7 +336,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           </div>
 
           {/* Input — TOUJOURS visible en bas */}
-          <div className="flex-none px-4 py-2.5 border-t border-gray-200 bg-white">
+          <div className="flex-none px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t border-gray-200 bg-white">
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
