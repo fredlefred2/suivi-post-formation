@@ -86,47 +86,66 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
   const [search, setSearch] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
-  // Conversation list state
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loadingConvs, setLoadingConvs] = useState(true)
 
-  // Chat state
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [loadingChat, setLoadingChat] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      }
+    })
   }, [])
 
-  // Verrouiller le scroll du body quand la modale est ouverte
+  // ── Adapter la taille au clavier virtuel iOS/Android ──
   useEffect(() => {
     const original = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = original }
-  }, [])
 
-  // Fetch conversations
-  useEffect(() => {
-    fetchConversations()
-  }, [])
+    function updateSize() {
+      const container = containerRef.current
+      if (!container) return
+      const vv = window.visualViewport
+      if (vv) {
+        container.style.height = `${vv.height}px`
+        container.style.top = `${vv.offsetTop}px`
+      } else {
+        container.style.height = '100vh'
+        container.style.top = '0px'
+      }
+      scrollToBottom()
+    }
+
+    updateSize()
+    window.visualViewport?.addEventListener('resize', updateSize)
+    window.visualViewport?.addEventListener('scroll', updateSize)
+
+    return () => {
+      document.body.style.overflow = original
+      window.visualViewport?.removeEventListener('resize', updateSize)
+      window.visualViewport?.removeEventListener('scroll', updateSize)
+    }
+  }, [scrollToBottom])
+
+  useEffect(() => { fetchConversations() }, [])
 
   async function fetchConversations() {
     try {
       const res = await fetch('/api/messages')
       if (!res.ok) return
       const { conversations: convs } = await res.json()
-      // Filtrer les conversations supprimées par le formateur
       const deleted = getDeletedConvs()
       const filtered = (convs ?? []).filter((conv: Conversation) => {
         const deletedAt = deleted[conv.userId]
         if (!deletedAt) return true
-        // Si un nouveau message est arrivé après la suppression, on réaffiche
         if (new Date(conv.lastMessageAt) > new Date(deletedAt)) {
           clearDeletedConv(conv.userId)
           return true
@@ -137,7 +156,6 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
     } catch { /* silencieux */ } finally { setLoadingConvs(false) }
   }
 
-  // Fetch messages when selected changes
   useEffect(() => {
     if (!selected) return
     setLoadingChat(true)
@@ -169,18 +187,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
     } catch { /* silencieux */ }
   }
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, scrollToBottom])
-
-  // Scroll to bottom when virtual keyboard opens
-  useEffect(() => {
-    const handleResize = () => {
-      setTimeout(scrollToBottom, 150)
-    }
-    window.visualViewport?.addEventListener('resize', handleResize)
-    return () => window.visualViewport?.removeEventListener('resize', handleResize)
-  }, [scrollToBottom])
+  useEffect(() => { scrollToBottom() }, [messages, scrollToBottom])
 
   async function handleSend() {
     if (!selected) return
@@ -241,7 +248,11 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
     : allLearners
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
+    <div
+      ref={containerRef}
+      className="fixed left-0 right-0 z-50 bg-white flex flex-col overflow-hidden"
+      style={{ top: 0, height: '100vh' }}
+    >
       {/* Header — TOUJOURS visible */}
       <div className="flex-none flex items-center gap-3 px-4 py-2.5 border-b border-gray-200 bg-white">
         {selected ? (
@@ -288,7 +299,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           <div
             ref={scrollRef}
             className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50"
-            style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+            style={{ overscrollBehavior: 'contain' }}
           >
             {loadingChat ? (
               <div className="space-y-3">
@@ -324,14 +335,13 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           </div>
 
           {/* Input — TOUJOURS visible en bas */}
-          <div className="flex-none px-4 py-2.5 border-t border-gray-200 bg-white" style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}>
+          <div className="flex-none px-4 py-2.5 border-t border-gray-200 bg-white">
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                onFocus={() => setTimeout(scrollToBottom, 200)}
                 placeholder="Votre message…"
                 rows={1}
                 className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent max-h-24"
@@ -347,8 +357,8 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           </div>
         </>
       ) : showNewMessage ? (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="flex-none flex items-center gap-2 px-4 py-3 border-b border-gray-100">
             <button onClick={() => setShowNewMessage(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
               <ArrowLeft size={18} />
             </button>
@@ -364,7 +374,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
               />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-100">
             {filteredLearners.map((learner) => (
               <button
                 key={learner.id}
@@ -385,7 +395,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {loadingConvs ? (
             <div className="space-y-3 p-4">
               {[1, 2, 3].map((i) => (
@@ -441,7 +451,6 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                       </div>
                     </div>
                   </button>
-                  {/* Bouton supprimer la conversation */}
                   {confirmDelete === conv.userId ? (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white border border-red-200 rounded-lg px-2 py-1 shadow-md z-10">
                       <span className="text-xs text-red-600 font-medium mr-1">Supprimer ?</span>

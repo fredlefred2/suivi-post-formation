@@ -38,6 +38,7 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
+  const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -49,12 +50,36 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
     })
   }, [])
 
-  // Verrouiller le scroll du body quand la modale est ouverte
+  // ── Adapter la taille au clavier virtuel iOS/Android ──
   useEffect(() => {
     const original = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = original }
-  }, [])
+
+    function updateSize() {
+      const container = containerRef.current
+      if (!container) return
+      const vv = window.visualViewport
+      if (vv) {
+        container.style.height = `${vv.height}px`
+        container.style.top = `${vv.offsetTop}px`
+      } else {
+        container.style.height = '100vh'
+        container.style.top = '0px'
+      }
+      // Scroll to bottom après resize (clavier ouvert/fermé)
+      scrollToBottom()
+    }
+
+    updateSize()
+    window.visualViewport?.addEventListener('resize', updateSize)
+    window.visualViewport?.addEventListener('scroll', updateSize)
+
+    return () => {
+      document.body.style.overflow = original
+      window.visualViewport?.removeEventListener('resize', updateSize)
+      window.visualViewport?.removeEventListener('scroll', updateSize)
+    }
+  }, [scrollToBottom])
 
   useEffect(() => {
     fetchMessages()
@@ -120,8 +145,9 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden"
-      style={{ height: '100dvh' }}
+      ref={containerRef}
+      className="fixed left-0 right-0 z-50 bg-white flex flex-col overflow-hidden"
+      style={{ top: 0, height: '100vh' }}
     >
       {/* ── Header ── TOUJOURS visible */}
       <div className="flex-none flex items-center gap-3 px-4 py-2.5 border-b border-gray-200 bg-white">
@@ -142,7 +168,7 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
       <div
         ref={scrollRef}
         className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50"
-        style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+        style={{ overscrollBehavior: 'contain' }}
       >
         {loading ? (
           <div className="space-y-3">
@@ -178,17 +204,13 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
       </div>
 
       {/* ── Input ── TOUJOURS visible en bas */}
-      <div
-        className="flex-none px-4 py-2.5 border-t border-gray-200 bg-white"
-        style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}
-      >
+      <div className="flex-none px-4 py-2.5 border-t border-gray-200 bg-white">
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            onFocus={() => setTimeout(scrollToBottom, 300)}
             placeholder="Ton message…"
             rows={1}
             className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent max-h-24"
