@@ -9,7 +9,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = 'install_dismissed_at'
-const REPROPOSE_DELAY = 1 * 24 * 60 * 60 * 1000 // 1 jour
+const SESSION_DISMISS_KEY = 'install_dismissed_session'
+const REPROPOSE_DELAY = 7 * 24 * 60 * 60 * 1000 // 7 jours
 
 /** Vérifie si l'app tourne en mode standalone (installée) */
 function isStandalone() {
@@ -20,8 +21,10 @@ function isStandalone() {
   return false
 }
 
-/** Vérifie si le dismiss est encore actif (< 4 jours) */
+/** Vérifie si le dismiss est encore actif */
 function isDismissed() {
+  // Si déjà fermé dans cette session de navigation → ne plus jamais réafficher
+  if (sessionStorage.getItem(SESSION_DISMISS_KEY)) return true
   const ts = localStorage.getItem(DISMISS_KEY)
   if (!ts) return false
   const elapsed = Date.now() - parseInt(ts, 10)
@@ -116,9 +119,10 @@ export default function InstallPrompt() {
     deferredPromptRef.current = null
   }
 
-  // ── Dismiss : stocker le timestamp ──
+  // ── Dismiss : stocker le timestamp + flag session ──
   function dismiss() {
     localStorage.setItem(DISMISS_KEY, Date.now().toString())
+    sessionStorage.setItem(SESSION_DISMISS_KEY, '1')
     setBannerType(null)
   }
 
