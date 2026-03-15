@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Send, ArrowLeft, Plus, Search, MessageCircle } from 'lucide-react'
+import { X, Send, ArrowLeft, Plus, Search, MessageCircle, Trash2 } from 'lucide-react'
 
 type Learner = { id: string; name: string }
 
@@ -23,6 +23,26 @@ type Conversation = {
   lastMessageAt: string
   lastMessageByMe: boolean
   unreadCount: number
+}
+
+const DELETED_CONVS_KEY = 'trainer_deleted_convs'
+
+function getDeletedConvs(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(DELETED_CONVS_KEY) || '{}')
+  } catch { return {} }
+}
+
+function setDeletedConv(userId: string) {
+  const deleted = getDeletedConvs()
+  deleted[userId] = new Date().toISOString()
+  localStorage.setItem(DELETED_CONVS_KEY, JSON.stringify(deleted))
+}
+
+function clearDeletedConv(userId: string) {
+  const deleted = getDeletedConvs()
+  delete deleted[userId]
+  localStorage.setItem(DELETED_CONVS_KEY, JSON.stringify(deleted))
 }
 
 function formatTime(dateStr: string): string {
@@ -64,6 +84,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
   const [selected, setSelected] = useState<{ userId: string; name: string } | null>(initialContact)
   const [showNewMessage, setShowNewMessage] = useState(false)
   const [search, setSearch] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   // Conversation list state
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -87,7 +108,19 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
       const res = await fetch('/api/messages')
       if (!res.ok) return
       const { conversations: convs } = await res.json()
-      setConversations(convs ?? [])
+      // Filtrer les conversations supprimées par le formateur
+      const deleted = getDeletedConvs()
+      const filtered = (convs ?? []).filter((conv: Conversation) => {
+        const deletedAt = deleted[conv.userId]
+        if (!deletedAt) return true
+        // Si un nouveau message est arrivé après la suppression, on réaffiche
+        if (new Date(conv.lastMessageAt) > new Date(deletedAt)) {
+          clearDeletedConv(conv.userId)
+          return true
+        }
+        return false
+      })
+      setConversations(filtered)
     } catch { /* silencieux */ } finally { setLoadingConvs(false) }
   }
 
@@ -165,12 +198,20 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
     setSelected({ userId, name })
     setShowNewMessage(false)
     setMessages([])
+    setConfirmDelete(null)
   }
 
   function handleBack() {
     setSelected(null)
     setInput('')
-    fetchConversations() // Refresh conversation list
+    setConfirmDelete(null)
+    fetchConversations()
+  }
+
+  function handleDeleteConversation(userId: string) {
+    setDeletedConv(userId)
+    setConversations(prev => prev.filter(c => c.userId !== userId))
+    setConfirmDelete(null)
   }
 
   const filteredLearners = search.trim()
@@ -197,7 +238,6 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           </>
         ) : (
           <>
-            <MessageCircle size={20} className="text-gray-600" />
             <p className="font-semibold text-sm text-gray-800 flex-1">Conversations</p>
             {!showNewMessage && (
               <button
@@ -345,35 +385,62 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           ) : (
             <div className="divide-y divide-gray-100">
               {conversations.map((conv) => (
-                <button
-                  key={conv.userId}
-                  onClick={() => handleSelect(conv.userId, `${conv.firstName} ${conv.lastName}`)}
-                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    {`${conv.firstName.charAt(0)}${conv.lastName.charAt(0)}`.toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
-                        {conv.firstName} {conv.lastName}
-                      </p>
-                      <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">
-                        {timeAgo(conv.lastMessageAt)}
-                      </span>
+                <div key={conv.userId} className="relative">
+                  <button
+                    onClick={() => handleSelect(conv.userId, `${conv.firstName} ${conv.lastName}`)}
+                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                      {`${conv.firstName.charAt(0)}${conv.lastName.charAt(0)}`.toUpperCase()}
                     </div>
-                    <div className="flex items-center justify-between mt-0.5">
-                      <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'text-gray-700 font-medium' : 'text-gray-400'}`}>
-                        {conv.lastMessageByMe ? 'Vous : ' : ''}{conv.lastMessage}
-                      </p>
-                      {conv.unreadCount > 0 && (
-                        <span className="ml-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-indigo-500 rounded-full px-1 flex-shrink-0">
-                          {conv.unreadCount}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
+                          {conv.firstName} {conv.lastName}
+                        </p>
+                        <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">
+                          {timeAgo(conv.lastMessageAt)}
                         </span>
-                      )}
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'text-gray-700 font-medium' : 'text-gray-400'}`}>
+                          {conv.lastMessageByMe ? 'Vous : ' : ''}{conv.lastMessage}
+                        </p>
+                        {conv.unreadCount > 0 && (
+                          <span className="ml-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-indigo-500 rounded-full px-1 flex-shrink-0">
+                            {conv.unreadCount}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                  {/* Bouton supprimer la conversation */}
+                  {confirmDelete === conv.userId ? (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white border border-red-200 rounded-lg px-2 py-1 shadow-md z-10">
+                      <span className="text-xs text-red-600 font-medium mr-1">Supprimer ?</span>
+                      <button
+                        onClick={() => handleDeleteConversation(conv.userId)}
+                        className="text-xs px-2 py-1 bg-red-500 text-white rounded font-medium hover:bg-red-600"
+                      >
+                        Oui
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(null)}
+                        className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded font-medium hover:bg-gray-200"
+                      >
+                        Non
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDelete(conv.userId)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-300 hover:text-red-400 transition-colors"
+                      aria-label="Supprimer la conversation"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}

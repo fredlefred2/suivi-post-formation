@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { submitCheckin } from './actions'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import type { Difficulty } from '@/lib/types'
 
@@ -15,8 +14,6 @@ const weatherOptions = [
   { value: 'stormy', emoji: '⛈️', label: 'Difficile', color: 'border-red-400 bg-red-100' },
 ]
 
-const scoreLabels = ['', 'Débutant', 'En cours', 'Intermédiaire', 'Avancé', 'Expert']
-
 export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe[]; weekLabel?: string; streak?: number }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -27,16 +24,40 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
     e.preventDefault()
     setError(null)
     setSubmitting(true)
+
     const formData = new FormData(e.currentTarget)
-    // Appel direct (sans startTransition) pour que le revalidatePath
-    // ne démonte pas le composant avant la célébration
-    const result = await submitCheckin(formData)
-    if (result?.error) {
-      setError(result.error)
-      setSubmitting(false)
-    } else {
+
+    // Construire le body JSON pour l'API route (pas de server action = pas de re-render auto)
+    const body = {
+      weather: formData.get('weather') as string,
+      what_worked: formData.get('what_worked') as string || null,
+      difficulties: formData.get('difficulties') as string || null,
+      axes: axes.map(axe => ({
+        id: axe.id,
+        score: parseInt(formData.get(`score_${axe.id}`) as string) || axe.initial_score,
+      })),
+    }
+
+    try {
+      const res = await fetch('/api/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Erreur lors de l\'enregistrement')
+        setSubmitting(false)
+        return
+      }
+
+      // Afficher la célébration — aucun revalidatePath ne viendra démonter le composant
       setShowCelebration(true)
-      setTimeout(() => { window.location.href = '/dashboard' }, 4000)
+      setTimeout(() => { window.location.href = '/dashboard' }, 5000)
+    } catch {
+      setError('Erreur réseau, réessaie.')
+      setSubmitting(false)
     }
   }
 
@@ -57,6 +78,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
         ) : (
           <p className="text-sm text-gray-500">Premier check-in de la série, continue ! 💪</p>
         )}
+        <p className="text-xs text-gray-400">Redirection dans quelques secondes…</p>
         <a href="/dashboard" className="btn-primary inline-block mt-2">
           Retour au dashboard
         </a>

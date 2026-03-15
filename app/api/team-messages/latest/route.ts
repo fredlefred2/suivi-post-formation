@@ -35,7 +35,7 @@ export async function GET() {
   // Get the latest team message from the trainer for this group
   const { data: msg } = await admin
     .from('team_messages')
-    .select('id, content, created_at, profiles!inner(first_name)')
+    .select('id, content, created_at, profiles!inner(first_name, last_name)')
     .eq('group_id', groupId)
     .eq('sender_id', trainerId)
     .order('created_at', { ascending: false })
@@ -46,13 +46,14 @@ export async function GET() {
     return NextResponse.json({ message: null })
   }
 
-  const p = msg.profiles as unknown as { first_name: string }
+  const p = msg.profiles as unknown as { first_name: string; last_name: string }
 
   return NextResponse.json({
     message: {
       id: msg.id,
       content: msg.content,
       senderFirstName: p.first_name,
+      senderLastName: p.last_name,
       createdAt: msg.created_at,
     },
   })
