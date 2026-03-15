@@ -152,7 +152,7 @@ export default function RegisterPage() {
               Se connecter
             </Link>
           </p>
-          <p className="text-center text-[11px] text-indigo-300/30 mt-4">V25.7</p>
+          <p className="text-center text-[11px] text-indigo-300/30 mt-4">V25.8</p>
         </div>
       </div>
     </div>
