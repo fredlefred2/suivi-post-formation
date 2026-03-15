@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { logout } from '@/app/(auth)/actions'
 import { LogOut } from 'lucide-react'
 import MobileDrawer from '@/app/components/MobileDrawer'
@@ -32,6 +33,29 @@ export default async function TrainerLayout({ children }: { children: React.Reac
 
   if (profile.role !== 'trainer') redirect('/dashboard')
 
+  // Récupérer tous les apprenants du formateur pour la messagerie instantanée
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data: groupsRaw } = await admin
+    .from('groups')
+    .select('id, group_members(learner_id, profiles!inner(id, first_name, last_name))')
+    .eq('trainer_id', user.id)
+
+  type MemberRow = { learner_id: string; profiles: { id: string; first_name: string; last_name: string } }
+  const allLearners: { id: string; name: string }[] = []
+  const seen = new Set<string>()
+  for (const g of groupsRaw ?? []) {
+    for (const m of (g.group_members ?? []) as unknown as MemberRow[]) {
+      if (!seen.has(m.learner_id)) {
+        seen.add(m.learner_id)
+        allLearners.push({ id: m.learner_id, name: `${m.profiles.first_name} ${m.profiles.last_name}` })
+      }
+    }
+  }
+  allLearners.sort((a, b) => a.name.localeCompare(b.name))
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* ── Header gradient fort ── */}
@@ -50,7 +74,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <MessageIcon variant="trainer" />
+            <MessageIcon variant="trainer" currentUserId={user.id} allLearners={allLearners} />
             <form action={logout}>
               <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">
                 <LogOut size={18} />

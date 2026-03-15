@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { logout } from '@/app/(auth)/actions'
 import { LayoutDashboard, Target, ClipboardCheck, Users, LogOut } from 'lucide-react'
 import MobileDrawer from '@/app/components/MobileDrawer'
@@ -37,6 +38,32 @@ export default async function LearnerLayout({ children }: { children: React.Reac
 
   if (profile.role !== 'learner') redirect('/trainer/dashboard')
 
+  // Récupérer le formateur de l'apprenant pour la messagerie instantanée
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data: membership } = await admin
+    .from('group_members')
+    .select('group_id, groups!inner(trainer_id)')
+    .eq('learner_id', user.id)
+    .limit(1)
+    .maybeSingle()
+
+  let trainerId = ''
+  let trainerName = 'Formateur'
+  if (membership) {
+    trainerId = (membership.groups as unknown as { trainer_id: string }).trainer_id
+    const { data: trainerProfile } = await admin
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('id', trainerId)
+      .single()
+    if (trainerProfile) {
+      trainerName = `${trainerProfile.first_name} ${trainerProfile.last_name}`
+    }
+  }
+
   return (
     <OnboardingProvider>
       <div className="min-h-screen flex flex-col">
@@ -56,7 +83,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <MessageIcon variant="learner" />
+              <MessageIcon variant="learner" currentUserId={user.id} trainerId={trainerId} trainerName={trainerName} />
               <NotificationBell />
               <form action={logout}>
                 <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">

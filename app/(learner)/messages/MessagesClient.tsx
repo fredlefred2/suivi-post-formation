@@ -30,9 +30,10 @@ type Props = {
   currentUserId: string
   trainerId: string
   trainerName: string
+  onClose?: () => void
 }
 
-export default function MessagesClient({ currentUserId, trainerId, trainerName }: Props) {
+export default function MessagesClient({ currentUserId, trainerId, trainerName, onClose }: Props) {
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -156,7 +157,7 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
         </div>
         <p className="font-semibold text-sm text-gray-800 flex-1 truncate">{trainerName}</p>
         <button
-          onClick={() => router.back()}
+          onClick={() => onClose ? onClose() : router.back()}
           className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-900 transition-colors shrink-0"
           aria-label="Fermer"
         >

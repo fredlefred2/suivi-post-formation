@@ -77,9 +77,10 @@ type Props = {
   currentUserId: string
   initialContact: { userId: string; name: string } | null
   allLearners: Learner[]
+  onClose?: () => void
 }
 
-export default function TrainerMessagesClient({ currentUserId, initialContact, allLearners }: Props) {
+export default function TrainerMessagesClient({ currentUserId, initialContact, allLearners, onClose }: Props) {
   const router = useRouter()
   const [selected, setSelected] = useState<{ userId: string; name: string } | null>(initialContact)
   const [showNewMessage, setShowNewMessage] = useState(false)
@@ -284,7 +285,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           </>
         )}
         <button
-          onClick={() => router.back()}
+          onClick={() => onClose ? onClose() : router.back()}
           className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-900 transition-colors shrink-0"
           aria-label="Fermer"
         >
