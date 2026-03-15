@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { MessageCircle } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
@@ -32,6 +33,10 @@ export default function MessageIcon(props: Props) {
   const { variant, currentUserId } = props
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Nécessaire pour createPortal côté client
+  useEffect(() => { setMounted(true) }, [])
 
   const fetchUnread = useCallback(async () => {
     try {
@@ -70,6 +75,29 @@ export default function MessageIcon(props: Props) {
     fetchUnread()
   }
 
+  // Rendu de l'overlay via createPortal pour éviter l'héritage de styles du header
+  const overlay = open && mounted ? createPortal(
+    <>
+      {variant === 'learner' && (
+        <MessagesClient
+          currentUserId={currentUserId}
+          trainerId={props.trainerId}
+          trainerName={props.trainerName}
+          onClose={handleClose}
+        />
+      )}
+      {variant === 'trainer' && (
+        <TrainerMessagesClient
+          currentUserId={currentUserId}
+          initialContact={null}
+          allLearners={props.allLearners}
+          onClose={handleClose}
+        />
+      )}
+    </>,
+    document.body
+  ) : null
+
   return (
     <>
       <button
@@ -84,24 +112,7 @@ export default function MessageIcon(props: Props) {
           </span>
         )}
       </button>
-
-      {open && variant === 'learner' && (
-        <MessagesClient
-          currentUserId={currentUserId}
-          trainerId={props.trainerId}
-          trainerName={props.trainerName}
-          onClose={handleClose}
-        />
-      )}
-
-      {open && variant === 'trainer' && (
-        <TrainerMessagesClient
-          currentUserId={currentUserId}
-          initialContact={null}
-          allLearners={props.allLearners}
-          onClose={handleClose}
-        />
-      )}
+      {overlay}
     </>
   )
 }

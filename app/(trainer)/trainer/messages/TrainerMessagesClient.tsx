@@ -251,7 +251,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
   return (
     <div
       ref={containerRef}
-      className="fixed left-0 right-0 z-50 bg-white flex flex-col overflow-hidden"
+      className="fixed inset-0 z-[9999] bg-white flex flex-col overflow-hidden"
       style={{ top: 0, height: '100vh' }}
     >
       {/* Header — TOUJOURS visible */}
