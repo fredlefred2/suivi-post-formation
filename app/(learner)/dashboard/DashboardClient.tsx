@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { AlertCircle, CalendarCheck, Zap, TrendingUp } from 'lucide-react'
+import { AlertCircle, CalendarCheck, Zap, TrendingUp, Plus, Flame, Trophy } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
 import { MARKERS, getCurrentLevelIndex, getProgress, getCurrentLevel } from '@/lib/axeHelpers'
 
@@ -23,6 +23,7 @@ type AxeItem = {
 type Props = {
   firstName: string
   checkinDone: boolean
+  checkinWeekLabel: string
   totalCheckins: number
   expectedCheckins: number
   totalActions: number
@@ -31,11 +32,16 @@ type Props = {
   axesCount: number
   axes: AxeItem[]
   stepsData: { label: string; done: boolean }[]
+  streak: number
+  rank: number | null
+  groupSize: number | null
+  lastWeekActions: number
 }
 
 export default function DashboardClient({
   firstName,
   checkinDone,
+  checkinWeekLabel,
   totalCheckins,
   expectedCheckins,
   totalActions,
@@ -44,6 +50,10 @@ export default function DashboardClient({
   axesCount,
   axes,
   stepsData,
+  streak,
+  rank,
+  groupSize,
+  lastWeekActions,
 }: Props) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -81,21 +91,36 @@ export default function DashboardClient({
 
   const weatherEmoji = lastWeather ? WEATHER_ICONS[lastWeather] ?? '❓' : null
 
+  // Récap hebdo visible lundi/mardi (jour 1-2)
+  const dayOfWeek = new Date().getDay()
+  const showRecap = (dayOfWeek === 1 || dayOfWeek === 2) && lastWeekActions > 0
+
   return (
-    <div className="space-y-6 pb-4">
+    <div className="space-y-6 pb-20 sm:pb-4">
 
       {/* En-tête */}
       <div>
         <h1 className="page-title">Bonjour {firstName} 👋</h1>
       </div>
 
-      {/* Alerte check-in */}
+      {/* Récap semaine dernière (lundi/mardi) */}
+      {showRecap && (
+        <div className="rounded-xl px-4 py-3 flex items-center gap-3 bg-indigo-50 border border-indigo-200">
+          <span className="text-lg">📊</span>
+          <p className="text-sm text-indigo-800">
+            <span className="font-semibold">Semaine dernière :</span> +{lastWeekActions} action{lastWeekActions > 1 ? 's' : ''}
+            {streak > 1 && <span> · 🔥 {streak} semaines d&apos;affilée</span>}
+          </p>
+        </div>
+      )}
+
+      {/* Alerte check-in (visible ven→lun si pas encore fait) */}
       {!checkinDone && (
         <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-100 border border-amber-300">
           <AlertCircle className="text-amber-600 shrink-0" size={24} />
           <div className="flex-1">
-            <p className="font-medium text-amber-900">Check-in de la semaine en attente</p>
-            <p className="text-sm text-amber-700">Prenez 2 minutes pour faire le point</p>
+            <p className="font-medium text-amber-900">Check-in en attente</p>
+            <p className="text-sm text-amber-700">{checkinWeekLabel}</p>
           </div>
           <Link href="/checkin" className="btn-primary shrink-0">Faire</Link>
         </div>
@@ -135,6 +160,12 @@ export default function DashboardClient({
               {expectedCheckins > 0 && <span className="text-sm font-normal text-gray-400">/{expectedCheckins}</span>}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">Check-ins</p>
+            {streak >= 2 && (
+              <div className="flex items-center justify-center gap-1 mt-1.5">
+                <Flame size={13} className="text-orange-500" />
+                <span className="text-xs font-semibold text-orange-600">{streak} sem.</span>
+              </div>
+            )}
           </div>
           {/* Dernière météo */}
           <div className="text-center px-2 flex flex-col items-center justify-center">
@@ -162,6 +193,14 @@ export default function DashboardClient({
             <Zap size={28} className="mx-auto text-amber-500 mb-1.5" />
             <p className="text-3xl font-bold text-gray-800">{animatedActions}</p>
             <p className="text-xs text-gray-500 mt-0.5">Actions menées</p>
+            {rank && groupSize && groupSize > 1 && (
+              <div className="flex items-center justify-center gap-1 mt-1.5">
+                <Trophy size={13} className="text-amber-500" />
+                <span className="text-xs font-semibold text-amber-600">
+                  {rank === 1 ? '🥇 1er' : rank === 2 ? '🥈 2e' : rank === 3 ? '🥉 3e' : `${rank}e`} / {groupSize}
+                </span>
+              </div>
+            )}
           </div>
           {/* Delta cette semaine */}
           <div className="text-center px-2">
@@ -260,6 +299,21 @@ export default function DashboardClient({
             </div>
           )}
         </div>
+      )}
+
+      {/* FAB — Bouton flottant "Ajouter une action" (mobile) */}
+      {axes.length > 0 && (
+        <Link
+          href="/axes"
+          className="fixed bottom-20 right-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
+            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.4)',
+          }}
+          title="Ajouter une action"
+        >
+          <Plus size={24} strokeWidth={2.5} />
+        </Link>
       )}
     </div>
   )

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   X,
   LayoutDashboard, Target, ClipboardCheck,
@@ -34,8 +34,20 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
   let onboardingDisabled = false
   try { onboardingDisabled = useOnboarding().isOnboarding } catch { /* outside provider (trainer layout) */ }
 
+  const searchParams = useSearchParams()
   const navItems = variant === 'trainer' ? trainerNavItems : learnerNavItems
   const isTrainer = variant === 'trainer'
+
+  // Persist group selection across trainer pages
+  const getGroupHref = useCallback((href: string) => {
+    if (!isTrainer) return href
+    // Read from URL first, then localStorage
+    const group = searchParams.get('group') || (typeof window !== 'undefined' ? localStorage.getItem('trainer_selected_group') : null)
+    if (group && (href === '/trainer/dashboard' || href === '/trainer/apprenants')) {
+      return `${href}?group=${group}`
+    }
+    return href
+  }, [isTrainer, searchParams])
 
   useEffect(() => {
     setOpen(false)
@@ -91,7 +103,7 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
                 return (
                   <Link
                     key={href}
-                    href={href}
+                    href={getGroupHref(href)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                       isActive
                         ? 'text-indigo-800 bg-indigo-100'

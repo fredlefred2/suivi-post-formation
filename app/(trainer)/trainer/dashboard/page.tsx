@@ -201,6 +201,7 @@ export default async function TrainerDashboardPage({
       unassignedLearners={unassignedLearners}
       learnerAxesMap={learnerAxesMap}
       initialGroup={searchParams.group}
+      currentUserId={user!.id}
     />
   )
 }

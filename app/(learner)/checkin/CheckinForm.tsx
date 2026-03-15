@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { submitCheckin } from './actions'
+import { useState } from 'react'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import type { Difficulty } from '@/lib/types'
 
 type Axe = { id: string; subject: string; initial_score: number; difficulty: Difficulty }
+
+const WEATHER_EMOJI_MAP: Record<string, string> = { sunny: '☀️', cloudy: '⛅', stormy: '⛈️' }
 
 const weatherOptions = [
   { value: 'sunny', emoji: '☀️', label: 'Ça roule !', color: 'border-amber-400 bg-amber-100' },
@@ -13,22 +14,76 @@ const weatherOptions = [
   { value: 'stormy', emoji: '⛈️', label: 'Difficile', color: 'border-red-400 bg-red-100' },
 ]
 
-const scoreLabels = ['', 'Débutant', 'En cours', 'Intermédiaire', 'Avancé', 'Expert']
-
-export default function CheckinForm({ axes }: { axes: Axe[] }) {
-  const [isPending, startTransition] = useTransition()
+export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe[]; weekLabel?: string; streak?: number }) {
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedWeather, setSelectedWeather] = useState<string>('')
+  const [showCelebration, setShowCelebration] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    setSubmitting(true)
+
     const formData = new FormData(e.currentTarget)
-    startTransition(async () => {
-      const result = await submitCheckin(formData)
-      if (result?.error) setError(result.error)
-      else window.location.href = '/dashboard'
-    })
+
+    // Construire le body JSON pour l'API route (pas de server action = pas de re-render auto)
+    const body = {
+      weather: formData.get('weather') as string,
+      what_worked: formData.get('what_worked') as string || null,
+      difficulties: formData.get('difficulties') as string || null,
+      axes: axes.map(axe => ({
+        id: axe.id,
+        score: parseInt(formData.get(`score_${axe.id}`) as string) || axe.initial_score,
+      })),
+    }
+
+    try {
+      const res = await fetch('/api/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Erreur lors de l\'enregistrement')
+        setSubmitting(false)
+        return
+      }
+
+      // Afficher la célébration — aucun revalidatePath ne viendra démonter le composant
+      setShowCelebration(true)
+      setTimeout(() => { window.location.href = '/dashboard' }, 5000)
+    } catch {
+      setError('Erreur réseau, réessaie.')
+      setSubmitting(false)
+    }
+  }
+
+  if (showCelebration) {
+    const newStreak = streak + 1
+    return (
+      <div className="card text-center py-10 space-y-4 animate-fade-in-up">
+        <div className="text-6xl">✅</div>
+        <h2 className="text-xl font-bold text-gray-900">Check-in validé !</h2>
+        {selectedWeather && (
+          <p className="text-4xl">{WEATHER_EMOJI_MAP[selectedWeather] ?? ''}</p>
+        )}
+        {newStreak >= 2 ? (
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-2xl">🔥</span>
+            <p className="text-lg font-semibold text-orange-600">{newStreak} semaines d&apos;affilée !</p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">Premier check-in de la série, continue ! 💪</p>
+        )}
+        <p className="text-xs text-gray-400">Redirection dans quelques secondes…</p>
+        <a href="/dashboard" className="btn-primary inline-block mt-2">
+          Retour au dashboard
+        </a>
+      </div>
+    )
   }
 
   return (
@@ -40,8 +95,8 @@ export default function CheckinForm({ axes }: { axes: Axe[] }) {
 
       {/* Météo */}
       <div className="card">
-        <h2 className="section-title mb-1">Comment s&apos;est passée cette semaine ? *</h2>
-        <p className="text-sm text-gray-400 mb-4">Votre météo générale</p>
+        <h2 className="section-title mb-1">Comment s&apos;est passée ta semaine ? *</h2>
+        <p className="text-sm text-gray-400 mb-4">{weekLabel ? `${weekLabel} — Ta météo générale` : 'Ta météo générale'}</p>
         <div className="grid grid-cols-3 gap-3">
           {weatherOptions.map((opt) => {
             const isSelected = selectedWeather === opt.value
@@ -100,8 +155,8 @@ export default function CheckinForm({ axes }: { axes: Axe[] }) {
 
       {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 
-      <button type="submit" disabled={isPending} className="btn-primary w-full py-3 text-base">
-        {isPending ? 'Enregistrement...' : 'Valider mon check-in ✓'}
+      <button type="submit" disabled={submitting} className="btn-primary w-full py-3 text-base">
+        {submitting ? 'Enregistrement...' : 'Valider mon check-in ✓'}
       </button>
     </form>
   )

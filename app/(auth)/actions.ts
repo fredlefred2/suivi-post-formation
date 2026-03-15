@@ -106,7 +106,7 @@ export async function register(formData: FormData) {
     return { error: 'Erreur lors de la création du compte.' }
   }
 
-  return { success: true, role }
+  return { success: true, role, userId: data.user!.id }
 }
 
 export async function getTrainers() {

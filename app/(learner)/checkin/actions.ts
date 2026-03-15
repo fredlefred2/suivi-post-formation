@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentWeek } from '@/lib/utils'
+import { getCheckinContext } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
 
 export async function submitCheckin(formData: FormData) {
@@ -9,7 +9,12 @@ export async function submitCheckin(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Non authentifié' }
 
-  const { week, year } = getCurrentWeek()
+  const checkinCtx = getCheckinContext()
+
+  // Vérifier que la fenêtre est ouverte (ven→lun)
+  if (!checkinCtx.isOpen) return { error: 'Le check-in n\'est disponible que du vendredi au lundi.' }
+
+  const { checkinWeek: week, checkinYear: year } = checkinCtx
 
   // Vérifier si déjà fait cette semaine
   const { data: existing } = await supabase
@@ -20,7 +25,7 @@ export async function submitCheckin(formData: FormData) {
     .eq('year', year)
     .maybeSingle()
 
-  if (existing) return { error: 'Vous avez déjà effectué votre check-in cette semaine.' }
+  if (existing) return { error: 'Tu as déjà effectué ton check-in pour cette semaine.' }
 
   // Créer le check-in
   const { error: checkinError } = await supabase.from('checkins').insert({
@@ -49,6 +54,8 @@ export async function submitCheckin(formData: FormData) {
     }
   }
 
+  // Ne PAS revalider /checkin ici : la célébration doit rester visible
+  // avant la redirection vers /dashboard. La page checkin sera fraîche
+  // au prochain chargement complet (window.location.href).
   revalidatePath('/dashboard')
-  revalidatePath('/checkin')
 }

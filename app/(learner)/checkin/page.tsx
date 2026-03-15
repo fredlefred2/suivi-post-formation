@@ -1,18 +1,18 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentWeek, formatWeek } from '@/lib/utils'
+import { formatWeek, calculateStreak, getCheckinContext } from '@/lib/utils'
 import { WEATHER_LABELS, WEATHER_COLORS } from '@/lib/types'
 import CheckinForm from './CheckinForm'
 
 export default async function CheckinPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const { week, year } = getCurrentWeek()
+  const checkinCtx = getCheckinContext()
 
   const [{ data: axes }, { data: existingCheckin }, { data: allCheckins }] = await Promise.all([
     supabase.from('axes').select('id, subject, initial_score, difficulty').eq('learner_id', user!.id).order('created_at'),
-    supabase.from('checkins').select('*').eq('learner_id', user!.id).eq('week_number', week).eq('year', year).maybeSingle(),
+    supabase.from('checkins').select('*').eq('learner_id', user!.id).eq('week_number', checkinCtx.checkinWeek).eq('year', checkinCtx.checkinYear).maybeSingle(),
     supabase.from('checkins').select('*').eq('learner_id', user!.id).order('year', { ascending: false }).order('week_number', { ascending: false }),
   ])
 
@@ -53,6 +53,25 @@ export default async function CheckinPage() {
     </div>
   ) : null
 
+  // Fenêtre fermée (mardi → jeudi)
+  if (!checkinCtx.isOpen) {
+    return (
+      <div className="space-y-6 pb-4">
+        <h1 className="page-title">Check-in hebdomadaire</h1>
+        <div className="card text-center py-10">
+          <div className="text-4xl mb-3">📅</div>
+          <h2 className="font-semibold text-gray-900 mb-1">
+            Pas de check-in pour le moment
+          </h2>
+          <p className="text-sm text-gray-500">
+            Le check-in sera disponible à partir de vendredi.
+          </p>
+        </div>
+        {historySection}
+      </div>
+    )
+  }
+
   if (existingCheckin) {
     return (
       <div className="space-y-6 pb-4">
@@ -60,10 +79,10 @@ export default async function CheckinPage() {
         <div className="card text-center py-10">
           <div className="text-4xl mb-3">✅</div>
           <h2 className="font-semibold text-gray-900 mb-1">
-            Check-in de la semaine {week} déjà effectué !
+            Check-in de la {checkinCtx.weekLabel} déjà effectué !
           </h2>
           <p className="text-sm text-gray-500">
-            Rendez-vous la semaine prochaine.
+            Rendez-vous vendredi prochain.
           </p>
         </div>
         {historySection}
@@ -89,9 +108,16 @@ export default async function CheckinPage() {
     <div className="space-y-6 pb-4">
       <div>
         <h1 className="page-title">Check-in hebdomadaire</h1>
-        <p className="text-sm text-gray-500 mt-1">{formatWeek(week, year)}</p>
+        <p className="text-sm text-gray-500 mt-1">{checkinCtx.weekLabel}</p>
       </div>
-      <CheckinForm axes={axes} />
+      <CheckinForm
+        axes={axes}
+        weekLabel={checkinCtx.weekLabel}
+        streak={calculateStreak(
+          (allCheckins ?? []).map(c => ({ week_number: c.week_number, year: c.year })),
+          checkinCtx.checkinWeek, checkinCtx.checkinYear
+        )}
+      />
       {historySection}
     </div>
   )

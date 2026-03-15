@@ -58,6 +58,7 @@ type RecentAction = {
 }
 
 type Props = {
+  groupId: string
   groupName: string
   membersCount: number
   totalActions: number
@@ -70,6 +71,7 @@ type Props = {
 }
 
 export default function TeamClient({
+  groupId,
   groupName,
   membersCount,
   totalActions,

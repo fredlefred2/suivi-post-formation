@@ -37,6 +37,15 @@ export function getCurrentLevel(count: number) {
   return              { label: 'Propulsion',   icon: '🚀' }
 }
 
+// Infos sur le prochain niveau (pour les toasts "encore X pour...")
+export function getNextLevel(count: number): { icon: string; label: string; delta: number } | null {
+  const dyn = getDynamique(count)
+  if (dyn.delta === 0) return null // Déjà au max (Propulsion)
+  const nextCount = count + dyn.delta
+  const next = getCurrentLevel(nextCount)
+  return { icon: next.icon, label: next.label, delta: dyn.delta }
+}
+
 // Icône de phase selon le rang chronologique de l'action (1-indexed)
 export function getActionPhaseIcon(rank: number) {
   if (rank <= 2) return '👣'
