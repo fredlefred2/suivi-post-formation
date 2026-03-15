@@ -359,13 +359,15 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                       >
                         <Pencil size={15} />
                       </button>
-                      <button
-                        onClick={() => { setDeletingAxeId(axe.id); setDeletingAxeStep(1) }}
-                        className="opacity-40 hover:opacity-80 transition-opacity p-1"
-                        title="Supprimer cet axe"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      {axes.length > 1 && (
+                        <button
+                          onClick={() => { setDeletingAxeId(axe.id); setDeletingAxeStep(1) }}
+                          className="opacity-40 hover:opacity-80 transition-opacity p-1"
+                          title="Supprimer cet axe"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
                     </div>
                   </div>
 

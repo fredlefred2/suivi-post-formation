@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Send, ArrowLeft } from 'lucide-react'
+import { X, Send } from 'lucide-react'
 
 type Message = {
   id: string
@@ -41,6 +41,12 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [])
+
   useEffect(() => {
     fetchMessages()
     markAsRead()
@@ -69,8 +75,18 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
   }
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [messages])
+    scrollToBottom()
+  }, [messages, scrollToBottom])
+
+  // Scroll to bottom when virtual keyboard opens (input focus)
+  useEffect(() => {
+    const handleResize = () => {
+      // Petit délai pour laisser le clavier se positionner
+      setTimeout(scrollToBottom, 150)
+    }
+    window.visualViewport?.addEventListener('resize', handleResize)
+    return () => window.visualViewport?.removeEventListener('resize', handleResize)
+  }, [scrollToBottom])
 
   async function handleSend() {
     const text = input.trim()
@@ -106,31 +122,28 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col">
+    <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ height: '100dvh', overscrollBehavior: 'none' }}>
       {/* Header fixe */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-white shrink-0">
-        <button
-          onClick={() => router.back()}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-          aria-label="Retour"
-        >
-          <ArrowLeft size={20} className="text-gray-600" />
-        </button>
-        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
+      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-200 bg-white shrink-0">
+        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">
           {trainerName.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
         </div>
-        <p className="font-semibold text-sm text-gray-800 flex-1">{trainerName}</p>
+        <p className="font-semibold text-sm text-gray-800 flex-1 truncate">{trainerName}</p>
         <button
           onClick={() => router.back()}
-          className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-900 transition-colors"
+          className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-900 transition-colors shrink-0"
           aria-label="Fermer"
         >
           <X size={18} strokeWidth={2.5} />
         </button>
       </div>
 
-      {/* Zone messages scrollable */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-gray-50">
+      {/* Zone messages — seule partie qui scrolle */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50"
+        style={{ overscrollBehavior: 'contain' }}
+      >
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -164,14 +177,15 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
         )}
       </div>
 
-      {/* Input fixe en bas */}
-      <div className="px-4 py-3 border-t border-gray-200 bg-white shrink-0">
+      {/* Input fixe en bas — toujours visible */}
+      <div className="px-4 py-2.5 border-t border-gray-200 bg-white shrink-0" style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}>
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onFocus={() => setTimeout(scrollToBottom, 200)}
             placeholder="Ton message…"
             rows={1}
             className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent max-h-24"
@@ -179,7 +193,7 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName }
           <button
             onClick={handleSend}
             disabled={!input.trim() || sending}
-            className="p-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90"
+            className="p-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90 shrink-0"
           >
             <Send size={18} />
           </button>
