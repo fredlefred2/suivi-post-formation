@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { register, getTrainers } from '../actions'
+import { CURRENT_VERSION, STORAGE_KEY } from '../../components/WhatsNewPopup'
 
 type Trainer = { id: string; first_name: string; last_name: string }
 
@@ -48,6 +49,9 @@ export default function RegisterPage() {
       setError(result.error)
       setLoading(false)
     } else {
+      // Marquer "Quoi de neuf" comme vu pour les nouveaux inscrits
+      // (ils n'ont pas besoin de voir les nouveautés, tout est nouveau pour eux)
+      localStorage.setItem(STORAGE_KEY, CURRENT_VERSION)
       window.location.href = '/'
     }
   }

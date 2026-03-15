@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { X, Sparkles } from 'lucide-react'
 
-const CURRENT_VERSION = '25.8.3'
-const STORAGE_KEY = 'whats_new_seen'
+export const CURRENT_VERSION = '25.8.3'
+export const STORAGE_KEY = 'whats_new_seen'
 
 type Update = {
   icon: string
@@ -16,32 +16,32 @@ const updates: Update[] = [
   {
     icon: '💬',
     title: 'Échange avec ton formateur',
-    description: 'Tu peux maintenant lui envoyer un message privé directement depuis l\'appli. Clique sur l\'icône message en haut à droite.',
+    description: 'Tu peux maintenant envoyer et recevoir des messages privés avec ton formateur. Clique sur l\'icône message en haut à droite.',
   },
   {
     icon: '📢',
-    title: 'Messages de ton formateur',
-    description: 'Ton formateur peut t\'envoyer un message à toi et à tout le groupe. Il apparaîtra automatiquement quand tu ouvres l\'appli.',
+    title: 'Messages de groupe',
+    description: 'Ton formateur peut envoyer un message à tout le groupe. Il s\'affiche automatiquement quand tu ouvres l\'appli.',
+  },
+  {
+    icon: '✏️',
+    title: 'Modifie tes axes',
+    description: 'Tu peux maintenant modifier le sujet, la description et la difficulté de tes axes de progrès à tout moment.',
   },
   {
     icon: '🔥',
-    title: 'Ta série de check-ins',
-    description: 'Plus tu fais tes check-ins chaque semaine sans en rater, plus ta série grandit ! Tu verras aussi ta place dans le classement de ton groupe.',
-  },
-  {
-    icon: '🚀',
-    title: 'Monte en puissance',
-    description: 'Chaque action que tu ajoutes te fait progresser : Veille → Impulsion → Rythme → Intensité → Propulsion. À toi de jouer !',
-  },
-  {
-    icon: '❤️',
-    title: 'Encouragements',
-    description: 'Ton formateur peut liker tes actions et te laisser des commentaires pour t\'encourager.',
+    title: 'Série de check-ins',
+    description: 'Plus tu fais tes check-ins chaque semaine sans en rater, plus ta série grandit ! Tu vois ta place dans le classement du groupe.',
   },
   {
     icon: '📅',
-    title: 'Check-in du vendredi au lundi',
+    title: 'Check-in : vendredi → lundi',
     description: 'Chaque vendredi, fais le point sur ta semaine. Tu as jusqu\'au lundi pour le compléter.',
+  },
+  {
+    icon: '📲',
+    title: 'Installe l\'appli',
+    description: 'Tu peux installer YAPLUKA sur ton téléphone comme une vraie appli. Accepte simplement la proposition quand elle apparaît !',
   },
 ]
 
