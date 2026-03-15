@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
+import { LayoutDashboard, Target, ClipboardCheck, Users, MessageCircle, Bell } from 'lucide-react'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
 
@@ -29,10 +29,32 @@ export default function OnboardingFlow({
 
   useEffect(() => {
     const stored = getOnboardingAck(userId)
-    // Fallback : si l'apprenant a déjà des actions, il a déjà utilisé l'app
-    // → on auto-complète les étapes 5-8 (stockées uniquement en localStorage)
+    const isOnboardingDone = stored['menu-tour'] === true
+
+    // Vérifier si on est dans une session d'onboarding active
+    const sessionKey = `onboarding_session_${userId}`
+    const isActiveSession = sessionStorage.getItem(sessionKey) === 'true'
+
+    // Si l'apprenant a >= 1 axe et n'est PAS dans une session d'onboarding active
+    // → auto-compléter tout l'onboarding (il est revenu après avoir quitté)
+    if (axesCount >= 1 && !isOnboardingDone && !isActiveSession) {
+      const allSteps = ['welcome', 'axis-1', 'axis-2', 'axis-3', 'first-action', 'edit-delete', 'feedback-intro', 'progression', 'checkin', 'menu-tour']
+      for (const step of allSteps) {
+        if (!stored[step]) {
+          stored[step] = true
+          acknowledgeStep(step, userId)
+        }
+      }
+    }
+
+    // Si l'apprenant a 0 axes et l'onboarding n'est pas terminé → démarrer la session
+    if (axesCount === 0 && !isOnboardingDone) {
+      sessionStorage.setItem(sessionKey, 'true')
+    }
+
+    // Auto-compléter les étapes de démo si l'apprenant a déjà des actions (legacy)
     if (totalActions >= 1) {
-      const autoSteps = ['first-action', 'edit-delete', 'progression', 'checkin', 'menu-tour']
+      const autoSteps = ['first-action', 'edit-delete', 'feedback-intro', 'progression', 'checkin', 'menu-tour']
       for (const step of autoSteps) {
         if (!stored[step]) {
           stored[step] = true
@@ -40,13 +62,25 @@ export default function OnboardingFlow({
         }
       }
     }
+
     setAck(stored)
     setMounted(true)
-  }, [totalActions, userId])
+  }, [axesCount, totalActions, userId])
 
   function acknowledge(stepId: string) {
     acknowledgeStep(stepId, userId)
     setAck((prev) => ({ ...prev, [stepId]: true }))
+  }
+
+  function skipAxis2() {
+    acknowledgeStep('skip-axis-2', userId)
+    acknowledgeStep('skip-axis-3', userId) // Si on saute le 2e, on saute aussi le 3e
+    setAck((prev) => ({ ...prev, 'skip-axis-2': true, 'skip-axis-3': true }))
+  }
+
+  function skipAxis3() {
+    acknowledgeStep('skip-axis-3', userId)
+    setAck((prev) => ({ ...prev, 'skip-axis-3': true }))
   }
 
   const steps: {
@@ -58,20 +92,21 @@ export default function OnboardingFlow({
     extra?: React.ReactNode
     isCompleted: boolean
     cta: { label: string; href?: string; action?: () => void }
+    skipAction?: () => void
   }[] = [
     // ── Étape 1 : Bienvenue ──
     {
       id: 'welcome',
       title: `Bienvenue ${firstName} !`,
       icon: 'yapluka',
-      description: 'YAPLUKA vous accompagne pour transformer votre formation en actions concrètes. Voici le programme :',
+      description: 'YAPLUKA t\'accompagne pour transformer ta formation en actions concrètes. Voici le programme :',
       extra: (
         <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
           {[
-            { n: '1', text: <>Définissez <strong>3 axes</strong> de progrès</> },
-            { n: '2', text: <>Ajoutez une <strong>action concrète</strong></> },
-            { n: '3', text: <>Découvrez la <strong>dynamique</strong> de progression</> },
-            { n: '4', text: <>Comprenez le <strong>check-in</strong> hebdomadaire</> },
+            { n: '1', text: <>Définis tes <strong>axes</strong> de progrès</> },
+            { n: '2', text: <>Ajoute une <strong>action concrète</strong></> },
+            { n: '3', text: <>Découvre la <strong>dynamique</strong> de progression</> },
+            { n: '4', text: <>Comprends le <strong>check-in</strong> hebdomadaire</> },
           ].map((s) => (
             <div key={s.n} className="flex items-center gap-3 text-sm">
               <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
@@ -80,16 +115,16 @@ export default function OnboardingFlow({
           ))}
         </div>
       ),
-      isCompleted: axesCount >= 1,
+      isCompleted: axesCount >= 1 || ack['welcome'] === true,
       cta: { label: 'C\'est parti !', href: '/axes?onboarding=create' },
     },
 
-    // ── Étape 2 : Axe 1 ──
+    // ── Étape 2 : Axe 1 (OBLIGATOIRE) ──
     {
       id: 'axis-1',
-      title: 'Créez votre 1er axe de progrès',
+      title: 'Crée ton 1er axe de progrès',
       icon: '🎯',
-      description: 'Un axe représente un domaine que vous souhaitez améliorer suite à votre formation. Remplissez le formulaire qui s\'affichera.',
+      description: 'Un axe représente un domaine que tu souhaites améliorer suite à ta formation. Remplis le formulaire qui va s\'afficher.',
       extra: (
         <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
           <p className="font-medium mb-1">Exemple d&apos;axe :</p>
@@ -100,55 +135,63 @@ export default function OnboardingFlow({
       cta: { label: 'Créer mon 1er axe', href: '/axes?onboarding=create' },
     },
 
-    // ── Étape 3 : Axe 2 ──
+    // ── Étape 3 : Axe 2 (OPTIONNEL) ──
     {
       id: 'axis-2',
-      title: 'Créez votre 2e axe',
+      title: 'Crée ton 2e axe',
       icon: '🎯',
-      bravo: '🎉 Bravo ! Votre 1er axe est créé !',
-      description: 'Excellent début ! Continuez sur votre lancée. Le formulaire est déjà prêt pour vous.',
+      bravo: '🎉 Bravo ! Ton 1er axe est créé !',
+      description: 'Excellent début ! Continue sur ta lancée. Tu peux aussi le faire plus tard.',
       extra: (
         <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
           <p className="font-medium mb-1">Idée d&apos;axe :</p>
           <p className="text-indigo-600">&laquo; Mieux communiquer en réunion &raquo;</p>
         </div>
       ),
-      isCompleted: axesCount >= 2,
+      isCompleted: axesCount >= 2 || ack['skip-axis-2'] === true,
       cta: { label: 'Créer mon 2e axe', href: '/axes?onboarding=create' },
+      skipAction: skipAxis2,
     },
 
-    // ── Étape 4 : Axe 3 ──
+    // ── Étape 4 : Axe 3 (OPTIONNEL, sauté si axe 2 sauté) ──
     {
       id: 'axis-3',
-      title: 'Créez votre 3e et dernier axe',
+      title: 'Crée ton 3e et dernier axe',
       icon: '🎯',
       bravo: '🎉 Super ! 2 axes déjà définis !',
-      description: 'Plus qu\'un axe et vous aurez posé les bases de votre progression !',
+      description: 'Plus qu\'un axe et tu auras posé toutes les bases de ta progression ! Tu peux aussi le faire plus tard.',
       extra: (
         <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
           <p className="font-medium mb-1">Idée d&apos;axe :</p>
           <p className="text-indigo-600">&laquo; Gérer mon temps et mes priorités &raquo;</p>
         </div>
       ),
-      isCompleted: axesCount >= 3,
+      isCompleted: axesCount >= 3 || ack['skip-axis-3'] === true || ack['skip-axis-2'] === true,
       cta: { label: 'Créer mon 3e axe', href: '/axes?onboarding=create' },
+      skipAction: skipAxis3,
     },
 
     // ── Étape 5 : Démo auto des actions ──
     {
       id: 'first-action',
-      title: 'Découvrez la gestion des actions',
+      title: 'Découvre la gestion des actions',
       icon: '⚡',
-      bravo: '🎉 Parfait ! Vos 3 axes sont définis !',
-      description: 'On va vous montrer comment ajouter, modifier et supprimer une action. Tout se fait automatiquement, suivez le guide !',
+      bravo: axesCount >= 3
+        ? '🎉 Parfait ! Tes 3 axes sont définis !'
+        : axesCount >= 2
+        ? '🎉 Super ! Tes axes sont définis !'
+        : '🎉 Ton axe est créé !',
+      description: 'On va te montrer comment ajouter, modifier et supprimer une action. Tout se fait automatiquement, suis le guide !',
       extra: (
         <div className="bg-amber-50 rounded-xl p-3 mt-3 text-left text-sm text-amber-800">
-          <p className="font-medium mb-1">Vous découvrirez :</p>
+          <p className="font-medium mb-1">Tu vas découvrir :</p>
           <ul className="space-y-1 text-amber-600">
             <li>➕ Ajouter une action</li>
             <li>✏️ Modifier une action</li>
             <li>❤️ Likes et 💬 commentaires</li>
             <li>🗑️ Supprimer une action</li>
+            <li>💬 Envoyer un message à ton formateur</li>
+            <li>🔔 Suivre tes notifications</li>
           </ul>
         </div>
       ),
@@ -162,10 +205,10 @@ export default function OnboardingFlow({
     // ── Étape 6 : Dynamique de progression ──
     {
       id: 'progression',
-      title: 'Votre dynamique de progression',
+      title: 'Ta dynamique de progression',
       icon: 'yapluka',
-      bravo: '🎉 Bien joué ! Vous maîtrisez la gestion des actions !',
-      description: 'Plus vous ajoutez d\'actions, plus votre dynamique monte ! Voici les 5 niveaux que vous pouvez atteindre :',
+      bravo: '🎉 Bien joué ! Tu maîtrises la gestion des actions !',
+      description: 'Plus tu ajoutes d\'actions, plus ta dynamique monte ! Voici les 5 niveaux que tu peux atteindre :',
       extra: (
         <div className="flex flex-col gap-1 mt-2 max-w-xs mx-auto w-full">
           {[
@@ -192,8 +235,8 @@ export default function OnboardingFlow({
       id: 'checkin',
       title: 'Le check-in hebdomadaire',
       icon: '📋',
-      bravo: '🎉 Vous y êtes presque !',
-      description: 'Chaque vendredi, prenez 2 minutes pour votre check-in : donnez votre météo de la semaine, notez ce qui a bien fonctionné et les difficultés rencontrées.',
+      bravo: '🎉 Tu y es presque !',
+      description: 'Chaque vendredi, prends 2 minutes pour ton check-in : donne ta météo de la semaine, note ce qui a bien fonctionné et les difficultés rencontrées.',
       extra: (
         <div className="flex items-center justify-center gap-4 mt-3">
           {[
@@ -215,10 +258,10 @@ export default function OnboardingFlow({
     // ── Étape 8 : Tour des menus ──
     {
       id: 'menu-tour',
-      title: 'Votre espace YAPLUKA',
+      title: 'Ton espace YAPLUKA',
       icon: 'yapluka',
       bravo: '🎉 Félicitations, la prise en main est terminée !',
-      description: 'Retrouvez ces 4 espaces dans le menu en bas de votre écran.',
+      description: 'Retrouve ces espaces dans le menu en bas de ton écran.',
       extra: (
         <div className="grid grid-cols-2 gap-2 mt-2 w-full">
           {[
@@ -230,7 +273,7 @@ export default function OnboardingFlow({
             },
             {
               Icon: Target, label: 'Mes actions',
-              desc: 'Gérez vos actions pour chaque axe.',
+              desc: 'Gère tes actions pour chaque axe.',
               gradient: 'from-amber-500 to-orange-500',
               bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700',
             },
@@ -242,9 +285,21 @@ export default function OnboardingFlow({
             },
             {
               Icon: Users, label: 'Team',
-              desc: 'Météo et actions de vos coéquipiers.',
+              desc: 'Météo et actions de tes coéquipiers.',
               gradient: 'from-purple-500 to-pink-500',
               bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700',
+            },
+            {
+              Icon: MessageCircle, label: 'Messages',
+              desc: 'Échange directement avec ton formateur.',
+              gradient: 'from-cyan-500 to-blue-500',
+              bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700',
+            },
+            {
+              Icon: Bell, label: 'Notifications',
+              desc: 'Likes, commentaires et messages reçus.',
+              gradient: 'from-yellow-500 to-amber-500',
+              bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700',
             },
           ].map((item, i) => (
             <div key={item.label} className={`${item.bg} border ${item.border} rounded-xl p-2 text-left`}
@@ -259,7 +314,14 @@ export default function OnboardingFlow({
         </div>
       ),
       isCompleted: ack['menu-tour'] ?? false,
-      cta: { label: 'C\'est parti !', action: () => acknowledge('menu-tour') },
+      cta: {
+        label: 'C\'est parti !',
+        action: () => {
+          acknowledge('menu-tour')
+          // Nettoyer la session d'onboarding
+          sessionStorage.removeItem(`onboarding_session_${userId}`)
+        },
+      },
     },
   ]
 
@@ -267,11 +329,15 @@ export default function OnboardingFlow({
   const activeIndex = mounted ? steps.findIndex((s) => !s.isCompleted) : -2
   const isActive = mounted && activeIndex !== -1
 
+  // Cas spécial : onboarding terminé mais 0 axes (l'apprenant a tout supprimé)
+  const onboardingDone = mounted && ack['menu-tour'] === true
+  const needsAxisBlock = mounted && axesCount === 0 && onboardingDone
+
   // Sync onboarding state to context (disables nav menus)
   useEffect(() => {
-    if (mounted) setIsOnboarding(isActive)
+    if (mounted) setIsOnboarding(isActive || needsAxisBlock)
     return () => setIsOnboarding(false)
-  }, [mounted, isActive, setIsOnboarding])
+  }, [mounted, isActive, needsAxisBlock, setIsOnboarding])
 
   // Scroll to top when onboarding transitions from active → completed
   const prevActiveRef = useRef<number>(-2)
@@ -283,6 +349,28 @@ export default function OnboardingFlow({
   }, [activeIndex])
 
   if (!mounted) return null
+
+  // Blocage : onboarding terminé mais 0 axes → forcer la création
+  if (needsAxisBlock) {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3 px-1">
+            <div className="text-4xl">🎯</div>
+            <h2 className="text-lg font-bold text-gray-800">Crée au moins un axe de progrès</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Tu as besoin d&apos;au moins un axe pour accéder à ton espace. C&apos;est rapide !
+            </p>
+          </div>
+          <div className="pt-3 pb-1 text-center shrink-0">
+            <Link href="/axes?onboarding=create" className="btn-primary">
+              Créer un axe
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // All done → show normal dashboard
   if (activeIndex === -1) return <>{children}</>
@@ -330,8 +418,8 @@ export default function OnboardingFlow({
           {activeStep.extra}
         </div>
 
-        {/* CTA button — always visible at bottom */}
-        <div className="pt-3 pb-1 text-center shrink-0">
+        {/* CTA button + optional skip — always visible at bottom */}
+        <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
           {activeStep.cta.href ? (
             <Link href={activeStep.cta.href} className="btn-primary">
               {activeStep.cta.label}
@@ -343,6 +431,16 @@ export default function OnboardingFlow({
             >
               {activeStep.cta.label}
             </button>
+          )}
+          {activeStep.skipAction && (
+            <div>
+              <button
+                onClick={activeStep.skipAction}
+                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                Plus tard
+              </button>
+            </div>
           )}
         </div>
       </div>

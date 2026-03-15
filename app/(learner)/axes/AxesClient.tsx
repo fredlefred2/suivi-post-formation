@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Pencil } from 'lucide-react'
-import { createAxe, deleteAxe, createAction, updateAction, deleteAction } from './actions'
+import { createAxe, deleteAxe, updateAxe, createAction, updateAction, deleteAction } from './actions'
 import type { Axe, Action, ActionFeedbackData, Difficulty } from '@/lib/types'
+import { MessageCircle, Bell } from 'lucide-react'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import { acknowledgeStep } from '@/lib/onboarding'
@@ -65,6 +66,11 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const [deletingActionId, setDeletingActionId] = useState<string | null>(null)
   const [deletingAxeStep, setDeletingAxeStep] = useState<0 | 1 | 2>(0) // 0=fermé, 1=avertissement, 2=confirmation
   const [deletingAxeId, setDeletingAxeId] = useState<string | null>(null)
+  // État édition d'axe
+  const [editingAxe, setEditingAxe] = useState<AxeWithActions | null>(null)
+  const [editAxeSubject, setEditAxeSubject] = useState('')
+  const [editAxeDescription, setEditAxeDescription] = useState('')
+  const [editAxeDifficulty, setEditAxeDifficulty] = useState<Difficulty | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Index sécurisé (évite les débordements si un axe est supprimé)
@@ -128,12 +134,14 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     }
   }
 
-  // Demo phase data
+  // Demo phase data (6 phases)
   const demoPhases = [
     { icon: '➕', text: 'Le bouton « Ajouter » permet de créer des actions concrètes pour chaque axe.' },
     { icon: '✏️', text: 'Le bouton ✏️ permet de modifier le texte d\'une action à tout moment.' },
-    { icon: '💬', text: 'Votre formateur et vos coéquipiers peuvent ❤️ liker et 💬 commenter vos actions.' },
+    { icon: '💬', text: 'Ton formateur et tes coéquipiers peuvent ❤️ liker et 💬 commenter tes actions.' },
     { icon: '🗑️', text: 'Le bouton 🗑️ permet de supprimer une action.' },
+    { icon: '💬', text: 'L\'icône message en haut à droite te permet d\'envoyer un message privé à ton formateur.', highlight: 'message' },
+    { icon: '🔔', text: 'La cloche te notifie des nouveautés : likes, commentaires et messages de ton formateur.', highlight: 'bell' },
   ]
 
   // Scroll initial vers l'index demandé
@@ -204,6 +212,18 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         setLevelUpInfo(level)
         setTimeout(() => setLevelUpInfo(null), 3000)
       }
+    })
+  }
+
+  // Handler pour la modification d'axe
+  async function handleUpdateAxe(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!editingAxe || !editAxeDifficulty) return
+    setError(null)
+    startTransition(async () => {
+      const result = await updateAxe(editingAxe.id, editAxeSubject, editAxeDescription || null, editAxeDifficulty)
+      if (result?.error) setError(result.error)
+      else setEditingAxe(null)
     })
   }
 
@@ -326,13 +346,27 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                       {axeIndex + 1}
                     </span>
                     <p className="font-bold text-base leading-snug line-clamp-2 flex-1">{axe.subject}</p>
-                    <button
-                      onClick={() => { setDeletingAxeId(axe.id); setDeletingAxeStep(1) }}
-                      className="opacity-40 hover:opacity-80 transition-opacity p-1 shrink-0"
-                      title="Supprimer cet axe"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button
+                        onClick={() => {
+                          setEditingAxe(axe)
+                          setEditAxeSubject(axe.subject)
+                          setEditAxeDescription(axe.description ?? '')
+                          setEditAxeDifficulty(axe.difficulty as Difficulty)
+                        }}
+                        className="opacity-40 hover:opacity-80 transition-opacity p-1"
+                        title="Modifier cet axe"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        onClick={() => { setDeletingAxeId(axe.id); setDeletingAxeStep(1) }}
+                        className="opacity-40 hover:opacity-80 transition-opacity p-1"
+                        title="Supprimer cet axe"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Ligne 2 : actions + niveau */}
@@ -603,14 +637,20 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       )}
 
       {/* Bandeau auto-demo fixe en bas */}
-      {isAutoDemo && demoPhase >= 1 && demoPhase <= 4 && (
+      {isAutoDemo && demoPhase >= 1 && demoPhase <= 6 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in-up">
-            <span className="text-2xl shrink-0">{demoPhases[demoPhase - 1].icon}</span>
+            {demoPhases[demoPhase - 1].highlight === 'message' ? (
+              <MessageCircle size={24} className="shrink-0 text-indigo-500 animate-pulse" />
+            ) : demoPhases[demoPhase - 1].highlight === 'bell' ? (
+              <Bell size={24} className="shrink-0 text-amber-500 animate-pulse" />
+            ) : (
+              <span className="text-2xl shrink-0">{demoPhases[demoPhase - 1].icon}</span>
+            )}
             <p className="text-sm text-gray-700 flex-1">{demoPhases[demoPhase - 1].text}</p>
             <button
               onClick={() => {
-                if (demoPhase < 4) {
+                if (demoPhase < 6) {
                   setDemoPhase(demoPhase + 1)
                 } else {
                   finishDemo()
@@ -619,7 +659,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               disabled={isPending}
               className="btn-primary text-xs px-4 py-2 shrink-0"
             >
-              {isPending ? '...' : demoPhase < 4 ? 'Suivant →' : 'Compris !'}
+              {isPending ? '...' : demoPhase < 6 ? 'Suivant →' : 'Compris !'}
             </button>
           </div>
         </div>
@@ -676,6 +716,67 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                 Supprimer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modale d'édition d'axe */}
+      {editingAxe && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setEditingAxe(null)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <h3 className="font-semibold text-gray-900 text-lg">Modifier l&apos;axe de progrès</h3>
+            <form onSubmit={handleUpdateAxe} className="space-y-4">
+              <div>
+                <label className="label">Sujet / intitulé de l&apos;axe *</label>
+                <input
+                  value={editAxeSubject}
+                  onChange={(e) => setEditAxeSubject(e.target.value)}
+                  required
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="label">Description (optionnel)</label>
+                <textarea
+                  value={editAxeDescription}
+                  onChange={(e) => setEditAxeDescription(e.target.value)}
+                  className="input h-20 resize-none"
+                />
+              </div>
+              <div>
+                <label className="label">Niveau de difficulté *</label>
+                <div className="flex gap-3 mt-1">
+                  {(['facile', 'moyen', 'difficile'] as const).map((d) => {
+                    const isSelected = editAxeDifficulty === d
+                    return (
+                      <label key={d} className="flex-1 cursor-pointer">
+                        <input
+                          type="radio" name="edit-difficulty" value={d} className="sr-only"
+                          checked={editAxeDifficulty === d}
+                          onChange={() => setEditAxeDifficulty(d)}
+                        />
+                        <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 ${
+                          isSelected
+                            ? `${DIFFICULTY_COLORS[d]} scale-105 shadow-lg`
+                            : 'border-gray-200 bg-white text-gray-600'
+                        }`}>
+                          <p className="text-xs font-bold">{DIFFICULTY_LABELS[d]}</p>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+              {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+              <div className="flex gap-3 justify-end">
+                <button type="button" onClick={() => setEditingAxe(null)} className="btn-secondary px-5">
+                  Annuler
+                </button>
+                <button type="submit" disabled={isPending} className="btn-primary px-5">
+                  {isPending ? 'Enregistrement...' : 'Valider'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
