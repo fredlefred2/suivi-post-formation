@@ -6,6 +6,7 @@ import { AlertCircle, CalendarCheck, Zap, TrendingUp, Plus, Flame, Trophy } from
 import { useCountUp } from '@/lib/useCountUp'
 import { MARKERS, getCurrentLevelIndex, getProgress, getCurrentLevel } from '@/lib/axeHelpers'
 import QuickAddAction from '@/app/components/QuickAddAction'
+import QuickCheckin from '@/app/components/QuickCheckin'
 import { useRouter } from 'next/navigation'
 
 const WEATHER_ICONS: Record<string, string> = {
@@ -38,6 +39,8 @@ type Props = {
   rank: number | null
   groupSize: number | null
   lastWeekActions: number
+  checkinIsOpen: boolean
+  axesForCheckin: { id: string; initial_score: number }[]
 }
 
 export default function DashboardClient({
@@ -56,11 +59,14 @@ export default function DashboardClient({
   rank,
   groupSize,
   lastWeekActions,
+  checkinIsOpen,
+  axesForCheckin,
 }: Props) {
   const router = useRouter()
   const [currentSlide, setCurrentSlide] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
 
   // Compteurs animés
   const animatedCheckins = useCountUp(totalCheckins)
@@ -120,14 +126,17 @@ export default function DashboardClient({
 
       {/* Alerte check-in (visible ven→lun si pas encore fait) */}
       {!checkinDone && (
-        <div className="rounded-xl p-4 flex items-center gap-4 bg-amber-100 border border-amber-300">
+        <button
+          onClick={() => setQuickCheckinOpen(true)}
+          className="w-full rounded-xl p-4 flex items-center gap-4 bg-amber-100 border border-amber-300 text-left active:scale-[0.98] transition-transform"
+        >
           <AlertCircle className="text-amber-600 shrink-0" size={24} />
           <div className="flex-1">
             <p className="font-medium text-amber-900">Check-in en attente</p>
             <p className="text-sm text-amber-700">{checkinWeekLabel}</p>
           </div>
-          <Link href="/checkin" className="btn-primary shrink-0">Faire</Link>
-        </div>
+          <span className="btn-primary shrink-0">Faire</span>
+        </button>
       )}
 
       {/* Barre de progression globale */}
@@ -320,11 +329,36 @@ export default function DashboardClient({
         </button>
       )}
 
+      {/* FAB — Bouton flottant "Check-in" (mobile, visible si check-in en attente) */}
+      {!checkinDone && checkinIsOpen && axesForCheckin.length > 0 && (
+        <button
+          onClick={() => setQuickCheckinOpen(true)}
+          className="fixed bottom-20 left-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform animate-pulse"
+          style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
+          }}
+          title="Faire mon check-in"
+        >
+          <CalendarCheck size={24} strokeWidth={2.5} />
+        </button>
+      )}
+
       {/* Quick Add Action Modal */}
       <QuickAddAction
         axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}
         open={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
+        onSuccess={() => router.refresh()}
+      />
+
+      {/* Quick Checkin Modal */}
+      <QuickCheckin
+        axes={axesForCheckin}
+        weekLabel={checkinWeekLabel}
+        streak={streak}
+        open={quickCheckinOpen}
+        onClose={() => setQuickCheckinOpen(false)}
         onSuccess={() => router.refresh()}
       />
     </div>

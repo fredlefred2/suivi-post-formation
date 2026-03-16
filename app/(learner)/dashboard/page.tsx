@@ -171,6 +171,8 @@ export default async function DashboardPage() {
         rank={rank}
         groupSize={groupSize}
         lastWeekActions={lastWeekActions}
+        checkinIsOpen={checkinCtx.isOpen}
+        axesForCheckin={(axes ?? []).map(a => ({ id: a.id, initial_score: (a as Record<string, unknown>).initial_score as number ?? 1 }))}
       />
     </OnboardingFlow>
   )
