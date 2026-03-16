@@ -334,7 +334,10 @@ export default function DashboardClient({
         axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}
         open={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
-        onSuccess={() => router.refresh()}
+        onSuccess={(axeId) => {
+          const axeIndex = axes.findIndex(a => a.id === axeId)
+          router.push(`/axes?index=${axeIndex >= 0 ? axeIndex : 0}&highlight=${axeId}`)
+        }}
       />
 
       {/* Quick Checkin Modal */}

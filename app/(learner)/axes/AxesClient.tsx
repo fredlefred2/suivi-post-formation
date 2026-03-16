@@ -35,7 +35,7 @@ function getActionPhaseBg(rank: number) {
   return ACTION_PHASE_COLORS[3]
 }
 
-export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string }) {
+export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId, highlightAxeIdParam }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string, highlightAxeIdParam?: string }) {
   const router = useRouter()
   const { toast } = useToast()
   const { setIsOnboarding } = useOnboarding()
@@ -69,7 +69,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const [deletingAxeId, setDeletingAxeId] = useState<string | null>(null)
   // État édition d'axe
   const [quickAddOpen, setQuickAddOpen] = useState(false)
-  const [highlightAxeId, setHighlightAxeId] = useState<string | null>(null)
+  const [highlightAxeId, setHighlightAxeId] = useState<string | null>(highlightAxeIdParam ?? null)
   const [editingAxe, setEditingAxe] = useState<AxeWithActions | null>(null)
   const [editAxeSubject, setEditAxeSubject] = useState('')
   const [editAxeDescription, setEditAxeDescription] = useState('')
@@ -99,6 +99,14 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     }
     setCurrentIndex(closestIndex)
   }, [])
+
+  // Nettoyer le highlight initial (venant du dashboard) après 2s
+  useEffect(() => {
+    if (highlightAxeIdParam) {
+      const timer = setTimeout(() => setHighlightAxeId(null), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [highlightAxeIdParam])
 
   // Auto-demo : créer automatiquement une action d'exemple
   useEffect(() => {
