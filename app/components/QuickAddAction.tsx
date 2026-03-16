@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { X } from 'lucide-react'
 import { createAction } from '@/app/(learner)/axes/actions'
 import { getNextLevel, getCurrentLevelIndex, getCurrentLevel } from '@/lib/axeHelpers'
+import { useToast } from '@/app/components/Toast'
 
 type AxeOption = {
   id: string
@@ -57,6 +58,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
   const [comment, setComment] = useState('')
   const [isPending, startTransition] = useTransition()
   const [levelUpInfo, setLevelUpInfo] = useState<{ icon: string; label: string } | null>(null)
+  const { toast } = useToast()
 
   function reset() {
     setStep('axe')
@@ -99,6 +101,14 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
       if (result?.error) return
 
       const newCount = oldCount + 1
+
+      // Toast avec delta vers le prochain niveau
+      const next = getNextLevel(newCount)
+      if (next) {
+        toast(`✓ Action ajoutée — encore ${next.delta} pour ${next.icon} ${next.label}`)
+      } else {
+        toast('✓ Action ajoutée — niveau max atteint ! 🚀')
+      }
 
       // Célébration si changement de niveau
       const oldLevel = getCurrentLevelIndex(oldCount)
