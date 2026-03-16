@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { getCurrentWeek } from '@/lib/utils'
+import { getCheckinContext } from '@/lib/utils'
 import TrainerDashboardClient from './TrainerDashboardClient'
 import type { GroupData, CheckinData, ActionData, UnassignedLearner } from './TrainerDashboardClient'
 
@@ -13,7 +13,9 @@ export default async function TrainerDashboardPage({
 }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const { week, year } = getCurrentWeek()
+  const checkinCtx = getCheckinContext()
+  const week = checkinCtx.checkinWeek
+  const year = checkinCtx.checkinYear
 
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

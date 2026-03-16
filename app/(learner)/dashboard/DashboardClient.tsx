@@ -329,21 +329,6 @@ export default function DashboardClient({
         </button>
       )}
 
-      {/* FAB — Bouton flottant "Check-in" (mobile, visible si check-in en attente) */}
-      {!checkinDone && checkinIsOpen && axesForCheckin.length > 0 && (
-        <button
-          onClick={() => setQuickCheckinOpen(true)}
-          className="fixed bottom-20 left-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform animate-pulse"
-          style={{
-            background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
-          }}
-          title="Faire mon check-in"
-        >
-          <CalendarCheck size={24} strokeWidth={2.5} />
-        </button>
-      )}
-
       {/* Quick Add Action Modal */}
       <QuickAddAction
         axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}

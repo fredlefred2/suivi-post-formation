@@ -46,6 +46,10 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       })
 
       if (!res.ok) {
+        if (res.status === 401) {
+          window.location.href = '/login'
+          return
+        }
         const data = await res.json()
         setError(data.error || 'Erreur lors de l\'enregistrement')
         setSubmitting(false)

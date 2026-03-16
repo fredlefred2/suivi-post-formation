@@ -341,8 +341,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               return (
                 <div
                   key={axe.id}
-                  className={`snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl border-2 p-4 ${dyn.color}`}
+                  className={`snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl border-2 p-4 flex flex-col max-h-[calc(100dvh-11rem)] ${dyn.color}`}
                 >
+                 <div className="shrink-0">
                   {/* Ligne 1 : numéro + titre + supprimer */}
                   <div className="flex items-start gap-3">
                     <span className="w-9 h-9 rounded-full bg-white/60 border border-current/20 flex items-center justify-center text-base font-bold shrink-0 mt-0.5">
@@ -406,9 +407,10 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                       ))}
                     </div>
                   </div>
+                 </div>
 
-                  {/* Séparateur + Actions menées */}
-                  <div className="border-t border-current/10 pt-3 mt-2">
+                  {/* Séparateur + titre Actions menées (fixe) */}
+                  <div className="border-t border-current/10 pt-3 mt-2 shrink-0">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium text-gray-700">
                         Actions menées
@@ -426,7 +428,10 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                         </button>
                       )}
                     </div>
+                  </div>
 
+                  {/* Liste d'actions (scrollable) */}
+                  <div className="flex-1 min-h-0 overflow-y-auto">
                     {axe.actions.length === 0 && (
                       <p className="text-xs text-gray-400 italic">Aucune action enregistrée</p>
                     )}

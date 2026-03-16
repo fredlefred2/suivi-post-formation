@@ -42,10 +42,8 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
   const [weather, setWeather] = useState<string | null>(null)
   const [goodTags, setGoodTags] = useState<Set<string>>(new Set())
   const [goodComment, setGoodComment] = useState('')
-  const [showGoodComment, setShowGoodComment] = useState(false)
   const [diffTags, setDiffTags] = useState<Set<string>>(new Set())
   const [diffComment, setDiffComment] = useState('')
-  const [showDiffComment, setShowDiffComment] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,10 +53,8 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
     setWeather(null)
     setGoodTags(new Set())
     setGoodComment('')
-    setShowGoodComment(false)
     setDiffTags(new Set())
     setDiffComment('')
-    setShowDiffComment(false)
     setSubmitting(false)
     setShowCelebration(false)
     setError(null)
@@ -105,6 +101,10 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
       })
 
       if (!res.ok) {
+        if (res.status === 401) {
+          window.location.href = '/login'
+          return
+        }
         const data = await res.json()
         setError(data.error || 'Erreur lors de l\'enregistrement')
         setSubmitting(false)
@@ -237,27 +237,14 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
                     </button>
                   )
                 })}
-                <button
-                  onClick={() => setShowGoodComment(!showGoodComment)}
-                  className={`px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all active:scale-95 ${
-                    showGoodComment
-                      ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  ✏️ Autre
-                </button>
               </div>
 
-              {showGoodComment && (
-                <textarea
-                  value={goodComment}
-                  onChange={(e) => setGoodComment(e.target.value)}
-                  className="input w-full h-20 resize-none"
-                  placeholder="Précise si tu veux..."
-                  autoFocus
-                />
-              )}
+              <textarea
+                value={goodComment}
+                onChange={(e) => setGoodComment(e.target.value)}
+                className="input w-full h-16 resize-none text-sm"
+                placeholder="Précise ou ajoute un commentaire..."
+              />
 
               <button
                 onClick={() => setStep('difficult')}
@@ -288,27 +275,14 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
                     </button>
                   )
                 })}
-                <button
-                  onClick={() => setShowDiffComment(!showDiffComment)}
-                  className={`px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all active:scale-95 ${
-                    showDiffComment
-                      ? 'border-orange-400 bg-orange-50 text-orange-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  ✏️ Autre
-                </button>
               </div>
 
-              {showDiffComment && (
-                <textarea
-                  value={diffComment}
-                  onChange={(e) => setDiffComment(e.target.value)}
-                  className="input w-full h-20 resize-none"
-                  placeholder="Précise si tu veux..."
-                  autoFocus
-                />
-              )}
+              <textarea
+                value={diffComment}
+                onChange={(e) => setDiffComment(e.target.value)}
+                className="input w-full h-16 resize-none text-sm"
+                placeholder="Précise ou ajoute un commentaire..."
+              />
 
               {error && (
                 <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
