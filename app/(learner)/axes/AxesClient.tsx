@@ -69,6 +69,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const [deletingAxeId, setDeletingAxeId] = useState<string | null>(null)
   // État édition d'axe
   const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [highlightAxeId, setHighlightAxeId] = useState<string | null>(null)
   const [editingAxe, setEditingAxe] = useState<AxeWithActions | null>(null)
   const [editAxeSubject, setEditAxeSubject] = useState('')
   const [editAxeDescription, setEditAxeDescription] = useState('')
@@ -444,8 +445,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                             const shouldPulseEdit = isAutoDemo && demoPhase === 2 && axeIndex === 0 && actionIndex === 0
                             const shouldPulseFeedback = isAutoDemo && demoPhase === 3 && axeIndex === 0 && actionIndex === 0
                             const shouldPulseDelete = (isHighlightDelete || (isAutoDemo && demoPhase === 4)) && axeIndex === 0 && actionIndex === 0
+                            const isNewlyAdded = highlightAxeId === axe.id && actionIndex === 0
                             return (
-                              <li key={action.id} className="flex items-start gap-2">
+                              <li key={action.id} className={`flex items-start gap-2 rounded-lg px-1 -mx-1 transition-colors duration-1000 ${isNewlyAdded ? 'bg-indigo-100' : ''}`}>
                                 <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{getActionPhaseIcon(rank)}</span>
                                 <div className="flex-1 min-w-0">
                                   <span className="text-sm text-gray-700">{action.description}</span>
@@ -746,7 +748,21 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.actions.length }))}
         open={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
-        onSuccess={() => router.refresh()}
+        onSuccess={(axeId) => {
+          // Scroll vers la carte de l'axe concerné
+          const axeIndex = axes.findIndex(a => a.id === axeId)
+          if (axeIndex >= 0) {
+            setCurrentIndex(axeIndex)
+            const container = scrollContainerRef.current
+            if (container && container.children[axeIndex]) {
+              (container.children[axeIndex] as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+            }
+          }
+          // Flash sur la dernière action ajoutée
+          setHighlightAxeId(axeId)
+          setTimeout(() => setHighlightAxeId(null), 2000)
+          router.refresh()
+        }}
       />
 
       {/* Modale d'édition d'axe */}
