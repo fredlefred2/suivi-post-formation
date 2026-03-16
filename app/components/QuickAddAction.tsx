@@ -58,6 +58,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
   const [comment, setComment] = useState('')
   const [isPending, startTransition] = useTransition()
   const [levelUpInfo, setLevelUpInfo] = useState<{ icon: string; label: string } | null>(null)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [confirmInfo, setConfirmInfo] = useState<{ message: string; nextIcon: string; nextLabel: string } | null>(null)
   const { toast } = useToast()
 
   function reset() {
@@ -66,6 +68,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
     setSelectedCategory(null)
     setComment('')
     setLevelUpInfo(null)
+    setShowConfirm(false)
+    setConfirmInfo(null)
   }
 
   function handleClose() {
@@ -102,15 +106,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
 
       const newCount = oldCount + 1
 
-      // Toast avec delta vers le prochain niveau
-      const next = getNextLevel(newCount)
-      if (next) {
-        toast(`✓ Action ajoutée — encore ${next.delta} pour ${next.icon} ${next.label}`)
-      } else {
-        toast('✓ Action ajoutée — niveau max atteint ! 🚀')
-      }
-
-      // Célébration si changement de niveau
+      // Célébration si changement de niveau, sinon confirmation simple
       const oldLevel = getCurrentLevelIndex(oldCount)
       const newLevel = getCurrentLevelIndex(newCount)
       if (newLevel > oldLevel) {
@@ -122,8 +118,20 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
           onSuccess?.(selectedAxe.id, newCount)
         }, 2500)
       } else {
-        handleClose()
-        onSuccess?.(selectedAxe.id, newCount)
+        // Fenêtre de confirmation (même taille que célébration)
+        const next = getNextLevel(newCount)
+        setConfirmInfo(next ? {
+          message: `Encore ${next.delta} action${next.delta > 1 ? 's' : ''} pour`,
+          nextIcon: next.icon,
+          nextLabel: next.label,
+        } : null)
+        setShowConfirm(true)
+        setTimeout(() => {
+          setShowConfirm(false)
+          setConfirmInfo(null)
+          handleClose()
+          onSuccess?.(selectedAxe.id, newCount)
+        }, 2500)
       }
     })
   }
@@ -131,10 +139,9 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
 
-      {/* Célébration de niveau */}
       {levelUpInfo ? (
         <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xs mx-4 p-8 text-center animate-fade-in-up">
           <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
@@ -143,6 +150,19 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
             <p className="text-lg font-semibold text-indigo-600">débloqué !</p>
             <p className="text-sm text-gray-400 mt-3">Continue comme ça 💪</p>
           </div>
+        </div>
+      ) : showConfirm ? (
+        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xs mx-4 p-8 text-center animate-fade-in-up">
+          <div className="text-7xl mb-4">✅</div>
+          <p className="text-xl font-bold text-gray-900 mb-1">Action ajoutée !</p>
+          {confirmInfo ? (
+            <div className="mt-3">
+              <p className="text-sm text-gray-500">{confirmInfo.message}</p>
+              <p className="text-2xl mt-1">{confirmInfo.nextIcon} <span className="text-lg font-semibold text-indigo-600">{confirmInfo.nextLabel}</span></p>
+            </div>
+          ) : (
+            <p className="text-lg font-semibold text-indigo-600 mt-1">Niveau max atteint ! 🚀</p>
+          )}
         </div>
       ) : (
         <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-md mx-0 sm:mx-4 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-in-up">
