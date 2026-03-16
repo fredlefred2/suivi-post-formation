@@ -8,6 +8,7 @@ import type { Axe, Action, ActionFeedbackData, Difficulty } from '@/lib/types'
 import { MessageCircle, Bell } from 'lucide-react'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
+import QuickAddAction from '@/app/components/QuickAddAction'
 import { acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
 import { MARKERS, getDynamique, getCurrentLevelIndex, getProgress, getCurrentLevel, getNextLevel, getActionPhaseIcon } from '@/lib/axeHelpers'
@@ -67,6 +68,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const [deletingAxeStep, setDeletingAxeStep] = useState<0 | 1 | 2>(0) // 0=fermé, 1=avertissement, 2=confirmation
   const [deletingAxeId, setDeletingAxeId] = useState<string | null>(null)
   // État édition d'axe
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [editingAxe, setEditingAxe] = useState<AxeWithActions | null>(null)
   const [editAxeSubject, setEditAxeSubject] = useState('')
   const [editAxeDescription, setEditAxeDescription] = useState('')
@@ -413,12 +415,15 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                           <span className="ml-1.5 text-xs font-normal text-gray-400">({axe.actions.length})</span>
                         )}
                       </p>
-                      <button
-                        onClick={() => { if (!isAutoDemo) setAddActionAxeId(addActionAxeId === axe.id ? null : axe.id) }}
-                        className={`btn-primary text-xs px-3 py-1.5 ${(isHighlightAdd || (isAutoDemo && demoPhase === 1)) && axeIndex === 0 ? 'onboarding-pulse' : ''}`}
-                      >
-                        <Plus size={14} /> Ajouter
-                      </button>
+                      {/* Bouton Ajouter visible uniquement pendant l'onboarding */}
+                      {(isHighlightAdd || (isAutoDemo && demoPhase === 1)) && axeIndex === 0 && (
+                        <button
+                          onClick={() => setAddActionAxeId(axe.id)}
+                          className="btn-primary text-xs px-3 py-1.5 onboarding-pulse"
+                        >
+                          <Plus size={14} /> Ajouter
+                        </button>
+                      )}
                     </div>
 
                     {axe.actions.length === 0 && (
@@ -721,6 +726,29 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           </div>
         </div>
       )}
+      {/* FAB — Bouton flottant "Ajouter une action" */}
+      {axes.length > 0 && !isOnboardingMode && (
+        <button
+          onClick={() => setQuickAddOpen(true)}
+          className="fixed bottom-20 right-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
+            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.4)',
+          }}
+          title="Ajouter une action"
+        >
+          <Plus size={24} strokeWidth={2.5} />
+        </button>
+      )}
+
+      {/* Quick Add Action Modal */}
+      <QuickAddAction
+        axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.actions.length }))}
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        onSuccess={() => router.refresh()}
+      />
+
       {/* Modale d'édition d'axe */}
       {editingAxe && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

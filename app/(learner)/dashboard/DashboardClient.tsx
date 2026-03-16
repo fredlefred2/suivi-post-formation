@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { AlertCircle, CalendarCheck, Zap, TrendingUp, Plus, Flame, Trophy } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
 import { MARKERS, getCurrentLevelIndex, getProgress, getCurrentLevel } from '@/lib/axeHelpers'
+import QuickAddAction from '@/app/components/QuickAddAction'
+import { useRouter } from 'next/navigation'
 
 const WEATHER_ICONS: Record<string, string> = {
   sunny: '☀️',
@@ -55,8 +57,10 @@ export default function DashboardClient({
   groupSize,
   lastWeekActions,
 }: Props) {
+  const router = useRouter()
   const [currentSlide, setCurrentSlide] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
 
   // Compteurs animés
   const animatedCheckins = useCountUp(totalCheckins)
@@ -303,8 +307,8 @@ export default function DashboardClient({
 
       {/* FAB — Bouton flottant "Ajouter une action" (mobile) */}
       {axes.length > 0 && (
-        <Link
-          href="/axes"
+        <button
+          onClick={() => setQuickAddOpen(true)}
           className="fixed bottom-20 right-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"
           style={{
             background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
@@ -313,8 +317,16 @@ export default function DashboardClient({
           title="Ajouter une action"
         >
           <Plus size={24} strokeWidth={2.5} />
-        </Link>
+        </button>
       )}
+
+      {/* Quick Add Action Modal */}
+      <QuickAddAction
+        axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        onSuccess={() => router.refresh()}
+      />
     </div>
   )
 }
