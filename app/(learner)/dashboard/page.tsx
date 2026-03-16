@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase.from('profiles').select('first_name, created_at').eq('id', user!.id).single(),
     supabase.from('axes')
-      .select('id, subject, difficulty, actions(id, created_at)')
+      .select('id, subject, difficulty, initial_score, actions(id, created_at)')
       .eq('learner_id', user!.id)
       .order('created_at'),
     supabase.from('checkins')
@@ -172,7 +172,7 @@ export default async function DashboardPage() {
         groupSize={groupSize}
         lastWeekActions={lastWeekActions}
         checkinIsOpen={checkinCtx.isOpen}
-        axesForCheckin={(axes ?? []).map(a => ({ id: a.id, initial_score: (a as Record<string, unknown>).initial_score as number ?? 1 }))}
+        axesForCheckin={(axes ?? []).map(a => ({ id: a.id, initial_score: a.initial_score ?? 1 }))}
       />
     </OnboardingFlow>
   )
