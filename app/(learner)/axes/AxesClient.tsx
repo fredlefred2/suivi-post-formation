@@ -35,7 +35,7 @@ function getActionPhaseBg(rank: number) {
   return ACTION_PHASE_COLORS[3]
 }
 
-export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId, highlightAxeIdParam, oldCountParam }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string, highlightAxeIdParam?: string, oldCountParam?: number }) {
+export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string }) {
   const router = useRouter()
   const { toast } = useToast()
   const { setIsOnboarding } = useOnboarding()
@@ -69,7 +69,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const [deletingAxeId, setDeletingAxeId] = useState<string | null>(null)
   // État édition d'axe
   const [quickAddOpen, setQuickAddOpen] = useState(false)
-  const [highlightAxeId, setHighlightAxeId] = useState<string | null>(highlightAxeIdParam ?? null)
+  const [highlightAxeId, setHighlightAxeId] = useState<string | null>(null)
   const [editingAxe, setEditingAxe] = useState<AxeWithActions | null>(null)
   const [editAxeSubject, setEditAxeSubject] = useState('')
   const [editAxeDescription, setEditAxeDescription] = useState('')
@@ -99,51 +99,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     }
     setCurrentIndex(closestIndex)
   }, [])
-
-  // Séquence feedback au montage (venant du dashboard) : toast → célébration → highlight
-  useEffect(() => {
-    if (!highlightAxeIdParam) return
-
-    const axe = axes.find(a => a.id === highlightAxeIdParam)
-    if (!axe) return
-
-    const newCount = axe.actions.length
-    const oldCount = oldCountParam ?? newCount
-
-    // 1. Toast après 300ms (laisser la page se dessiner)
-    const t1 = setTimeout(() => {
-      const next = getNextLevel(newCount)
-      if (next) {
-        toast(`✓ Action ajoutée — encore ${next.delta} pour ${next.icon} ${next.label}`)
-      } else {
-        toast('✓ Action ajoutée — niveau max atteint ! 🚀')
-      }
-    }, 300)
-
-    // 2. Célébration si changement de niveau (après 800ms)
-    const oldLevel = getCurrentLevelIndex(oldCount)
-    const newLevel = getCurrentLevelIndex(newCount)
-    let t2: ReturnType<typeof setTimeout> | null = null
-    let t3: ReturnType<typeof setTimeout> | null = null
-    if (newLevel > oldLevel) {
-      t2 = setTimeout(() => {
-        const level = getCurrentLevel(newCount)
-        setLevelUpInfo(level)
-      }, 800)
-      t3 = setTimeout(() => setLevelUpInfo(null), 3300)
-    }
-
-    // 3. Nettoyer le highlight après 3s
-    const t4 = setTimeout(() => setHighlightAxeId(null), 3000)
-
-    return () => {
-      clearTimeout(t1)
-      clearTimeout(t4)
-      if (t2) clearTimeout(t2)
-      if (t3) clearTimeout(t3)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightAxeIdParam])
 
   // Auto-demo : créer automatiquement une action d'exemple
   useEffect(() => {

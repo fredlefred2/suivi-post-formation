@@ -334,12 +334,7 @@ export default function DashboardClient({
         axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}
         open={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
-        skipFeedback
-        onSuccess={(axeId, newCount) => {
-          const axeIndex = axes.findIndex(a => a.id === axeId)
-          const oldCount = axes.find(a => a.id === axeId)?.completedCount ?? 0
-          router.push(`/axes?index=${axeIndex >= 0 ? axeIndex : 0}&highlight=${axeId}&oldCount=${oldCount}`)
-        }}
+        onSuccess={() => router.refresh()}
       />
 
       {/* Quick Checkin Modal */}

@@ -49,10 +49,9 @@ type Props = {
   open: boolean
   onClose: () => void
   onSuccess?: (axeId: string, newCount: number) => void
-  skipFeedback?: boolean
 }
 
-export default function QuickAddAction({ axes, open, onClose, onSuccess, skipFeedback = false }: Props) {
+export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props) {
   const [step, setStep] = useState<'axe' | 'category' | 'comment'>('axe')
   const [selectedAxe, setSelectedAxe] = useState<AxeOption | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
@@ -102,13 +101,6 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, skipFee
       if (result?.error) return
 
       const newCount = oldCount + 1
-
-      // Mode skipFeedback : fermer et rediriger immédiatement (le feedback sera joué côté page axes)
-      if (skipFeedback) {
-        handleClose()
-        onSuccess?.(selectedAxe.id, newCount)
-        return
-      }
 
       // Toast avec delta vers le prochain niveau
       const next = getNextLevel(newCount)

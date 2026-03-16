@@ -8,7 +8,7 @@ import AxesClient from './AxesClient'
 export default async function AxesPage({
   searchParams,
 }: {
-  searchParams: { index?: string; onboarding?: string; highlight?: string; oldCount?: string }
+  searchParams: { index?: string; onboarding?: string }
 }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -67,7 +67,5 @@ export default async function AxesPage({
     ? Math.max(0, parseInt(searchParams.index) || 0)
     : 0
 
-  const oldCountParam = searchParams.oldCount !== undefined ? parseInt(searchParams.oldCount) : undefined
-
-  return <AxesClient key={initialIndex} axes={axes ?? []} initialIndex={initialIndex} feedbackMap={feedbackMap} onboarding={searchParams.onboarding} userId={user!.id} highlightAxeIdParam={searchParams.highlight} oldCountParam={oldCountParam} />
+  return <AxesClient key={initialIndex} axes={axes ?? []} initialIndex={initialIndex} feedbackMap={feedbackMap} onboarding={searchParams.onboarding} userId={user!.id} />
 }
