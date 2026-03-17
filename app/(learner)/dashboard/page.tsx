@@ -66,14 +66,18 @@ export default async function DashboardPage() {
     year
   )
 
-  // Actions de la semaine dernière (pour le récap)
-  const twoWeeksAgo = new Date()
-  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  // Actions de la semaine ISO précédente (lundi→dimanche, stable)
+  const now = new Date()
+  const dayOfWeekNow = now.getDay() // 0=dim, 1=lun, ..., 6=sam
+  const diffToMonday = dayOfWeekNow === 0 ? 6 : dayOfWeekNow - 1 // jours depuis lundi courant
+  const thisMonday = new Date(now)
+  thisMonday.setHours(0, 0, 0, 0)
+  thisMonday.setDate(now.getDate() - diffToMonday)
+  const lastMonday = new Date(thisMonday)
+  lastMonday.setDate(thisMonday.getDate() - 7)
   const lastWeekActions = axes?.reduce((acc, axe) => {
     return acc + ((axe.actions as { id: string; created_at: string }[]) ?? [])
-      .filter(a => a.created_at >= twoWeeksAgo.toISOString() && a.created_at < oneWeekAgo.toISOString()).length
+      .filter(a => a.created_at >= lastMonday.toISOString() && a.created_at < thisMonday.toISOString()).length
   }, 0) ?? 0
 
   // Rang dans le groupe
