@@ -260,7 +260,7 @@ export default function DashboardClient({
                 <Link
                   key={axe.id}
                   href={`/axes?index=${axe.index}`}
-                  className="snap-center shrink-0 w-[80vw] max-w-[320px] rounded-2xl block hover:shadow-xl transition-all overflow-hidden"
+                  className="snap-center shrink-0 w-[80vw] max-w-[320px] rounded-2xl flex flex-col hover:shadow-xl transition-all overflow-hidden"
                   style={{
                     background: levelIdx === 0
                       ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'
@@ -273,7 +273,7 @@ export default function DashboardClient({
                       : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)',
                   }}
                 >
-                  <div className="p-4">
+                  <div className="p-4 flex-1">
                     {/* Titre */}
                     <div className="flex items-center gap-2">
                       <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
@@ -345,30 +345,30 @@ export default function DashboardClient({
                     </p>
                   </div>
 
-                  {/* Footer : likes/commentaires + dernière action */}
-                  {(axe.likesCount > 0 || axe.commentsCount > 0 || axe.lastAction) && (
-                    <div className="bg-white/50 px-4 py-2.5 border-t border-white/60">
-                      {/* Likes + commentaires */}
-                      {(axe.likesCount > 0 || axe.commentsCount > 0) && (
-                        <div className="flex items-center justify-center gap-5 text-sm">
-                          {axe.likesCount > 0 && (
-                            <span className="flex items-center gap-1 text-pink-500 font-semibold">❤️ {axe.likesCount}</span>
-                          )}
-                          {axe.commentsCount > 0 && (
-                            <span className="flex items-center gap-1 text-indigo-500 font-semibold">💬 {axe.commentsCount}</span>
-                          )}
-                        </div>
+                  {/* Footer : toujours affiché, même si vide */}
+                  <div className="bg-white/50 px-4 py-2 border-t border-white/60">
+                    {/* Zone likes + commentaires */}
+                    <div className="flex items-center justify-center gap-5 text-sm min-h-[22px]">
+                      {axe.likesCount > 0 && (
+                        <span className="flex items-center gap-1 text-pink-500 font-semibold">❤️ {axe.likesCount}</span>
                       )}
-
-                      {/* Derniere action */}
-                      {axe.lastAction && (
-                        <p className={`text-xs text-gray-500 line-clamp-1 ${(axe.likesCount > 0 || axe.commentsCount > 0) ? 'mt-1.5' : ''}`}>
-                          <span className="font-medium text-gray-600">Derniere :</span> {axe.lastAction.description}
-                          <span className="text-gray-400"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-                        </p>
+                      {axe.commentsCount > 0 && (
+                        <span className="flex items-center gap-1 text-indigo-500 font-semibold">💬 {axe.commentsCount}</span>
                       )}
                     </div>
-                  )}
+
+                    {/* Zone derniere action */}
+                    <p className="text-xs text-gray-500 line-clamp-1 mt-1 min-h-[18px]">
+                      {axe.lastAction ? (
+                        <>
+                          <span className="font-medium text-gray-600">Derniere :</span> {axe.lastAction.description}
+                          <span className="text-gray-400"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                        </>
+                      ) : (
+                        <span className="text-gray-400 italic">Aucune action</span>
+                      )}
+                    </p>
+                  </div>
                 </Link>
               )
             })}
