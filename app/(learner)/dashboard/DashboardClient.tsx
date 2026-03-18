@@ -273,26 +273,39 @@ export default function DashboardClient({
                     <p className="text-xs opacity-60 mt-1.5 line-clamp-2 leading-relaxed">{axe.description}</p>
                   )}
 
-                  {/* 5 icones de niveau */}
-                  <div className="flex justify-between mt-2.5 px-1">
-                    {MARKERS.map((m, i) => (
-                      <span
-                        key={i}
-                        className={`text-lg transition-all ${i <= levelIdx ? 'opacity-100 scale-110' : 'opacity-20 grayscale'}`}
-                      >
-                        {m.icon}
-                      </span>
-                    ))}
+                  {/* 5 icones avec jauge arrondie */}
+                  <div className="flex justify-between mt-3 px-0.5">
+                    {MARKERS.map((m, i) => {
+                      const reached = i <= levelIdx
+                      return (
+                        <div key={i} className="flex flex-col items-center gap-0.5">
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl transition-all ${
+                              reached
+                                ? 'bg-white/80 shadow-sm ring-2 ring-current/30'
+                                : 'bg-white/30'
+                            }`}
+                          >
+                            <span className={reached ? '' : 'opacity-20 grayscale'}>{m.icon}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
 
-                  {/* Likes + commentaires */}
+                  {/* Nombre d'actions */}
+                  <p className="text-center text-xs font-semibold mt-2 opacity-80">
+                    {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
+                  </p>
+
+                  {/* Likes + commentaires - centres */}
                   {(axe.likesCount > 0 || axe.commentsCount > 0) && (
-                    <div className="flex items-center gap-3 mt-2 text-xs">
+                    <div className="flex items-center justify-center gap-4 mt-2 text-sm">
                       {axe.likesCount > 0 && (
-                        <span className="flex items-center gap-1 text-pink-500">❤️ {axe.likesCount}</span>
+                        <span className="flex items-center gap-1 text-pink-500 font-semibold">❤️ {axe.likesCount}</span>
                       )}
                       {axe.commentsCount > 0 && (
-                        <span className="flex items-center gap-1 text-indigo-500">💬 {axe.commentsCount}</span>
+                        <span className="flex items-center gap-1 text-indigo-500 font-semibold">💬 {axe.commentsCount}</span>
                       )}
                     </div>
                   )}
