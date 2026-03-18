@@ -180,19 +180,23 @@ export default function TrainerDashboardClient({
   // Actions pour le carousel (les 10 plus recentes filtrees)
   const carouselActions = filteredActions.slice(0, 10)
 
-  // ── Meteo : distribution ──
-  const weatherDistribution = useMemo(() => {
-    const latestByLearner: Record<string, string> = {}
-    ;[...filteredCheckins]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .forEach((c) => { if (!latestByLearner[c.learner_id]) latestByLearner[c.learner_id] = c.weather })
+  // ── Meteo : distribution semaine passée ──
+  const prevWeek = useMemo(() => {
+    let w = currentWeek - 1, y = currentYear
+    if (w <= 0) { w = 52; y-- }
+    return { week: w, year: y }
+  }, [currentWeek, currentYear])
 
+  const weatherDistribution = useMemo(() => {
+    const lastWeekCheckins = filteredCheckins.filter(
+      (c) => c.week_number === prevWeek.week && c.year === prevWeek.year
+    )
     const counts = { sunny: 0, cloudy: 0, stormy: 0 }
-    Object.values(latestByLearner).forEach((w) => {
-      if (w in counts) counts[w as keyof typeof counts]++
+    lastWeekCheckins.forEach((c) => {
+      if (c.weather in counts) counts[c.weather as keyof typeof counts]++
     })
     return counts
-  }, [filteredCheckins])
+  }, [filteredCheckins, prevWeek])
 
   const totalWithCheckin = weatherDistribution.sunny + weatherDistribution.cloudy + weatherDistribution.stormy
 
@@ -447,7 +451,7 @@ export default function TrainerDashboardClient({
         {/* Meteo distribution */}
         {totalWithCheckin > 0 && (
           <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-gray-100">
-            <span className="text-[11px] text-gray-400">Meteo</span>
+            <span className="text-[11px] text-gray-400">Meteo S-1</span>
             {weatherDistribution.sunny > 0 && (
               <span className="text-sm">☀️ <span className="text-xs font-semibold text-gray-600">{weatherDistribution.sunny}</span></span>
             )}
