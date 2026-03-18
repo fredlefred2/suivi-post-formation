@@ -465,33 +465,14 @@ export default function TrainerDashboardClient({
         )}
       </div>
 
-      {/* ── Bandeau check-ins : conditionnel selon période ── */}
-      {isCheckinOpen ? (
-        missingCount > 0 && (
-          <div className="rounded-xl px-4 py-2.5 bg-amber-50 border border-amber-200">
-            <p className="text-sm text-amber-800">
-              <span className="font-semibold">Check-ins en attente :</span>{' '}
-              {missingCheckinMembers.slice(0, 4).map((m) => m.first_name).join(', ')}
-              {missingCheckinMembers.length > 4 && ` et ${missingCheckinMembers.length - 4} autre${missingCheckinMembers.length - 4 > 1 ? 's' : ''}`}
-            </p>
-          </div>
-        )
-      ) : (
-        <div className="rounded-xl px-4 py-3 bg-indigo-50 border border-indigo-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-indigo-800">
-                {lastWeekInfo.pct}% de check-ins realisés
-              </p>
-              <p className="text-xs text-indigo-500 mt-0.5">
-                Semaine du {lastWeekInfo.label} — {lastWeekInfo.uniqueLearnersChecked}/{lastWeekInfo.totalMembers}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-[11px] text-indigo-400">Prochain check-in</p>
-              <p className="text-xs font-medium text-indigo-700 capitalize">{lastWeekInfo.nextCheckinLabel}</p>
-            </div>
-          </div>
+      {/* ── Bandeau check-ins en attente (uniquement si fenêtre ouverte) ── */}
+      {isCheckinOpen && missingCount > 0 && (
+        <div className="rounded-xl px-4 py-2.5 bg-amber-50 border border-amber-200">
+          <p className="text-sm text-amber-800">
+            <span className="font-semibold">Check-ins en attente :</span>{' '}
+            {missingCheckinMembers.slice(0, 4).map((m) => m.first_name).join(', ')}
+            {missingCheckinMembers.length > 4 && ` et ${missingCheckinMembers.length - 4} autre${missingCheckinMembers.length - 4 > 1 ? 's' : ''}`}
+          </p>
         </div>
       )}
 
