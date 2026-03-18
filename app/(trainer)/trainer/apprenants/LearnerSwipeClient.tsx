@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, ChevronDown, CalendarCheck, Zap, TrendingUp } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import { formatWeek } from '@/lib/utils'
 import { WEATHER_COLORS } from '@/lib/types'
 import type { ActionFeedbackData } from '@/lib/types'
@@ -250,8 +250,6 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
         className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
       >
         {learners.map((learner) => {
-          const weatherEmoji = learner.lastWeather ? WEATHER_ICONS[learner.lastWeather] ?? '❓' : null
-
           return (
             <div
               key={learner.id}
@@ -262,52 +260,50 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                 {/* Nom */}
                 <h2 className="page-title text-center">{learner.firstName} {learner.lastName}</h2>
 
-                {/* ── Bloc 1 : Check-ins + Dernière météo ──────────────── */}
-                <div className="card py-5 px-4">
-                  <div className="grid grid-cols-2 divide-x divide-gray-100">
-                    <div className="text-center px-2">
-                      <CalendarCheck size={28} className="mx-auto text-emerald-500 mb-1.5" />
-                      <p className="text-3xl font-bold text-gray-800">
-                        {learner.totalCheckins}
-                        {learner.expectedCheckins > 0 && (
-                          <span className="text-sm font-normal text-gray-400">/{learner.expectedCheckins}</span>
-                        )}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">Check-ins</p>
+                {/* ── Bloc compact : 3 colonnes ──────────────────────── */}
+                <div className="card p-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Colonne 1 : Cette semaine */}
+                    <div className="text-center">
+                      <div className={`text-3xl font-black ${learner.actionsThisWeek > 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+                        {learner.actionsThisWeek > 0 ? `+${learner.actionsThisWeek}` : '0'}
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">cette semaine</p>
                     </div>
-                    <div className="text-center px-2 flex flex-col items-center justify-center">
-                      {weatherEmoji ? (
-                        <>
-                          <p className="text-xs text-gray-500 mb-2">Dernière météo</p>
-                          <span className="text-6xl leading-none">{weatherEmoji}</span>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-xs text-gray-500 mb-2">Dernière météo</p>
-                          <span className="text-5xl text-gray-300">-</span>
-                          <p className="text-[11px] text-gray-400 mt-1">Pas de check-in</p>
-                        </>
+
+                    {/* Colonne 2 : Total actions */}
+                    <div className="text-center">
+                      <div className="text-3xl font-black text-gray-800">{learner.totalActions}</div>
+                      <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">actions</p>
+                    </div>
+
+                    {/* Colonne 3 : Check-ins */}
+                    <div className="text-center">
+                      <div className="text-3xl font-black text-gray-800">{learner.totalCheckins}</div>
+                      <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">check-ins</p>
+                    </div>
+                  </div>
+
+                  {/* Frise météo */}
+                  {learner.checkins.length > 0 && (
+                    <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
+                      <span className="text-[11px] text-gray-400 mr-1">Meteo</span>
+                      {[...learner.checkins]
+                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                        .slice(-4)
+                        .map((ci, i, arr) => (
+                          <span
+                            key={ci.id}
+                            className={`text-xl transition-all ${i === arr.length - 1 ? 'text-2xl' : 'opacity-50'}`}
+                          >
+                            {WEATHER_ICONS[ci.weather] ?? '❓'}
+                          </span>
+                        ))}
+                      {learner.checkins.length < 4 && (
+                        <span className="text-gray-200 text-lg ml-0.5">{'· '.repeat(4 - Math.min(learner.checkins.length, 4))}</span>
                       )}
                     </div>
-                  </div>
-                </div>
-
-                {/* ── Bloc 2 : Actions + Delta cette semaine ───────────── */}
-                <div className="card py-5 px-4">
-                  <div className="grid grid-cols-2 divide-x divide-gray-100">
-                    <div className="text-center px-2">
-                      <Zap size={28} className="mx-auto text-amber-500 mb-1.5" />
-                      <p className="text-3xl font-bold text-gray-800">{learner.totalActions}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Actions menées</p>
-                    </div>
-                    <div className="text-center px-2">
-                      <TrendingUp size={28} className={`mx-auto ${learner.actionsThisWeek > 0 ? 'text-emerald-500' : 'text-gray-400'} mb-1.5`} />
-                      <p className={`text-3xl font-bold ${learner.actionsThisWeek > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
-                        {learner.actionsThisWeek > 0 ? `+${learner.actionsThisWeek}` : '0'}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">Cette semaine</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* ── Axes de progrès ───────────────────────────────────── */}
