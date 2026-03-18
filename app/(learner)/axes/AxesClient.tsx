@@ -344,12 +344,12 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                   className={`snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl border-2 p-4 flex flex-col max-h-[calc(100dvh-11rem)] ${dyn.color}`}
                 >
                  <div className="shrink-0">
-                  {/* Ligne 1 : numéro + titre + supprimer */}
-                  <div className="flex items-start gap-3">
-                    <span className="w-9 h-9 rounded-full bg-white/60 border border-current/20 flex items-center justify-center text-base font-bold shrink-0 mt-0.5">
+                  {/* Titre + boutons edit/delete */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
                       {axeIndex + 1}
                     </span>
-                    <p className="font-bold text-base leading-snug line-clamp-2 flex-1">{axe.subject}</p>
+                    <p className="font-bold text-sm leading-snug line-clamp-1 flex-1">{axe.subject}</p>
                     <div className="flex items-center gap-0.5 shrink-0">
                       <button
                         onClick={() => {
@@ -375,37 +375,70 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                     </div>
                   </div>
 
-                  {/* Ligne 2 : actions + niveau */}
-                  <div className="flex items-center gap-2 mt-3">
-                    <span className="text-sm font-semibold">
-                      {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
-                    </span>
-                    <span className="opacity-30">·</span>
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{level.icon}</span>
-                    <span className="text-sm font-medium opacity-80">
-                      Niveau {level.label}
-                    </span>
+                  {/* Moyens / description */}
+                  <div className="h-[32px] mt-1">
+                    {axe.description ? (
+                      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{axe.description}</p>
+                    ) : (
+                      <p className="text-xs text-gray-400 italic">—</p>
+                    )}
                   </div>
 
-                  {/* Barre de progression */}
-                  <div className="mt-3 relative">
-                    <div className="h-3 bg-white/60 rounded-full overflow-hidden">
+                  {/* Niveau actuel - hero */}
+                  <div className="flex items-center justify-center h-[40px] gap-2">
+                    <span className="text-3xl drop-shadow-sm">{level.icon}</span>
+                    <span className="text-sm font-bold text-gray-700">{level.label}</span>
+                  </div>
+
+                  {/* Piste de progression avec jalons */}
+                  <div className="relative h-[20px] mx-1">
+                    <div className="absolute top-[6px] inset-x-0 h-2 bg-white/50 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-current opacity-60 transition-all duration-500"
-                        style={{ width: `${progress}%` }}
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${progress}%`,
+                          background: levelIdx === 0
+                            ? '#94a3b8'
+                            : levelIdx === 1
+                            ? '#38bdf8'
+                            : levelIdx === 2
+                            ? '#34d399'
+                            : levelIdx === 3
+                            ? '#fb923c'
+                            : '#f472b6',
+                        }}
                       />
                     </div>
-                    <div className="relative h-5 mt-0.5">
-                      {MARKERS.map((m, i) => (
-                        <span
-                          key={i}
-                          className={`absolute -translate-x-1/2 text-sm ${i <= levelIdx ? 'opacity-100' : 'opacity-25'}`}
-                          style={{ left: `${m.pos * 100}%` }}
-                        >
-                          {m.icon}
-                        </span>
-                      ))}
+                    <div className="flex justify-between absolute inset-x-0 top-0">
+                      {MARKERS.map((m, i) => {
+                        const reached = i <= levelIdx
+                        const isCurrent = i === levelIdx
+                        return (
+                          <div
+                            key={i}
+                            className={`flex items-center justify-center rounded-full transition-all ${
+                              isCurrent
+                                ? 'w-5 h-5 bg-white shadow-md ring-2 ring-current/40 text-sm z-10'
+                                : reached
+                                ? 'w-4 h-4 mt-0.5 bg-white/90 shadow-sm text-[11px]'
+                                : 'w-4 h-4 mt-0.5 bg-white/40 text-[11px]'
+                            }`}
+                          >
+                            <span className={reached ? '' : 'opacity-30 grayscale text-[10px]'}>{m.icon}</span>
+                          </div>
+                        )
+                      })}
                     </div>
+                  </div>
+
+                  {/* Compteur actions + delta */}
+                  <div className="h-[20px] flex items-center justify-center mt-1">
+                    <p className="text-center text-xs font-semibold text-gray-600">
+                      {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
+                      {axe.actions.length < 9 && (
+                        <span className="font-normal text-gray-400"> · encore {9 - axe.actions.length} pour 🚀</span>
+                      )}
+                    </p>
                   </div>
                  </div>
 
