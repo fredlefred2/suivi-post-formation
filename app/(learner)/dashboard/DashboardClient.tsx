@@ -273,30 +273,33 @@ export default function DashboardClient({
                       : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)',
                   }}
                 >
-                  <div className="p-4 flex-1">
-                    {/* Titre */}
-                    <div className="flex items-center gap-2">
+                  <div className="p-4">
+                    {/* Titre — hauteur fixe */}
+                    <div className="flex items-center gap-2 h-[24px]">
                       <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
                         {axe.index + 1}
                       </span>
                       <p className="font-bold text-sm leading-snug line-clamp-1 flex-1 text-gray-800">{axe.subject}</p>
                     </div>
 
-                    {/* Moyens / description */}
-                    {axe.description && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{axe.description}</p>
-                    )}
+                    {/* Moyens / description — hauteur fixe (2 lignes réservées) */}
+                    <div className="h-[32px] mt-1">
+                      {axe.description ? (
+                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{axe.description}</p>
+                      ) : (
+                        <p className="text-xs text-gray-400 italic">—</p>
+                      )}
+                    </div>
 
-                    {/* Niveau actuel - hero */}
-                    <div className="flex items-center justify-center mt-3 gap-2">
+                    {/* Niveau actuel - hero — hauteur fixe */}
+                    <div className="flex items-center justify-center h-[40px] gap-2">
                       <span className="text-3xl drop-shadow-sm">{currentMarker.icon}</span>
                       <span className="text-sm font-bold text-gray-700">{axe.dyn.label}</span>
                     </div>
 
-                    {/* Piste de progression avec jalons */}
-                    <div className="relative mt-3 mx-1">
-                      {/* Barre de fond */}
-                      <div className="h-2 bg-white/50 rounded-full overflow-hidden">
+                    {/* Piste de progression — hauteur fixe */}
+                    <div className="relative h-[20px] mx-1">
+                      <div className="absolute top-[6px] inset-x-0 h-2 bg-white/50 rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-700"
                           style={{
@@ -313,8 +316,7 @@ export default function DashboardClient({
                           }}
                         />
                       </div>
-                      {/* Jalons sur la barre */}
-                      <div className="flex justify-between absolute inset-x-0 -top-1.5">
+                      <div className="flex justify-between absolute inset-x-0 top-0">
                         {MARKERS.map((m, i) => {
                           const reached = i <= levelIdx
                           const isCurrent = i === levelIdx
@@ -323,7 +325,7 @@ export default function DashboardClient({
                               key={i}
                               className={`flex items-center justify-center rounded-full transition-all ${
                                 isCurrent
-                                  ? 'w-5 h-5 -mt-0 bg-white shadow-md ring-2 ring-current/40 text-sm z-10'
+                                  ? 'w-5 h-5 bg-white shadow-md ring-2 ring-current/40 text-sm z-10'
                                   : reached
                                   ? 'w-4 h-4 mt-0.5 bg-white/90 shadow-sm text-[11px]'
                                   : 'w-4 h-4 mt-0.5 bg-white/40 text-[11px]'
@@ -336,19 +338,21 @@ export default function DashboardClient({
                       </div>
                     </div>
 
-                    {/* Compteur actions */}
-                    <p className="text-center text-xs font-semibold text-gray-600 mt-3">
-                      {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
-                      {axe.completedCount < 9 && (
-                        <span className="font-normal text-gray-400"> · encore {9 - axe.completedCount} pour 🚀</span>
-                      )}
-                    </p>
+                    {/* Compteur actions — hauteur fixe */}
+                    <div className="h-[20px] flex items-center justify-center mt-1">
+                      <p className="text-center text-xs font-semibold text-gray-600">
+                        {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
+                        {axe.completedCount < 9 && (
+                          <span className="font-normal text-gray-400"> · encore {9 - axe.completedCount} pour 🚀</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Footer : toujours affiché, même si vide */}
+                  {/* Footer — toujours affiché, hauteurs fixes */}
                   <div className="bg-white/50 px-4 py-2 border-t border-white/60">
-                    {/* Zone likes + commentaires */}
-                    <div className="flex items-center justify-center gap-5 text-sm min-h-[22px]">
+                    {/* Zone likes + commentaires — hauteur fixe */}
+                    <div className="flex items-center justify-center gap-5 text-sm h-[22px]">
                       {axe.likesCount > 0 && (
                         <span className="flex items-center gap-1 text-pink-500 font-semibold">❤️ {axe.likesCount}</span>
                       )}
@@ -357,17 +361,19 @@ export default function DashboardClient({
                       )}
                     </div>
 
-                    {/* Zone derniere action */}
-                    <p className="text-xs text-gray-500 line-clamp-1 mt-1 min-h-[18px]">
-                      {axe.lastAction ? (
-                        <>
-                          <span className="font-medium text-gray-600">Derniere :</span> {axe.lastAction.description}
-                          <span className="text-gray-400"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-                        </>
-                      ) : (
-                        <span className="text-gray-400 italic">Aucune action</span>
-                      )}
-                    </p>
+                    {/* Zone derniere action — hauteur fixe */}
+                    <div className="h-[18px] mt-1">
+                      <p className="text-xs text-gray-500 line-clamp-1">
+                        {axe.lastAction ? (
+                          <>
+                            <span className="font-medium text-gray-600">Derniere :</span> {axe.lastAction.description}
+                            <span className="text-gray-400"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                          </>
+                        ) : (
+                          <span className="text-gray-400 italic">Aucune action</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </Link>
               )
