@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { AlertCircle, Plus, Flame, Trophy } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
-import { MARKERS, getCurrentLevelIndex } from '@/lib/axeHelpers'
+import { MARKERS, getCurrentLevelIndex, getProgress } from '@/lib/axeHelpers'
 import QuickAddAction from '@/app/components/QuickAddAction'
 import QuickCheckin from '@/app/components/QuickCheckin'
 import { useRouter } from 'next/navigation'
@@ -253,72 +253,120 @@ export default function DashboardClient({
           >
             {axes.map((axe) => {
               const levelIdx = getCurrentLevelIndex(axe.completedCount)
+              const progress = getProgress(axe.completedCount)
+              const currentMarker = MARKERS[levelIdx]
 
               return (
                 <Link
                   key={axe.id}
                   href={`/axes?index=${axe.index}`}
-                  className={`snap-center shrink-0 w-[80vw] max-w-[320px] rounded-xl border-2 p-3 block hover:shadow-lg transition-all ${axe.dyn.color}`}
+                  className="snap-center shrink-0 w-[80vw] max-w-[320px] rounded-2xl block hover:shadow-xl transition-all overflow-hidden"
+                  style={{
+                    background: levelIdx === 0
+                      ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'
+                      : levelIdx === 1
+                      ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
+                      : levelIdx === 2
+                      ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+                      : levelIdx === 3
+                      ? 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)'
+                      : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)',
+                  }}
                 >
-                  {/* Titre */}
-                  <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-white/60 border border-current/20 flex items-center justify-center text-sm font-bold shrink-0">
-                      {axe.index + 1}
-                    </span>
-                    <p className="font-bold text-sm leading-snug line-clamp-1 flex-1">{axe.subject}</p>
-                  </div>
-
-                  {/* Moyens / description */}
-                  {axe.description && (
-                    <p className="text-xs opacity-60 mt-1.5 line-clamp-2 leading-relaxed">{axe.description}</p>
-                  )}
-
-                  {/* 5 icones avec jauge arrondie */}
-                  <div className="flex justify-between mt-3 px-0.5">
-                    {MARKERS.map((m, i) => {
-                      const reached = i <= levelIdx
-                      return (
-                        <div key={i} className="flex flex-col items-center gap-0.5">
-                          <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl transition-all ${
-                              reached
-                                ? 'bg-white/80 shadow-sm ring-2 ring-current/30'
-                                : 'bg-white/30'
-                            }`}
-                          >
-                            <span className={reached ? '' : 'opacity-20 grayscale'}>{m.icon}</span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Nombre d'actions */}
-                  <p className="text-center text-xs font-semibold mt-2 opacity-80">
-                    {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
-                  </p>
-
-                  {/* Likes + commentaires - centres */}
-                  {(axe.likesCount > 0 || axe.commentsCount > 0) && (
-                    <div className="flex items-center justify-center gap-4 mt-2 text-sm">
-                      {axe.likesCount > 0 && (
-                        <span className="flex items-center gap-1 text-pink-500 font-semibold">❤️ {axe.likesCount}</span>
-                      )}
-                      {axe.commentsCount > 0 && (
-                        <span className="flex items-center gap-1 text-indigo-500 font-semibold">💬 {axe.commentsCount}</span>
-                      )}
+                  <div className="p-4">
+                    {/* Titre */}
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
+                        {axe.index + 1}
+                      </span>
+                      <p className="font-bold text-sm leading-snug line-clamp-1 flex-1 text-gray-800">{axe.subject}</p>
                     </div>
-                  )}
 
-                  {/* Derniere action */}
-                  {axe.lastAction && (
-                    <div className="mt-2 pt-2 border-t border-current/10">
-                      <p className="text-xs opacity-70 line-clamp-1">
-                        <span className="font-medium">Derniere :</span> {axe.lastAction.description}
-                      </p>
-                      <p className="text-[10px] opacity-40 mt-0.5">
-                        {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                      </p>
+                    {/* Moyens / description */}
+                    {axe.description && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{axe.description}</p>
+                    )}
+
+                    {/* Niveau actuel - hero */}
+                    <div className="flex items-center justify-center mt-3 gap-2">
+                      <span className="text-3xl drop-shadow-sm">{currentMarker.icon}</span>
+                      <span className="text-sm font-bold text-gray-700">{axe.dyn.label}</span>
+                    </div>
+
+                    {/* Piste de progression avec jalons */}
+                    <div className="relative mt-3 mx-1">
+                      {/* Barre de fond */}
+                      <div className="h-2 bg-white/50 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{
+                            width: `${progress}%`,
+                            background: levelIdx === 0
+                              ? '#94a3b8'
+                              : levelIdx === 1
+                              ? '#38bdf8'
+                              : levelIdx === 2
+                              ? '#34d399'
+                              : levelIdx === 3
+                              ? '#fb923c'
+                              : '#f472b6',
+                          }}
+                        />
+                      </div>
+                      {/* Jalons sur la barre */}
+                      <div className="flex justify-between absolute inset-x-0 -top-1.5">
+                        {MARKERS.map((m, i) => {
+                          const reached = i <= levelIdx
+                          const isCurrent = i === levelIdx
+                          return (
+                            <div
+                              key={i}
+                              className={`flex items-center justify-center rounded-full transition-all ${
+                                isCurrent
+                                  ? 'w-5 h-5 -mt-0 bg-white shadow-md ring-2 ring-current/40 text-sm z-10'
+                                  : reached
+                                  ? 'w-4 h-4 mt-0.5 bg-white/90 shadow-sm text-[11px]'
+                                  : 'w-4 h-4 mt-0.5 bg-white/40 text-[11px]'
+                              }`}
+                            >
+                              <span className={reached ? '' : 'opacity-30 grayscale text-[10px]'}>{m.icon}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Compteur actions */}
+                    <p className="text-center text-xs font-semibold text-gray-600 mt-3">
+                      {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
+                      {axe.completedCount < 9 && (
+                        <span className="font-normal text-gray-400"> · encore {9 - axe.completedCount} pour 🚀</span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Footer : likes/commentaires + dernière action */}
+                  {(axe.likesCount > 0 || axe.commentsCount > 0 || axe.lastAction) && (
+                    <div className="bg-white/50 px-4 py-2.5 border-t border-white/60">
+                      {/* Likes + commentaires */}
+                      {(axe.likesCount > 0 || axe.commentsCount > 0) && (
+                        <div className="flex items-center justify-center gap-5 text-sm">
+                          {axe.likesCount > 0 && (
+                            <span className="flex items-center gap-1 text-pink-500 font-semibold">❤️ {axe.likesCount}</span>
+                          )}
+                          {axe.commentsCount > 0 && (
+                            <span className="flex items-center gap-1 text-indigo-500 font-semibold">💬 {axe.commentsCount}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Derniere action */}
+                      {axe.lastAction && (
+                        <p className={`text-xs text-gray-500 line-clamp-1 ${(axe.likesCount > 0 || axe.commentsCount > 0) ? 'mt-1.5' : ''}`}>
+                          <span className="font-medium text-gray-600">Derniere :</span> {axe.lastAction.description}
+                          <span className="text-gray-400"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                        </p>
+                      )}
                     </div>
                   )}
                 </Link>
