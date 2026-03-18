@@ -78,6 +78,12 @@ export default async function DashboardPage() {
       .filter(a => a.created_at >= lastMonday.toISOString() && a.created_at < thisMonday.toISOString()).length
   }, 0) ?? 0
 
+  // Admin client (réutilisé pour rang + feedback)
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   // Rang dans le groupe
   let rank: number | null = null
   let groupSize: number | null = null
@@ -123,12 +129,6 @@ export default async function DashboardPage() {
   const firstActionId = axes?.flatMap((axe) =>
     ((axe.actions as { id: string }[]) ?? []).map((a) => a.id)
   )[0] ?? null
-
-  // Admin client (réutilisé pour feedback + rang)
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
 
   // Feedback (likes + commentaires) pour les actions du dashboard
   const allActionIds = (axes ?? []).flatMap(
