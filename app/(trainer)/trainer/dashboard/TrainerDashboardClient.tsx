@@ -77,6 +77,7 @@ type Props = {
   actions: ActionData[]
   currentWeek: number
   currentYear: number
+  isCheckinOpen: boolean
   unassignedLearners?: UnassignedLearner[]
   learnerAxesMap?: Record<string, number[]>
   initialGroup?: string
@@ -89,6 +90,7 @@ export default function TrainerDashboardClient({
   actions,
   currentWeek,
   currentYear,
+  isCheckinOpen,
   unassignedLearners = [],
   learnerAxesMap = {},
   initialGroup,
@@ -201,6 +203,46 @@ export default function TrainerDashboardClient({
       .filter((m) => !thisWeekCheckinLearnerIds.has(m.learner_id))
   }, [filteredGroups, thisWeekCheckinLearnerIds])
   const missingCount = missingCheckinMembers.length
+
+  // ── Semaine passée : % check-ins réalisés ──
+  const lastWeekInfo = useMemo(() => {
+    // Semaine précédente
+    let prevWeek = currentWeek - 1
+    let prevYear = currentYear
+    if (prevWeek <= 0) { prevWeek = 52; prevYear-- }
+
+    const lastWeekCheckins = filteredCheckins.filter(
+      (c) => c.week_number === prevWeek && c.year === prevYear
+    )
+    const uniqueLearnersChecked = new Set(lastWeekCheckins.map((c) => c.learner_id)).size
+    const totalMembers = filteredLearnerIds.size
+    const pct = totalMembers > 0 ? Math.round((uniqueLearnersChecked / totalMembers) * 100) : 0
+
+    // Calculer les dates lundi → dimanche de la semaine passée
+    const now = new Date()
+    const day = now.getDay()
+    const diffToMonday = day === 0 ? 6 : day - 1
+    const thisMonday = new Date(now)
+    thisMonday.setHours(0, 0, 0, 0)
+    thisMonday.setDate(now.getDate() - diffToMonday)
+    const lastMonday = new Date(thisMonday)
+    lastMonday.setDate(thisMonday.getDate() - 7)
+    const lastSunday = new Date(thisMonday)
+    lastSunday.setDate(thisMonday.getDate() - 1)
+
+    const fmt = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    const label = `${fmt(lastMonday)} - ${fmt(lastSunday)}`
+
+    // Prochain check-in : vendredi de cette semaine (ou vendredi prochain si déjà passé)
+    const nextFriday = new Date(thisMonday)
+    nextFriday.setDate(thisMonday.getDate() + 4) // lundi + 4 = vendredi
+    if (now > nextFriday) {
+      nextFriday.setDate(nextFriday.getDate() + 7)
+    }
+    const nextCheckinLabel = nextFriday.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+    return { pct, label, nextCheckinLabel, uniqueLearnersChecked, totalMembers }
+  }, [currentWeek, currentYear, filteredCheckins, filteredLearnerIds])
 
   // ── Compteurs animes ──
   const animatedMembers = useCountUp(filteredLearnerIds.size)
@@ -376,17 +418,26 @@ export default function TrainerDashboardClient({
             <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">cette semaine</p>
           </Link>
 
-          {/* Colonne 3 : Check-ins manquants */}
+          {/* Colonne 3 : Check-ins */}
           <div className="text-center">
-            {missingCount === 0 ? (
-              <>
-                <div className="text-3xl font-black text-emerald-600">✓</div>
-                <p className="text-[11px] text-emerald-600 mt-0.5 leading-tight font-medium">tous a jour</p>
-              </>
+            {isCheckinOpen ? (
+              missingCount === 0 ? (
+                <>
+                  <div className="text-3xl font-black text-emerald-600">✓</div>
+                  <p className="text-[11px] text-emerald-600 mt-0.5 leading-tight font-medium">tous a jour</p>
+                </>
+              ) : (
+                <>
+                  <div className="text-3xl font-black text-amber-600">{missingCount}</div>
+                  <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">en attente</p>
+                </>
+              )
             ) : (
               <>
-                <div className="text-3xl font-black text-amber-600">{missingCount}</div>
-                <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">en attente</p>
+                <div className={`text-3xl font-black ${lastWeekInfo.pct === 100 ? 'text-emerald-600' : lastWeekInfo.pct >= 50 ? 'text-indigo-600' : 'text-amber-600'}`}>
+                  {lastWeekInfo.pct}%
+                </div>
+                <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">check-ins</p>
               </>
             )}
           </div>
@@ -410,14 +461,33 @@ export default function TrainerDashboardClient({
         )}
       </div>
 
-      {/* ── Bandeau check-ins manquants (si > 0) ── */}
-      {missingCount > 0 && (
-        <div className="rounded-xl px-4 py-2.5 bg-amber-50 border border-amber-200">
-          <p className="text-sm text-amber-800">
-            <span className="font-semibold">Check-ins en attente :</span>{' '}
-            {missingCheckinMembers.slice(0, 4).map((m) => m.first_name).join(', ')}
-            {missingCheckinMembers.length > 4 && ` et ${missingCheckinMembers.length - 4} autre${missingCheckinMembers.length - 4 > 1 ? 's' : ''}`}
-          </p>
+      {/* ── Bandeau check-ins : conditionnel selon période ── */}
+      {isCheckinOpen ? (
+        missingCount > 0 && (
+          <div className="rounded-xl px-4 py-2.5 bg-amber-50 border border-amber-200">
+            <p className="text-sm text-amber-800">
+              <span className="font-semibold">Check-ins en attente :</span>{' '}
+              {missingCheckinMembers.slice(0, 4).map((m) => m.first_name).join(', ')}
+              {missingCheckinMembers.length > 4 && ` et ${missingCheckinMembers.length - 4} autre${missingCheckinMembers.length - 4 > 1 ? 's' : ''}`}
+            </p>
+          </div>
+        )
+      ) : (
+        <div className="rounded-xl px-4 py-3 bg-indigo-50 border border-indigo-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-indigo-800">
+                {lastWeekInfo.pct}% de check-ins realisés
+              </p>
+              <p className="text-xs text-indigo-500 mt-0.5">
+                Semaine du {lastWeekInfo.label} — {lastWeekInfo.uniqueLearnersChecked}/{lastWeekInfo.totalMembers}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] text-indigo-400">Prochain check-in</p>
+              <p className="text-xs font-medium text-indigo-700 capitalize">{lastWeekInfo.nextCheckinLabel}</p>
+            </div>
+          </div>
         </div>
       )}
 

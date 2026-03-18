@@ -200,6 +200,7 @@ export default async function TrainerDashboardPage({
       actions={actions}
       currentWeek={week}
       currentYear={year}
+      isCheckinOpen={checkinCtx.isOpen}
       unassignedLearners={unassignedLearners}
       learnerAxesMap={learnerAxesMap}
       initialGroup={searchParams.group}
