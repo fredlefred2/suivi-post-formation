@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
-import { formatWeek } from '@/lib/utils'
-import { WEATHER_COLORS } from '@/lib/types'
 import type { ActionFeedbackData } from '@/lib/types'
 import LearnerAxesSection from '../learner/[id]/LearnerAxesSection'
 
@@ -314,42 +312,6 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                   />
                 )}
 
-                {/* ── Historique météo ──────────────────────────────────── */}
-                {learner.checkins.length > 0 && (
-                  <div className="card">
-                    <h2 className="section-title mb-4">🌤 Historique météo</h2>
-
-                    {/* Résumé en 3 blocs */}
-                    <div className="grid grid-cols-3 gap-3 mb-5">
-                      {(['sunny', 'cloudy', 'stormy'] as const).map((w) => (
-                        <div key={w} className={`rounded-lg p-3 text-center ${WEATHER_COLORS[w]}`}>
-                          <p className="text-2xl">{w === 'sunny' ? '☀️' : w === 'cloudy' ? '⛅' : '⛈️'}</p>
-                          <p className="font-bold text-lg mt-0.5">{learner.weatherCount[w]}</p>
-                          <p className="text-xs mt-0.5">
-                            {learner.checkins.length > 0
-                              ? `${Math.round((learner.weatherCount[w] / learner.checkins.length) * 100)}%`
-                              : '0%'}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Timeline pills */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {[...learner.checkins].reverse().map((ci) => (
-                        <span
-                          key={ci.id}
-                          title={formatWeek(ci.week_number, ci.year)}
-                          className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-default ${
-                            WEATHER_COLORS[ci.weather as keyof typeof WEATHER_COLORS]
-                          }`}
-                        >
-                          {ci.weather === 'sunny' ? '☀️' : ci.weather === 'cloudy' ? '⛅' : '⛈️'} S{ci.week_number}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* État vide */}
                 {learner.checkins.length === 0 && learner.axes.length === 0 && (
