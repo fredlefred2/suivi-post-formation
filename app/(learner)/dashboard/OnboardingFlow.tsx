@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { LayoutDashboard, Target, ClipboardCheck, Users, MessageCircle, Bell } from 'lucide-react'
@@ -22,7 +21,6 @@ export default function OnboardingFlow({
   userId, firstName, axesCount, totalActions, totalCheckins,
   firstActionId, children,
 }: Props) {
-  const router = useRouter()
   const { setIsOnboarding } = useOnboarding()
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
@@ -38,7 +36,7 @@ export default function OnboardingFlow({
     // Si l'apprenant a >= 1 axe et n'est PAS dans une session d'onboarding active
     // → auto-compléter tout l'onboarding (il est revenu après avoir quitté)
     if (axesCount >= 1 && !isOnboardingDone && !isActiveSession) {
-      const allSteps = ['welcome', 'axis-1', 'axis-2', 'axis-3', 'first-action', 'edit-delete', 'feedback-intro', 'progression', 'checkin', 'menu-tour']
+      const allSteps = ['welcome', 'axis-1', 'axis-2', 'axis-3', 'progression', 'checkin', 'menu-tour']
       for (const step of allSteps) {
         if (!stored[step]) {
           stored[step] = true
@@ -52,9 +50,9 @@ export default function OnboardingFlow({
       sessionStorage.setItem(sessionKey, 'true')
     }
 
-    // Auto-compléter les étapes de démo si l'apprenant a déjà des actions (legacy)
+    // Auto-compléter les étapes restantes si l'apprenant a déjà des actions (legacy)
     if (totalActions >= 1) {
-      const autoSteps = ['first-action', 'edit-delete', 'feedback-intro', 'progression', 'checkin', 'menu-tour']
+      const autoSteps = ['progression', 'checkin', 'menu-tour']
       for (const step of autoSteps) {
         if (!stored[step]) {
           stored[step] = true
@@ -104,9 +102,8 @@ export default function OnboardingFlow({
         <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
           {[
             { n: '1', text: <>Définis tes <strong>axes</strong> de progrès</> },
-            { n: '2', text: <>Ajoute une <strong>action concrète</strong></> },
-            { n: '3', text: <>Découvre la <strong>dynamique</strong> de progression</> },
-            { n: '4', text: <>Comprends le <strong>check-in</strong> hebdomadaire</> },
+            { n: '2', text: <>Découvre ta <strong>dynamique</strong> de progression</> },
+            { n: '3', text: <>Comprends le <strong>check-in</strong> hebdomadaire</> },
           ].map((s) => (
             <div key={s.n} className="flex items-center gap-3 text-sm">
               <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
@@ -171,66 +168,46 @@ export default function OnboardingFlow({
       skipAction: skipAxis3,
     },
 
-    // ── Étape 5 : Démo auto des actions ──
+    // ── Étape 5 : Dynamique de progression ──
     {
-      id: 'first-action',
-      title: 'Découvre la gestion des actions',
-      icon: '⚡',
+      id: 'progression',
+      title: 'Ta dynamique de progression',
+      icon: 'yapluka',
       bravo: axesCount >= 3
         ? '🎉 Parfait ! Tes 3 axes sont définis !'
         : axesCount >= 2
         ? '🎉 Super ! Tes axes sont définis !'
         : '🎉 Ton axe est créé !',
-      description: 'On va te montrer comment ajouter, modifier et supprimer une action. Tout se fait automatiquement, suis le guide !',
+      description: 'Plus tu ajoutes d\'actions, plus ta dynamique monte ! Voici ta piste de progression :',
       extra: (
-        <div className="bg-amber-50 rounded-xl p-3 mt-3 text-left text-sm text-amber-800">
-          <p className="font-medium mb-1">Tu vas découvrir :</p>
-          <ul className="space-y-1 text-amber-600">
-            <li>➕ Ajouter une action</li>
-            <li>✏️ Modifier une action</li>
-            <li>❤️ Likes et 💬 commentaires</li>
-            <li>🗑️ Supprimer une action</li>
-            <li>💬 Envoyer un message à ton formateur</li>
-            <li>🔔 Suivre tes notifications</li>
-          </ul>
-        </div>
-      ),
-      isCompleted: ack['edit-delete'] ?? false,
-      cta: {
-        label: 'C\'est parti !',
-        action: () => router.push('/axes?onboarding=auto-demo'),
-      },
-    },
-
-    // ── Étape 6 : Dynamique de progression ──
-    {
-      id: 'progression',
-      title: 'Ta dynamique de progression',
-      icon: 'yapluka',
-      bravo: '🎉 Bien joué ! Tu maîtrises la gestion des actions !',
-      description: 'Plus tu ajoutes d\'actions, plus ta dynamique monte ! Voici les 5 niveaux que tu peux atteindre :',
-      extra: (
-        <div className="flex flex-col gap-1 mt-2 max-w-xs mx-auto w-full">
-          {[
-            { icon: '⚪', label: 'Veille', desc: '0 action', color: 'bg-slate-100 text-slate-700' },
-            { icon: '👣', label: 'Impulsion', desc: '1-2 actions', color: 'bg-sky-100 text-sky-700' },
-            { icon: '🥁', label: 'Rythme', desc: '3-5 actions', color: 'bg-emerald-100 text-emerald-700' },
-            { icon: '🔥', label: 'Intensité', desc: '6-8 actions', color: 'bg-orange-100 text-orange-700' },
-            { icon: '🚀', label: 'Propulsion', desc: '9+ actions', color: 'bg-rose-100 text-rose-700' },
-          ].map((level) => (
-            <div key={level.label} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${level.color}`}>
-              <span className="text-base">{level.icon}</span>
-              <span className="font-medium text-xs flex-1">{level.label}</span>
-              <span className="text-[10px] opacity-70">{level.desc}</span>
-            </div>
-          ))}
+        <div className="mt-3 max-w-xs mx-auto w-full">
+          {/* Piste de progression visuelle */}
+          <div className="relative flex items-center justify-between px-2 py-3">
+            {/* Ligne de connexion */}
+            <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-slate-200 via-emerald-200 to-rose-200 rounded-full" />
+            {[
+              { icon: '⚪', label: 'Veille', color: 'bg-slate-100 ring-slate-300' },
+              { icon: '👣', label: 'Impulsion', color: 'bg-sky-100 ring-sky-300' },
+              { icon: '🥁', label: 'Rythme', color: 'bg-emerald-100 ring-emerald-300' },
+              { icon: '🔥', label: 'Intensité', color: 'bg-orange-100 ring-orange-300' },
+              { icon: '🚀', label: 'Propulsion', color: 'bg-rose-100 ring-rose-300' },
+            ].map((level) => (
+              <div key={level.label} className="relative flex flex-col items-center gap-1 z-10">
+                <div className={`w-10 h-10 rounded-full ${level.color} ring-2 flex items-center justify-center`}>
+                  <span className="text-lg">{level.icon}</span>
+                </div>
+                <span className="text-[9px] font-medium text-gray-500">{level.label}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-1">Chaque action te rapproche du niveau suivant !</p>
         </div>
       ),
       isCompleted: ack['progression'] ?? false,
       cta: { label: 'Compris !', action: () => acknowledge('progression') },
     },
 
-    // ── Étape 7 : Check-in hebdomadaire ──
+    // ── Étape 6 : Check-in hebdomadaire ──
     {
       id: 'checkin',
       title: 'Le check-in hebdomadaire',
@@ -255,7 +232,7 @@ export default function OnboardingFlow({
       cta: { label: 'Ok, compris !', action: () => acknowledge('checkin') },
     },
 
-    // ── Étape 8 : Tour des menus ──
+    // ── Étape 7 : Tour des menus ──
     {
       id: 'menu-tour',
       title: 'Ton espace YAPLUKA',
@@ -267,7 +244,7 @@ export default function OnboardingFlow({
           {[
             {
               Icon: LayoutDashboard, label: 'Tableau de bord',
-              desc: 'Progression, stats et actions récentes.',
+              desc: 'Ta progression, tes actions et ta météo.',
               gradient: 'from-indigo-500 to-indigo-600',
               bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700',
             },
