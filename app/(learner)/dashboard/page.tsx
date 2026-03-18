@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { getCurrentWeek, calculateStreak, getCheckinContext } from '@/lib/utils'
 import { getDynamique } from '@/lib/axeHelpers'
+import type { ActionFeedbackData } from '@/lib/types'
 import OnboardingFlow from './OnboardingFlow'
 import DashboardClient from './DashboardClient'
 
@@ -21,7 +22,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase.from('profiles').select('first_name, created_at').eq('id', user!.id).single(),
     supabase.from('axes')
-      .select('id, subject, difficulty, initial_score, actions(id, created_at)')
+      .select('id, subject, description, difficulty, initial_score, actions(id, description, created_at)')
       .eq('learner_id', user!.id)
       .order('created_at'),
     supabase.from('checkins')
@@ -81,10 +82,6 @@ export default async function DashboardPage() {
   let rank: number | null = null
   let groupSize: number | null = null
   try {
-    const admin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
     const { data: membership } = await admin
       .from('group_members')
       .select('group_id')
@@ -127,15 +124,52 @@ export default async function DashboardPage() {
     ((axe.actions as { id: string }[]) ?? []).map((a) => a.id)
   )[0] ?? null
 
+  // Admin client (réutilisé pour feedback + rang)
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  // Feedback (likes + commentaires) pour les actions du dashboard
+  const allActionIds = (axes ?? []).flatMap(
+    (axe) => ((axe.actions ?? []) as { id: string }[]).map((a) => a.id)
+  )
+
+  const [{ data: likesData }, { data: commentsData }] = await Promise.all([
+    allActionIds.length > 0
+      ? admin.from('action_likes').select('action_id').in('action_id', allActionIds)
+      : Promise.resolve({ data: [] as { action_id: string }[] }),
+    allActionIds.length > 0
+      ? admin.from('action_comments').select('action_id').in('action_id', allActionIds)
+      : Promise.resolve({ data: [] as { action_id: string }[] }),
+  ])
+
+  // Comptes par axe
+  const likesCountByAxe: Record<string, number> = {}
+  const commentsCountByAxe: Record<string, number> = {}
+  ;(axes ?? []).forEach((axe) => {
+    const actionIds = new Set(((axe.actions ?? []) as { id: string }[]).map(a => a.id))
+    likesCountByAxe[axe.id] = (likesData ?? []).filter(l => actionIds.has(l.action_id)).length
+    commentsCountByAxe[axe.id] = (commentsData ?? []).filter(c => actionIds.has(c.action_id)).length
+  })
+
   // Axes formatés pour le client
   const axeItems = (axes ?? []).map((axe, index) => {
-    const completedCount = ((axe.actions as { id: string }[]) ?? []).length
+    const actions = (axe.actions ?? []) as { id: string; description: string; created_at: string }[]
+    const completedCount = actions.length
+    const lastAction = actions.length > 0
+      ? actions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+      : null
     return {
       id: axe.id,
       index,
       subject: axe.subject,
+      description: (axe as { description?: string | null }).description ?? null,
       completedCount,
       dyn: getDynamique(completedCount),
+      likesCount: likesCountByAxe[axe.id] ?? 0,
+      commentsCount: commentsCountByAxe[axe.id] ?? 0,
+      lastAction: lastAction ? { description: lastAction.description, date: lastAction.created_at } : null,
     }
   })
 

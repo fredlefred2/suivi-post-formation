@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { AlertCircle, Plus, Flame, Trophy } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
-import { MARKERS, getCurrentLevelIndex, getProgress, getCurrentLevel } from '@/lib/axeHelpers'
+import { MARKERS, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import QuickAddAction from '@/app/components/QuickAddAction'
 import QuickCheckin from '@/app/components/QuickCheckin'
 import { useRouter } from 'next/navigation'
@@ -19,8 +19,12 @@ type AxeItem = {
   id: string
   index: number
   subject: string
+  description: string | null
   completedCount: number
   dyn: { label: string; icon: string; color: string }
+  likesCount: number
+  commentsCount: number
+  lastAction: { description: string; date: string } | null
 }
 
 type Props = {
@@ -248,49 +252,62 @@ export default function DashboardClient({
             className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1"
           >
             {axes.map((axe) => {
-              const progress = getProgress(axe.completedCount)
               const levelIdx = getCurrentLevelIndex(axe.completedCount)
-              const level = getCurrentLevel(axe.completedCount)
 
               return (
                 <Link
                   key={axe.id}
                   href={`/axes?index=${axe.index}`}
-                  className={`snap-center shrink-0 w-[75vw] max-w-[300px] rounded-xl border-2 p-3 block hover:shadow-lg transition-all ${axe.dyn.color}`}
+                  className={`snap-center shrink-0 w-[80vw] max-w-[320px] rounded-xl border-2 p-3 block hover:shadow-lg transition-all ${axe.dyn.color}`}
                 >
-                  {/* Titre + niveau */}
+                  {/* Titre */}
                   <div className="flex items-center gap-2">
                     <span className="w-7 h-7 rounded-full bg-white/60 border border-current/20 flex items-center justify-center text-sm font-bold shrink-0">
                       {axe.index + 1}
                     </span>
                     <p className="font-bold text-sm leading-snug line-clamp-1 flex-1">{axe.subject}</p>
-                    <span className="text-lg shrink-0">{level.icon}</span>
                   </div>
 
-                  {/* Barre de progression compacte */}
-                  <div className="mt-2 relative">
-                    <div className="h-2 bg-white/60 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-current opacity-60 transition-all duration-500"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between mt-0.5 px-0.5">
-                      {MARKERS.map((m, i) => (
-                        <span
-                          key={i}
-                          className={`text-xs ${i <= levelIdx ? 'opacity-100' : 'opacity-25'}`}
-                        >
-                          {m.icon}
-                        </span>
-                      ))}
-                    </div>
+                  {/* Moyens / description */}
+                  {axe.description && (
+                    <p className="text-xs opacity-60 mt-1.5 line-clamp-2 leading-relaxed">{axe.description}</p>
+                  )}
+
+                  {/* 5 icones de niveau */}
+                  <div className="flex justify-between mt-2.5 px-1">
+                    {MARKERS.map((m, i) => (
+                      <span
+                        key={i}
+                        className={`text-lg transition-all ${i <= levelIdx ? 'opacity-100 scale-110' : 'opacity-20 grayscale'}`}
+                      >
+                        {m.icon}
+                      </span>
+                    ))}
                   </div>
 
-                  {/* Compteur actions */}
-                  <p className="text-xs font-medium opacity-70 mt-1">
-                    {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''} · {level.label}
-                  </p>
+                  {/* Likes + commentaires */}
+                  {(axe.likesCount > 0 || axe.commentsCount > 0) && (
+                    <div className="flex items-center gap-3 mt-2 text-xs">
+                      {axe.likesCount > 0 && (
+                        <span className="flex items-center gap-1 text-pink-500">❤️ {axe.likesCount}</span>
+                      )}
+                      {axe.commentsCount > 0 && (
+                        <span className="flex items-center gap-1 text-indigo-500">💬 {axe.commentsCount}</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Derniere action */}
+                  {axe.lastAction && (
+                    <div className="mt-2 pt-2 border-t border-current/10">
+                      <p className="text-xs opacity-70 line-clamp-1">
+                        <span className="font-medium">Derniere :</span> {axe.lastAction.description}
+                      </p>
+                      <p className="text-[10px] opacity-40 mt-0.5">
+                        {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                  )}
                 </Link>
               )
             })}
