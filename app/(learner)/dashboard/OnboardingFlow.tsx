@@ -1,11 +1,42 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { LayoutDashboard, Target, ClipboardCheck, Users, MessageCircle, Bell } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
+import CoachMark from '@/app/components/CoachMark'
+import QuickAddAction from '@/app/components/QuickAddAction'
+
+// All step IDs in order
+const ALL_STEPS = [
+  'welcome',
+  'axis-1',
+  'progression',
+  'fab-action',
+  'demo-action',
+  'show-feedback',
+  'delete-demo',
+  'checkin',
+  'menu-tour',
+] as const
+
+type StepId = (typeof ALL_STEPS)[number]
+
+// Menu tour sub-steps
+const MENU_NAV_ITEMS = [
+  { selector: '[data-onboarding="nav-dashboard"]', label: 'Tableau de bord', desc: 'Ta progression et tes actions' },
+  { selector: '[data-onboarding="nav-axes"]', label: 'Mes actions', desc: 'Gere tes actions pour chaque axe' },
+  { selector: '[data-onboarding="nav-checkin"]', label: 'Check-in', desc: 'Meteo et bilan hebdomadaire' },
+  { selector: '[data-onboarding="nav-team"]', label: 'Team', desc: 'Tes coequipiers' },
+]
+
+type AxeOption = {
+  id: string
+  subject: string
+  completedCount: number
+}
 
 type Props = {
   userId: string
@@ -14,30 +45,38 @@ type Props = {
   totalActions: number
   totalCheckins: number
   firstActionId?: string | null
+  axes: AxeOption[]
   children: React.ReactNode
 }
 
 export default function OnboardingFlow({
-  userId, firstName, axesCount, totalActions, totalCheckins,
-  firstActionId, children,
+  userId,
+  firstName,
+  axesCount,
+  totalActions,
+  totalCheckins,
+  firstActionId,
+  axes,
+  children,
 }: Props) {
+  const router = useRouter()
   const { setIsOnboarding } = useOnboarding()
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
+  const [menuSubStep, setMenuSubStep] = useState(0)
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
 
   useEffect(() => {
     const stored = getOnboardingAck(userId)
     const isOnboardingDone = stored['menu-tour'] === true
 
-    // Vérifier si on est dans une session d'onboarding active
+    // Check for active onboarding session
     const sessionKey = `onboarding_session_${userId}`
     const isActiveSession = sessionStorage.getItem(sessionKey) === 'true'
 
-    // Si l'apprenant a >= 1 axe et n'est PAS dans une session d'onboarding active
-    // → auto-compléter tout l'onboarding (il est revenu après avoir quitté)
+    // Existing users with axes and no active session → auto-complete everything
     if (axesCount >= 1 && !isOnboardingDone && !isActiveSession) {
-      const allSteps = ['welcome', 'axis-1', 'axis-2', 'axis-3', 'progression', 'checkin', 'menu-tour']
-      for (const step of allSteps) {
+      for (const step of ALL_STEPS) {
         if (!stored[step]) {
           stored[step] = true
           acknowledgeStep(step, userId)
@@ -45,14 +84,14 @@ export default function OnboardingFlow({
       }
     }
 
-    // Si l'apprenant a 0 axes et l'onboarding n'est pas terminé → démarrer la session
+    // 0 axes and onboarding not done → start session
     if (axesCount === 0 && !isOnboardingDone) {
       sessionStorage.setItem(sessionKey, 'true')
     }
 
-    // Auto-compléter les étapes restantes si l'apprenant a déjà des actions (legacy)
+    // Users with actions → auto-complete from progression onwards
     if (totalActions >= 1) {
-      const autoSteps = ['progression', 'checkin', 'menu-tour']
+      const autoSteps: StepId[] = ['progression', 'fab-action', 'demo-action', 'show-feedback', 'delete-demo', 'checkin', 'menu-tour']
       for (const step of autoSteps) {
         if (!stored[step]) {
           stored[step] = true
@@ -65,248 +104,24 @@ export default function OnboardingFlow({
     setMounted(true)
   }, [axesCount, totalActions, userId])
 
-  function acknowledge(stepId: string) {
+  const acknowledge = useCallback((stepId: string) => {
     acknowledgeStep(stepId, userId)
     setAck((prev) => ({ ...prev, [stepId]: true }))
-  }
+  }, [userId])
 
-  function skipAxis2() {
-    acknowledgeStep('skip-axis-2', userId)
-    acknowledgeStep('skip-axis-3', userId) // Si on saute le 2e, on saute aussi le 3e
-    setAck((prev) => ({ ...prev, 'skip-axis-2': true, 'skip-axis-3': true }))
-  }
+  // Determine which step is active
+  const getActiveStep = useCallback((): StepId | null => {
+    for (const step of ALL_STEPS) {
+      if (step === 'axis-1' && axesCount >= 1) continue
+      if (!ack[step]) return step
+    }
+    return null
+  }, [ack, axesCount])
 
-  function skipAxis3() {
-    acknowledgeStep('skip-axis-3', userId)
-    setAck((prev) => ({ ...prev, 'skip-axis-3': true }))
-  }
+  const activeStep = mounted ? getActiveStep() : null
+  const isActive = mounted && activeStep !== null
 
-  const steps: {
-    id: string
-    title: string
-    icon: string
-    bravo?: string
-    description: string
-    extra?: React.ReactNode
-    isCompleted: boolean
-    cta: { label: string; href?: string; action?: () => void }
-    skipAction?: () => void
-  }[] = [
-    // ── Étape 1 : Bienvenue ──
-    {
-      id: 'welcome',
-      title: `Bienvenue ${firstName} !`,
-      icon: 'yapluka',
-      description: 'YAPLUKA t\'accompagne pour transformer ta formation en actions concrètes. Voici le programme :',
-      extra: (
-        <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
-          {[
-            { n: '1', text: <>Définis tes <strong>axes</strong> de progrès</> },
-            { n: '2', text: <>Découvre ta <strong>dynamique</strong> de progression</> },
-            { n: '3', text: <>Comprends le <strong>check-in</strong> hebdomadaire</> },
-          ].map((s) => (
-            <div key={s.n} className="flex items-center gap-3 text-sm">
-              <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
-              <span className="text-gray-600">{s.text}</span>
-            </div>
-          ))}
-        </div>
-      ),
-      isCompleted: axesCount >= 1 || ack['welcome'] === true,
-      cta: { label: 'C\'est parti !', href: '/axes?onboarding=create' },
-    },
-
-    // ── Étape 2 : Axe 1 (OBLIGATOIRE) ──
-    {
-      id: 'axis-1',
-      title: 'Crée ton 1er axe de progrès',
-      icon: '🎯',
-      description: 'Un axe représente un domaine que tu souhaites améliorer suite à ta formation. Remplis le formulaire qui va s\'afficher.',
-      extra: (
-        <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
-          <p className="font-medium mb-1">Exemple d&apos;axe :</p>
-          <p className="text-indigo-600">&laquo; Déléguer efficacement &raquo; — Difficulté : Intermédiaire</p>
-        </div>
-      ),
-      isCompleted: axesCount >= 1,
-      cta: { label: 'Créer mon 1er axe', href: '/axes?onboarding=create' },
-    },
-
-    // ── Étape 3 : Axe 2 (OPTIONNEL) ──
-    {
-      id: 'axis-2',
-      title: 'Crée ton 2e axe',
-      icon: '🎯',
-      bravo: '🎉 Bravo ! Ton 1er axe est créé !',
-      description: 'Excellent début ! Continue sur ta lancée. Tu peux aussi le faire plus tard.',
-      extra: (
-        <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
-          <p className="font-medium mb-1">Idée d&apos;axe :</p>
-          <p className="text-indigo-600">&laquo; Mieux communiquer en réunion &raquo;</p>
-        </div>
-      ),
-      isCompleted: axesCount >= 2 || ack['skip-axis-2'] === true,
-      cta: { label: 'Créer mon 2e axe', href: '/axes?onboarding=create' },
-      skipAction: skipAxis2,
-    },
-
-    // ── Étape 4 : Axe 3 (OPTIONNEL, sauté si axe 2 sauté) ──
-    {
-      id: 'axis-3',
-      title: 'Crée ton 3e et dernier axe',
-      icon: '🎯',
-      bravo: '🎉 Super ! 2 axes déjà définis !',
-      description: 'Plus qu\'un axe et tu auras posé toutes les bases de ta progression ! Tu peux aussi le faire plus tard.',
-      extra: (
-        <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
-          <p className="font-medium mb-1">Idée d&apos;axe :</p>
-          <p className="text-indigo-600">&laquo; Gérer mon temps et mes priorités &raquo;</p>
-        </div>
-      ),
-      isCompleted: axesCount >= 3 || ack['skip-axis-3'] === true || ack['skip-axis-2'] === true,
-      cta: { label: 'Créer mon 3e axe', href: '/axes?onboarding=create' },
-      skipAction: skipAxis3,
-    },
-
-    // ── Étape 5 : Dynamique de progression ──
-    {
-      id: 'progression',
-      title: 'Ta dynamique de progression',
-      icon: 'yapluka',
-      bravo: axesCount >= 3
-        ? '🎉 Parfait ! Tes 3 axes sont définis !'
-        : axesCount >= 2
-        ? '🎉 Super ! Tes axes sont définis !'
-        : '🎉 Ton axe est créé !',
-      description: 'Plus tu ajoutes d\'actions, plus ta dynamique monte ! Voici ta piste de progression :',
-      extra: (
-        <div className="mt-3 max-w-xs mx-auto w-full">
-          {/* Piste de progression visuelle */}
-          <div className="relative flex items-center justify-between px-2 py-3">
-            {/* Ligne de connexion */}
-            <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-slate-200 via-emerald-200 to-rose-200 rounded-full" />
-            {[
-              { icon: '⚪', label: 'Veille', color: 'bg-slate-100 ring-slate-300' },
-              { icon: '👣', label: 'Impulsion', color: 'bg-sky-100 ring-sky-300' },
-              { icon: '🥁', label: 'Rythme', color: 'bg-emerald-100 ring-emerald-300' },
-              { icon: '🔥', label: 'Intensité', color: 'bg-orange-100 ring-orange-300' },
-              { icon: '🚀', label: 'Propulsion', color: 'bg-rose-100 ring-rose-300' },
-            ].map((level) => (
-              <div key={level.label} className="relative flex flex-col items-center gap-1 z-10">
-                <div className={`w-10 h-10 rounded-full ${level.color} ring-2 flex items-center justify-center`}>
-                  <span className="text-lg">{level.icon}</span>
-                </div>
-                <span className="text-[9px] font-medium text-gray-500">{level.label}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-gray-400 text-center mt-1">Chaque action te rapproche du niveau suivant !</p>
-        </div>
-      ),
-      isCompleted: ack['progression'] ?? false,
-      cta: { label: 'Compris !', action: () => acknowledge('progression') },
-    },
-
-    // ── Étape 6 : Check-in hebdomadaire ──
-    {
-      id: 'checkin',
-      title: 'Le check-in hebdomadaire',
-      icon: '📋',
-      bravo: '🎉 Tu y es presque !',
-      description: 'Chaque vendredi, prends 2 minutes pour ton check-in : donne ta météo de la semaine, note ce qui a bien fonctionné et les difficultés rencontrées.',
-      extra: (
-        <div className="flex items-center justify-center gap-4 mt-3">
-          {[
-            { icon: '☀️', label: 'Ça roule' },
-            { icon: '⛅', label: 'Mitigé' },
-            { icon: '⛈️', label: 'Difficile' },
-          ].map((w) => (
-            <div key={w.label} className="flex flex-col items-center gap-1">
-              <span className="text-2xl">{w.icon}</span>
-              <span className="text-xs text-gray-500">{w.label}</span>
-            </div>
-          ))}
-        </div>
-      ),
-      isCompleted: ack['checkin'] ?? false,
-      cta: { label: 'Ok, compris !', action: () => acknowledge('checkin') },
-    },
-
-    // ── Étape 7 : Tour des menus ──
-    {
-      id: 'menu-tour',
-      title: 'Ton espace YAPLUKA',
-      icon: 'yapluka',
-      bravo: '🎉 Félicitations, la prise en main est terminée !',
-      description: 'Retrouve ces espaces dans le menu en bas de ton écran.',
-      extra: (
-        <div className="grid grid-cols-2 gap-2 mt-2 w-full">
-          {[
-            {
-              Icon: LayoutDashboard, label: 'Tableau de bord',
-              desc: 'Ta progression, tes actions et ta météo.',
-              gradient: 'from-indigo-500 to-indigo-600',
-              bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700',
-            },
-            {
-              Icon: Target, label: 'Mes actions',
-              desc: 'Gère tes actions pour chaque axe.',
-              gradient: 'from-amber-500 to-orange-500',
-              bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700',
-            },
-            {
-              Icon: ClipboardCheck, label: 'Check-in',
-              desc: 'Météo, réussites et difficultés.',
-              gradient: 'from-emerald-500 to-teal-500',
-              bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700',
-            },
-            {
-              Icon: Users, label: 'Team',
-              desc: 'Météo et actions de tes coéquipiers.',
-              gradient: 'from-purple-500 to-pink-500',
-              bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700',
-            },
-            {
-              Icon: MessageCircle, label: 'Messages',
-              desc: 'Échange directement avec ton formateur.',
-              gradient: 'from-cyan-500 to-blue-500',
-              bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700',
-            },
-            {
-              Icon: Bell, label: 'Notifications',
-              desc: 'Likes, commentaires et messages reçus.',
-              gradient: 'from-yellow-500 to-amber-500',
-              bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700',
-            },
-          ].map((item, i) => (
-            <div key={item.label} className={`${item.bg} border ${item.border} rounded-xl p-2 text-left`}
-                 style={{ animation: `fade-in 0.3s ease-out ${i * 0.1}s both` }}>
-              <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-1`}>
-                <item.Icon size={15} className="text-white" />
-              </div>
-              <p className={`text-xs font-semibold ${item.text} mb-0.5`}>{item.label}</p>
-              <p className="text-[10px] text-gray-500 leading-snug">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      ),
-      isCompleted: ack['menu-tour'] ?? false,
-      cta: {
-        label: 'C\'est parti !',
-        action: () => {
-          acknowledge('menu-tour')
-          // Nettoyer la session d'onboarding
-          sessionStorage.removeItem(`onboarding_session_${userId}`)
-        },
-      },
-    },
-  ]
-
-  // Compute active step
-  const activeIndex = mounted ? steps.findIndex((s) => !s.isCompleted) : -2
-  const isActive = mounted && activeIndex !== -1
-
-  // Cas spécial : onboarding terminé mais 0 axes (l'apprenant a tout supprimé)
+  // Onboarding done but 0 axes → needs axis block
   const onboardingDone = mounted && ack['menu-tour'] === true
   const needsAxisBlock = mounted && axesCount === 0 && onboardingDone
 
@@ -317,31 +132,40 @@ export default function OnboardingFlow({
   }, [mounted, isActive, needsAxisBlock, setIsOnboarding])
 
   // Scroll to top when onboarding transitions from active → completed
-  const prevActiveRef = useRef<number>(-2)
+  const prevStepRef = useRef<StepId | null>(null)
   useEffect(() => {
-    if (prevActiveRef.current >= 0 && activeIndex === -1) {
+    if (prevStepRef.current !== null && activeStep === null) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-    prevActiveRef.current = activeIndex
-  }, [activeIndex])
+    prevStepRef.current = activeStep
+  }, [activeStep])
+
+  // Auto-open QuickAddAction for demo-action step
+  useEffect(() => {
+    if (activeStep === 'demo-action' && !quickAddOpen) {
+      // Short delay to let the dashboard render
+      const timer = setTimeout(() => setQuickAddOpen(true), 400)
+      return () => clearTimeout(timer)
+    }
+  }, [activeStep, quickAddOpen])
 
   if (!mounted) return null
 
-  // Blocage : onboarding terminé mais 0 axes → forcer la création
+  // Blocking overlay: onboarding done but 0 axes → force creation
   if (needsAxisBlock) {
     return (
       <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
         <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3 px-1">
             <div className="text-4xl">🎯</div>
-            <h2 className="text-lg font-bold text-gray-800">Crée au moins un axe de progrès</h2>
+            <h2 className="text-lg font-bold text-gray-800">Cree au moins un axe de progres</h2>
             <p className="text-sm text-gray-500 leading-relaxed">
-              Tu as besoin d&apos;au moins un axe pour accéder à ton espace. C&apos;est rapide !
+              Tu as besoin d&apos;au moins un axe pour acceder a ton espace. C&apos;est rapide !
             </p>
           </div>
           <div className="pt-3 pb-1 text-center shrink-0">
             <Link href="/axes?onboarding=create" className="btn-primary">
-              Créer un axe
+              Creer un axe
             </Link>
           </div>
         </div>
@@ -350,77 +174,217 @@ export default function OnboardingFlow({
   }
 
   // All done → show normal dashboard
-  if (activeIndex === -1) return <>{children}</>
+  if (activeStep === null) return <>{children}</>
 
-  const activeStep = steps[activeIndex]
-
-  return (
-    <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
-      <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
-        {/* Step indicator */}
-        <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-          <span className="text-xs font-semibold text-indigo-600">
-            Étape {activeIndex + 1}/{steps.length}
-          </span>
-          <div className="flex items-center gap-1">
-            {steps.map((s, i) => (
-              <div
-                key={s.id}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i < activeIndex ? 'w-3 bg-emerald-400'
-                  : i === activeIndex ? 'w-5 bg-indigo-500'
-                  : 'w-3 bg-gray-200'
-                }`}
-              />
-            ))}
+  // ── Step 1: Welcome (full-screen modal) ──
+  if (activeStep === 'welcome') {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          {/* Step indicator */}
+          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
+            <span className="text-xs font-semibold text-indigo-600">Etape 1/8</span>
+            <div className="flex items-center gap-1">
+              {ALL_STEPS.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === 0 ? 'w-5 bg-indigo-500' : 'w-3 bg-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Bravo banner */}
-        {activeStep.bravo && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 mb-2 text-center shrink-0">
-            <p className="text-sm font-semibold text-emerald-700">{activeStep.bravo}</p>
-          </div>
-        )}
-
-        {/* Active step content — centered, fills available space */}
-        <div key={activeStep.id} className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
-          {activeStep.icon === 'yapluka' ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
             <Image src="/yapluka-symbol.png" alt="YAPLUKA" width={48} height={45} className="drop-shadow-md" />
-          ) : (
-            <div className="text-4xl">{activeStep.icon}</div>
-          )}
-          <h2 className="text-lg font-bold text-gray-800">{activeStep.title}</h2>
-          <p className="text-sm text-gray-500 leading-relaxed">{activeStep.description}</p>
-          {activeStep.extra}
-        </div>
+            <h2 className="text-lg font-bold text-gray-800">Bienvenue {firstName} !</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              YAPLUKA t&apos;accompagne pour transformer ta formation en actions concretes. Voici le programme :
+            </p>
+            <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
+              {[
+                { n: '1', text: <>Definis tes <strong>axes</strong> de progres</> },
+                { n: '2', text: <>Decouvre ta <strong>dynamique</strong> de progression</> },
+                { n: '3', text: <>Enregistre ta premiere <strong>action</strong></> },
+              ].map((s) => (
+                <div key={s.n} className="flex items-center gap-3 text-sm">
+                  <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
+                  <span className="text-gray-600">{s.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        {/* CTA button + optional skip — always visible at bottom */}
-        <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
-          {activeStep.cta.href ? (
-            <Link href={activeStep.cta.href} className="btn-primary">
-              {activeStep.cta.label}
-            </Link>
-          ) : (
-            <button
-              onClick={activeStep.cta.action}
+          <div className="pt-3 pb-1 text-center shrink-0">
+            <Link
+              href="/axes?onboarding=create"
+              onClick={() => acknowledge('welcome')}
               className="btn-primary"
             >
-              {activeStep.cta.label}
-            </button>
-          )}
-          {activeStep.skipAction && (
-            <div>
-              <button
-                onClick={activeStep.skipAction}
-                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
-              >
-                Plus tard
-              </button>
-            </div>
-          )}
+              C&apos;est parti !
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  // ── Step 2: axis-1 (full-screen modal — user is redirected to /axes) ──
+  if (activeStep === 'axis-1') {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
+            <span className="text-xs font-semibold text-indigo-600">Etape 2/8</span>
+            <div className="flex items-center gap-1">
+              {ALL_STEPS.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i < 1 ? 'w-3 bg-emerald-400'
+                    : i === 1 ? 'w-5 bg-indigo-500'
+                    : 'w-3 bg-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
+            <div className="text-4xl">🎯</div>
+            <h2 className="text-lg font-bold text-gray-800">Cree ton 1er axe de progres</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Un axe represente un domaine que tu souhaites ameliorer suite a ta formation. Remplis le formulaire qui va s&apos;afficher.
+            </p>
+            <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
+              <p className="font-medium mb-1">Exemple d&apos;axe :</p>
+              <p className="text-indigo-600">&laquo; Deleguer efficacement &raquo; — Difficulte : Intermediaire</p>
+            </div>
+          </div>
+
+          <div className="pt-3 pb-1 text-center shrink-0">
+            <Link href="/axes?onboarding=create" className="btn-primary">
+              Creer mon 1er axe
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Steps 3, 4a, 4b/4c, 7, 8: Coach marks overlaid on the dashboard ──
+
+  // Step 3: Progression — spotlight on first axis card
+  if (activeStep === 'progression') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          targetSelector='[data-onboarding="progression"]'
+          icon="📈"
+          title="Ta dynamique de progression"
+          description="Chaque action te fait monter de niveau, de ⚪ Veille a 🚀 Propulsion !"
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('progression')}
+        />
+      </>
+    )
+  }
+
+  // Step 4a: FAB action — spotlight on FAB button
+  if (activeStep === 'fab-action') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          targetSelector='[data-onboarding="fab-action"]'
+          icon="➕"
+          title="Ajoute une action"
+          description="Clique ici pour enregistrer une action concrete que tu as menee."
+          onTargetClick={() => {
+            acknowledge('fab-action')
+          }}
+        />
+      </>
+    )
+  }
+
+  // Step 4b/4c: Demo action — QuickAddAction in onboarding mode
+  if (activeStep === 'demo-action') {
+    return (
+      <>
+        {children}
+        <QuickAddAction
+          axes={axes}
+          open={quickAddOpen}
+          onClose={() => {
+            // Don't allow closing during onboarding — just reopen
+            setQuickAddOpen(true)
+          }}
+          onSuccess={() => {
+            acknowledge('demo-action')
+            // Redirect to /axes to show feedback step
+            router.push('/axes?onboarding=show-feedback')
+          }}
+          onboardingMode
+        />
+      </>
+    )
+  }
+
+  // Steps 5, 6: show-feedback and delete-demo happen on /axes
+  // OnboardingFlow just renders children (AxesClient handles these via URL params)
+  if (activeStep === 'show-feedback' || activeStep === 'delete-demo') {
+    return <>{children}</>
+  }
+
+  // Step 7: Check-in — spotlight on weather/check-in area
+  if (activeStep === 'checkin') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          targetSelector='[data-onboarding="checkin-area"]'
+          icon="📋"
+          title="Le check-in hebdomadaire"
+          description="Chaque vendredi, prends 2 minutes pour donner ta meteo de la semaine : ☀️ ⛅ ou ⛈️"
+          ctaLabel="Ok, compris !"
+          onCta={() => acknowledge('checkin')}
+        />
+      </>
+    )
+  }
+
+  // Step 8: Menu tour — sequential spotlights on bottom nav items
+  if (activeStep === 'menu-tour') {
+    const navItem = MENU_NAV_ITEMS[menuSubStep]
+    const isLast = menuSubStep >= MENU_NAV_ITEMS.length - 1
+
+    return (
+      <>
+        {children}
+        <CoachMark
+          key={`menu-${menuSubStep}`}
+          targetSelector={navItem.selector}
+          icon="👇"
+          title={navItem.label}
+          description={navItem.desc}
+          ctaLabel={isLast ? 'C\'est parti !' : 'Suivant'}
+          onCta={() => {
+            if (isLast) {
+              acknowledge('menu-tour')
+              // Clean up onboarding session
+              sessionStorage.removeItem(`onboarding_session_${userId}`)
+            } else {
+              setMenuSubStep((prev) => prev + 1)
+            }
+          }}
+        />
+      </>
+    )
+  }
+
+  // Fallback: render children
+  return <>{children}</>
 }

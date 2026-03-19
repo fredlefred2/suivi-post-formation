@@ -189,6 +189,7 @@ export default async function DashboardPage() {
       totalActions={totalCompletedActions}
       totalCheckins={totalCheckins}
       firstActionId={firstActionId}
+      axes={axeItems.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}
     >
       <DashboardClient
         firstName={profile?.first_name ?? ''}

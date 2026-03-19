@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { X } from 'lucide-react'
 import { createAction } from '@/app/(learner)/axes/actions'
 import { getNextLevel, getCurrentLevelIndex, getCurrentLevel } from '@/lib/axeHelpers'
@@ -49,9 +49,10 @@ type Props = {
   open: boolean
   onClose: () => void
   onSuccess?: (axeId: string, newCount: number) => void
+  onboardingMode?: boolean
 }
 
-export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props) {
+export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode }: Props) {
   const [step, setStep] = useState<'axe' | 'category' | 'comment'>('axe')
   const [selectedAxe, setSelectedAxe] = useState<AxeOption | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
@@ -61,6 +62,17 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
   const [showConfirm, setShowConfirm] = useState(false)
   const [confirmInfo, setConfirmInfo] = useState<{ message: string; nextIcon: string; nextLabel: string } | null>(null)
   const { toast } = useToast()
+
+  // Onboarding mode: auto-select first axe, first category, pre-fill text
+  useEffect(() => {
+    if (onboardingMode && open && axes.length > 0 && !selectedAxe) {
+      const firstAxe = axes[0]
+      setSelectedAxe(firstAxe)
+      setSelectedCategory(CATEGORIES[0]) // 💪 J'ai agi différemment
+      setComment('J\'ai prepare le compte-rendu de la reunion')
+      setStep('comment')
+    }
+  }, [onboardingMode, open, axes, selectedAxe])
 
   function reset() {
     setStep('axe')
@@ -231,6 +243,12 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
           {/* Étape 3 : Commentaire optionnel */}
           {step === 'comment' && (
             <div className="space-y-4">
+              {onboardingMode && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-sm text-indigo-700">
+                  <p className="font-medium">🎯 C&apos;est un exemple !</p>
+                  <p className="text-xs text-indigo-500 mt-0.5">Ton axe et ta categorie sont pre-selectionnes. Valide cette action pour decouvrir la suite.</p>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <span>{selectedCategory?.emoji}</span>
                 <span className="font-medium text-gray-700">{selectedCategory?.label}</span>
@@ -243,12 +261,14 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess }: Props
                 autoFocus
               />
               <div className="flex gap-3">
-                <button
-                  onClick={() => setStep('category')}
-                  className="btn-secondary flex-1"
-                >
-                  ← Retour
-                </button>
+                {!onboardingMode && (
+                  <button
+                    onClick={() => setStep('category')}
+                    className="btn-secondary flex-1"
+                  >
+                    ← Retour
+                  </button>
+                )}
                 <button
                   onClick={handleSubmit}
                   disabled={isPending}

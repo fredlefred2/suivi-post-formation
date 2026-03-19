@@ -8,7 +8,9 @@ import type { Axe, Action, ActionFeedbackData, Difficulty } from '@/lib/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import QuickAddAction from '@/app/components/QuickAddAction'
+import CoachMark from '@/app/components/CoachMark'
 import { useOnboarding } from '@/lib/onboarding-context'
+import { acknowledgeStep } from '@/lib/onboarding'
 import { MARKERS, getDynamique, getCurrentLevelIndex, getProgress, getCurrentLevel, getNextLevel, getActionPhaseIcon } from '@/lib/axeHelpers'
 import { useToast } from '@/app/components/Toast'
 
@@ -39,7 +41,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const { setIsOnboarding } = useOnboarding()
   const [levelUpInfo, setLevelUpInfo] = useState<{ icon: string; label: string } | null>(null)
   const isOnboardingCreate = onboarding === 'create'
-  const isOnboardingMode = isOnboardingCreate
+  const isOnboardingShowFeedback = onboarding === 'show-feedback'
+  const isOnboardingDeleteDemo = onboarding === 'delete-demo'
+  const isOnboardingMode = isOnboardingCreate || isOnboardingShowFeedback || isOnboardingDeleteDemo
   const [showAxeForm, setShowAxeForm] = useState(isOnboardingCreate)
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null)
 
@@ -395,7 +399,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                                 <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{getActionPhaseIcon(rank)}</span>
                                 <div className="flex-1 min-w-0">
                                   <span className="text-sm text-gray-700">{action.description}</span>
-                                  <div className="flex items-center gap-2 mt-0.5">
+                                  <div className="flex items-center gap-2 mt-0.5"
+                                    {...(actionIndex === 0 && axeIndex === 0 ? { 'data-onboarding': 'feedback-icons' } : {})}
+                                  >
                                     <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
                                     <ActionFeedback
                                       actionId={action.id}
@@ -416,6 +422,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                                     onClick={() => setDeletingActionId(action.id)}
                                     className="text-gray-300 hover:text-red-400 transition-colors p-0.5"
                                     title="Supprimer"
+                                    {...(actionIndex === 0 && axeIndex === 0 ? { 'data-onboarding': 'delete-action' } : {})}
                                   >
                                     <Trash2 size={13} />
                                   </button>
@@ -627,6 +634,11 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                   setDeletingActionId(null)
                   startTransition(async () => {
                     await deleteAction(actionId)
+                    // If in delete-demo onboarding, acknowledge and redirect to dashboard
+                    if (isOnboardingDeleteDemo && userId) {
+                      acknowledgeStep('delete-demo', userId)
+                      router.push('/dashboard')
+                    }
                   })
                 }}
                 className="px-5 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
@@ -673,6 +685,36 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           router.refresh()
         }}
       />
+
+      {/* Coach marks for onboarding */}
+      {isOnboardingShowFeedback && (
+        <CoachMark
+          targetSelector='[data-onboarding="feedback-icons"]'
+          icon="❤️"
+          title="Feedback de ton equipe"
+          description="Ton formateur et tes coequipiers peuvent liker ❤️ et commenter 💬 tes actions pour t'encourager."
+          ctaLabel="Compris !"
+          onCta={() => {
+            if (userId) {
+              acknowledgeStep('show-feedback', userId)
+            }
+            router.push('/axes?onboarding=delete-demo')
+          }}
+        />
+      )}
+
+      {isOnboardingDeleteDemo && (
+        <CoachMark
+          targetSelector='[data-onboarding="delete-action"]'
+          icon="🗑️"
+          title="Supprime cet exemple"
+          description="C'etait un exemple ! Supprime-la pour commencer avec tes vraies actions."
+          onTargetClick={() => {
+            // The delete button click will open the delete confirmation modal
+            // We'll handle the ack after actual deletion
+          }}
+        />
+      )}
 
       {/* Modale d'édition d'axe */}
       {editingAxe && (

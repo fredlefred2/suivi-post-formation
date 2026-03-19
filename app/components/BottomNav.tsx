@@ -53,6 +53,7 @@ export default function BottomNav({ items }: { items: NavItem[] }) {
           if (!Icon) return null
           return (
             <Link key={href} href={getGroupHref(href)}
+              data-onboarding={`nav-${href.split('/').pop()}`}
               className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-all duration-150 font-medium active:scale-90 ${
                 isActive ? 'text-white' : 'text-gray-500'
               }`}

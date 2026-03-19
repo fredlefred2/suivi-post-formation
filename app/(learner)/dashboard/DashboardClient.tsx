@@ -70,7 +70,8 @@ export default function DashboardClient({
   lastWeekActions,
   checkinIsOpen,
   axesForCheckin,
-}: Props) {
+  onboardingStep,
+}: Props & { onboardingStep?: string }) {
   const router = useRouter()
   const [currentSlide, setCurrentSlide] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -173,7 +174,7 @@ export default function DashboardClient({
       )}
 
       {/* ── Bloc principal : 3 colonnes compactes ── */}
-      <div className="card p-4">
+      <div className="card p-4" data-onboarding="checkin-area">
         <div className="grid grid-cols-3 gap-3">
 
           {/* Colonne 1 : Cette semaine */}
@@ -260,6 +261,7 @@ export default function DashboardClient({
                 <Link
                   key={axe.id}
                   href={`/axes?index=${axe.index}`}
+                  {...(axe.index === 0 ? { 'data-onboarding': 'progression' } : {})}
                   className="snap-center shrink-0 w-[80vw] max-w-[320px] rounded-2xl flex flex-col hover:shadow-xl transition-all overflow-hidden"
                   style={{
                     background: levelIdx === 0
@@ -399,6 +401,7 @@ export default function DashboardClient({
       {/* FAB -- Bouton flottant "Ajouter une action" (mobile) */}
       {axes.length > 0 && (
         <button
+          data-onboarding="fab-action"
           onClick={() => setQuickAddOpen(true)}
           className="fixed bottom-20 right-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"
           style={{
