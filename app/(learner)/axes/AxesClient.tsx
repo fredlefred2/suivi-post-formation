@@ -183,49 +183,86 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
 
       {/* Formulaire nouvel axe */}
       {showAxeForm && (
-        <div className="card border-indigo-100 border-2">
-          <h2 className="section-title mb-4">Nouvel axe de progrès</h2>
-          <form onSubmit={handleCreateAxe} className="space-y-4">
+        <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden">
+          {/* Header gradient */}
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4">
+            <h2 className="text-white font-bold text-base">🎯 Nouvel axe de progrès</h2>
+            <p className="text-indigo-100 text-xs mt-0.5">Définis un domaine à améliorer</p>
+          </div>
+
+          <form onSubmit={handleCreateAxe} className="p-5 space-y-5">
+            {/* Sujet */}
             <div>
-              <label className="label">Sujet / intitulé de l&apos;axe *</label>
-              <input name="subject" required className="input" placeholder="Ex: Déléguer efficacement" />
+              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Intitulé de l&apos;axe</label>
+              <input
+                name="subject"
+                required
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-gray-400"
+                placeholder="Ex : Déléguer efficacement"
+              />
             </div>
+
+            {/* Description */}
             <div>
-              <label className="label">Description (optionnel)</label>
-              <textarea name="description" className="input h-20 resize-none" placeholder="Décrivez ce que vous souhaitez améliorer..." />
+              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                Moyens envisagés <span className="font-normal text-gray-400">(optionnel)</span>
+              </label>
+              <textarea
+                name="description"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20 placeholder:text-gray-400"
+                placeholder="Comment comptez-vous progresser sur cet axe ?"
+              />
             </div>
+
+            {/* Difficulté */}
             <div>
-              <label className="label">Niveau de difficulté de cet axe *</label>
-              <p className="text-xs text-gray-400 mb-2">Ce niveau reste fixe et ne sera pas modifié lors des check-ins.</p>
-              <div className="flex gap-3 mt-1">
-                {(['facile', 'moyen', 'difficile'] as const).map((d) => {
-                  const isSelected = selectedDifficulty === d
+              <label className="text-xs font-semibold text-gray-700 mb-2 block">Niveau de difficulté</label>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { key: 'facile' as const, emoji: '🟢', label: 'Facile' },
+                  { key: 'moyen' as const, emoji: '🟡', label: 'Moyen' },
+                  { key: 'difficile' as const, emoji: '🔴', label: 'Difficile' },
+                ]).map(({ key, emoji, label }) => {
+                  const isSelected = selectedDifficulty === key
                   return (
-                    <label key={d} className="flex-1 cursor-pointer">
+                    <label key={key} className="cursor-pointer">
                       <input
-                        type="radio" name="difficulty" value={d} required className="sr-only"
-                        checked={selectedDifficulty === d}
-                        onChange={() => setSelectedDifficulty(d)}
+                        type="radio" name="difficulty" value={key} required className="sr-only"
+                        checked={isSelected}
+                        onChange={() => setSelectedDifficulty(key)}
                       />
-                      <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 ${
+                      <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
                         isSelected
-                          ? `${DIFFICULTY_COLORS[d]} scale-105 shadow-lg`
-                          : 'border-gray-200 bg-white text-gray-600'
+                          ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
                       }`}>
-                        <p className="text-xs font-bold">{DIFFICULTY_LABELS[d]}</p>
+                        <span className="text-lg">{emoji}</span>
+                        <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
                       </div>
                     </label>
                   )
                 })}
               </div>
             </div>
+
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
-            <div className="flex gap-2">
-              <button type="submit" disabled={isPending} className="btn-primary">
-                {isPending ? 'Enregistrement...' : 'Enregistrer'}
+
+            {/* Boutons */}
+            <div className="flex gap-3 pt-1">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
+                style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+              >
+                {isPending ? 'Enregistrement...' : '✓ Enregistrer'}
               </button>
               {!isOnboardingCreate && (
-                <button type="button" onClick={() => { setShowAxeForm(false); setError(null) }} className="btn-secondary">
+                <button
+                  type="button"
+                  onClick={() => { setShowAxeForm(false); setError(null); setSelectedDifficulty(null) }}
+                  className="px-5 py-3 rounded-xl font-semibold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                >
                   Annuler
                 </button>
               )}
@@ -257,10 +294,20 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               const progress = getProgress(axe.actions.length)
               const levelIdx = getCurrentLevelIndex(axe.actions.length)
               const level = getCurrentLevel(axe.actions.length)
+              const cardGradient = levelIdx === 0
+                ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'
+                : levelIdx === 1
+                ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
+                : levelIdx === 2
+                ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+                : levelIdx === 3
+                ? 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)'
+                : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)'
               return (
                 <div
                   key={axe.id}
-                  className={`snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl border-2 p-4 flex flex-col max-h-[calc(100dvh-11rem)] ${dyn.color}`}
+                  className="snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl p-4 flex flex-col max-h-[calc(100dvh-11rem)]"
+                  style={{ background: cardGradient }}
                 >
                  <div className="shrink-0">
                   {/* Titre + boutons edit/delete */}

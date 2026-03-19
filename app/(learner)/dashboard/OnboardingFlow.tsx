@@ -460,35 +460,60 @@ export default function OnboardingFlow({
     )
   }
 
-  // Step 9: Check-in — spotlight on check-in area
+  // Step 9: Check-in — informational bubble with alert banner mockup
   if (activeStep === 'checkin') {
     return (
       <>
         {children}
         <CoachMark
-          targetSelector='[data-onboarding="checkin-area"]'
           stepLabel={stepLabel}
           icon="📋"
           title="Le check-in hebdomadaire"
-          description="Chaque vendredi, prends 2 minutes pour donner ta météo de la semaine et faire le point."
+          description="Chaque vendredi, un bandeau apparaîtra en haut de ton écran pour te rappeler de faire ton check-in :"
           extra={
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 16,
-              marginTop: 8,
-              marginBottom: 4,
-            }}>
-              {[
-                { icon: '☀️', label: 'Ça roule' },
-                { icon: '⛅', label: 'Mitigé' },
-                { icon: '⛈️', label: 'Difficile' },
-              ].map((w) => (
-                <div key={w.label} style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: 24 }}>{w.icon}</span>
-                  <p style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{w.label}</p>
+            <div style={{ marginTop: 10, marginBottom: 6 }}>
+              {/* Mockup du bandeau alerte */}
+              <div style={{
+                background: '#fffbeb',
+                border: '1px solid #fcd34d',
+                borderRadius: 12,
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}>
+                <span style={{ fontSize: 16, color: '#d97706' }}>⚠️</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#78350f', margin: 0 }}>Check-in en attente</p>
+                  <p style={{ fontSize: 11, color: '#92400e', margin: 0 }}>Semaine du 10 au 16 mars</p>
                 </div>
-              ))}
+                <span style={{
+                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  color: 'white',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '4px 10px',
+                  borderRadius: 8,
+                }}>Faire</span>
+              </div>
+              {/* Météos */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 16,
+                marginTop: 10,
+              }}>
+                {[
+                  { icon: '☀️', label: 'Ça roule' },
+                  { icon: '⛅', label: 'Mitigé' },
+                  { icon: '⛈️', label: 'Difficile' },
+                ].map((w) => (
+                  <div key={w.label} style={{ textAlign: 'center' }}>
+                    <span style={{ fontSize: 22 }}>{w.icon}</span>
+                    <p style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{w.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           }
           ctaLabel="Ok, compris !"
