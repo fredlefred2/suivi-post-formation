@@ -145,6 +145,12 @@ export default function OnboardingFlow({
     const idx = ALL_STEPS.indexOf(fromStep)
     if (idx <= 0) return
 
+    // Si on est sur la première étape coach mark (add-action) → éditer le dernier axe
+    if (fromStep === 'add-action') {
+      openEditLastAxe()
+      return
+    }
+
     // Find the previous visible step
     for (let i = idx - 1; i >= 0; i--) {
       const prev = ALL_STEPS[i]
@@ -153,9 +159,7 @@ export default function OnboardingFlow({
       if (prev === 'axis-2' && (axesCount >= 2 || ack['skip-axis-2'])) continue
       if (prev === 'axis-3' && (axesCount >= 3 || ack['skip-axis-3'] || ack['skip-axis-2'])) continue
 
-      // Un-acknowledge the current step to go back
-      // We need to remove the ack for fromStep so it becomes active again after we go back
-      // Actually, we un-ack the previous step so IT becomes active
+      // Un-ack the previous step so IT becomes active
       const stored = getOnboardingAck(userId)
       delete stored[prev]
       localStorage.setItem(`onboarding_${userId}`, JSON.stringify(stored))
@@ -166,7 +170,7 @@ export default function OnboardingFlow({
       })
       return
     }
-  }, [userId, axesCount, ack])
+  }, [userId, axesCount, ack]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Determine which step is active
   const getActiveStep = useCallback((): StepId | null => {
