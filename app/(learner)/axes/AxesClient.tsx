@@ -120,17 +120,22 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     e.preventDefault()
     setError(null)
     const formData = new FormData(e.currentTarget)
-    startTransition(async () => {
+    if (isOnboardingCreate) {
+      // En onboarding, pas de startTransition pour éviter la lenteur
       const result = await createAxe(formData)
       if (result?.error) setError(result.error)
-      else if (isOnboardingCreate) {
-        router.push('/dashboard')
-      } else {
-        setShowAxeForm(false)
-        setSelectedDifficulty(null)
-        setCurrentIndex(axes.length)
-      }
-    })
+      else router.push('/dashboard')
+    } else {
+      startTransition(async () => {
+        const result = await createAxe(formData)
+        if (result?.error) setError(result.error)
+        else {
+          setShowAxeForm(false)
+          setSelectedDifficulty(null)
+          setCurrentIndex(axes.length)
+        }
+      })
+    }
   }
 
   async function handleCreateAction(e: React.FormEvent<HTMLFormElement>, axeId: string) {
@@ -173,13 +178,19 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     e.preventDefault()
     if (!editingAxe || !editAxeDifficulty) return
     setError(null)
-    startTransition(async () => {
+    if (isOnboardingEditLast) {
       const result = await updateAxe(editingAxe.id, editAxeSubject, editAxeDescription || null, editAxeDifficulty)
       if (result?.error) setError(result.error)
       else {
         setEditingAxe(null)
-        if (isOnboardingEditLast) router.push('/dashboard')
+        router.push('/dashboard')
       }
+      return
+    }
+    startTransition(async () => {
+      const result = await updateAxe(editingAxe.id, editAxeSubject, editAxeDescription || null, editAxeDifficulty)
+      if (result?.error) setError(result.error)
+      else setEditingAxe(null)
     })
   }
 
@@ -740,57 +751,86 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {editingAxe && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => { setEditingAxe(null); if (isOnboardingEditLast) router.push('/dashboard') }} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-            <h3 className="font-semibold text-gray-900 text-lg">Modifier l&apos;axe de progrès</h3>
-            <form onSubmit={handleUpdateAxe} className="space-y-4">
+          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
+            {/* Header gradient */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4">
+              <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
+              <p className="text-indigo-100 text-xs mt-0.5">Modifie les détails de ton axe</p>
+            </div>
+
+            <form onSubmit={handleUpdateAxe} className="p-5 space-y-5">
+              {/* Sujet */}
               <div>
-                <label className="label">Sujet / intitulé de l&apos;axe *</label>
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Intitulé de l&apos;axe</label>
                 <input
                   value={editAxeSubject}
                   onChange={(e) => setEditAxeSubject(e.target.value)}
                   required
-                  className="input"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
                 />
               </div>
+
+              {/* Description */}
               <div>
-                <label className="label">Description (optionnel)</label>
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                  Moyens envisagés <span className="font-normal text-gray-400">(optionnel)</span>
+                </label>
                 <textarea
                   value={editAxeDescription}
                   onChange={(e) => setEditAxeDescription(e.target.value)}
-                  className="input h-20 resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20"
                 />
               </div>
+
+              {/* Difficulté */}
               <div>
-                <label className="label">Niveau de difficulté *</label>
-                <div className="flex gap-3 mt-1">
-                  {(['facile', 'moyen', 'difficile'] as const).map((d) => {
-                    const isSelected = editAxeDifficulty === d
+                <label className="text-xs font-semibold text-gray-700 mb-2 block">Niveau de difficulté</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: 'facile' as const, emoji: '🟢', label: 'Facile' },
+                    { key: 'moyen' as const, emoji: '🟡', label: 'Moyen' },
+                    { key: 'difficile' as const, emoji: '🔴', label: 'Difficile' },
+                  ]).map(({ key, emoji, label }) => {
+                    const isSelected = editAxeDifficulty === key
                     return (
-                      <label key={d} className="flex-1 cursor-pointer">
+                      <label key={key} className="cursor-pointer">
                         <input
-                          type="radio" name="edit-difficulty" value={d} className="sr-only"
-                          checked={editAxeDifficulty === d}
-                          onChange={() => setEditAxeDifficulty(d)}
+                          type="radio" name="edit-difficulty" value={key} className="sr-only"
+                          checked={isSelected}
+                          onChange={() => setEditAxeDifficulty(key)}
                         />
-                        <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 ${
+                        <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
                           isSelected
-                            ? `${DIFFICULTY_COLORS[d]} scale-105 shadow-lg`
-                            : 'border-gray-200 bg-white text-gray-600'
+                            ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}>
-                          <p className="text-xs font-bold">{DIFFICULTY_LABELS[d]}</p>
+                          <span className="text-lg">{emoji}</span>
+                          <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
                         </div>
                       </label>
                     )
                   })}
                 </div>
               </div>
+
               {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
-              <div className="flex gap-3 justify-end">
-                <button type="button" onClick={() => { setEditingAxe(null); if (isOnboardingEditLast) router.push('/dashboard') }} className="btn-secondary px-5">
-                  Annuler
+
+              {/* Boutons */}
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+                >
+                  {isPending ? 'Enregistrement...' : '✓ Valider'}
                 </button>
-                <button type="submit" disabled={isPending} className="btn-primary px-5">
-                  {isPending ? 'Enregistrement...' : 'Valider'}
+                <button
+                  type="button"
+                  onClick={() => { setEditingAxe(null); if (isOnboardingEditLast) router.push('/dashboard') }}
+                  className="px-5 py-3 rounded-xl font-semibold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                >
+                  Annuler
                 </button>
               </div>
             </form>
