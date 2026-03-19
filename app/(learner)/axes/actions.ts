@@ -30,6 +30,47 @@ export async function createAxe(formData: FormData) {
   revalidatePath('/dashboard')
 }
 
+// Version optimisée pour l'onboarding : ne revalide que /dashboard (pas /axes)
+export async function createAxeFast(formData: FormData) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  const { count } = await supabase
+    .from('axes')
+    .select('*', { count: 'exact', head: true })
+    .eq('learner_id', user.id)
+
+  if ((count ?? 0) >= 3) return { error: 'Vous ne pouvez pas avoir plus de 3 axes.' }
+
+  const { error } = await supabase.from('axes').insert({
+    learner_id: user.id,
+    subject: formData.get('subject') as string,
+    description: formData.get('description') as string || null,
+    initial_score: 1,
+    difficulty: formData.get('difficulty') as string,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard')
+}
+
+// Version optimisée pour l'onboarding : ne revalide que /dashboard
+export async function updateAxeFast(axeId: string, subject: string, description: string | null, difficulty: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  const { error } = await supabase
+    .from('axes')
+    .update({ subject, description: description || null, difficulty })
+    .eq('id', axeId)
+    .eq('learner_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard')
+}
+
 export async function deleteAxe(axeId: string) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()

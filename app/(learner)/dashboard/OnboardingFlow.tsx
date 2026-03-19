@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
 import CoachMark from '@/app/components/CoachMark'
-import { updateAxe } from '@/app/(learner)/axes/actions'
+import { updateAxeFast } from '@/app/(learner)/axes/actions'
 
 // All step IDs in order (10 steps, axes 2-3 skippable)
 const ALL_STEPS = [
@@ -133,7 +133,7 @@ export default function OnboardingFlow({
     e.preventDefault()
     if (!editingAxeId) return
     setEditError(null)
-    const result = await updateAxe(editingAxeId, editSubject, editDescription || null, editDifficulty)
+    const result = await updateAxeFast(editingAxeId, editSubject, editDescription || null, editDifficulty)
     if (result?.error) { setEditError(result.error); return }
     setEditingAxeId(null)
   }
@@ -708,7 +708,6 @@ export default function OnboardingFlow({
                   { icon: '🌤️', text: 'Ta météo de la semaine (ça roule, mitigé, difficile)' },
                   { icon: '✅', text: 'Tes réussites et avancées' },
                   { icon: '⚡', text: 'Tes difficultés rencontrées' },
-                  { icon: '💡', text: 'Tes objectifs pour la semaine suivante' },
                 ].map((item) => (
                   <div key={item.icon} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
                     <span style={{ fontSize: 14, flexShrink: 0 }}>{item.icon}</span>

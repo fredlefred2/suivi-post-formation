@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Pencil } from 'lucide-react'
-import { createAxe, deleteAxe, updateAxe, createAction, updateAction, deleteAction } from './actions'
+import { createAxe, createAxeFast, deleteAxe, updateAxe, createAction, updateAction, deleteAction } from './actions'
 import type { Axe, Action, ActionFeedbackData, Difficulty } from '@/lib/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
@@ -109,8 +109,8 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     setError(null)
     const formData = new FormData(e.currentTarget)
     if (isOnboardingCreate) {
-      // En onboarding, pas de startTransition pour éviter la lenteur
-      const result = await createAxe(formData)
+      // En onboarding : action rapide (revalide uniquement /dashboard)
+      const result = await createAxeFast(formData)
       if (result?.error) setError(result.error)
       else router.push('/dashboard')
     } else {
