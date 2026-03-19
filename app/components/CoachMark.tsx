@@ -5,16 +5,19 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 type Position = 'top' | 'bottom'
 
 type Props = {
-  targetSelector: string
+  /** CSS selector for the target element. If omitted, shows a centered informational bubble */
+  targetSelector?: string
   title: string
   description: string
   icon?: string
+  /** Extra content rendered below description (e.g. illustrations) */
+  extra?: React.ReactNode
   ctaLabel?: string
   onCta?: () => void
-  /** When provided, the target element is made clickable (z-index above overlay) and this fires on click */
-  onTargetClick?: () => void
   /** Extra padding around the spotlight cutout (px) */
   padding?: number
+  /** Step indicator (e.g. "3/8") */
+  stepLabel?: string
 }
 
 export default function CoachMark({
@@ -22,20 +25,26 @@ export default function CoachMark({
   title,
   description,
   icon,
+  extra,
   ctaLabel,
   onCta,
-  onTargetClick,
-  padding = 8,
+  padding = 10,
+  stepLabel,
 }: Props) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
   const [position, setPosition] = useState<Position>('bottom')
   const [visible, setVisible] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const targetElRef = useRef<HTMLElement | null>(null)
-  const cleanupRef = useRef<(() => void) | null>(null)
 
   // Find the target element with retry logic
   const findTarget = useCallback(() => {
+    if (!targetSelector) {
+      // No target → centered informational bubble
+      setVisible(true)
+      return true
+    }
+
     const el = document.querySelector(targetSelector) as HTMLElement | null
     if (!el) return false
 
@@ -48,36 +57,13 @@ export default function CoachMark({
     const spaceAbove = rect.top
     setPosition(spaceBelow > spaceAbove ? 'bottom' : 'top')
 
-    // If onTargetClick, make the target clickable above the overlay
-    if (onTargetClick) {
-      el.style.position = el.style.position || 'relative'
-      el.style.zIndex = '60'
-      el.style.pointerEvents = 'auto'
-
-      const handler = (e: Event) => {
-        e.preventDefault()
-        e.stopPropagation()
-        onTargetClick()
-      }
-      el.addEventListener('click', handler, { once: true })
-
-      cleanupRef.current = () => {
-        el.style.zIndex = ''
-        el.style.pointerEvents = ''
-        if (!el.style.position || el.style.position === 'relative') {
-          el.style.position = ''
-        }
-        el.removeEventListener('click', handler)
-      }
-    }
-
     setVisible(true)
     return true
-  }, [targetSelector, onTargetClick])
+  }, [targetSelector])
 
   useEffect(() => {
     let attempts = 0
-    const maxAttempts = 30 // 3 seconds max
+    const maxAttempts = 30
     let timer: ReturnType<typeof setInterval>
 
     if (!findTarget()) {
@@ -85,6 +71,8 @@ export default function CoachMark({
         attempts++
         if (findTarget() || attempts >= maxAttempts) {
           clearInterval(timer)
+          // If max attempts reached without finding, show centered anyway
+          if (attempts >= maxAttempts) setVisible(true)
         }
       }, 100)
     }
@@ -107,20 +95,112 @@ export default function CoachMark({
       clearInterval(timer)
       window.removeEventListener('scroll', updateRect)
       window.removeEventListener('resize', updateRect)
-      cleanupRef.current?.()
     }
   }, [findTarget])
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cleanupRef.current?.()
-    }
-  }, [])
+  if (!visible) return null
 
-  if (!targetRect || !visible) return null
+  // ── Mode centré (pas de cible) ──
+  if (!targetSelector || !targetRect) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 55 }}>
+        {/* Overlay translucide */}
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.4)',
+            animation: 'coach-mark-fade-in 0.3s ease-out',
+          }}
+        />
 
-  // Spotlight dimensions (with padding)
+        {/* Bulle centrée */}
+        <div
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 320,
+            maxWidth: 'calc(100vw - 32px)',
+            zIndex: 56,
+            animation: 'coach-mark-scale-in 0.3s ease-out',
+          }}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: 20,
+              padding: '24px',
+              boxShadow: '0 12px 48px rgba(0, 0, 0, 0.2)',
+              textAlign: 'center',
+            }}
+          >
+            {stepLabel && (
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', marginBottom: 8 }}>
+                Étape {stepLabel}
+              </div>
+            )}
+            {icon && (
+              <div style={{ fontSize: 36, marginBottom: 8 }}>{icon}</div>
+            )}
+            <h3 style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: '#1f2937',
+              marginBottom: 6,
+              lineHeight: 1.3,
+            }}>
+              {title}
+            </h3>
+            <p style={{
+              fontSize: 13,
+              color: '#6b7280',
+              lineHeight: 1.6,
+              marginBottom: extra ? 8 : (ctaLabel ? 16 : 0),
+            }}>
+              {description}
+            </p>
+            {extra}
+            {ctaLabel && onCta && (
+              <button
+                onClick={onCta}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '12px 16px',
+                  marginTop: extra ? 16 : 0,
+                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 12,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                }}
+              >
+                {ctaLabel}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes coach-mark-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes coach-mark-scale-in {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
+  // ── Mode spotlight (avec cible) ──
   const spot = {
     top: targetRect.top - padding,
     left: targetRect.left - padding,
@@ -133,50 +213,58 @@ export default function CoachMark({
   let tooltipLeft = spot.left + spot.width / 2 - tooltipMaxWidth / 2
   tooltipLeft = Math.max(12, Math.min(tooltipLeft, window.innerWidth - tooltipMaxWidth - 12))
 
-  const arrowLeft = spot.left + spot.width / 2 - tooltipLeft - 8 // 8 = half arrow width
+  const arrowLeft = spot.left + spot.width / 2 - tooltipLeft - 8
 
   const tooltipTop = position === 'bottom'
-    ? spot.top + spot.height + 12
-    : spot.top - 12
+    ? spot.top + spot.height + 14
+    : spot.top - 14
 
   return (
-    <div className="coach-mark-overlay" style={{ position: 'fixed', inset: 0, zIndex: 55, pointerEvents: 'none' }}>
-      {/* Dark overlay with spotlight cutout via box-shadow */}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 55 }}>
+      {/* Overlay translucide avec découpe spotlight */}
       <div
-        className="coach-mark-spotlight"
         style={{
           position: 'fixed',
           top: spot.top,
           left: spot.left,
           width: spot.width,
           height: spot.height,
-          borderRadius: 12,
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          borderRadius: 14,
+          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.4)',
           pointerEvents: 'none',
           animation: 'coach-mark-fade-in 0.3s ease-out',
+          zIndex: 55,
         }}
       />
 
-      {/* Spotlight border pulse */}
+      {/* Bordure pulsante autour du spotlight */}
       <div
-        className="coach-mark-pulse"
         style={{
           position: 'fixed',
           top: spot.top - 2,
           left: spot.left - 2,
           width: spot.width + 4,
           height: spot.height + 4,
-          borderRadius: 14,
-          border: '2px solid rgba(129, 140, 248, 0.6)',
+          borderRadius: 16,
+          border: '2px solid rgba(129, 140, 248, 0.5)',
           pointerEvents: 'none',
           animation: 'coach-mark-pulse 2s ease-in-out infinite',
+          zIndex: 55,
         }}
       />
 
-      {/* Tooltip bubble */}
+      {/* Bloquer les clics partout (l'overlay est non-interactif) */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 54,
+        }}
+      />
+
+      {/* Bulle tooltip */}
       <div
         ref={tooltipRef}
-        className="coach-mark-tooltip"
         style={{
           position: 'fixed',
           left: tooltipLeft,
@@ -186,20 +274,21 @@ export default function CoachMark({
           ),
           width: tooltipMaxWidth,
           pointerEvents: 'auto',
+          zIndex: 56,
           animation: 'coach-mark-slide-in 0.3s ease-out 0.1s both',
         }}
       >
-        {/* Arrow */}
+        {/* Flèche */}
         <div
           style={{
             position: 'absolute',
             left: Math.max(12, Math.min(arrowLeft, tooltipMaxWidth - 28)),
             ...(position === 'bottom'
-              ? { top: -8 }
-              : { bottom: -8 }
+              ? { top: -7 }
+              : { bottom: -7 }
             ),
-            width: 16,
-            height: 16,
+            width: 14,
+            height: 14,
             background: 'white',
             transform: 'rotate(45deg)',
             borderRadius: 2,
@@ -209,7 +298,7 @@ export default function CoachMark({
           }}
         />
 
-        {/* Content */}
+        {/* Contenu */}
         <div
           style={{
             position: 'relative',
@@ -219,6 +308,11 @@ export default function CoachMark({
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
           }}
         >
+          {stepLabel && (
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', marginBottom: 4, textAlign: 'center' }}>
+              Étape {stepLabel}
+            </div>
+          )}
           {icon && (
             <div style={{ fontSize: 28, marginBottom: 6, textAlign: 'center' }}>{icon}</div>
           )}
@@ -235,10 +329,11 @@ export default function CoachMark({
             fontSize: 13,
             color: '#6b7280',
             lineHeight: 1.5,
-            marginBottom: ctaLabel ? 12 : 0,
+            marginBottom: extra ? 8 : (ctaLabel ? 12 : 0),
           }}>
             {description}
           </p>
+          {extra}
           {ctaLabel && onCta && (
             <button
               onClick={onCta}
@@ -246,6 +341,7 @@ export default function CoachMark({
                 display: 'block',
                 width: '100%',
                 padding: '10px 16px',
+                marginTop: extra ? 12 : 0,
                 background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
                 color: 'white',
                 border: 'none',
@@ -259,21 +355,9 @@ export default function CoachMark({
               {ctaLabel}
             </button>
           )}
-          {onTargetClick && !ctaLabel && (
-            <p style={{
-              fontSize: 11,
-              color: '#a5b4fc',
-              textAlign: 'center',
-              marginTop: 8,
-              fontWeight: 500,
-            }}>
-              Clique sur l&apos;element en surbrillance
-            </p>
-          )}
         </div>
       </div>
 
-      {/* CSS animations */}
       <style jsx>{`
         @keyframes coach-mark-fade-in {
           from { opacity: 0; }
@@ -291,13 +375,17 @@ export default function CoachMark({
         }
         @keyframes coach-mark-pulse {
           0%, 100% {
-            opacity: 0.6;
+            opacity: 0.5;
             transform: scale(1);
           }
           50% {
             opacity: 1;
-            transform: scale(1.02);
+            transform: scale(1.03);
           }
+        }
+        @keyframes coach-mark-scale-in {
+          from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
       `}</style>
     </div>
