@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
+import { useOnboarding } from '@/lib/onboarding-context'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -40,6 +41,8 @@ function isIOSSafari() {
 }
 
 export default function InstallPrompt() {
+  let onboarding = false
+  try { onboarding = useOnboarding().isOnboarding } catch { /* outside provider */ }
   const [bannerType, setBannerType] = useState<'native' | 'guide-android' | 'guide-ios' | 'guide-ios-chrome' | null>(null)
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -127,7 +130,7 @@ export default function InstallPrompt() {
   }
 
   // ── Rien à afficher ──
-  if (!bannerType) return null
+  if (!bannerType || onboarding) return null
 
   // ── Bandeau natif Android (beforeinstallprompt capté) ──
   if (bannerType === 'native') {
