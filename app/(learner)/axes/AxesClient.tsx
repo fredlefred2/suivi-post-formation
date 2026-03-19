@@ -39,8 +39,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const { setIsOnboarding } = useOnboarding()
   const [levelUpInfo, setLevelUpInfo] = useState<{ icon: string; label: string } | null>(null)
   const isOnboardingCreate = onboarding === 'create'
-  const isOnboardingEditLast = onboarding === 'edit-last'
-  const isOnboardingMode = isOnboardingCreate || isOnboardingEditLast
+  const isOnboardingMode = isOnboardingCreate
   const [showAxeForm, setShowAxeForm] = useState(isOnboardingCreate)
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null)
 
@@ -49,17 +48,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     if (isOnboardingMode) setIsOnboarding(true)
     return () => setIsOnboarding(false)
   }, [isOnboardingMode, setIsOnboarding])
-
-  // Auto-open edit form for last axis when onboarding=edit-last
-  useEffect(() => {
-    if (isOnboardingEditLast && axes.length > 0) {
-      const lastAxe = axes[axes.length - 1]
-      setEditingAxe(lastAxe)
-      setEditAxeSubject(lastAxe.subject)
-      setEditAxeDescription(lastAxe.description || '')
-      setEditAxeDifficulty(lastAxe.difficulty as Difficulty)
-    }
-  }, [isOnboardingEditLast]) // eslint-disable-line react-hooks/exhaustive-deps
   const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -178,15 +166,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     e.preventDefault()
     if (!editingAxe || !editAxeDifficulty) return
     setError(null)
-    if (isOnboardingEditLast) {
-      const result = await updateAxe(editingAxe.id, editAxeSubject, editAxeDescription || null, editAxeDifficulty)
-      if (result?.error) setError(result.error)
-      else {
-        setEditingAxe(null)
-        router.push('/dashboard')
-      }
-      return
-    }
     startTransition(async () => {
       const result = await updateAxe(editingAxe.id, editAxeSubject, editAxeDescription || null, editAxeDifficulty)
       if (result?.error) setError(result.error)
@@ -750,7 +729,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {/* Modale d'édition d'axe */}
       {editingAxe && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => { setEditingAxe(null); if (isOnboardingEditLast) router.push('/dashboard') }} />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setEditingAxe(null)} />
           <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
             {/* Header gradient */}
             <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4">
@@ -827,7 +806,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setEditingAxe(null); if (isOnboardingEditLast) router.push('/dashboard') }}
+                  onClick={() => setEditingAxe(null)}
                   className="px-5 py-3 rounded-xl font-semibold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
                 >
                   Annuler

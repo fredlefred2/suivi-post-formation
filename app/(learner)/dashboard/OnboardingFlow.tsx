@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
 import CoachMark from '@/app/components/CoachMark'
+import { updateAxe } from '@/app/(learner)/axes/actions'
 
 // All step IDs in order (10 steps, axes 2-3 skippable)
 const ALL_STEPS = [
@@ -38,7 +39,7 @@ type Props = {
   totalActions: number
   totalCheckins: number
   firstActionId?: string | null
-  axes: { id: string; subject: string; completedCount: number }[]
+  axes: { id: string; subject: string; description: string | null; difficulty: string; completedCount: number }[]
   children: React.ReactNode
 }
 
@@ -56,6 +57,13 @@ export default function OnboardingFlow({
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
   const [menuSubStep, setMenuSubStep] = useState(0)
+  // Inline axis edit during onboarding
+  const [editingAxeId, setEditingAxeId] = useState<string | null>(null)
+  const [editSubject, setEditSubject] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editDifficulty, setEditDifficulty] = useState('moyen')
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editPending, startEditTransition] = useTransition()
 
   useEffect(() => {
     const stored = getOnboardingAck(userId)
@@ -109,6 +117,25 @@ export default function OnboardingFlow({
   function skipAxis3() {
     acknowledgeStep('skip-axis-3', userId)
     setAck((prev) => ({ ...prev, 'skip-axis-3': true }))
+  }
+
+  function openEditLastAxe() {
+    const lastAxe = axes[axes.length - 1]
+    if (!lastAxe) return
+    setEditingAxeId(lastAxe.id)
+    setEditSubject(lastAxe.subject)
+    setEditDescription(lastAxe.description || '')
+    setEditDifficulty(lastAxe.difficulty || 'moyen')
+    setEditError(null)
+  }
+
+  async function handleEditAxeSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingAxeId) return
+    setEditError(null)
+    const result = await updateAxe(editingAxeId, editSubject, editDescription || null, editDifficulty)
+    if (result?.error) { setEditError(result.error); return }
+    setEditingAxeId(null)
   }
 
   // Go back to previous step (un-acknowledge current step's predecessor)
@@ -176,6 +203,92 @@ export default function OnboardingFlow({
   }, [activeStep])
 
   if (!mounted) return null
+
+  // ── Modale d'édition inline (onboarding) ──
+  if (editingAxeId) {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-0 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden flex flex-col flex-1">
+            {/* Header gradient */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4 shrink-0">
+              <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
+              <p className="text-indigo-100 text-xs mt-0.5">Modifie les détails de ton axe</p>
+            </div>
+
+            <form onSubmit={handleEditAxeSubmit} className="p-5 space-y-5 flex-1 flex flex-col">
+              <div>
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Intitulé de l&apos;axe</label>
+                <input
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                  Moyens envisagés <span className="font-normal text-gray-400">(optionnel)</span>
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-700 mb-2 block">Niveau de difficulté</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: 'facile', emoji: '🟢', label: 'Facile' },
+                    { key: 'moyen', emoji: '🟡', label: 'Moyen' },
+                    { key: 'difficile', emoji: '🔴', label: 'Difficile' },
+                  ]).map(({ key, emoji, label }) => {
+                    const isSelected = editDifficulty === key
+                    return (
+                      <label key={key} className="cursor-pointer">
+                        <input
+                          type="radio" name="edit-difficulty" value={key} className="sr-only"
+                          checked={isSelected}
+                          onChange={() => setEditDifficulty(key)}
+                        />
+                        <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
+                          isSelected
+                            ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}>
+                          <span className="text-lg">{emoji}</span>
+                          <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+              {editError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{editError}</p>}
+              <div className="flex gap-3 pt-1 mt-auto">
+                <button
+                  type="submit"
+                  disabled={editPending}
+                  className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+                >
+                  {editPending ? 'Enregistrement...' : '✓ Valider'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingAxeId(null)}
+                  className="px-5 py-3 rounded-xl font-semibold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Blocking overlay: onboarding done but 0 axes → force creation
   if (needsAxisBlock) {
@@ -353,12 +466,12 @@ export default function OnboardingFlow({
               Créer mon 2e axe
             </Link>
             <div className="flex items-center justify-center gap-4">
-              <Link
-                href="/axes?onboarding=edit-last"
+              <button
+                onClick={openEditLastAxe}
                 className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
               >
                 ← Modifier mon axe
-              </Link>
+              </button>
               <button
                 onClick={skipAxis2}
                 className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
@@ -403,12 +516,12 @@ export default function OnboardingFlow({
               Créer mon 3e axe
             </Link>
             <div className="flex items-center justify-center gap-4">
-              <Link
-                href="/axes?onboarding=edit-last"
+              <button
+                onClick={openEditLastAxe}
                 className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
               >
                 ← Modifier mes axes
-              </Link>
+              </button>
               <button
                 onClick={skipAxis3}
                 className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
