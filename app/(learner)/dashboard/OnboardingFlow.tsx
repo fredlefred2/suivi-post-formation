@@ -354,7 +354,7 @@ export default function OnboardingFlow({
             </Link>
             <div className="flex items-center justify-center gap-4">
               <Link
-                href="/axes"
+                href="/axes?onboarding=edit-last"
                 className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
               >
                 ← Modifier mon axe
@@ -404,7 +404,7 @@ export default function OnboardingFlow({
             </Link>
             <div className="flex items-center justify-center gap-4">
               <Link
-                href="/axes"
+                href="/axes?onboarding=edit-last"
                 className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
               >
                 ← Modifier mes axes
