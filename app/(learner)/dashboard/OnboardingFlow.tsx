@@ -25,10 +25,10 @@ type StepId = (typeof ALL_STEPS)[number]
 
 // Menu tour sub-steps
 const MENU_NAV_ITEMS = [
-  { selector: '[data-onboarding="nav-dashboard"]', label: 'Tableau de bord', desc: 'Ta progression, tes actions et ta météo' },
-  { selector: '[data-onboarding="nav-axes"]', label: 'Mes actions', desc: 'Gère tes actions pour chaque axe' },
-  { selector: '[data-onboarding="nav-checkin"]', label: 'Check-in', desc: 'Météo et bilan hebdomadaire' },
-  { selector: '[data-onboarding="nav-team"]', label: 'Team', desc: 'Tes coéquipiers' },
+  { selector: '[data-onboarding="nav-dashboard"]', label: '📊 Tableau de bord', desc: 'Vue d\'ensemble : ta dynamique de progression sur chaque axe, tes statistiques (actions, check-ins, streak) et ta frise météo.' },
+  { selector: '[data-onboarding="nav-axes"]', label: '🎯 Mes actions', desc: 'Retrouve tes axes de progrès, ajoute et gère tes actions, et suis ton niveau pour chaque axe.' },
+  { selector: '[data-onboarding="nav-checkin"]', label: '📋 Check-in', desc: 'Chaque semaine, fais le point : ta météo, tes réussites et tes difficultés.' },
+  { selector: '[data-onboarding="nav-team"]', label: '👥 Team', desc: 'Découvre les actions de tes coéquipiers, encourage-les avec des likes et des commentaires !' },
 ]
 
 type Props = {
@@ -110,6 +110,34 @@ export default function OnboardingFlow({
     acknowledgeStep('skip-axis-3', userId)
     setAck((prev) => ({ ...prev, 'skip-axis-3': true }))
   }
+
+  // Go back to previous step (un-acknowledge current step's predecessor)
+  const goBack = useCallback((fromStep: StepId) => {
+    const idx = ALL_STEPS.indexOf(fromStep)
+    if (idx <= 0) return
+
+    // Find the previous visible step
+    for (let i = idx - 1; i >= 0; i--) {
+      const prev = ALL_STEPS[i]
+      // Skip auto-completed axis steps
+      if (prev === 'axis-1' && axesCount >= 1) continue
+      if (prev === 'axis-2' && (axesCount >= 2 || ack['skip-axis-2'])) continue
+      if (prev === 'axis-3' && (axesCount >= 3 || ack['skip-axis-3'] || ack['skip-axis-2'])) continue
+
+      // Un-acknowledge the current step to go back
+      // We need to remove the ack for fromStep so it becomes active again after we go back
+      // Actually, we un-ack the previous step so IT becomes active
+      const stored = getOnboardingAck(userId)
+      delete stored[prev]
+      localStorage.setItem(`onboarding_${userId}`, JSON.stringify(stored))
+      setAck((a) => {
+        const next = { ...a }
+        delete next[prev]
+        return next
+      })
+      return
+    }
+  }, [userId, axesCount, ack])
 
   // Determine which step is active
   const getActiveStep = useCallback((): StepId | null => {
@@ -382,9 +410,57 @@ export default function OnboardingFlow({
           stepLabel={stepLabel}
           icon="📈"
           title="Ta dynamique de progression"
-          description="Chaque action que tu enregistres te fait monter de niveau : de ⚪ Veille jusqu'à 🚀 Propulsion !"
+          description="Chaque action enregistrée te fait progresser. Voici les 5 niveaux que tu peux atteindre :"
+          extra={
+            <div style={{ marginTop: 8, marginBottom: 4 }}>
+              {/* Piste de progression colorée */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, position: 'relative' }}>
+                {[
+                  { icon: '⚪', label: 'Veille', color: '#94a3b8', bg: '#f1f5f9' },
+                  { icon: '👣', label: 'Impulsion', color: '#0ea5e9', bg: '#e0f2fe' },
+                  { icon: '🥁', label: 'Rythme', color: '#10b981', bg: '#d1fae5' },
+                  { icon: '🔥', label: 'Intensité', color: '#f97316', bg: '#ffedd5' },
+                  { icon: '🚀', label: 'Propulsion', color: '#ec4899', bg: '#fce7f3' },
+                ].map((level, i) => (
+                  <div key={level.label} style={{ display: 'flex', alignItems: 'center' }}>
+                    {i > 0 && (
+                      <div style={{
+                        width: 16,
+                        height: 3,
+                        background: `linear-gradient(90deg, ${[
+                          { icon: '⚪', label: 'Veille', color: '#94a3b8', bg: '#f1f5f9' },
+                          { icon: '👣', label: 'Impulsion', color: '#0ea5e9', bg: '#e0f2fe' },
+                          { icon: '🥁', label: 'Rythme', color: '#10b981', bg: '#d1fae5' },
+                          { icon: '🔥', label: 'Intensité', color: '#f97316', bg: '#ffedd5' },
+                          { icon: '🚀', label: 'Propulsion', color: '#ec4899', bg: '#fce7f3' },
+                        ][i - 1].color}, ${level.color})`,
+                        borderRadius: 2,
+                      }} />
+                    )}
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: level.bg,
+                        border: `2px solid ${level.color}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14,
+                      }}>
+                        {level.icon}
+                      </div>
+                      <p style={{ fontSize: 8, color: level.color, marginTop: 2, fontWeight: 600, lineHeight: 1 }}>{level.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          }
           ctaLabel="Compris !"
           onCta={() => acknowledge('progression')}
+          onBack={() => goBack('progression')}
         />
       </>
     )
@@ -400,9 +476,10 @@ export default function OnboardingFlow({
           stepLabel={stepLabel}
           icon="➕"
           title="Ajouter une action"
-          description="Ce bouton te permet d'enregistrer les actions concrètes que tu mènes au quotidien. Tu pourras choisir l'axe concerné."
+          description="Ce bouton te permet d'enregistrer chaque action concrète que tu mènes au quotidien. Tu choisis l'axe concerné, tu décris ce que tu as fait, et c'est enregistré ! Plus tu en ajoutes, plus tu progresses."
           ctaLabel="Compris !"
           onCta={() => acknowledge('add-action')}
+          onBack={() => goBack('add-action')}
         />
       </>
     )
@@ -417,7 +494,7 @@ export default function OnboardingFlow({
           stepLabel={stepLabel}
           icon="❤️"
           title="Likes & commentaires"
-          description="Ton formateur et tes coéquipiers peuvent liker et commenter tes actions pour t'encourager."
+          description="Ton formateur et tes coéquipiers peuvent liker ❤️ et commenter 💬 tes actions pour t'encourager. Et toi aussi, tu peux liker et commenter les actions des autres dans l'onglet Team !"
           extra={
             <div style={{
               display: 'flex',
@@ -438,6 +515,7 @@ export default function OnboardingFlow({
           }
           ctaLabel="Compris !"
           onCta={() => acknowledge('feedback-info')}
+          onBack={() => goBack('feedback-info')}
         />
       </>
     )
@@ -452,9 +530,22 @@ export default function OnboardingFlow({
           stepLabel={stepLabel}
           icon="✏️"
           title="Modifier & supprimer"
-          description="Tu peux modifier le texte d'une action avec ✏️ ou la supprimer avec 🗑️ à tout moment depuis l'écran « Mes actions »."
+          description="Depuis l'écran « Mes actions », tu peux à tout moment :"
+          extra={
+            <div style={{ marginTop: 6, marginBottom: 4, textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 18 }}>✏️</span>
+                <span style={{ fontSize: 13, color: '#6b7280' }}><strong>Modifier</strong> le texte d&apos;une action</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>🗑️</span>
+                <span style={{ fontSize: 13, color: '#6b7280' }}><strong>Supprimer</strong> une action si besoin</span>
+              </div>
+            </div>
+          }
           ctaLabel="Compris !"
           onCta={() => acknowledge('delete-info')}
+          onBack={() => goBack('delete-info')}
         />
       </>
     )
@@ -469,9 +560,23 @@ export default function OnboardingFlow({
           stepLabel={stepLabel}
           icon="📋"
           title="Le check-in hebdomadaire"
-          description="Chaque vendredi, un bandeau apparaîtra en haut de ton écran pour te rappeler de faire ton check-in :"
+          description="Chaque vendredi, un bandeau apparaîtra pour te rappeler de faire ton check-in. On te demandera :"
           extra={
-            <div style={{ marginTop: 10, marginBottom: 6 }}>
+            <div style={{ marginTop: 8, marginBottom: 6 }}>
+              {/* Ce qu'on demande */}
+              <div style={{ textAlign: 'left', marginBottom: 10 }}>
+                {[
+                  { icon: '🌤️', text: 'Ta météo de la semaine (ça roule, mitigé, difficile)' },
+                  { icon: '✅', text: 'Tes réussites et avancées' },
+                  { icon: '⚡', text: 'Tes difficultés rencontrées' },
+                  { icon: '📊', text: 'Une auto-évaluation sur chaque axe' },
+                ].map((item) => (
+                  <div key={item.icon} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>{item.icon}</span>
+                    <span style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.4 }}>{item.text}</span>
+                  </div>
+                ))}
+              </div>
               {/* Mockup du bandeau alerte */}
               <div style={{
                 background: '#fffbeb',
@@ -496,28 +601,11 @@ export default function OnboardingFlow({
                   borderRadius: 8,
                 }}>Faire</span>
               </div>
-              {/* Météos */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: 16,
-                marginTop: 10,
-              }}>
-                {[
-                  { icon: '☀️', label: 'Ça roule' },
-                  { icon: '⛅', label: 'Mitigé' },
-                  { icon: '⛈️', label: 'Difficile' },
-                ].map((w) => (
-                  <div key={w.label} style={{ textAlign: 'center' }}>
-                    <span style={{ fontSize: 22 }}>{w.icon}</span>
-                    <p style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{w.label}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           }
           ctaLabel="Ok, compris !"
           onCta={() => acknowledge('checkin')}
+          onBack={() => goBack('checkin')}
         />
       </>
     )
@@ -545,6 +633,13 @@ export default function OnboardingFlow({
               sessionStorage.removeItem(`onboarding_session_${userId}`)
             } else {
               setMenuSubStep((prev) => prev + 1)
+            }
+          }}
+          onBack={() => {
+            if (menuSubStep > 0) {
+              setMenuSubStep((prev) => prev - 1)
+            } else {
+              goBack('menu-tour')
             }
           }}
         />

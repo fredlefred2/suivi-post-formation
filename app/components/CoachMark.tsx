@@ -14,6 +14,8 @@ type Props = {
   extra?: React.ReactNode
   ctaLabel?: string
   onCta?: () => void
+  /** Back button handler. If provided, shows a "← Retour" link */
+  onBack?: () => void
   /** Extra padding around the spotlight cutout (px) */
   padding?: number
   /** Step indicator (e.g. "3/8") */
@@ -28,6 +30,7 @@ export default function CoachMark({
   extra,
   ctaLabel,
   onCta,
+  onBack,
   padding = 10,
   stepLabel,
 }: Props) {
@@ -181,6 +184,25 @@ export default function CoachMark({
                 }}
               >
                 {ctaLabel}
+              </button>
+            )}
+            {onBack && (
+              <button
+                onClick={onBack}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '8px 16px',
+                  marginTop: 6,
+                  background: 'transparent',
+                  color: '#9ca3af',
+                  border: 'none',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                }}
+              >
+                ← Retour
               </button>
             )}
           </div>
@@ -353,6 +375,25 @@ export default function CoachMark({
               }}
             >
               {ctaLabel}
+            </button>
+          )}
+          {onBack && (
+            <button
+              onClick={onBack}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '6px 16px',
+                marginTop: 4,
+                background: 'transparent',
+                color: '#9ca3af',
+                border: 'none',
+                fontSize: 12,
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              ← Retour
             </button>
           )}
         </div>
