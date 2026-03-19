@@ -50,6 +50,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   }, [isOnboardingMode, setIsOnboarding])
   const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [editingActionId, setEditingActionId] = useState<string | null>(null)
@@ -110,8 +111,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     const formData = new FormData(e.currentTarget)
     if (isOnboardingCreate) {
       // En onboarding : action rapide (revalide uniquement /dashboard)
+      setIsSaving(true)
       const result = await createAxeFast(formData)
-      if (result?.error) setError(result.error)
+      if (result?.error) { setError(result.error); setIsSaving(false) }
       else router.push('/dashboard')
     } else {
       startTransition(async () => {
@@ -256,11 +258,16 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
             <div className="flex gap-3 pt-1">
               <button
                 type="submit"
-                disabled={isPending}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
+                disabled={isPending || isSaving}
+                className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98] ${(isPending || isSaving) ? 'opacity-60' : ''}`}
                 style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
               >
-                {isPending ? 'Enregistrement...' : '✓ Enregistrer'}
+                {(isPending || isSaving) ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                    Enregistrement...
+                  </span>
+                ) : '✓ Enregistrer'}
               </button>
               {!isOnboardingCreate && (
                 <button

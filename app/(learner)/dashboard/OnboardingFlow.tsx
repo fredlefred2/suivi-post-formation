@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useTransition } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
@@ -14,8 +14,8 @@ const ALL_STEPS = [
   'axis-1',        // 2. Crée ton 1er axe (obligatoire)
   'axis-2',        // 3. Crée ton 2e axe (optionnel)
   'axis-3',        // 4. Crée ton 3e axe (optionnel)
-  'progression',   // 5. Ta dynamique de progression (coach mark)
-  'add-action',    // 6. Ajouter une action (coach mark)
+  'add-action',    // 5. Ajouter une action (coach mark)
+  'progression',   // 6. Ta dynamique de progression (coach mark)
   'feedback-info', // 7. Likes & commentaires (coach mark centré)
   'delete-info',   // 8. Modifier & supprimer (coach mark centré)
   'checkin',       // 9. Le check-in hebdomadaire (coach mark)
@@ -63,7 +63,7 @@ export default function OnboardingFlow({
   const [editDescription, setEditDescription] = useState('')
   const [editDifficulty, setEditDifficulty] = useState('moyen')
   const [editError, setEditError] = useState<string | null>(null)
-  const [editPending, startEditTransition] = useTransition()
+  const [editSaving, setEditSaving] = useState(false)
 
   useEffect(() => {
     const stored = getOnboardingAck(userId)
@@ -133,8 +133,10 @@ export default function OnboardingFlow({
     e.preventDefault()
     if (!editingAxeId) return
     setEditError(null)
+    setEditSaving(true)
     const result = await updateAxeFast(editingAxeId, editSubject, editDescription || null, editDifficulty)
-    if (result?.error) { setEditError(result.error); return }
+    if (result?.error) { setEditError(result.error); setEditSaving(false); return }
+    setEditSaving(false)
     setEditingAxeId(null)
   }
 
@@ -269,11 +271,16 @@ export default function OnboardingFlow({
               <div className="flex gap-3 pt-1 mt-auto">
                 <button
                   type="submit"
-                  disabled={editPending}
-                  className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
+                  disabled={editSaving}
+                  className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98] ${editSaving ? 'opacity-60' : ''}`}
                   style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
                 >
-                  {editPending ? 'Enregistrement...' : '✓ Valider'}
+                  {editSaving ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                      Enregistrement...
+                    </span>
+                  ) : '✓ Valider'}
                 </button>
                 <button
                   type="button"
