@@ -297,10 +297,24 @@ export default function OnboardingFlow({
             </div>
           </div>
 
-          <div className="pt-3 pb-1 text-center shrink-0">
+          <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
             <Link href="/axes?onboarding=create" className="btn-primary">
               Créer mon 1er axe
             </Link>
+            <div>
+              <button
+                onClick={() => {
+                  // Retour à welcome : un-ack welcome
+                  const stored = getOnboardingAck(userId)
+                  delete stored['welcome']
+                  localStorage.setItem(`onboarding_${userId}`, JSON.stringify(stored))
+                  setAck((a) => { const n = { ...a }; delete n['welcome']; return n })
+                }}
+                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                ← Retour
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -338,12 +352,18 @@ export default function OnboardingFlow({
             <Link href="/axes?onboarding=create" className="btn-primary">
               Créer mon 2e axe
             </Link>
-            <div>
+            <div className="flex items-center justify-center gap-4">
+              <Link
+                href="/axes"
+                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                ← Modifier mon axe
+              </Link>
               <button
                 onClick={skipAxis2}
                 className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
               >
-                Plus tard
+                Plus tard →
               </button>
             </div>
           </div>
@@ -382,12 +402,18 @@ export default function OnboardingFlow({
             <Link href="/axes?onboarding=create" className="btn-primary">
               Créer mon 3e axe
             </Link>
-            <div>
+            <div className="flex items-center justify-center gap-4">
+              <Link
+                href="/axes"
+                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+              >
+                ← Modifier mes axes
+              </Link>
               <button
                 onClick={skipAxis3}
                 className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
               >
-                Plus tard
+                Plus tard →
               </button>
             </div>
           </div>
@@ -569,7 +595,7 @@ export default function OnboardingFlow({
                   { icon: '🌤️', text: 'Ta météo de la semaine (ça roule, mitigé, difficile)' },
                   { icon: '✅', text: 'Tes réussites et avancées' },
                   { icon: '⚡', text: 'Tes difficultés rencontrées' },
-                  { icon: '📊', text: 'Une auto-évaluation sur chaque axe' },
+                  { icon: '💡', text: 'Tes objectifs pour la semaine suivante' },
                 ].map((item) => (
                   <div key={item.icon} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
                     <span style={{ fontSize: 14, flexShrink: 0 }}>{item.icon}</span>
