@@ -250,7 +250,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
+            className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
           >
             {axes.map((axe, axeIndex) => {
               const dyn = getDynamique(axe.actions.length)
