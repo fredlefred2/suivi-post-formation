@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         endpoint,
         p256dh: keys.p256dh,
-        auth: keys.auth,
+        auth_key: keys.auth,
       },
       { onConflict: 'endpoint' }
     )
