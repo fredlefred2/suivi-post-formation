@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { sendNotificationToMany } from '@/lib/send-notification'
 
 export async function createAxe(formData: FormData) {
   const supabase = createClient()
@@ -96,6 +98,54 @@ export async function createAction(formData: FormData) {
   if (error) return { error: error.message }
   revalidatePath('/axes')
   revalidatePath('/dashboard')
+
+  // ── Push notification: notify teammates ──
+  try {
+    const actionDesc = (formData.get('description') as string) || ''
+    // Get learner profile
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('first_name')
+      .eq('id', user.id)
+      .single()
+    // Get learner's group
+    const { data: membership } = await supabaseAdmin
+      .from('group_members')
+      .select('group_id')
+      .eq('learner_id', user.id)
+      .limit(1)
+      .maybeSingle()
+    if (membership) {
+      // Get all group members except the creator
+      const { data: members } = await supabaseAdmin
+        .from('group_members')
+        .select('learner_id')
+        .eq('group_id', membership.group_id)
+        .neq('learner_id', user.id)
+      const teamIds = (members ?? []).map((m) => m.learner_id)
+      // Also notify the trainer
+      const { data: group } = await supabaseAdmin
+        .from('groups')
+        .select('trainer_id')
+        .eq('id', membership.group_id)
+        .single()
+      if (group?.trainer_id) teamIds.push(group.trainer_id)
+
+      if (teamIds.length > 0) {
+        const firstName = profile?.first_name ?? 'Un participant'
+        const short = actionDesc.length > 60 ? actionDesc.slice(0, 57) + '...' : actionDesc
+        await sendNotificationToMany(teamIds, {
+          type: 'action_added',
+          title: 'Nouvelle action 💪',
+          body: `${firstName} a ajouté : ${short}`,
+          url: '/team',
+        })
+      }
+    }
+  } catch {
+    // Never break the main flow
+  }
+
   return { id: data.id }
 }
 

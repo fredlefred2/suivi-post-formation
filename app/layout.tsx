@@ -14,7 +14,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'YAPLUKA',
   description: 'Transformez vos formations en actions concrètes',
-  manifest: '/manifest.json',
+  manifest: '/api/manifest',
   icons: [
     { rel: 'icon', url: '/icon-192.png', sizes: '192x192' },
     { rel: 'apple-touch-icon', url: '/icon-192.png' },

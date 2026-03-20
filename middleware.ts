@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Fichiers statiques PWA — ne jamais intercepter
-  if (pathname === '/sw.js' || pathname === '/manifest.json') {
+  if (pathname === '/sw.js' || pathname === '/manifest.json' || pathname === '/api/manifest') {
     return supabaseResponse
   }
 
