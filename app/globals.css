@@ -119,13 +119,9 @@
     @apply block text-sm font-semibold text-gray-700 mb-1.5;
   }
 
-  /* ──────── Titres gradient — bien visible ──────── */
+  /* ──────── Titres — gris charbon moderne ──────── */
   .page-title {
-    @apply text-2xl font-extrabold;
-    background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 35%, #7c3aed 65%, #9333ea 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply text-2xl font-extrabold text-gray-900;
     letter-spacing: -0.02em;
   }
 

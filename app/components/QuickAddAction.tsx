@@ -159,7 +159,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
           <div className="animate-level-up-text">
             <p className="text-xl font-bold text-gray-900 mb-1">Niveau {levelUpInfo.label}</p>
-            <p className="text-lg font-semibold text-indigo-600">débloqué !</p>
+            <p className="text-lg font-semibold text-gray-500">débloqué !</p>
             <p className="text-sm text-gray-400 mt-3">Continue comme ça 💪</p>
           </div>
         </div>
@@ -170,10 +170,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           {confirmInfo ? (
             <div className="mt-3">
               <p className="text-sm text-gray-500">{confirmInfo.message}</p>
-              <p className="text-2xl mt-1">{confirmInfo.nextIcon} <span className="text-lg font-semibold text-indigo-600">{confirmInfo.nextLabel}</span></p>
+              <p className="text-2xl mt-1">{confirmInfo.nextIcon} <span className="text-lg font-semibold text-gray-500">{confirmInfo.nextLabel}</span></p>
             </div>
           ) : (
-            <p className="text-lg font-semibold text-indigo-600 mt-1">Niveau max atteint ! 🚀</p>
+            <p className="text-lg font-semibold text-gray-500 mt-1">Niveau max atteint ! 🚀</p>
           )}
         </div>
       ) : (

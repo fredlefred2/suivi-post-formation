@@ -654,7 +654,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
             <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
             <div className="animate-level-up-text">
               <p className="text-xl font-bold text-gray-900 mb-1">Niveau {levelUpInfo.label}</p>
-              <p className="text-lg font-semibold text-indigo-600">débloqué !</p>
+              <p className="text-lg font-semibold text-gray-500">débloqué !</p>
               <p className="text-sm text-gray-400 mt-3">Continue comme ça 💪</p>
             </div>
           </div>

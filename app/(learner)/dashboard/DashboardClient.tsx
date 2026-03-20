@@ -155,7 +155,7 @@ export default function DashboardClient({
         <div className="card p-3">
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-xs font-semibold text-gray-700">Votre onboarding</p>
-            <span className="text-xs font-bold text-indigo-600">{pct}%</span>
+            <span className="text-xs font-bold text-gray-900">{pct}%</span>
           </div>
           <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all duration-500" style={{
@@ -359,7 +359,7 @@ export default function DashboardClient({
                         <span className="flex items-center gap-1 text-pink-500 font-semibold">❤️ {axe.likesCount}</span>
                       )}
                       {axe.commentsCount > 0 && (
-                        <span className="flex items-center gap-1 text-indigo-500 font-semibold">💬 {axe.commentsCount}</span>
+                        <span className="flex items-center gap-1 text-gray-500 font-semibold">💬 {axe.commentsCount}</span>
                       )}
                     </div>
 
