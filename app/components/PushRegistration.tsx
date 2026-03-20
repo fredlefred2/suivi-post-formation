@@ -107,11 +107,56 @@ export default function PushRegistration() {
     }
   }, [])
 
+  const [debugMsg, setDebugMsg] = useState('')
+
   async function handleActivate() {
     setSubscribing(true)
-    const ok = await subscribePush()
+    setDebugMsg('Démarrage...')
+    try {
+      if (!('PushManager' in window)) { setDebugMsg('❌ PushManager non dispo'); setSubscribing(false); return }
+      if (!('serviceWorker' in navigator)) { setDebugMsg('❌ SW non dispo'); setSubscribing(false); return }
+
+      setDebugMsg('Attente SW...')
+      const reg = await navigator.serviceWorker.ready
+      setDebugMsg('SW OK. Vérif abo...')
+
+      let subscription = await reg.pushManager.getSubscription()
+      if (!subscription) {
+        setDebugMsg('Demande permission...')
+        const perm = await Notification.requestPermission()
+        setDebugMsg('Permission: ' + perm)
+        if (perm !== 'granted') { setSubscribing(false); return }
+
+        const vapidRes = await fetch('/api/push/vapid')
+        const { publicKey } = await vapidRes.json()
+        setDebugMsg('VAPID reçue, subscribe...')
+
+        const key = urlBase64ToUint8Array(publicKey)
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: key.buffer as ArrayBuffer,
+        })
+      }
+      setDebugMsg('Abo OK. Envoi backend...')
+
+      const sub = subscription.toJSON()
+      const saveRes = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: sub.endpoint, keys: sub.keys }),
+      })
+
+      if (saveRes.ok) {
+        setDebugMsg('✅ Tout bon !')
+        setShowBanner(false)
+      } else {
+        const errBody = await saveRes.text()
+        setDebugMsg('❌ Save: ' + saveRes.status + ' ' + errBody)
+      }
+    } catch (err: any) {
+      setDebugMsg('❌ ' + (err?.message || String(err)))
+    }
     setSubscribing(false)
-    if (ok) setShowBanner(false)
   }
 
   function handleDismiss() {
@@ -148,6 +193,9 @@ export default function PushRegistration() {
                 Plus tard
               </button>
             </div>
+            {debugMsg && (
+              <p className="text-[10px] text-orange-600 mt-1 font-mono">{debugMsg}</p>
+            )}
           </div>
           <button onClick={handleDismiss} className="text-gray-400 hover:text-gray-600 p-1">
             <X size={16} />
