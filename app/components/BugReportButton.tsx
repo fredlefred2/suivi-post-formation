@@ -29,8 +29,7 @@ function timeAgo(dateStr: string): string {
 
 export default function BugReportButton() {
   // ── Onboarding check ──
-  let onboardingActive = false
-  try { onboardingActive = useOnboarding().isOnboarding } catch { /* outside provider */ }
+  const { isOnboarding: onboardingActive } = useOnboarding()
 
   // ── Shared state ──
   const [role, setRole] = useState<'learner' | 'trainer' | null>(null)

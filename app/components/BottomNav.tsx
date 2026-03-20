@@ -28,8 +28,7 @@ type NavItem = {
 export default function BottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  let disabled = false
-  try { disabled = useOnboarding().isOnboarding } catch { /* outside provider (trainer layout) */ }
+  const { isOnboarding: disabled } = useOnboarding()
 
   const isTrainer = pathname.startsWith('/trainer')
 

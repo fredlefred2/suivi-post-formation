@@ -31,8 +31,7 @@ type Props = {
 export default function MobileDrawer({ variant = 'learner' }: Props) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  let onboardingDisabled = false
-  try { onboardingDisabled = useOnboarding().isOnboarding } catch { /* outside provider (trainer layout) */ }
+  const { isOnboarding: onboardingDisabled } = useOnboarding()
 
   const searchParams = useSearchParams()
   const navItems = variant === 'trainer' ? trainerNavItems : learnerNavItems
