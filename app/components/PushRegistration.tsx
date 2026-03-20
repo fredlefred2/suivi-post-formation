@@ -25,36 +25,39 @@ export default function PushRegistration() {
         const reg = await navigator.serviceWorker.ready
         console.log('[Push] SW ready')
 
-        const existing = await reg.pushManager.getSubscription()
-        if (existing) {
-          console.log('[Push] Déjà abonné:', existing.endpoint.substring(0, 60))
-          return
+        // Check existing subscription
+        let subscription = await reg.pushManager.getSubscription()
+
+        if (subscription) {
+          console.log('[Push] Souscription existante:', subscription.endpoint.substring(0, 60))
+        } else {
+          // Need to create a new subscription
+          const permission = await Notification.requestPermission()
+          console.log('[Push] Permission:', permission)
+          if (permission !== 'granted') return
+
+          const vapidRes = await fetch('/api/push/vapid')
+          if (!vapidRes.ok) {
+            console.error('[Push] Erreur VAPID:', vapidRes.status)
+            return
+          }
+          const { publicKey } = await vapidRes.json()
+          if (!publicKey) {
+            console.error('[Push] Clé VAPID vide')
+            return
+          }
+          console.log('[Push] VAPID key reçue:', publicKey.substring(0, 20) + '...')
+
+          const applicationServerKey = urlBase64ToUint8Array(publicKey)
+
+          subscription = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
+          })
+          console.log('[Push] Nouvelle souscription:', subscription.endpoint.substring(0, 60))
         }
 
-        const permission = await Notification.requestPermission()
-        console.log('[Push] Permission:', permission)
-        if (permission !== 'granted') return
-
-        const vapidRes = await fetch('/api/push/vapid')
-        if (!vapidRes.ok) {
-          console.error('[Push] Erreur VAPID:', vapidRes.status)
-          return
-        }
-        const { publicKey } = await vapidRes.json()
-        if (!publicKey) {
-          console.error('[Push] Clé VAPID vide')
-          return
-        }
-        console.log('[Push] VAPID key reçue:', publicKey.substring(0, 20) + '...')
-
-        const applicationServerKey = urlBase64ToUint8Array(publicKey)
-
-        const subscription = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
-        })
-        console.log('[Push] Souscription créée:', subscription.endpoint.substring(0, 60))
-
+        // Always send subscription to backend (ensures it's saved for current user)
         const sub = subscription.toJSON()
         const saveRes = await fetch('/api/push/subscribe', {
           method: 'POST',

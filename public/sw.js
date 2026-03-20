@@ -5,7 +5,7 @@
  * - Notification click handling (open/focus app)
  */
 
-const CACHE_NAME = 'yapluka-v3'
+const CACHE_NAME = 'yapluka-v4'
 const SHELL_URLS = [
   '/',
   '/manifest.json',
