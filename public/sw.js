@@ -5,7 +5,7 @@
  * - Notification click handling (open/focus app)
  */
 
-const CACHE_NAME = 'yapluka-v4'
+const CACHE_NAME = 'yapluka-v5'
 const SHELL_URLS = [
   '/',
   '/manifest.json',
@@ -72,8 +72,7 @@ self.addEventListener('push', (event) => {
     body,
     icon,
     badge,
-    tag: 'yapluka-notification', // replaces existing notification
-    renotify: true,
+    tag: 'yapluka-' + Date.now(), // tag unique → les notifs s'empilent
     data: { url },
   }
 
