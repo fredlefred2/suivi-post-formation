@@ -9,9 +9,17 @@ const nextConfig = {
     return [
       {
         // Pages HTML et API : pas de cache (données personnalisées)
-        source: '/((?!_next/static|_next/image|icon-|manifest|yapluka|sw\\.js).*)',
+        source: '/((?!_next/static|_next/image|icon-|manifest|yapluka).*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, must-revalidate' },
+        ],
+      },
+      {
+        // Service Worker : jamais caché (doit toujours se mettre à jour)
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
         ],
       },
     ]

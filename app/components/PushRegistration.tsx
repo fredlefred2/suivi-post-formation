@@ -54,8 +54,15 @@ export default function PushRegistration() {
     return () => clearTimeout(timer)
   }, [])
 
-  // ── Listener messages SW (badge) ──
+  // ── Forcer la mise à jour du SW + listener messages ──
   useEffect(() => {
+    // Force update du SW à chaque chargement
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        reg?.update().catch(() => {})
+      })
+    }
+
     function onMessage(e: MessageEvent) {
       try {
         if (e.data?.type === 'SET_BADGE') (navigator as any).setAppBadge?.(e.data.count ?? 1)
