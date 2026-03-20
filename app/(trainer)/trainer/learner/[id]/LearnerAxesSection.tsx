@@ -91,10 +91,21 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
           : displaySorted.slice(0, MAX_VISIBLE_ACTIONS)
         const hiddenCount = displaySorted.length - MAX_VISIBLE_ACTIONS
 
+        const cardGradient = levelIdx === 0
+          ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'
+          : levelIdx === 1
+          ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
+          : levelIdx === 2
+          ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+          : levelIdx === 3
+          ? 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)'
+          : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)'
+
         return (
           <div
             key={axe.id}
-            className={`rounded-2xl border-2 p-4 ${dyn.color}`}
+            className="rounded-2xl border-2 p-4"
+            style={{ background: cardGradient }}
           >
             {/* Titre */}
             <div className="flex items-center gap-2">
