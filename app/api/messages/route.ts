@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendNotification } from '@/lib/send-notification'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -102,5 +104,32 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Notification push au destinataire
+  try {
+    const { data: senderProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('id', user.id)
+      .single()
+    const senderName = senderProfile
+      ? `${senderProfile.first_name} ${senderProfile.last_name}`
+      : 'Quelqu\'un'
+    const preview = content.trim().length > 50
+      ? content.trim().substring(0, 50) + '…'
+      : content.trim()
+
+    await sendNotification({
+      userId: receiverId,
+      type: 'message',
+      title: `💬 ${senderName}`,
+      body: preview,
+      url: '/messages',
+      data: { senderId: user.id },
+    })
+  } catch {
+    // Ne pas bloquer l'envoi du message si la notification échoue
+  }
+
   return NextResponse.json({ message: data })
 }
