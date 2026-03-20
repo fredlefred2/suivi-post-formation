@@ -59,7 +59,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
   return (
     <div className="min-h-screen flex flex-col">
       {/* ── Header gradient fort ── */}
-      <header className="text-white sticky top-0 z-10" style={{
+      <header className="text-white sticky top-0 z-20" style={{
         background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 60%, #6366f1 100%)',
         boxShadow: '0 4px 20px rgba(49, 46, 129, 0.3)',
       }}>
