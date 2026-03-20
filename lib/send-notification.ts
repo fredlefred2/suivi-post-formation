@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase-admin'
-import { webpush } from './web-push'
+import { webpush, VAPID_PUBLIC } from './web-push'
 
 type NotificationType =
   | 'action_added'
@@ -42,7 +42,7 @@ export async function sendNotification({ userId, type, title, body, data = {}, u
     .select('*')
     .eq('user_id', userId)
 
-  if (!subs?.length) return
+  if (!subs?.length || !VAPID_PUBLIC) return
 
   // 3. Get unread count for badge
   const { count } = await supabaseAdmin

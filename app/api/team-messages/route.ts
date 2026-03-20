@@ -88,37 +88,29 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Notifier tous les apprenants du groupe
-  try {
-    const { data: members } = await supabaseAdmin
-      .from('group_members')
-      .select('learner_id')
-      .eq('group_id', groupId)
-    const { data: senderProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('first_name')
-      .eq('id', user.id)
-      .single()
-
-    const learnerIds = (members || [])
-      .map((m) => m.learner_id)
-      .filter((id) => id !== user.id)
-
-    if (learnerIds.length > 0) {
-      const preview = content.trim().length > 60
-        ? content.trim().substring(0, 60) + '…'
-        : content.trim()
-      await sendNotificationToMany(learnerIds, {
-        type: 'team_message',
-        title: `📢 Message de ${senderProfile?.first_name || 'votre formateur'}`,
-        body: preview,
-        url: '/team',
-        data: { groupId },
-      })
-    }
-  } catch {
-    // Ne pas bloquer l'envoi du message si les notifications échouent
-  }
+  // Notifier tous les apprenants du groupe (fire-and-forget)
+  const gId = groupId
+  const uId = user.id
+  const txt = content.trim()
+  ;(async () => {
+    try {
+      const [{ data: members }, { data: senderProfile }] = await Promise.all([
+        supabaseAdmin.from('group_members').select('learner_id').eq('group_id', gId),
+        supabaseAdmin.from('profiles').select('first_name').eq('id', uId).single(),
+      ])
+      const learnerIds = (members || []).map((m) => m.learner_id).filter((id) => id !== uId)
+      if (learnerIds.length > 0) {
+        const preview = txt.length > 60 ? txt.substring(0, 60) + '…' : txt
+        await sendNotificationToMany(learnerIds, {
+          type: 'team_message',
+          title: `📢 Message de ${senderProfile?.first_name || 'votre formateur'}`,
+          body: preview,
+          url: '/team',
+          data: { groupId: gId },
+        })
+      }
+    } catch { /* silencieux */ }
+  })()
 
   return NextResponse.json({ message: data })
 }

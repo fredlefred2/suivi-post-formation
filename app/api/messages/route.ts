@@ -105,31 +105,18 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Notification push au destinataire
-  try {
-    const { data: senderProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('first_name, last_name')
-      .eq('id', user.id)
-      .single()
-    const senderName = senderProfile
-      ? `${senderProfile.first_name} ${senderProfile.last_name}`
-      : 'Quelqu\'un'
-    const preview = content.trim().length > 50
-      ? content.trim().substring(0, 50) + '…'
-      : content.trim()
-
-    await sendNotification({
-      userId: receiverId,
-      type: 'message',
-      title: `💬 ${senderName}`,
-      body: preview,
-      url: '/messages',
-      data: { senderId: user.id },
-    })
-  } catch {
-    // Ne pas bloquer l'envoi du message si la notification échoue
-  }
+  // Notification push au destinataire (fire-and-forget, ne bloque pas la réponse)
+  const notifContent = content.trim()
+  const notifReceiver = receiverId
+  const notifSender = user.id
+  sendNotification({
+    userId: notifReceiver,
+    type: 'message',
+    title: '💬 Nouveau message',
+    body: notifContent.length > 50 ? notifContent.substring(0, 50) + '…' : notifContent,
+    url: '/messages',
+    data: { senderId: notifSender },
+  }).catch(() => {})
 
   return NextResponse.json({ message: data })
 }
