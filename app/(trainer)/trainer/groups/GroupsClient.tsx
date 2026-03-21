@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Plus, Trash2, Pencil, UserPlus, X } from 'lucide-react'
+import Link from 'next/link'
+import { Plus, Trash2, Pencil, UserPlus, X, Lightbulb } from 'lucide-react'
 import { createGroup, deleteGroup, removeLearnerFromGroup } from './actions'
 import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
 
@@ -118,6 +119,13 @@ export default function GroupsClient({
                     <p className="font-semibold text-gray-900">{group.name}</p>
                     <p className="text-sm text-gray-500">{memberCount} participant{memberCount > 1 ? 's' : ''}</p>
                   </div>
+                  <Link
+                    href={`/trainer/groups/${group.id}`}
+                    className="px-3 py-2 rounded-xl border bg-white border-gray-200 text-amber-600 hover:border-amber-200 hover:bg-amber-50 text-sm font-medium transition-colors"
+                    title="Défis & détails"
+                  >
+                    <Lightbulb size={16} />
+                  </Link>
                   <button
                     onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
                     className={`px-3 py-2 rounded-xl border text-sm font-medium transition-colors ${
