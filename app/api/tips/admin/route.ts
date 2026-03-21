@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
   const groupId = request.nextUrl.searchParams.get('groupId')
   if (!groupId) return NextResponse.json({ error: 'groupId requis' }, { status: 400 })
 
-  // Vérifier que le formateur gère ce groupe
-  const { data: group } = await supabase
+  // Vérifier que le formateur gère ce groupe (via admin pour éviter RLS)
+  const { data: group } = await supabaseAdmin
     .from('groups')
     .select('id')
     .eq('id', groupId)
