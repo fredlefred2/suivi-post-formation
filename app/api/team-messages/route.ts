@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
   const { data: messages, error } = await query
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
 
   // Renverser pour avoir du plus ancien au plus récent
   const sorted = (messages ?? []).reverse().map((m) => {
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     .select('id, group_id, sender_id, content, created_at')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
 
   // Répondre immédiatement, puis envoyer les notifications
   const response = NextResponse.json({ message: data })

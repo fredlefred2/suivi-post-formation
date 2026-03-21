@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: true })
       .limit(100)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
     return NextResponse.json({ messages: messages ?? [] })
   }
 
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false })
     .limit(200)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
 
   // Grouper par interlocuteur
   const convMap = new Map<string, { lastMessage: typeof allMessages[0]; unreadCount: number }>()
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     .select('id, sender_id, receiver_id, content, is_read, created_at')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
 
   // Notification push au destinataire — await pour ne pas être tué par Vercel
   try {

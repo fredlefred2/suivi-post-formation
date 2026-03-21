@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
   })
 
   if (checkinError) {
-    return NextResponse.json({ error: checkinError.message }, { status: 500 })
+    console.error('Checkin insert error:', checkinError)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 
   // Enregistrer les scores des axes
