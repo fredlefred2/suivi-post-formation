@@ -30,16 +30,33 @@ export async function GET(request: NextRequest) {
   const learnerIds = (members || []).map(m => m.learner_id)
   if (learnerIds.length === 0) return NextResponse.json({ tips: [] })
 
-  // Récupérer tous les tips avec infos axe et apprenant
+  // Récupérer les profils des apprenants
+  const { data: profiles } = await supabaseAdmin
+    .from('profiles')
+    .select('id, first_name, last_name')
+    .in('id', learnerIds)
+
+  const profileMap = new Map((profiles || []).map(p => [p.id, p]))
+
+  // Récupérer tous les tips avec infos axe
   const { data: tips } = await supabaseAdmin
     .from('tips')
-    .select('id, axe_id, learner_id, week_number, content, sent, acted, axe:axes(subject), learner:profiles!tips_learner_id_fkey(first_name, last_name)')
+    .select('id, axe_id, learner_id, week_number, content, sent, acted, axe:axes(subject)')
     .in('learner_id', learnerIds)
     .order('learner_id')
     .order('axe_id')
     .order('week_number')
 
-  return NextResponse.json({ tips: tips || [] })
+  // Enrichir avec le nom de l'apprenant
+  const enriched = (tips || []).map(t => ({
+    ...t,
+    learner: profileMap.get(t.learner_id) ? {
+      first_name: profileMap.get(t.learner_id)!.first_name,
+      last_name: profileMap.get(t.learner_id)!.last_name,
+    } : null,
+  }))
+
+  return NextResponse.json({ tips: enriched })
 }
 
 // PUT : modifier un tip
