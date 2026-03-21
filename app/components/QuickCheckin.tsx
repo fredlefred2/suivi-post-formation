@@ -153,7 +153,7 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
               {step !== 'weather' && (
                 <button
                   onClick={() => setStep(step === 'difficult' ? 'good' : 'weather')}
-                  className="p-1 text-gray-400 hover:text-gray-600"
+                  className="p-1 text-gray-500 hover:text-gray-600"
                 >
                   <ChevronLeft size={20} />
                 </button>
@@ -164,11 +164,11 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
                 {step === 'difficult' && 'J\'ai eu du mal avec...'}
               </h3>
             </div>
-            <button onClick={handleClose} className="p-1 text-gray-400 hover:text-gray-600">
+            <button onClick={handleClose} className="p-1 text-gray-500 hover:text-gray-600">
               <X size={20} />
             </button>
           </div>
-          <p className="text-xs text-gray-400 mb-5">{weekLabel}</p>
+          <p className="text-xs text-gray-500 mb-5">{weekLabel}</p>
 
           {/* Indicateur d'étapes */}
           <div className="flex gap-1.5 mb-5">

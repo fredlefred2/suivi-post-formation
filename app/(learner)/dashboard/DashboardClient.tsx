@@ -165,7 +165,7 @@ export default function DashboardClient({
           </div>
           <div className="flex gap-3 mt-2">
             {stepsData.map((s, i) => (
-              <span key={i} className={`text-[11px] ${s.done ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
+              <span key={i} className={`text-[11px] ${s.done ? 'text-emerald-600 font-medium' : 'text-gray-500'}`}>
                 {s.done ? '✓' : '○'} {s.label}
               </span>
             ))}
@@ -220,7 +220,7 @@ export default function DashboardClient({
         {/* Frise meteo */}
         {weatherHistory.length > 0 && (
           <Link href="/checkin" className="flex items-center justify-center gap-1 mt-3 pt-3 border-t border-gray-100">
-            <span className="text-[11px] text-gray-400 mr-1">Meteo</span>
+            <span className="text-[11px] text-gray-500 mr-1">Meteo</span>
             {weatherHistory.map((w, i) => (
               <span
                 key={i}
@@ -289,7 +289,7 @@ export default function DashboardClient({
                       {axe.description ? (
                         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{axe.description}</p>
                       ) : (
-                        <p className="text-xs text-gray-400 italic">—</p>
+                        <p className="text-xs text-gray-500 italic">—</p>
                       )}
                     </div>
 
@@ -345,7 +345,7 @@ export default function DashboardClient({
                       <p className="text-center text-xs font-semibold text-gray-600">
                         {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
                         {axe.completedCount < 9 && (
-                          <span className="font-normal text-gray-400"> · encore {9 - axe.completedCount} pour 🚀</span>
+                          <span className="font-normal text-gray-500"> · encore {9 - axe.completedCount} pour 🚀</span>
                         )}
                       </p>
                     </div>
@@ -369,10 +369,10 @@ export default function DashboardClient({
                         {axe.lastAction ? (
                           <>
                             <span className="font-medium text-gray-600">Derniere :</span> {axe.lastAction.description}
-                            <span className="text-gray-400"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                            <span className="text-gray-500"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                           </>
                         ) : (
-                          <span className="text-gray-400 italic">Aucune action</span>
+                          <span className="text-gray-500 italic">Aucune action</span>
                         )}
                       </p>
                     </div>

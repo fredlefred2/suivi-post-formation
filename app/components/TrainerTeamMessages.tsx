@@ -124,15 +124,15 @@ export default function TrainerTeamMessages({
       ) : lastMessage ? (
         <div className="bg-gray-50 rounded-xl px-3.5 py-2.5 mb-3">
           <div className="flex items-baseline gap-2 mb-0.5">
-            <span className="text-[10px] text-gray-400 font-medium">Dernier message</span>
-            <span className="text-[10px] text-gray-400">{timeAgo(lastMessage.createdAt)}</span>
+            <span className="text-[10px] text-gray-500 font-medium">Dernier message</span>
+            <span className="text-[10px] text-gray-500">{timeAgo(lastMessage.createdAt)}</span>
           </div>
           <p className="text-sm text-gray-600 line-clamp-2">{lastMessage.content}</p>
         </div>
       ) : (
         <div className="text-center py-4 mb-3">
           <MessageSquare size={28} className="mx-auto text-gray-300 mb-1.5" />
-          <p className="text-sm text-gray-400">Aucun message envoyé</p>
+          <p className="text-sm text-gray-500">Aucun message envoyé</p>
         </div>
       )}
 
@@ -165,7 +165,7 @@ export default function TrainerTeamMessages({
               <h3 className="font-bold text-gray-800">Messages à la team</h3>
               <button
                 onClick={() => setShowAll(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                className="text-gray-500 hover:text-gray-600 transition-colors p-1"
               >
                 <X size={20} />
               </button>
@@ -174,7 +174,7 @@ export default function TrainerTeamMessages({
               {messages.map((msg) => (
                 <div key={msg.id} className="bg-gray-50 rounded-xl px-4 py-3">
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-[10px] text-gray-400 font-medium">
+                    <span className="text-[10px] text-gray-500 font-medium">
                       {timeAgo(msg.createdAt)}
                     </span>
                   </div>

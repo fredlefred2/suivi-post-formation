@@ -160,7 +160,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           <div className="animate-level-up-text">
             <p className="text-xl font-bold text-gray-900 mb-1">Niveau {levelUpInfo.label}</p>
             <p className="text-lg font-semibold text-gray-500">débloqué !</p>
-            <p className="text-sm text-gray-400 mt-3">Continue comme ça 💪</p>
+            <p className="text-sm text-gray-500 mt-3">Continue comme ça 💪</p>
           </div>
         </div>
       ) : showConfirm ? (
@@ -185,7 +185,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               {step === 'category' && 'Qu\'as-tu fait ?'}
               {step === 'comment' && 'Précise (optionnel)'}
             </h3>
-            <button onClick={handleClose} className="p-1 text-gray-400 hover:text-gray-600">
+            <button onClick={handleClose} className="p-1 text-gray-500 hover:text-gray-600">
               <X size={20} />
             </button>
           </div>
@@ -205,7 +205,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-800 truncate">{axe.subject}</p>
-                      <p className="text-xs text-gray-400">{axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}</p>
+                      <p className="text-xs text-gray-500">{axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}</p>
                     </div>
                   </div>
                 </button>
@@ -233,7 +233,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               ))}
               <button
                 onClick={() => setStep('axe')}
-                className="text-sm text-gray-400 hover:text-gray-600 mt-2"
+                className="text-sm text-gray-500 hover:text-gray-600 mt-2"
               >
                 ← Changer d&apos;axe
               </button>

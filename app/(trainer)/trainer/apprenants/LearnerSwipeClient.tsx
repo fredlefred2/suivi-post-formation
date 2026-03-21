@@ -191,7 +191,7 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                   <span className={`text-sm ${g.id === currentGroupId ? 'text-indigo-700 font-medium' : 'text-gray-700'}`}>
                     {g.name}
                   </span>
-                  <span className="ml-auto text-xs text-gray-400">{g.count} app.</span>
+                  <span className="ml-auto text-xs text-gray-500">{g.count} app.</span>
                 </button>
               ))}
             </div>
@@ -285,7 +285,7 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                   {/* Frise météo */}
                   {learner.checkins.length > 0 && (
                     <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
-                      <span className="text-[11px] text-gray-400 mr-1">Meteo</span>
+                      <span className="text-[11px] text-gray-500 mr-1">Meteo</span>
                       {[...learner.checkins]
                         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
                         .slice(-4)
@@ -318,7 +318,7 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                   <div className="card text-center py-10">
                     <p className="text-4xl mb-3">🌱</p>
                     <p className="text-gray-500 font-medium">Ce participant n&apos;a pas encore commencé.</p>
-                    <p className="text-gray-400 text-sm mt-1">Aucun axe ni check-in enregistré.</p>
+                    <p className="text-gray-500 text-sm mt-1">Aucun axe ni check-in enregistré.</p>
                   </div>
                 )}
 

@@ -312,7 +312,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
               </div>
             ) : messages.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-sm text-gray-400">Démarrez la conversation</p>
+                <p className="text-sm text-gray-500">Démarrez la conversation</p>
               </div>
             ) : (
               messages.map((msg) => {
@@ -325,7 +325,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                         : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
                     }`}>
                       <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                      <p className={`text-[10px] mt-1 ${isMine ? 'text-indigo-200' : 'text-gray-400'}`}>
+                      <p className={`text-[10px] mt-1 ${isMine ? 'text-indigo-200' : 'text-gray-500'}`}>
                         {formatTime(msg.created_at)}
                       </p>
                     </div>
@@ -360,11 +360,11 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
       ) : showNewMessage ? (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <div className="flex-none flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-            <button onClick={() => setShowNewMessage(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <button onClick={() => setShowNewMessage(false)} className="text-gray-500 hover:text-gray-600 transition-colors">
               <ArrowLeft size={18} />
             </button>
             <div className="flex-1 relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 value={search}
@@ -390,7 +390,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
             ))}
             {filteredLearners.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-sm text-gray-400">Aucun résultat</p>
+                <p className="text-sm text-gray-500">Aucun résultat</p>
               </div>
             )}
           </div>
@@ -412,7 +412,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
           ) : conversations.length === 0 ? (
             <div className="text-center py-12 px-4">
               <MessageCircle size={40} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-sm text-gray-400">Aucune conversation</p>
+              <p className="text-sm text-gray-500">Aucune conversation</p>
               <button
                 onClick={() => setShowNewMessage(true)}
                 className="mt-4 btn-primary text-sm"
@@ -436,12 +436,12 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                         <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
                           {conv.firstName} {conv.lastName}
                         </p>
-                        <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">
+                        <span className="text-[10px] text-gray-500 flex-shrink-0 ml-2">
                           {timeAgo(conv.lastMessageAt)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
-                        <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'text-gray-700 font-medium' : 'text-gray-400'}`}>
+                        <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'text-gray-700 font-medium' : 'text-gray-500'}`}>
                           {conv.lastMessageByMe ? 'Vous : ' : ''}{conv.lastMessage}
                         </p>
                         {conv.unreadCount > 0 && (

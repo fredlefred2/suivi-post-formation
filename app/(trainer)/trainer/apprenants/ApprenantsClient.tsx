@@ -111,7 +111,7 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
             onClick={handleRemove}
             disabled={isPending}
             title="Retirer du groupe"
-            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
           >
             <UserMinus size={16} />
           </button>
@@ -213,7 +213,7 @@ export default function ApprenantsClient({
       <h1 className="page-title">Participants</h1>
 
       {learners.length === 0 ? (
-        <div className="card text-center py-10 text-gray-400 text-sm">
+        <div className="card text-center py-10 text-gray-500 text-sm">
           Aucun participant inscrit pour l&apos;instant.
         </div>
       ) : (
@@ -249,7 +249,7 @@ export default function ApprenantsClient({
                   <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
                     Tous les groupes
                   </span>
-                  <span className="ml-auto text-xs text-gray-400">{totalAssigned} app.</span>
+                  <span className="ml-auto text-xs text-gray-500">{totalAssigned} app.</span>
                 </button>
 
                 {/* Groupes individuels */}
@@ -268,7 +268,7 @@ export default function ApprenantsClient({
                         <span className={`text-sm ${selectedOption === g.id ? 'text-indigo-700 font-medium' : 'text-gray-700'}`}>
                           {g.name}
                         </span>
-                        <span className="ml-auto text-xs text-gray-400">{count} app.</span>
+                        <span className="ml-auto text-xs text-gray-500">{count} app.</span>
                       </button>
                     )
                   })}
@@ -312,7 +312,7 @@ export default function ApprenantsClient({
                     </span>
                   </h2>
                   {groups.length === 0 && (
-                    <p className="text-xs text-gray-400 mb-3">
+                    <p className="text-xs text-gray-500 mb-3">
                       Créez d&apos;abord un groupe pour pouvoir affecter des participants.
                     </p>
                   )}
@@ -342,7 +342,7 @@ export default function ApprenantsClient({
               ))}
 
               {groupedView.length === 0 && unassigned.length === 0 && (
-                <div className="card text-center py-8 text-gray-400 text-sm">
+                <div className="card text-center py-8 text-gray-500 text-sm">
                   Aucun participant dans vos groupes.
                 </div>
               )}
@@ -366,7 +366,7 @@ export default function ApprenantsClient({
                 </div>
               </div>
             ) : (
-              <div className="card text-center py-8 text-gray-400 text-sm">
+              <div className="card text-center py-8 text-gray-500 text-sm">
                 Aucun participant dans ce groupe.
               </div>
             )
@@ -383,7 +383,7 @@ export default function ApprenantsClient({
                   </span>
                 </h2>
                 {groups.length === 0 && (
-                  <p className="text-xs text-gray-400 mb-3">
+                  <p className="text-xs text-gray-500 mb-3">
                     Créez d&apos;abord un groupe pour pouvoir affecter des participants.
                   </p>
                 )}
@@ -394,7 +394,7 @@ export default function ApprenantsClient({
                 </div>
               </div>
             ) : (
-              <div className="card text-center py-8 text-gray-400 text-sm">
+              <div className="card text-center py-8 text-gray-500 text-sm">
                 ✅ Tous les participants sont affectés à un groupe.
               </div>
             )

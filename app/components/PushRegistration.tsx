@@ -173,7 +173,7 @@ export default function PushRegistration() {
           </div>
           <button
             onClick={() => setState('subscribed')}
-            className="text-gray-400 hover:text-gray-600 p-1"
+            className="text-gray-500 hover:text-gray-600 p-1"
           >
             <X size={16} />
           </button>

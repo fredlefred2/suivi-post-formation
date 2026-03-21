@@ -348,9 +348,9 @@ export default function TrainerDashboardClient({
                 <RadioDot active={selectedOption === 'all'} />
                 <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
                   Tous les groupes
-                  <span className="ml-1 font-normal text-gray-400">({groups.length})</span>
+                  <span className="ml-1 font-normal text-gray-500">({groups.length})</span>
                 </span>
-                <span className="ml-auto text-xs text-gray-400">
+                <span className="ml-auto text-xs text-gray-500">
                   {groups.reduce((acc, g) => acc + g.members.length, 0)} app.
                 </span>
               </button>
@@ -375,7 +375,7 @@ export default function TrainerDashboardClient({
                       }`}>
                         {isSalleAttente ? '⚪ ' : ''}{g.name}
                       </span>
-                      <span className="ml-auto text-xs text-gray-400">{g.members.length} app.</span>
+                      <span className="ml-auto text-xs text-gray-500">{g.members.length} app.</span>
                     </button>
                   )
                 })}
@@ -451,7 +451,7 @@ export default function TrainerDashboardClient({
         {/* Meteo distribution */}
         {totalWithCheckin > 0 && (
           <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-gray-100">
-            <span className="text-[11px] text-gray-400">Meteo S-1</span>
+            <span className="text-[11px] text-gray-500">Meteo S-1</span>
             {weatherDistribution.sunny > 0 && (
               <span className="text-sm">☀️ <span className="text-xs font-semibold text-gray-600">{weatherDistribution.sunny}</span></span>
             )}
@@ -517,7 +517,7 @@ export default function TrainerDashboardClient({
                   </div>
                   <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
                   <div className="flex items-center justify-between mt-1.5">
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px] text-gray-500">
                       {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </p>
                     {(action.feedback.likes_count > 0 || action.feedback.comments_count > 0) && (
@@ -548,7 +548,7 @@ export default function TrainerDashboardClient({
 
       {carouselActions.length === 0 && filteredLearnerIds.size > 0 && (
         <div className="card text-center py-6">
-          <p className="text-gray-400 text-sm">Aucune action enregistree</p>
+          <p className="text-gray-500 text-sm">Aucune action enregistree</p>
         </div>
       )}
 
@@ -559,7 +559,7 @@ export default function TrainerDashboardClient({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-400 border-b border-gray-100">
+                <tr className="text-xs text-gray-500 border-b border-gray-100">
                   <th className="text-left pb-2 font-medium">#</th>
                   <th className="text-left pb-2 font-medium">Participant</th>
                   <th className="text-center pb-2 font-medium">Actions</th>
@@ -571,7 +571,7 @@ export default function TrainerDashboardClient({
               <tbody>
                 {sorted.map((learner, idx) => (
                   <tr key={learner.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-1.5 text-xs text-gray-400 w-6">{idx + 1}</td>
+                    <td className="py-1.5 text-xs text-gray-500 w-6">{idx + 1}</td>
                     <td className="py-1.5 font-medium text-gray-800 max-w-[140px]">
                       <Link
                         href={`/trainer/apprenants?group=${learnerGroupMap[learner.id] ?? ''}&learner=${learner.id}`}
@@ -604,7 +604,7 @@ export default function TrainerDashboardClient({
           <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h3 className="font-bold text-gray-800">Actions recentes</h3>
-              <button onClick={() => setShowAllActions(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+              <button onClick={() => setShowAllActions(false)} className="text-gray-500 hover:text-gray-600 transition-colors p-1">
                 <X size={20} />
               </button>
             </div>
@@ -626,7 +626,7 @@ export default function TrainerDashboardClient({
                       </p>
                       <p className="text-xs text-indigo-500">{action.axe_subject}</p>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-500">
                       {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>

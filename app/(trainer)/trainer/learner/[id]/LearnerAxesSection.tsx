@@ -120,7 +120,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
               {axe.description ? (
                 <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{axe.description}</p>
               ) : (
-                <p className="text-xs text-gray-400 italic">—</p>
+                <p className="text-xs text-gray-500 italic">—</p>
               )}
             </div>
 
@@ -176,7 +176,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
               <p className="text-center text-xs font-semibold text-gray-600">
                 {actionsCount} action{actionsCount !== 1 ? 's' : ''}
                 {actionsCount < 9 && (
-                  <span className="font-normal text-gray-400"> · encore {9 - actionsCount} pour 🚀</span>
+                  <span className="font-normal text-gray-500"> · encore {9 - actionsCount} pour 🚀</span>
                 )}
               </p>
             </div>
@@ -186,14 +186,14 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
               <p className="text-sm font-medium text-gray-700 mb-2">
                 Actions menées
                 {actionsCount > 0 && (
-                  <span className="ml-1.5 text-xs font-normal text-gray-400">
+                  <span className="ml-1.5 text-xs font-normal text-gray-500">
                     ({actionsCount})
                   </span>
                 )}
               </p>
 
               {actionsCount === 0 ? (
-                <p className="text-xs text-gray-400 italic">Aucune action enregistrée</p>
+                <p className="text-xs text-gray-500 italic">Aucune action enregistrée</p>
               ) : (
                 <>
                   <ul className="space-y-2">
@@ -209,7 +209,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
                               {action.description}
                             </span>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-500">
                                 {formatDate(action.created_at)}
                               </span>
                               <ActionFeedback

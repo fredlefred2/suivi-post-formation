@@ -204,7 +204,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               <input
                 name="subject"
                 required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-gray-400"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-gray-500"
                 placeholder="Ex : Déléguer efficacement"
               />
             </div>
@@ -212,11 +212,11 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
             {/* Description */}
             <div>
               <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                Moyens envisagés <span className="font-normal text-gray-400">(optionnel)</span>
+                Moyens envisagés <span className="font-normal text-gray-500">(optionnel)</span>
               </label>
               <textarea
                 name="description"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20 placeholder:text-gray-400"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20 placeholder:text-gray-500"
                 placeholder="Comment comptez-vous progresser sur cet axe ?"
               />
             </div>
@@ -286,7 +286,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {/* État vide */}
       {axes.length === 0 && !showAxeForm && (
         <div className="card text-center py-10">
-          <p className="text-gray-400 mb-4">Vous n&apos;avez pas encore défini d&apos;axes de progrès.</p>
+          <p className="text-gray-500 mb-4">Vous n&apos;avez pas encore défini d&apos;axes de progrès.</p>
           <button onClick={() => setShowAxeForm(true)} className="btn-primary">
             <Plus size={16} /> Définir mon premier axe
           </button>
@@ -358,7 +358,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                     {axe.description ? (
                       <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{axe.description}</p>
                     ) : (
-                      <p className="text-xs text-gray-400 italic">—</p>
+                      <p className="text-xs text-gray-500 italic">—</p>
                     )}
                   </div>
 
@@ -414,7 +414,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                     <p className="text-center text-xs font-semibold text-gray-600">
                       {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
                       {axe.actions.length < 9 && (
-                        <span className="font-normal text-gray-400"> · encore {9 - axe.actions.length} pour 🚀</span>
+                        <span className="font-normal text-gray-500"> · encore {9 - axe.actions.length} pour 🚀</span>
                       )}
                     </p>
                   </div>
@@ -426,7 +426,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                       <p className="text-sm font-medium text-gray-700">
                         Actions menées
                         {axe.actions.length > 0 && (
-                          <span className="ml-1.5 text-xs font-normal text-gray-400">({axe.actions.length})</span>
+                          <span className="ml-1.5 text-xs font-normal text-gray-500">({axe.actions.length})</span>
                         )}
                       </p>
                     </div>
@@ -435,7 +435,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                   {/* Liste d'actions (scrollable) */}
                   <div className="flex-1 min-h-0 overflow-y-auto">
                     {axe.actions.length === 0 && (
-                      <p className="text-xs text-gray-400 italic">Aucune action enregistrée</p>
+                      <p className="text-xs text-gray-500 italic">Aucune action enregistrée</p>
                     )}
 
                     {(() => {
@@ -455,7 +455,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                                 <div className="flex-1 min-w-0">
                                   <span className="text-sm text-gray-700">{action.description}</span>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
+                                    <span className="text-xs text-gray-500">{formatDate(action.created_at)}</span>
                                     <ActionFeedback
                                       actionId={action.id}
                                       feedback={feedbackMap[action.id] ?? emptyFeedback}
@@ -655,7 +655,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
             <div className="animate-level-up-text">
               <p className="text-xl font-bold text-gray-900 mb-1">Niveau {levelUpInfo.label}</p>
               <p className="text-lg font-semibold text-gray-500">débloqué !</p>
-              <p className="text-sm text-gray-400 mt-3">Continue comme ça 💪</p>
+              <p className="text-sm text-gray-500 mt-3">Continue comme ça 💪</p>
             </div>
           </div>
         </div>
@@ -759,7 +759,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               {/* Description */}
               <div>
                 <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Moyens envisagés <span className="font-normal text-gray-400">(optionnel)</span>
+                  Moyens envisagés <span className="font-normal text-gray-500">(optionnel)</span>
                 </label>
                 <textarea
                   value={editAxeDescription}

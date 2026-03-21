@@ -29,10 +29,10 @@ export default async function CheckinPage() {
           <div key={ci.id} className={`flex gap-3 border border-gray-100 rounded-xl p-3 ${WEATHER_BG[ci.weather as string] ?? ''}`}>
             <div className="flex flex-col items-center justify-center shrink-0 w-14">
               <span className="text-3xl leading-none">{WEATHER_EMOJI[ci.weather as string] ?? '❓'}</span>
-              <span className="text-[10px] text-gray-400 mt-1">{`S${ci.week_number}`}</span>
+              <span className="text-[10px] text-gray-500 mt-1">{`S${ci.week_number}`}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-gray-400 mb-1">{formatWeek(ci.week_number, ci.year)}</p>
+              <p className="text-[10px] text-gray-500 mb-1">{formatWeek(ci.week_number, ci.year)}</p>
               {ci.what_worked && (
                 <p className="text-xs text-gray-700 leading-relaxed">
                   <span className="font-medium text-emerald-600">✅</span> {ci.what_worked}
@@ -44,7 +44,7 @@ export default async function CheckinPage() {
                 </p>
               )}
               {!ci.what_worked && !ci.difficulties && (
-                <p className="text-xs text-gray-400 italic">Aucun commentaire</p>
+                <p className="text-xs text-gray-500 italic">Aucun commentaire</p>
               )}
             </div>
           </div>

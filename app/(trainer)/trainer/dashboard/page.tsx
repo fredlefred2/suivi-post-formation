@@ -34,7 +34,7 @@ export default async function TrainerDashboardPage({
   if (groupIds.length === 0) {
     return (
       <div className="space-y-6 pb-4">
-        <div className="card text-center py-12 text-gray-400">
+        <div className="card text-center py-12 text-gray-500">
           <p className="text-4xl mb-3">👥</p>
           <p>Vous n&apos;avez pas encore créé de groupe.</p>
         </div>

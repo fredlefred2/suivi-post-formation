@@ -234,7 +234,7 @@ export default function OnboardingFlow({
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Moyens envisagés <span className="font-normal text-gray-400">(optionnel)</span>
+                  Moyens envisagés <span className="font-normal text-gray-500">(optionnel)</span>
                 </label>
                 <textarea
                   value={editDescription}
@@ -434,7 +434,7 @@ export default function OnboardingFlow({
                   localStorage.setItem(`onboarding_${userId}`, JSON.stringify(stored))
                   setAck((a) => { const n = { ...a }; delete n['welcome']; return n })
                 }}
-                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
               >
                 ← Retour
               </button>
@@ -479,13 +479,13 @@ export default function OnboardingFlow({
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={openEditLastAxe}
-                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
               >
                 ← Modifier mon axe
               </button>
               <button
                 onClick={skipAxis2}
-                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
               >
                 Plus tard →
               </button>
@@ -529,13 +529,13 @@ export default function OnboardingFlow({
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={openEditLastAxe}
-                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
               >
                 ← Modifier mes axes
               </button>
               <button
                 onClick={skipAxis3}
-                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
               >
                 Plus tard →
               </button>

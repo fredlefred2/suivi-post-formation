@@ -92,14 +92,14 @@ export default async function GroupDetailPage({ params }: { params: { id: string
           ← Retour aux groupes
         </Link>
         <h1 className="page-title mt-2">{group.name}</h1>
-        <p className="text-sm text-gray-400">Semaine courante : {formatWeek(week, year)}</p>
+        <p className="text-sm text-gray-500">Semaine courante : {formatWeek(week, year)}</p>
       </div>
 
       {/* Stats météo globales */}
       {allCheckinsList.length > 0 && (
         <div className="card">
           <h2 className="section-title mb-3">Tendance météo du groupe</h2>
-          <p className="text-xs text-gray-400 mb-3">Basé sur {allCheckinsList.length} check-in{allCheckinsList.length > 1 ? 's' : ''} au total</p>
+          <p className="text-xs text-gray-500 mb-3">Basé sur {allCheckinsList.length} check-in{allCheckinsList.length > 1 ? 's' : ''} au total</p>
           <div className="grid grid-cols-3 gap-3">
             {(['sunny', 'cloudy', 'stormy'] as const).map((w) => (
               <div key={w} className={`rounded-lg p-3 text-center ${WEATHER_COLORS[w]}`}>
@@ -126,7 +126,7 @@ export default async function GroupDetailPage({ params }: { params: { id: string
         </div>
 
         {learnersData.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-6">Aucun participant dans ce groupe.</p>
+          <p className="text-gray-500 text-sm text-center py-6">Aucun participant dans ce groupe.</p>
         ) : (
           <div className="space-y-2">
             {learnersData.map((learner) => (
@@ -140,7 +140,7 @@ export default async function GroupDetailPage({ params }: { params: { id: string
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900">{learner.first_name} {learner.last_name}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-500">
                     {learner.axesCount} axe{learner.axesCount > 1 ? 's' : ''} · {learner.checkinCount} check-in{learner.checkinCount > 1 ? 's' : ''}
                   </p>
                 </div>

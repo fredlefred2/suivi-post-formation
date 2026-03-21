@@ -97,7 +97,7 @@ export default function GroupsClient({
       {/* Liste des groupes */}
       {groups.length === 0 ? (
         <div className="card text-center py-10">
-          <p className="text-gray-400">Aucun groupe pour l&apos;instant.</p>
+          <p className="text-gray-500">Aucun groupe pour l&apos;instant.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -111,7 +111,7 @@ export default function GroupsClient({
                 <div className="card flex items-center gap-3">
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">{group.name}</p>
-                    <p className="text-sm text-gray-400">{memberCount} participant{memberCount > 1 ? 's' : ''}</p>
+                    <p className="text-sm text-gray-500">{memberCount} participant{memberCount > 1 ? 's' : ''}</p>
                   </div>
                   <button
                     onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
@@ -139,7 +139,7 @@ export default function GroupsClient({
                 {isExpanded && (
                   <div className="mt-1 ml-2 mr-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
                     {members.length === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-3">Aucun participant dans ce groupe</p>
+                      <p className="text-sm text-gray-500 text-center py-3">Aucun participant dans ce groupe</p>
                     ) : (
                       <div className="space-y-2">
                         {members
@@ -191,7 +191,7 @@ export default function GroupsClient({
                                       </button>
                                     ))}
                                   {groups.filter((g) => g.id !== group.id).length === 0 && (
-                                    <p className="text-xs text-gray-400 px-3 py-2">Aucun autre groupe disponible</p>
+                                    <p className="text-xs text-gray-500 px-3 py-2">Aucun autre groupe disponible</p>
                                   )}
                                 </div>
                               </div>
@@ -213,7 +213,7 @@ export default function GroupsClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/30" onClick={() => { setDeletingLearnerId(null); setDeletingLearnerGroupId(null) }} />
           <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full">
-            <button onClick={() => { setDeletingLearnerId(null); setDeletingLearnerGroupId(null) }} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+            <button onClick={() => { setDeletingLearnerId(null); setDeletingLearnerGroupId(null) }} className="absolute top-3 right-3 text-gray-500 hover:text-gray-600">
               <X size={18} />
             </button>
             <div className="p-6 text-center">

@@ -150,7 +150,7 @@ export default function InstallPrompt() {
           >
             Installer
           </button>
-          <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+          <button onClick={dismiss} className="p-1 text-gray-500 hover:text-gray-600 flex-shrink-0">
             <X size={18} />
           </button>
         </div>
@@ -168,7 +168,7 @@ export default function InstallPrompt() {
             <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
             <p className="text-xs text-gray-500 mt-0.5">Accès rapide depuis votre écran d&apos;accueil</p>
           </div>
-          <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+          <button onClick={dismiss} className="p-1 text-gray-500 hover:text-gray-600 flex-shrink-0">
             <X size={18} />
           </button>
         </div>
@@ -213,7 +213,7 @@ export default function InstallPrompt() {
                 </div>
               </div>
             </div>
-            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <button onClick={dismiss} className="p-1 text-gray-500 hover:text-gray-600 flex-shrink-0">
               <X size={18} />
             </button>
           </div>
@@ -259,7 +259,7 @@ export default function InstallPrompt() {
                 </div>
               </div>
             </div>
-            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <button onClick={dismiss} className="p-1 text-gray-500 hover:text-gray-600 flex-shrink-0">
               <X size={18} />
             </button>
           </div>

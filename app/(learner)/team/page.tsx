@@ -45,7 +45,7 @@ export default async function TeamPage() {
         <div className="card text-center py-10 space-y-3">
           <span className="text-5xl">⏳</span>
           <p className="text-gray-700 font-medium">Vous êtes en salle d&apos;attente</p>
-          <p className="text-sm text-gray-400">Votre formateur va bientôt vous affecter à un groupe. L&apos;espace Team sera alors accessible.</p>
+          <p className="text-sm text-gray-500">Votre formateur va bientôt vous affecter à un groupe. L&apos;espace Team sera alors accessible.</p>
         </div>
       </div>
     )

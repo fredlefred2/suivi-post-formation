@@ -113,7 +113,7 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
                       borderLeft: '3px solid #6366f1',
                     } : {}}
                   >
-                    <Icon size={18} className={isActive ? 'text-indigo-500' : 'text-gray-400'} />
+                    <Icon size={18} className={isActive ? 'text-indigo-500' : 'text-gray-500'} />
                     {label}
                   </Link>
                 )

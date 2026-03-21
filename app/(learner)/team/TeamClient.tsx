@@ -152,7 +152,7 @@ export default function TeamClient({
         {/* Météo distribution semaine passée */}
         {totalWithCheckin > 0 && (
           <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-gray-100">
-            <span className="text-[11px] text-gray-400">Météo S-1</span>
+            <span className="text-[11px] text-gray-500">Météo S-1</span>
             {weatherCounts.sunny > 0 && (
               <span className="text-sm">☀️ <span className="text-xs font-semibold text-gray-600">{weatherCounts.sunny}</span></span>
             )}
@@ -202,7 +202,7 @@ export default function TeamClient({
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
                 <div className="flex items-center justify-between mt-2">
-                  <p className="text-[10px] text-gray-400">
+                  <p className="text-[10px] text-gray-500">
                     {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
                   {feedbackMap[action.id] && (feedbackMap[action.id].likes_count > 0 || feedbackMap[action.id].comments_count > 0) && (
@@ -237,7 +237,7 @@ export default function TeamClient({
 
       {recentActions.length === 0 && (
         <div className="card text-center py-6">
-          <p className="text-gray-400 text-sm">Aucune action cette semaine</p>
+          <p className="text-gray-500 text-sm">Aucune action cette semaine</p>
         </div>
       )}
 
@@ -245,12 +245,12 @@ export default function TeamClient({
       <div className="card">
         <h2 className="section-title mb-3">Tous en action</h2>
         {sorted.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">Aucun membre</p>
+          <p className="text-sm text-gray-500 italic">Aucun membre</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-400 border-b border-gray-100">
+                <tr className="text-xs text-gray-500 border-b border-gray-100">
                   <th className="text-left pb-2 font-medium">#</th>
                   <th className="text-left pb-2 font-medium">Nom</th>
                   <th className="text-center pb-2 font-medium">Actions</th>
@@ -262,7 +262,7 @@ export default function TeamClient({
               <tbody>
                 {sorted.map((learner, idx) => (
                   <tr key={learner.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-1.5 text-xs text-gray-400 w-6">{idx + 1}</td>
+                    <td className="py-1.5 text-xs text-gray-500 w-6">{idx + 1}</td>
                     <td className="py-1.5 font-medium text-gray-800 truncate max-w-[140px]">
                       {learner.name}
                     </td>
@@ -289,7 +289,7 @@ export default function TeamClient({
               <h3 className="font-bold text-gray-800">Actions de la semaine</h3>
               <button
                 onClick={() => setShowAllActions(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                className="text-gray-500 hover:text-gray-600 transition-colors p-1"
               >
                 <X size={20} />
               </button>
@@ -309,7 +309,7 @@ export default function TeamClient({
                       </p>
                       <p className="text-xs text-indigo-500">{action.axe_subject}</p>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-500">
                       {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>

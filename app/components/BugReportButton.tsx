@@ -227,18 +227,18 @@ export default function BugReportButton() {
                       Signalements ({reports.length})
                     </h3>
                   </div>
-                  <button onClick={handleClose} className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                  <button onClick={handleClose} className="p-1 text-gray-500 hover:text-gray-600 transition-colors">
                     <X size={18} />
                   </button>
                 </div>
 
                 <div className="max-h-[60vh] overflow-y-auto scrollbar-thin">
                   {loadingReports ? (
-                    <div className="p-8 text-center text-gray-400 text-sm">Chargement...</div>
+                    <div className="p-8 text-center text-gray-500 text-sm">Chargement...</div>
                   ) : reports.length === 0 ? (
                     <div className="p-8 text-center">
                       <Bug size={32} className="text-gray-200 mx-auto mb-2" />
-                      <p className="text-sm text-gray-400">Aucun signalement</p>
+                      <p className="text-sm text-gray-500">Aucun signalement</p>
                       <p className="text-xs text-gray-300 mt-1">Tout va bien ! 🎉</p>
                     </div>
                   ) : (
@@ -260,13 +260,13 @@ export default function BugReportButton() {
                             }`}>
                               {report.user_name}
                             </span>
-                            <span className="text-xs text-gray-400">{timeAgo(report.created_at)}</span>
+                            <span className="text-xs text-gray-500">{timeAgo(report.created_at)}</span>
                           </div>
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
                               {report.user_role}
                             </span>
-                            <span className="text-[10px] text-gray-400 font-mono">{report.page}</span>
+                            <span className="text-[10px] text-gray-500 font-mono">{report.page}</span>
                           </div>
                           <p className={`text-sm leading-relaxed ${
                             report.read_at === null ? 'text-gray-700' : 'text-gray-500'
@@ -289,7 +289,7 @@ export default function BugReportButton() {
                     <Bug size={18} className="text-red-500" />
                     <h3 className="font-semibold text-gray-900 text-sm">Signaler un problème</h3>
                   </div>
-                  <button onClick={handleClose} className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                  <button onClick={handleClose} className="p-1 text-gray-500 hover:text-gray-600 transition-colors">
                     <X size={18} />
                   </button>
                 </div>
@@ -312,14 +312,14 @@ export default function BugReportButton() {
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Décrivez le problème rencontré..."
                         rows={4}
-                        className="w-full rounded-xl px-4 py-2.5 text-sm bg-white border border-gray-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400 transition-all resize-none"
+                        className="w-full rounded-xl px-4 py-2.5 text-sm bg-white border border-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400 transition-all resize-none"
                         style={{ fontSize: '16px' }}
                         required
                         autoFocus
                       />
                     </div>
 
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       📍 Page : <span className="font-mono">{currentPath}</span>
                     </p>
 

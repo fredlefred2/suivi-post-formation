@@ -102,7 +102,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
             {navItems.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href}
                 className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-500 hover:text-indigo-800 hover:bg-indigo-100 rounded-xl transition-all duration-200 font-medium group active:scale-[0.97]">
-                <Icon size={17} className="text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                <Icon size={17} className="text-gray-500 group-hover:text-indigo-600 transition-colors" />
                 {label}
               </Link>
             ))}

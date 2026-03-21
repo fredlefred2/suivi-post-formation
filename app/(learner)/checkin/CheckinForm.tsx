@@ -82,7 +82,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
         ) : (
           <p className="text-sm text-gray-500">Premier check-in de la série, continue ! 💪</p>
         )}
-        <p className="text-xs text-gray-400">Redirection dans quelques secondes…</p>
+        <p className="text-xs text-gray-500">Redirection dans quelques secondes…</p>
         <a href="/dashboard" className="btn-primary inline-block mt-2">
           Retour au dashboard
         </a>
@@ -100,7 +100,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       {/* Météo */}
       <div className="card">
         <h2 className="section-title mb-1">Comment s&apos;est passée ta semaine ? *</h2>
-        <p className="text-sm text-gray-400 mb-4">{weekLabel ? `${weekLabel} — Ta météo générale` : 'Ta météo générale'}</p>
+        <p className="text-sm text-gray-500 mb-4">{weekLabel ? `${weekLabel} — Ta météo générale` : 'Ta météo générale'}</p>
         <div className="grid grid-cols-3 gap-3">
           {weatherOptions.map((opt) => {
             const isSelected = selectedWeather === opt.value
@@ -133,7 +133,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       {/* Ce qui a bien fonctionné */}
       <div className="card">
         <label className="section-title block mb-1">Ce qui a bien fonctionné</label>
-        <p className="text-sm text-gray-400 mb-3">Actions réussies, victoires, apprentissages positifs...</p>
+        <p className="text-sm text-gray-500 mb-3">Actions réussies, victoires, apprentissages positifs...</p>
         <textarea
           name="what_worked"
           className="input h-28 resize-none"
@@ -144,7 +144,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       {/* Difficultés */}
       <div className="card">
         <label className="section-title block mb-1">Difficultés rencontrées</label>
-        <p className="text-sm text-gray-400 mb-3">Obstacles, blocages, points d&apos;amélioration...</p>
+        <p className="text-sm text-gray-500 mb-3">Obstacles, blocages, points d&apos;amélioration...</p>
         <textarea
           name="difficulties"
           className="input h-28 resize-none"
