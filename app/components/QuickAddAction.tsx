@@ -50,9 +50,10 @@ type Props = {
   onClose: () => void
   onSuccess?: (axeId: string, newCount: number) => void
   onboardingMode?: boolean
+  prefill?: { content: string; axeId: string } | null
 }
 
-export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode }: Props) {
+export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode, prefill }: Props) {
   const [step, setStep] = useState<'axe' | 'category' | 'comment'>('axe')
   const [selectedAxe, setSelectedAxe] = useState<AxeOption | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
@@ -62,6 +63,18 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [showConfirm, setShowConfirm] = useState(false)
   const [confirmInfo, setConfirmInfo] = useState<{ message: string; nextIcon: string; nextLabel: string } | null>(null)
   const { toast } = useToast()
+
+  // Prefill depuis défi de la semaine
+  useEffect(() => {
+    if (prefill && open) {
+      const axe = axes.find(a => a.id === prefill.axeId)
+      if (axe) {
+        setSelectedAxe(axe)
+        setComment(prefill.content)
+        setStep('category')
+      }
+    }
+  }, [prefill, open, axes])
 
   // Onboarding mode: auto-select first axe, first category, pre-fill text
   useEffect(() => {

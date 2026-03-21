@@ -7,6 +7,7 @@ import { useCountUp } from '@/lib/useCountUp'
 import { MARKERS, getCurrentLevelIndex, getProgress } from '@/lib/axeHelpers'
 import QuickAddAction from '@/app/components/QuickAddAction'
 import QuickCheckin from '@/app/components/QuickCheckin'
+import WeeklyChallenge from '@/app/components/WeeklyChallenge'
 import { useRouter } from 'next/navigation'
 
 const WEATHER_ICONS: Record<string, string> = {
@@ -76,6 +77,7 @@ export default function DashboardClient({
   const [currentSlide, setCurrentSlide] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [challengePrefill, setChallengePrefill] = useState<{ content: string; axeId: string } | null>(null)
   const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
 
   // Compteurs animes
@@ -244,6 +246,14 @@ export default function DashboardClient({
           <p className="text-xs text-gray-500 mt-1">Cr&eacute;e ton premier axe de progr&egrave;s</p>
         </Link>
       )}
+
+      {/* ── Défi de la semaine ── */}
+      <WeeklyChallenge
+        onChallengeAccepted={(content, axeId) => {
+          setChallengePrefill({ content, axeId })
+          setQuickAddOpen(true)
+        }}
+      />
 
       {/* ── Carousel axes compact ── */}
       {axes.length > 0 && (
@@ -427,8 +437,9 @@ export default function DashboardClient({
       <QuickAddAction
         axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}
         open={quickAddOpen}
-        onClose={() => setQuickAddOpen(false)}
+        onClose={() => { setQuickAddOpen(false); setChallengePrefill(null) }}
         onSuccess={() => router.refresh()}
+        prefill={challengePrefill}
       />
 
       {/* Quick Checkin Modal */}

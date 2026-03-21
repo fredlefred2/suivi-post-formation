@@ -16,6 +16,7 @@ type NotificationType =
   | 'team_message'
   | 'streak_risk'
   | 'inactivity'
+  | 'weekly_tip'
 
 interface SendNotificationParams {
   userId: string

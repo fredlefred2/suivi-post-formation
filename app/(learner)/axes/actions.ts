@@ -4,6 +4,44 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendNotificationToMany } from '@/lib/send-notification'
+import { generateTips } from '@/lib/generate-tips'
+
+// Helper : déclenche la génération de tips pour un axe (fire-and-forget)
+async function triggerTipsGeneration(userId: string, subject: string, description: string | null) {
+  try {
+    // Récupérer l'axe qui vient d'être créé
+    const { data: axe } = await supabaseAdmin
+      .from('axes')
+      .select('id')
+      .eq('learner_id', userId)
+      .eq('subject', subject)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (!axe) return
+
+    // Récupérer le thème du groupe
+    const { data: membership } = await supabaseAdmin
+      .from('group_members')
+      .select('group:groups(theme)')
+      .eq('learner_id', userId)
+      .limit(1)
+      .single()
+
+    const groupTheme = (membership as any)?.group?.theme || 'Développement professionnel'
+
+    await generateTips({
+      axeId: axe.id,
+      learnerId: userId,
+      axeSubject: subject,
+      axeDescription: description || subject,
+      groupTheme,
+    })
+  } catch (err) {
+    console.error('[Tips] Erreur trigger:', err)
+  }
+}
 
 export async function createAxe(formData: FormData) {
   const supabase = createClient()
@@ -18,16 +56,22 @@ export async function createAxe(formData: FormData) {
 
   if ((count ?? 0) >= 3) return { error: 'Vous ne pouvez pas avoir plus de 3 axes.' }
 
+  const subject = formData.get('subject') as string
+  const description = formData.get('description') as string || null
   const scoreRaw = formData.get('initial_score') as string | null
   const { error } = await supabase.from('axes').insert({
     learner_id: user.id,
-    subject: formData.get('subject') as string,
-    description: formData.get('description') as string || null,
+    subject,
+    description,
     initial_score: scoreRaw ? parseInt(scoreRaw, 10) : 1,
     difficulty: formData.get('difficulty') as string,
   })
 
   if (error) return { error: error.message }
+
+  // Générer les tips en arrière-plan (ne bloque pas la réponse)
+  triggerTipsGeneration(user.id, subject, description)
+
   revalidatePath('/axes')
   revalidatePath('/dashboard')
 }
@@ -45,15 +89,21 @@ export async function createAxeFast(formData: FormData) {
 
   if ((count ?? 0) >= 3) return { error: 'Vous ne pouvez pas avoir plus de 3 axes.' }
 
+  const subject = formData.get('subject') as string
+  const description = formData.get('description') as string || null
   const { error } = await supabase.from('axes').insert({
     learner_id: user.id,
-    subject: formData.get('subject') as string,
-    description: formData.get('description') as string || null,
+    subject,
+    description,
     initial_score: 1,
     difficulty: formData.get('difficulty') as string,
   })
 
   if (error) return { error: error.message }
+
+  // Générer les tips en arrière-plan
+  triggerTipsGeneration(user.id, subject, description)
+
   revalidatePath('/dashboard')
 }
 

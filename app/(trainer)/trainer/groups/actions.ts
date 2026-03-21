@@ -11,6 +11,7 @@ export async function createGroup(formData: FormData) {
 
   const { error } = await supabase.from('groups').insert({
     name: formData.get('name') as string,
+    theme: (formData.get('theme') as string) || null,
     trainer_id: user.id,
   })
 

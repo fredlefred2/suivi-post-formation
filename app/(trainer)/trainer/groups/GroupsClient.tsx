@@ -77,6 +77,11 @@ export default function GroupsClient({
               <label className="label">Nom du groupe *</label>
               <input name="name" required className="input" placeholder="Ex: Management niveau 1 — Octobre 2024" />
             </div>
+            <div>
+              <label className="label">Thème de la formation</label>
+              <input name="theme" className="input" placeholder="Ex: Management de proximité, Communication assertive..." />
+              <p className="text-xs text-gray-500 mt-1">Utilisé pour générer des défis personnalisés aux apprenants</p>
+            </div>
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
             <div className="flex gap-2">
               <button type="submit" disabled={isPending} className="btn-primary">
