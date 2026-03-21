@@ -5,7 +5,7 @@
  * - Notification click handling (open/focus app)
  */
 
-const CACHE_NAME = 'yapluka-v5'
+const CACHE_NAME = 'yapluka-v6'
 const SHELL_URLS = [
   '/',
   '/manifest.json',
@@ -37,6 +37,10 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
   if (!event.request.url.startsWith(self.location.origin)) return
 
+  // Ne pas intercepter les requêtes de navigation (pages HTML)
+  // Laisser le navigateur les gérer directement → évite les crashes
+  if (event.request.mode === 'navigate') return
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -46,7 +50,10 @@ self.addEventListener('fetch', (event) => {
         }
         return response
       })
-      .catch(() => caches.match(event.request))
+      .catch(async () => {
+        const cached = await caches.match(event.request)
+        return cached || new Response('Offline', { status: 503 })
+      })
   )
 })
 
