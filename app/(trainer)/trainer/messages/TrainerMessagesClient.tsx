@@ -162,7 +162,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
     setLoadingChat(true)
     fetchMessages()
     markAsRead()
-    const interval = setInterval(fetchMessages, 10_000)
+    const interval = setInterval(fetchMessages, 30_000)
     return () => clearInterval(interval)
   }, [selected?.userId])
 
