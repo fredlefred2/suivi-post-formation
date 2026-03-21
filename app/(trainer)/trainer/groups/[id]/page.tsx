@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentWeek, formatWeek } from '@/lib/utils'
 import { WEATHER_LABELS, WEATHER_COLORS } from '@/lib/types'
 import { UserPlus } from 'lucide-react'
+import TrainerTipsManager from '@/app/components/TrainerTipsManager'
 
 export default async function GroupDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
@@ -158,6 +159,9 @@ export default async function GroupDetailPage({ params }: { params: { id: string
           </div>
         )}
       </div>
+
+      {/* Gestion des défis hebdomadaires */}
+      <TrainerTipsManager groupId={params.id} groupTheme={group.theme || group.name} />
     </div>
   )
 }
