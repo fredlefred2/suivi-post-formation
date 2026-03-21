@@ -105,19 +105,18 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Notification push au destinataire (fire-and-forget, ne bloque pas la réponse)
-  const notifContent = content.trim()
-  const notifReceiver = receiverId
-  const notifSender = user.id
-  sendNotification({
-    userId: notifReceiver,
-    type: 'message',
-    title: '💬 Nouveau message',
-    body: notifContent.length > 50 ? notifContent.substring(0, 50) + '…' : notifContent,
-    url: '/messages',
-    data: { senderId: notifSender },
-    pushOnly: true,
-  }).catch(() => {})
+  // Notification push au destinataire — await pour ne pas être tué par Vercel
+  try {
+    await sendNotification({
+      userId: receiverId,
+      type: 'message',
+      title: '💬 Nouveau message',
+      body: content.trim().length > 50 ? content.trim().substring(0, 50) + '…' : content.trim(),
+      url: '/messages',
+      data: { senderId: user.id },
+      pushOnly: true,
+    })
+  } catch { /* silencieux */ }
 
   return NextResponse.json({ message: data })
 }

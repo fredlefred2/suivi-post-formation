@@ -28,33 +28,33 @@ interface SendNotificationParams {
 }
 
 export async function sendNotification({ userId, type, title, body, data = {}, url = '/', pushOnly = false }: SendNotificationParams) {
-  // 1. Insert into notifications table (skip for messages — they have their own badge system)
-  if (!pushOnly) {
-    await supabaseAdmin.from('notifications').insert({
-      user_id: userId,
-      type,
-      title,
-      body,
-      data: { ...data, url },
-    })
-  }
-
-  // 2. Get all push subscriptions for this user
-  const { data: subs } = await supabaseAdmin
-    .from('push_subscriptions')
-    .select('*')
-    .eq('user_id', userId)
+  // 1. Insert into notifications table + get subs in parallel (skip insert for pushOnly)
+  const [, { data: subs }] = await Promise.all([
+    pushOnly
+      ? Promise.resolve()
+      : supabaseAdmin.from('notifications').insert({
+          user_id: userId,
+          type,
+          title,
+          body,
+          data: { ...data, url },
+        }),
+    supabaseAdmin
+      .from('push_subscriptions')
+      .select('id, endpoint, p256dh, auth_key')
+      .eq('user_id', userId),
+  ])
 
   if (!subs?.length || !VAPID_PUBLIC) return
 
-  // 3. Get unread count for badge
+  // 2. Get unread count for badge (fast HEAD query)
   const { count } = await supabaseAdmin
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('read', false)
 
-  // 4. Send push to all subscriptions
+  // 3. Send push to all subscriptions
   const payload = JSON.stringify({
     title,
     body,
@@ -72,7 +72,6 @@ export async function sendNotification({ userId, type, title, body, data = {}, u
           payload
         )
       } catch (err: any) {
-        // If subscription is expired/invalid, remove it
         if (err.statusCode === 404 || err.statusCode === 410) {
           await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id)
         }
@@ -81,9 +80,55 @@ export async function sendNotification({ userId, type, title, body, data = {}, u
   )
 }
 
-// Helper to send to multiple users at once
+// Helper to send to multiple users at once — fetch all subs in ONE query
 export async function sendNotificationToMany(userIds: string[], params: Omit<SendNotificationParams, 'userId'>) {
+  if (!userIds.length) return
+
+  // 1. Batch insert notifications (skip for pushOnly)
+  if (!params.pushOnly) {
+    await supabaseAdmin.from('notifications').insert(
+      userIds.map(userId => ({
+        user_id: userId,
+        type: params.type,
+        title: params.title,
+        body: params.body,
+        data: { ...params.data, url: params.url || '/' },
+      }))
+    )
+  }
+
+  if (!VAPID_PUBLIC) return
+
+  // 2. Get ALL push subscriptions for all users in ONE query
+  const { data: allSubs } = await supabaseAdmin
+    .from('push_subscriptions')
+    .select('id, user_id, endpoint, p256dh, auth_key')
+    .in('user_id', userIds)
+
+  if (!allSubs?.length) return
+
+  // 3. Send push to all subscriptions in parallel
+  const payload = JSON.stringify({
+    title: params.title,
+    body: params.body,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    url: params.url || '/',
+    badgeCount: 1,
+  })
+
   await Promise.allSettled(
-    userIds.map((userId) => sendNotification({ ...params, userId }))
+    allSubs.map(async (sub) => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
+          payload
+        )
+      } catch (err: any) {
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id)
+        }
+      }
+    })
   )
 }
