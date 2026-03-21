@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { ChevronDown, X, Download, Loader2 } from 'lucide-react'
+import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import TrainerTeamMessages from '@/app/components/TrainerTeamMessages'
@@ -48,11 +49,8 @@ const WEATHER_ICONS: Record<string, string> = {
 }
 
 function getDynamiqueForCount(count: number) {
-  if (count === 0) return { icon: '⚪', level: 0, label: 'Veille' }
-  if (count <= 2) return { icon: '👣', level: 1, label: 'Impulsion' }
-  if (count <= 5) return { icon: '🥁', level: 2, label: 'Rythme' }
-  if (count <= 8) return { icon: '🔥', level: 3, label: 'Intensite' }
-  return { icon: '🚀', level: 4, label: 'Propulsion' }
+  const dyn = getDynamique(count)
+  return { icon: dyn.icon, level: getCurrentLevelIndex(count), label: dyn.label }
 }
 
 const LEVEL_CARD_COLORS: Record<number, string> = {
