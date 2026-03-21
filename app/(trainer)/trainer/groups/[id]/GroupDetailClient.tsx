@@ -29,7 +29,7 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
   return (
     <div>
       {!showForm ? (
-        <button onClick={() => setShowForm(true)} className="btn-primary text-xs px-3 py-1.5">
+        <button onClick={() => setShowForm(true)} className="btn-primary btn-sm">
           <Plus size={14} /> Ajouter
         </button>
       ) : (
@@ -47,10 +47,10 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
             {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
             {success && <p className="text-xs text-emerald-600 mt-1">{success}</p>}
           </div>
-          <button type="submit" disabled={isPending} className="btn-primary text-xs px-3 py-1.5">
+          <button type="submit" disabled={isPending} className="btn-primary btn-sm">
             {isPending ? '...' : 'Ajouter'}
           </button>
-          <button type="button" onClick={() => { setShowForm(false); setError(null); setSuccess(null) }} className="btn-secondary text-xs px-2 py-1.5">
+          <button type="button" onClick={() => { setShowForm(false); setError(null); setSuccess(null) }} className="btn-secondary btn-sm">
             <X size={14} />
           </button>
         </form>

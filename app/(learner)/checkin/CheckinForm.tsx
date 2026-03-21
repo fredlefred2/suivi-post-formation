@@ -159,7 +159,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
 
       {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 
-      <button type="submit" disabled={submitting} className="btn-primary w-full py-3 text-base">
+      <button type="submit" disabled={submitting} className="btn-primary btn-lg w-full">
         {submitting ? 'Enregistrement...' : 'Valider mon check-in ✓'}
       </button>
     </form>
