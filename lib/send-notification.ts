@@ -24,17 +24,20 @@ interface SendNotificationParams {
   body: string
   data?: Record<string, any>
   url?: string // URL to open on click
+  pushOnly?: boolean // true = push notification only, no bell/cloche storage
 }
 
-export async function sendNotification({ userId, type, title, body, data = {}, url = '/' }: SendNotificationParams) {
-  // 1. Insert into notifications table (include url in data for in-app navigation)
-  await supabaseAdmin.from('notifications').insert({
-    user_id: userId,
-    type,
-    title,
-    body,
-    data: { ...data, url },
-  })
+export async function sendNotification({ userId, type, title, body, data = {}, url = '/', pushOnly = false }: SendNotificationParams) {
+  // 1. Insert into notifications table (skip for messages — they have their own badge system)
+  if (!pushOnly) {
+    await supabaseAdmin.from('notifications').insert({
+      user_id: userId,
+      type,
+      title,
+      body,
+      data: { ...data, url },
+    })
+  }
 
   // 2. Get all push subscriptions for this user
   const { data: subs } = await supabaseAdmin

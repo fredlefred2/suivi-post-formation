@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Bell, CheckCheck } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Bell } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
 
 const POLL_INTERVAL = 60_000 // 60s
 
@@ -107,7 +107,13 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const pathname = usePathname()
   const prevCountRef = useRef(0)
+
+  // Fermer le dropdown quand on change de page
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -119,6 +125,17 @@ export default function NotificationBell() {
     } catch {
       // Silencieux
     }
+  }, [])
+
+  // Supprime toutes les notifications texte affichées sur le téléphone
+  const clearPhoneNotifications = useCallback(async () => {
+    try {
+      const reg = await navigator.serviceWorker?.ready
+      if (reg) {
+        const notifs = await reg.getNotifications()
+        notifs.forEach(n => n.close())
+      }
+    } catch { /* silencieux */ }
   }, [])
 
   // Update app badge when unread count changes
@@ -141,7 +158,11 @@ export default function NotificationBell() {
     const interval = setInterval(fetchNotifications, POLL_INTERVAL)
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') fetchNotifications()
+      if (document.visibilityState === 'visible') {
+        fetchNotifications()
+        // Quand l'app revient au premier plan, nettoyer les notifs texte du téléphone
+        clearPhoneNotifications()
+      }
     }
     document.addEventListener('visibilitychange', handleVisibility)
 
@@ -149,7 +170,7 @@ export default function NotificationBell() {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [fetchNotifications])
+  }, [fetchNotifications, clearPhoneNotifications])
 
   // Close on outside click
   useEffect(() => {
@@ -170,6 +191,9 @@ export default function NotificationBell() {
     // Optimistic update
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     setUnreadCount(0)
+
+    // Supprimer les notifications texte du téléphone
+    clearPhoneNotifications()
 
     try {
       const res = await fetch('/api/notifications', {
@@ -253,7 +277,13 @@ export default function NotificationBell() {
     <div ref={ref} className="relative">
       {/* Bell button */}
       <button
-        onClick={() => setOpen(prev => !prev)}
+        onClick={() => {
+          const willOpen = !open
+          setOpen(willOpen)
+          if (willOpen && unreadCount > 0) {
+            markAllRead()
+          }
+        }}
         className="relative text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90"
         aria-label="Notifications"
       >
@@ -269,17 +299,8 @@ export default function NotificationBell() {
       {open && (
         <div className="fixed left-1/2 -translate-x-1/2 top-14 mt-2 w-96 max-w-[calc(100vw-1rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-800">Notifications</p>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-              >
-                <CheckCheck size={14} />
-                Tout marquer comme lu
-              </button>
-            )}
           </div>
 
           {/* Content */}

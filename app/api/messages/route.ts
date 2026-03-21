@@ -116,6 +116,7 @@ export async function POST(req: NextRequest) {
     body: notifContent.length > 50 ? notifContent.substring(0, 50) + '…' : notifContent,
     url: '/messages',
     data: { senderId: notifSender },
+    pushOnly: true,
   }).catch(() => {})
 
   return NextResponse.json({ message: data })

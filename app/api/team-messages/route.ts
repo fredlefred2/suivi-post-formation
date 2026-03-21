@@ -107,6 +107,7 @@ export async function POST(req: NextRequest) {
           body: preview,
           url: '/team',
           data: { groupId: gId },
+          pushOnly: true,
         })
       }
     } catch { /* silencieux */ }
