@@ -92,7 +92,7 @@ export default function TeamMessagePopup({ userId }: { userId: string }) {
   if (!visible || !message) return null
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-fade-in-up">
         {phase === 'announce' ? (
           /* Phase 1 : Annonce */

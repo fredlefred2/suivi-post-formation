@@ -137,7 +137,7 @@ export default function InstallPrompt() {
   // ── Bandeau natif Android (beforeinstallprompt capté) ──
   if (bannerType === 'native') {
     return (
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+      <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
           <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
           <div className="flex-1 min-w-0">
@@ -161,7 +161,7 @@ export default function InstallPrompt() {
   // ── Guide Android (prompt natif bloqué par Chrome) ──
   if (bannerType === 'guide-android') {
     return (
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+      <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
           <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
           <div className="flex-1 min-w-0">
@@ -179,7 +179,7 @@ export default function InstallPrompt() {
   // ── Guide iOS Safari ──
   if (bannerType === 'guide-ios') {
     return (
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+      <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
             <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
@@ -225,7 +225,7 @@ export default function InstallPrompt() {
   // ── Guide iOS Chrome (doit ouvrir dans Safari) ──
   if (bannerType === 'guide-ios-chrome') {
     return (
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+      <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
             <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />

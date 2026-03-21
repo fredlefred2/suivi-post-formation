@@ -176,7 +176,7 @@ export default function BugReportButton() {
           top: '50%',
           right: '-12px',
           transform: 'translateY(-50%)',
-          zIndex: 9998,
+          zIndex: 95,
         }}
         className="group w-10 h-10 rounded-full
                    bg-gray-800/50 hover:bg-gray-800 backdrop-blur-sm
@@ -204,7 +204,7 @@ export default function BugReportButton() {
       {/* ── Modal ── */}
       {open && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 9999 }}
+          style={{ position: 'fixed', inset: 0, zIndex: 100 }}
           className="flex items-end sm:items-center justify-center px-4 pb-4"
         >
           {/* Backdrop */}

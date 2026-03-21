@@ -147,7 +147,7 @@ export default function MessagesClient({ currentUserId, trainerId, trainerName, 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] bg-white flex flex-col overflow-hidden"
+      className="fixed inset-0 z-[70] bg-white flex flex-col overflow-hidden"
       style={{ top: 0, height: '100vh' }}
     >
       {/* ── Header ── TOUJOURS visible */}
