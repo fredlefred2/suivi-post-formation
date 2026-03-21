@@ -601,7 +601,7 @@ export default function TrainerDashboardClient({
       {showAllActions && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowAllActions(false)} />
-          <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col">
+          <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col pb-[max(0px,env(safe-area-inset-bottom))]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h3 className="font-bold text-gray-800">Actions recentes</h3>
               <button onClick={() => setShowAllActions(false)} className="text-gray-500 hover:text-gray-600 transition-colors p-1">

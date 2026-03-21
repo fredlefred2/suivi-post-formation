@@ -236,6 +236,15 @@ export default function DashboardClient({
         )}
       </div>
 
+      {/* ── Empty state : aucun axe ── */}
+      {axes.length === 0 && totalActions === 0 && (
+        <Link href="/axes" className="card p-5 text-center border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition-colors">
+          <p className="text-2xl mb-2">👣</p>
+          <p className="text-sm font-semibold text-gray-800">Commence ton parcours !</p>
+          <p className="text-xs text-gray-500 mt-1">Cr&eacute;e ton premier axe de progr&egrave;s</p>
+        </Link>
+      )}
+
       {/* ── Carousel axes compact ── */}
       {axes.length > 0 && (
         <div className="space-y-2">
@@ -262,7 +271,7 @@ export default function DashboardClient({
                   key={axe.id}
                   href={`/axes?index=${axe.index}`}
                   {...(axe.index === 0 ? { 'data-onboarding': 'progression' } : {})}
-                  className="snap-center shrink-0 w-[80vw] max-w-[320px] rounded-2xl flex flex-col hover:shadow-xl transition-all overflow-hidden"
+                  className="snap-center shrink-0 w-[min(85vw,340px)] rounded-2xl flex flex-col hover:shadow-xl transition-all overflow-hidden"
                   style={{
                     background: levelIdx === 0
                       ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'

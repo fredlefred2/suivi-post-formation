@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { logout } from '@/app/(auth)/actions'
-import { LayoutDashboard, Target, ClipboardCheck, Users, LogOut } from 'lucide-react'
+import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
+import LogoutButton from '@/app/components/LogoutButton'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 import NotificationBell from '@/app/components/NotificationBell'
@@ -85,11 +85,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
             <div className="flex items-center gap-1">
               <MessageIcon variant="learner" currentUserId={user.id} trainerId={trainerId} trainerName={trainerName} />
               <NotificationBell />
-              <form action={logout}>
-                <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">
-                  <LogOut size={18} />
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
         </header>

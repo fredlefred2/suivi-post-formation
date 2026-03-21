@@ -37,7 +37,7 @@ function FeedbackModal({ open, onClose, children }: { open: boolean, onClose: ()
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div
         ref={ref}
-        className="relative bg-white w-full sm:w-auto sm:min-w-[280px] sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-xl"
+        className="relative bg-white w-full sm:w-auto sm:min-w-[280px] sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-xl pb-[max(0px,env(safe-area-inset-bottom))]"
       >
         <button
           onClick={onClose}

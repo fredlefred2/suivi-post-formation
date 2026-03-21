@@ -34,7 +34,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       difficulties: formData.get('difficulties') as string || null,
       axes: axes.map(axe => ({
         id: axe.id,
-        score: parseInt(formData.get(`score_${axe.id}`) as string) || axe.initial_score,
+        score: parseInt(formData.get(`score_${axe.id}`) as string, 10) || axe.initial_score,
       })),
     }
 

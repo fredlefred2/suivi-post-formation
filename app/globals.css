@@ -93,6 +93,18 @@
     @apply px-6 py-3 text-base gap-2.5;
   }
 
+  /* ──────── Accessibilité : focus visible au clavier ──────── */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+
   /* ──────── Tap feedback pour éléments interactifs ──────── */
   .card:active {
     transform: translateY(0);
