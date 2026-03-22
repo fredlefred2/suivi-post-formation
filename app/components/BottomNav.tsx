@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import {
   LayoutDashboard, Target, ClipboardCheck, History,
-  Users, GraduationCap,
+  Users, GraduationCap, Sparkles,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useOnboarding } from '@/lib/onboarding-context'
@@ -16,6 +16,7 @@ const iconMap: Record<string, LucideIcon> = {
   History,
   Users,
   GraduationCap,
+  Sparkles,
 }
 
 type NavItem = {
