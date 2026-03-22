@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Plus, Trash2, Pencil, UserPlus, X, Lightbulb } from 'lucide-react'
+import { Plus, Trash2, Shuffle, UserPlus, X, Sparkles } from 'lucide-react'
 import { createGroup, deleteGroup, removeLearnerFromGroup } from './actions'
 import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
 
@@ -121,10 +121,10 @@ export default function GroupsClient({
                   </div>
                   <Link
                     href={`/trainer/groups/${group.id}`}
-                    className="px-3 py-2 rounded-xl border bg-white border-gray-200 text-amber-600 hover:border-amber-200 hover:bg-amber-50 text-sm font-medium transition-colors"
-                    title="Défis & détails"
+                    className="px-3 py-2 rounded-xl border bg-white border-gray-200 text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 text-sm font-medium transition-colors"
+                    title="Rappels & Conseils"
                   >
-                    <Lightbulb size={16} />
+                    <Sparkles size={16} />
                   </Link>
                   <button
                     onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
@@ -133,8 +133,9 @@ export default function GroupsClient({
                         ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
                         : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-200 hover:text-indigo-600'
                     }`}
+                    title="Gérer les participants"
                   >
-                    <Pencil size={16} />
+                    <Shuffle size={16} />
                   </button>
                   <button
                     onClick={() => {
