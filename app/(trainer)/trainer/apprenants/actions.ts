@@ -106,6 +106,8 @@ export async function deleteLearner(learnerId: string) {
     await admin.from('action_comments').delete().in('action_id', actionIds)
     await admin.from('actions').delete().in('id', actionIds)
   }
+  // Supprimer les tips avant les axes
+  await admin.from('tips').delete().eq('learner_id', learnerId)
   if (axeIds.length > 0) {
     await admin.from('axes').delete().in('id', axeIds)
   }

@@ -11,6 +11,12 @@ interface GenerateTipsParams {
   axeSubject: string
   axeDescription: string
   groupTheme: string
+  /** Nombre de tips à générer (default: 5) */
+  count?: number
+  /** Numéro de semaine de départ (default: 1) */
+  startWeek?: number
+  /** Si true, ignore la vérification "tips déjà existants" */
+  force?: boolean
 }
 
 /**
@@ -23,6 +29,9 @@ export async function generateTips({
   axeSubject,
   axeDescription,
   groupTheme,
+  count = 5,
+  startWeek = 1,
+  force = false,
 }: GenerateTipsParams): Promise<void> {
   const apiKey = process.env.CLAUDE_API_KEY
   if (!apiKey) {
@@ -30,14 +39,16 @@ export async function generateTips({
     return
   }
 
-  // Ne pas regénérer si des tips existent déjà pour cet axe
-  const { data: existing } = await supabaseAdmin
-    .from('tips')
-    .select('id')
-    .eq('axe_id', axeId)
-    .limit(1)
+  // Ne pas regénérer si des tips existent déjà pour cet axe (sauf si force=true)
+  if (!force) {
+    const { data: existing } = await supabaseAdmin
+      .from('tips')
+      .select('id')
+      .eq('axe_id', axeId)
+      .limit(1)
 
-  if (existing && existing.length > 0) return
+    if (existing && existing.length > 0) return
+  }
 
   const prompt = `Tu es un coach en formation professionnelle. Tu accompagnes un apprenant qui suit une formation "${groupTheme}".
 
@@ -45,13 +56,13 @@ Il travaille sur l'axe de progrès suivant :
 - Intitulé : "${axeSubject}"
 - Description : "${axeDescription}"
 
-Génère exactement 5 rappels hebdomadaires, chacun composé de :
+Génère exactement ${count} rappels hebdomadaires, chacun composé de :
 1. Un RAPPEL ("le savais-tu ?") : un principe ou une bonne pratique vue en formation, expliqué concrètement en 2-3 phrases (max 200 caractères). Décris l'idée de manière opérationnelle et accessible.
 2. Un CONSEIL : une mise en pratique concrète pour la semaine, en 1-2 phrases (max 200 caractères). Actionnable en 1 journée de travail.
 
 Règles :
 - Tutoiement
-- Progressif : semaine 1 = principe de base et action simple, semaine 5 = principe avancé et mise en pratique ambitieuse
+- Progressif : semaine 1 = principe de base et action simple, semaine ${count} = principe avancé et mise en pratique ambitieuse
 - Concret, spécifique et opérationnel (pas de généralités)
 - Adapté au contexte professionnel et managérial
 - NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens (pas de "Fenêtre de Johari", pas de "Porter", pas de "Hersey & Blanchard", pas de "DESC", etc.). Décris l'idée avec tes propres mots, de manière simple et directe.
@@ -95,13 +106,13 @@ Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
       return
     }
 
-    // Insérer les tips en base (max 5)
-    const rows = tips.slice(0, 5).map((tip, i) => {
+    // Insérer les tips en base (max count)
+    const rows = tips.slice(0, count).map((tip, i) => {
       const isNew = typeof tip === 'object' && tip.rappel
       return {
         axe_id: axeId,
         learner_id: learnerId,
-        week_number: i + 1,
+        week_number: startWeek + i,
         content: isNew ? (tip as any).rappel.trim() : String(tip).trim(),
         advice: isNew ? (tip as any).conseil.trim() : null,
       }

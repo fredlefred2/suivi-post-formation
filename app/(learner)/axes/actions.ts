@@ -43,6 +43,54 @@ async function triggerTipsGeneration(userId: string, subject: string, descriptio
   }
 }
 
+// Helper : régénère les tips non envoyés quand un axe est modifié
+async function regenerateUnsentTips(axeId: string, userId: string, subject: string, description: string | null) {
+  try {
+    // Supprimer les tips non envoyés de cet axe
+    await supabaseAdmin
+      .from('tips')
+      .delete()
+      .eq('axe_id', axeId)
+      .eq('sent', false)
+
+    // Compter les tips envoyés restants
+    const { count: sentCount } = await supabaseAdmin
+      .from('tips')
+      .select('*', { count: 'exact', head: true })
+      .eq('axe_id', axeId)
+      .eq('sent', true)
+
+    const remaining = sentCount ?? 0
+    const needed = 5 - remaining
+
+    if (needed <= 0) return
+
+    // Récupérer le thème du groupe
+    const { data: membership } = await supabaseAdmin
+      .from('group_members')
+      .select('group:groups(theme)')
+      .eq('learner_id', userId)
+      .limit(1)
+      .single()
+
+    const groupTheme = (membership as any)?.group?.theme || 'Développement professionnel'
+
+    // Générer les tips manquants avec force=true et startWeek adapté
+    await generateTips({
+      axeId,
+      learnerId: userId,
+      axeSubject: subject,
+      axeDescription: description || subject,
+      groupTheme,
+      count: needed,
+      startWeek: remaining + 1,
+      force: true,
+    })
+  } catch (err) {
+    console.error('[Tips] Erreur régénération tips après modification axe:', err)
+  }
+}
+
 export async function createAxe(formData: FormData) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -242,6 +290,10 @@ export async function updateAxe(axeId: string, subject: string, description: str
     .eq('learner_id', user.id)
 
   if (error) return { error: error.message }
+
+  // Régénérer les tips non envoyés pour refléter le nouvel axe
+  regenerateUnsentTips(axeId, user.id, subject, description)
+
   revalidatePath('/axes')
   revalidatePath('/dashboard')
 }
