@@ -9,6 +9,7 @@ interface Tip {
   learner_id: string
   week_number: number
   content: string
+  advice: string | null
   sent: boolean
   acted: boolean
   axe: { subject: string } | null
@@ -31,6 +32,7 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
   const [expandedLearners, setExpandedLearners] = useState<Set<string>>(new Set())
   const [editingTip, setEditingTip] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
+  const [editAdvice, setEditAdvice] = useState('')
   const [regenerating, setRegenerating] = useState<string | null>(null)
 
   const fetchTips = useCallback(async () => {
@@ -66,7 +68,6 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
     axeGroup.tips.push(tip)
   }
 
-  // Trier par nom
   grouped.sort((a, b) => a.learnerName.localeCompare(b.learnerName, 'fr'))
 
   const toggleLearner = (id: string) => {
@@ -81,7 +82,7 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
     await fetch('/api/tips/admin', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipId, content: editContent }),
+      body: JSON.stringify({ tipId, content: editContent, advice: editAdvice }),
     })
     setEditingTip(null)
     fetchTips()
@@ -94,7 +95,7 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
 
   const handleRegenerate = async (tip: Tip) => {
     setRegenerating(tip.id)
-    const res = await fetch('/api/tips/admin', {
+    await fetch('/api/tips/admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -105,16 +106,17 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
       }),
     })
     setRegenerating(null)
-    if (res.ok) fetchTips()
+    fetchTips()
   }
 
   const handleAdd = async (axeId: string, learnerId: string, nextWeek: number) => {
-    const content = prompt('Texte du nouveau rappel & conseil :')
+    const content = prompt('📚 Le savais-tu (rappel) :')
     if (!content) return
+    const advice = prompt('💡 Conseil pratique :')
     await fetch('/api/tips/admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add', axeId, learnerId, weekNumber: nextWeek, content }),
+      body: JSON.stringify({ action: 'add', axeId, learnerId, weekNumber: nextWeek, content, advice: advice || null }),
     })
     fetchTips()
   }
@@ -173,106 +175,135 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
               </span>
             </button>
 
-            {/* Contenu déplié */}
+            {/* Contenu déplié : tableau par axe */}
             {isExpanded && (
-              <div className="px-3 pb-3 space-y-3">
+              <div className="px-3 pb-3 space-y-4">
                 {learner.axes.map(axe => (
                   <div key={axe.axeId}>
                     <p className="text-xs font-semibold text-indigo-600 mb-2 uppercase tracking-wide">
                       🎯 {axe.axeSubject}
                     </p>
-                    <div className="space-y-1.5">
-                      {axe.tips.map(tip => {
-                        const isLocked = tip.sent
-                        return (
-                          <div key={tip.id} className={`rounded-lg text-sm ${
-                            tip.acted ? 'bg-green-50 border border-green-200'
-                            : tip.sent ? 'bg-amber-50 border border-amber-200'
-                            : 'bg-gray-50'
-                          }`}>
-                            {/* Header : semaine + status + actions */}
-                            <div className="flex items-center gap-2 px-3 py-2">
-                              <span className={`text-xs font-mono flex-shrink-0 ${
-                                isLocked ? 'text-amber-600 font-bold' : 'text-gray-500'
+
+                    {/* Tableau */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border-collapse">
+                        <thead>
+                          <tr className="text-xs text-gray-500 border-b border-gray-200">
+                            <th className="text-left py-2 px-2 w-10">Sem.</th>
+                            <th className="text-left py-2 px-2">📚 Le savais-tu ?</th>
+                            <th className="text-left py-2 px-2">💡 Conseil</th>
+                            <th className="text-center py-2 px-1 w-16">État</th>
+                            <th className="text-center py-2 px-1 w-24">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {axe.tips.map(tip => {
+                            const isLocked = tip.sent
+                            const isEditing = editingTip === tip.id
+
+                            return (
+                              <tr key={tip.id} className={`border-b border-gray-100 ${
+                                tip.acted ? 'bg-green-50' : tip.sent ? 'bg-amber-50' : ''
                               }`}>
-                                Semaine {tip.week_number}
-                              </span>
+                                {/* Semaine */}
+                                <td className={`py-2 px-2 font-mono text-xs ${isLocked ? 'text-amber-600 font-bold' : 'text-gray-500'}`}>
+                                  S{tip.week_number}
+                                </td>
 
-                              {/* Status */}
-                              {tip.acted && <span className="text-xs flex-shrink-0" title="Vu par l'apprenant">✅ Lu</span>}
-                              {tip.sent && !tip.acted && <span className="text-xs text-amber-600 flex-shrink-0" title="Envoyé, en attente">📤 Envoyé</span>}
-                              {!tip.sent && <span className="text-xs text-gray-400 flex-shrink-0">⏳ En attente</span>}
+                                {/* Rappel */}
+                                <td className="py-2 px-2 text-gray-700">
+                                  {isEditing ? (
+                                    <textarea
+                                      value={editContent}
+                                      onChange={e => setEditContent(e.target.value)}
+                                      className="w-full text-sm border border-gray-300 rounded px-2 py-1 min-h-[60px]"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <span className="text-sm leading-relaxed">{tip.content}</span>
+                                  )}
+                                </td>
 
-                              <div className="ml-auto flex items-center gap-0.5">
-                                {/* Actions — verrouillé si déjà envoyé */}
-                                {!isLocked && editingTip !== tip.id && (
-                                  <>
-                                    <button
-                                      onClick={() => { setEditingTip(tip.id); setEditContent(tip.content) }}
-                                      className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                                      title="Modifier"
-                                    >
-                                      <Pencil size={13} />
-                                    </button>
-                                    <button
-                                      onClick={() => handleRegenerate(tip)}
-                                      disabled={regenerating === tip.id}
-                                      className="p-1 text-gray-400 hover:text-amber-600 transition-colors"
-                                      title="Régénérer avec l'IA"
-                                    >
-                                      {regenerating === tip.id
-                                        ? <Loader2 size={13} className="animate-spin" />
-                                        : <RefreshCw size={13} />
-                                      }
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete(tip.id)}
-                                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                      title="Supprimer"
-                                    >
-                                      <Trash2 size={13} />
-                                    </button>
-                                  </>
-                                )}
-                                {isLocked && (
-                                  <span className="text-[10px] text-gray-400" title="Déjà envoyé — non modifiable">🔒</span>
-                                )}
-                              </div>
-                            </div>
+                                {/* Conseil */}
+                                <td className="py-2 px-2 text-gray-600">
+                                  {isEditing ? (
+                                    <textarea
+                                      value={editAdvice}
+                                      onChange={e => setEditAdvice(e.target.value)}
+                                      className="w-full text-sm border border-gray-300 rounded px-2 py-1 min-h-[60px]"
+                                    />
+                                  ) : (
+                                    <span className="text-sm leading-relaxed italic">{tip.advice || '—'}</span>
+                                  )}
+                                </td>
 
-                            {/* Contenu complet */}
-                            {editingTip === tip.id ? (
-                              <div className="px-3 pb-3 flex items-start gap-1">
-                                <textarea
-                                  value={editContent}
-                                  onChange={e => setEditContent(e.target.value)}
-                                  className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 min-h-[80px]"
-                                  autoFocus
-                                />
-                                <button onClick={() => handleEdit(tip.id)} className="text-green-600 hover:text-green-800 p-1.5">
-                                  <Check size={16} />
-                                </button>
-                                <button onClick={() => setEditingTip(null)} className="text-gray-500 hover:text-gray-700 p-1.5">
-                                  <X size={16} />
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="px-3 pb-3 text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-                                {tip.content}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
+                                {/* État */}
+                                <td className="py-2 px-1 text-center">
+                                  {tip.acted
+                                    ? <span className="text-xs" title="Lu par l'apprenant">✅</span>
+                                    : tip.sent
+                                    ? <span className="text-xs" title="Envoyé">📤</span>
+                                    : <span className="text-xs text-gray-400" title="En attente">⏳</span>
+                                  }
+                                </td>
 
-                      {/* Bouton ajouter */}
-                      <button
-                        onClick={() => handleAdd(axe.axeId, learner.learnerId, axe.tips.length + 1)}
-                        className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2.5 py-1.5 transition-colors"
-                      >
-                        <Plus size={12} /> Ajouter un rappel
-                      </button>
+                                {/* Actions */}
+                                <td className="py-2 px-1 text-center">
+                                  {isEditing ? (
+                                    <div className="flex items-center justify-center gap-1">
+                                      <button onClick={() => handleEdit(tip.id)} className="text-green-600 hover:text-green-800 p-1">
+                                        <Check size={14} />
+                                      </button>
+                                      <button onClick={() => setEditingTip(null)} className="text-gray-500 hover:text-gray-700 p-1">
+                                        <X size={14} />
+                                      </button>
+                                    </div>
+                                  ) : isLocked ? (
+                                    <span className="text-[10px] text-gray-400">🔒</span>
+                                  ) : (
+                                    <div className="flex items-center justify-center gap-0.5">
+                                      <button
+                                        onClick={() => { setEditingTip(tip.id); setEditContent(tip.content); setEditAdvice(tip.advice || '') }}
+                                        className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                        title="Modifier"
+                                      >
+                                        <Pencil size={13} />
+                                      </button>
+                                      <button
+                                        onClick={() => handleRegenerate(tip)}
+                                        disabled={regenerating === tip.id}
+                                        className="p-1 text-gray-400 hover:text-amber-600 transition-colors"
+                                        title="Régénérer"
+                                      >
+                                        {regenerating === tip.id
+                                          ? <Loader2 size={13} className="animate-spin" />
+                                          : <RefreshCw size={13} />
+                                        }
+                                      </button>
+                                      <button
+                                        onClick={() => handleDelete(tip.id)}
+                                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                        title="Supprimer"
+                                      >
+                                        <Trash2 size={13} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
                     </div>
+
+                    {/* Bouton ajouter */}
+                    <button
+                      onClick={() => handleAdd(axe.axeId, learner.learnerId, axe.tips.length + 1)}
+                      className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1.5 mt-1 transition-colors"
+                    >
+                      <Plus size={12} /> Ajouter un rappel
+                    </button>
                   </div>
                 ))}
               </div>

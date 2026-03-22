@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
   // Récupérer tous les tips avec infos axe
   const { data: tips } = await supabaseAdmin
     .from('tips')
-    .select('id, axe_id, learner_id, week_number, content, sent, acted, axe:axes(subject)')
+    .select('id, axe_id, learner_id, week_number, content, advice, sent, acted, axe:axes(subject)')
     .in('learner_id', learnerIds)
     .order('learner_id')
     .order('axe_id')
@@ -65,12 +65,15 @@ export async function PUT(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
-  const { tipId, content } = await request.json()
+  const { tipId, content, advice } = await request.json()
   if (!tipId || !content) return NextResponse.json({ error: 'tipId et content requis' }, { status: 400 })
+
+  const updateData: Record<string, string> = { content: content.trim() }
+  if (advice !== undefined) updateData.advice = (advice || '').trim()
 
   const { error } = await supabaseAdmin
     .from('tips')
-    .update({ content: content.trim() })
+    .update(updateData)
     .eq('id', tipId)
 
   if (error) return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
@@ -83,7 +86,7 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
-  const { action, tipId, axeId, learnerId, weekNumber, content, groupTheme, axeSubject } = await request.json()
+  const { action, tipId, axeId, learnerId, weekNumber, content, advice, groupTheme, axeSubject } = await request.json()
 
   if (action === 'add' && axeId && learnerId && weekNumber && content) {
     const { error } = await supabaseAdmin.from('tips').insert({
@@ -91,6 +94,7 @@ export async function POST(request: NextRequest) {
       learner_id: learnerId,
       week_number: weekNumber,
       content: content.trim(),
+      advice: advice?.trim() || null,
     })
     if (error) return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     return NextResponse.json({ success: true })
@@ -109,12 +113,14 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 100,
+        max_tokens: 300,
         messages: [{
           role: 'user',
           content: `Tu es coach en formation professionnelle. Contexte : formation "${groupTheme}", axe "${axeSubject}".
-Génère UN SEUL micro-défi concret (1 phrase, max 120 car., tutoiement, actionnable en 1 journée).
-Réponds UNIQUEMENT avec le texte du défi, sans guillemets ni ponctuation finale.`,
+Génère UN rappel + UN conseil :
+1. RAPPEL : un concept/méthode vu en formation (2-3 phrases, max 200 car., cite le modèle/auteur)
+2. CONSEIL : une mise en pratique concrète pour la semaine (1-2 phrases, max 200 car., tutoiement)
+Réponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`,
         }],
       }),
     })
@@ -122,12 +128,24 @@ Réponds UNIQUEMENT avec le texte du défi, sans guillemets ni ponctuation final
     if (!response.ok) return NextResponse.json({ error: 'Erreur Claude API' }, { status: 500 })
 
     const data = await response.json()
-    const newContent = data.content?.[0]?.text?.trim() || ''
+    const text = data.content?.[0]?.text?.trim() || ''
+    let newContent = text
+    let newAdvice: string | null = null
+
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        newContent = parsed.rappel || text
+        newAdvice = parsed.conseil || null
+      }
+    } catch { /* fallback to raw text */ }
+
     if (!newContent) return NextResponse.json({ error: 'Réponse vide' }, { status: 500 })
 
     const { error } = await supabaseAdmin
       .from('tips')
-      .update({ content: newContent })
+      .update({ content: newContent, advice: newAdvice })
       .eq('id', tipId)
 
     if (error) return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
