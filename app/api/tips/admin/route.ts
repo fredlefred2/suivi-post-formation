@@ -135,8 +135,9 @@ export async function POST(request: NextRequest) {
           role: 'user',
           content: `Tu es coach en formation professionnelle. Contexte : formation "${groupTheme}", axe "${axeSubject}".
 Génère UN rappel + UN conseil NOUVEAU et ORIGINAL :
-1. RAPPEL : un concept/méthode/modèle vu en formation (2-3 phrases, max 200 car., cite le modèle/auteur si pertinent)
+1. RAPPEL ("le savais-tu ?") : un principe ou bonne pratique vue en formation (2-3 phrases, max 200 car., concret et opérationnel)
 2. CONSEIL : une mise en pratique concrète pour la semaine (1-2 phrases, max 200 car., tutoiement)
+IMPORTANT : NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens. Décris l'idée simplement.
 ${existingList}
 Réponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`,
         }],
