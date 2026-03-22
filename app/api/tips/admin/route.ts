@@ -133,11 +133,11 @@ export async function POST(request: NextRequest) {
         max_tokens: 300,
         messages: [{
           role: 'user',
-          content: `Tu es un coach en formation professionnelle. Approche pragmatique, opérationnelle, concrète et encourageante, sans être exagérément enthousiaste. Contexte : formation "${groupTheme}", axe "${axeSubject}".
+          content: `Tu es un coach en formation professionnelle. Approche pragmatique, opérationnelle, concrète et encourageante, sans être exagérément enthousiaste. Le thème et le contenu de la formation portait sur "${groupTheme}". Axe de progrès : "${axeSubject}".
 Génère UN rappel + UN conseil NOUVEAU et ORIGINAL :
-1. RAPPEL ("Avoir à l'esprit que :") : un principe ou bonne pratique vue en formation (2-3 phrases, max 200 car., concret et opérationnel)
-2. CONSEIL : une mise en pratique concrète pour la semaine (1-2 phrases, max 200 car., tutoiement, SMART sans le décomposer comme tel)
-IMPORTANT : NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne. Ton léger mais pas familier.
+1. RAPPEL ("Le tip") : un principe ou bonne pratique vue en formation, décrit en un proverbe imaginaire / citation imaginaire / punchline. Ton provocant ou amusant, pour déclencher l'attention par la surprise.
+2. CONSEIL : une mise en pratique concrète pour la semaine (1-2 phrases, max 300 car., tutoiement, ton oral mais bien écrit, SMART sans le décomposer comme tel). L'apprenant connaît déjà le contenu de la formation, donc pas d'évidences — un petit truc en plus.
+IMPORTANT : NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne. Ton léger, un peu provocant mais jamais agressif.
 ${existingList}
 Réponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`,
         }],

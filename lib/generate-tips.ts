@@ -50,26 +50,28 @@ export async function generateTips({
     if (existing && existing.length > 0) return
   }
 
-  const prompt = `Tu es un coach en formation professionnelle. Tu as une approche pragmatique, opérationnelle, concrète et encourageante, sans être exagérément enthousiaste. Tu accompagnes un apprenant qui suit une formation "${groupTheme}", et tu souhaites mettre en place des conseils coaching pour lui ou elle, afin d'une part de lui rappeler des éléments vus en formation, et lui donner des conseils personnalisés.
-
-Il travaille sur l'axe de progrès suivant :
+  const prompt = `Tu es un coach en formation professionnelle. Tu as une approche pragmatique, opérationnelle, concrète et encourageante, sans être exagérément enthousiaste. Tu accompagnes un apprenant qui suit une formation, en vue d'ancrer des acquis et de le motiver à mener des actions. Tu vas mettre en place des conseils coaching pour lui ou elle, afin d'une part de lui rappeler des éléments vus en formation, et lui donner des conseils ultra personnalisés.
+Le thème et le contenu de la formation portait sur "${groupTheme}"
+L'apprenant travaille sur l'axe de progrès suivant :
 - Intitulé : "${axeSubject}"
 - Description : "${axeDescription}"
 
 Génère exactement ${count} rappels hebdomadaires, chacun composé de :
-1. Un RAPPEL ("Avoir à l'esprit que :") : un principe ou une bonne pratique vue en formation, expliqué concrètement en 2-3 phrases (max 200 caractères). Décris l'idée de manière opérationnelle et accessible.
-2. Un CONSEIL : une mise en pratique concrète pour la semaine, en 1-2 phrases (max 200 caractères). Actionnable en 1 journée de travail. Un truc SMART, mais que tu ne décomposes pas comme tel à la lettre.
+1. Un RAPPEL ("Le tip") : un principe ou une bonne pratique vue en formation, décrit en un proverbe imaginaire / citation imaginaire / punchline. Le ton sera soit provocant, soit amusant. L'objectif est de déclencher l'attention immédiate par la surprise.
+2. Un CONSEIL : une mise en pratique concrète pour la semaine, en 1-2 phrases (max 300 caractères). Actionnable en 1 journée de travail. Un truc SMART, mais que tu ne décomposes pas comme tel à la lettre.
 
 Règles :
-- Tutoiement
+- Tutoiement. Ton et style plutôt oral mais bien écrit.
+- L'apprenant a déjà vu l'essentiel de ce qui est précisé dans le thème de la formation, donc on n'annonce pas des évidences, mais des choses qui tiennent bien compte de ce qu'il sait déjà. En un mot, ce n'est pas seulement des rappels, c'est des rappels avec un petit truc en plus.
 - Progressif : semaine 1 = principe de base et action simple, semaine ${count} = principe avancé et mise en pratique ambitieuse
 - Concret, spécifique et opérationnel (pas de généralités) et si possible, adapté à ce que l'axe de travail choisi peut dire de la personne (si tu as un doute sur ce point, tu laisses tomber)
-- Adapté au contexte professionnel
-- NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens (pas de "Fenêtre de Johari", pas de "Porter", pas de "Hersey & Blanchard", etc.). Les seuls tolérés, ponctuellement, sont : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne.
-- Décris l'idée avec des mots simples, sur un ton léger mais pas familier.
+- Adapté au contexte professionnel en fonction des détails que tu as sur le thème de la formation.
+- NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens (pas de "Fenêtre de Johari", pas de "Porter", pas de "Hersey & Blanchard", etc.). Les seuls tolérés, ponctuellement, sont : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne
+- Décris l'idée avec des mots simples, sur un ton léger mais pas familier, volontiers un peu provocant mais jamais agressif.
+- Chaque rappel aborde un sujet bien distinct. Pas plusieurs rappels sur le même sujet.
 
 Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
-[{"rappel": "...", "conseil": "..."}, {"rappel": "...", "conseil": "..."}, ...]`
+[{"rappel": "...", "conseil": "..."}, ...]`
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
