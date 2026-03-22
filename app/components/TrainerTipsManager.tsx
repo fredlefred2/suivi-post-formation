@@ -184,117 +184,109 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
                       🎯 {axe.axeSubject}
                     </p>
 
-                    {/* Tableau */}
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm border-collapse">
-                        <thead>
-                          <tr className="text-xs text-gray-500 border-b border-gray-200">
-                            <th className="text-left py-2 px-2 w-10">Sem.</th>
-                            <th className="text-left py-2 px-2">📚 Le savais-tu ?</th>
-                            <th className="text-left py-2 px-2">💡 Conseil</th>
-                            <th className="text-center py-2 px-1 w-16">État</th>
-                            <th className="text-center py-2 px-1 w-24">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {axe.tips.map(tip => {
-                            const isLocked = tip.sent
-                            const isEditing = editingTip === tip.id
+                    {/* Cartes */}
+                    <div className="space-y-2">
+                      {axe.tips.map(tip => {
+                        const isLocked = tip.sent
+                        const isEditing = editingTip === tip.id
 
-                            return (
-                              <tr key={tip.id} className={`border-b border-gray-100 ${
-                                tip.acted ? 'bg-green-50' : tip.sent ? 'bg-amber-50' : ''
+                        return (
+                          <div key={tip.id} className={`rounded-xl border p-3 ${
+                            tip.acted ? 'bg-green-50 border-green-200'
+                            : tip.sent ? 'bg-amber-50 border-amber-200'
+                            : 'bg-white border-gray-200'
+                          }`}>
+                            {/* Header : semaine + état */}
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                isLocked ? 'bg-amber-200 text-amber-800' : 'bg-gray-200 text-gray-600'
                               }`}>
-                                {/* Semaine */}
-                                <td className={`py-2 px-2 font-mono text-xs ${isLocked ? 'text-amber-600 font-bold' : 'text-gray-500'}`}>
-                                  S{tip.week_number}
-                                </td>
+                                Semaine {tip.week_number}
+                              </span>
+                              {tip.acted && <span className="text-xs text-green-600">✅ Lu</span>}
+                              {tip.sent && !tip.acted && <span className="text-xs text-amber-600">📤 Envoyé</span>}
+                              {!tip.sent && <span className="text-xs text-gray-400">⏳ En attente</span>}
+                              {isLocked && <span className="text-[10px] text-gray-400 ml-auto">🔒</span>}
+                            </div>
 
+                            {isEditing ? (
+                              /* Mode édition */
+                              <div className="space-y-2">
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-500 mb-1 block">📚 Le savais-tu ?</label>
+                                  <textarea
+                                    value={editContent}
+                                    onChange={e => setEditContent(e.target.value)}
+                                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 min-h-[60px]"
+                                    autoFocus
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-500 mb-1 block">💡 Conseil</label>
+                                  <textarea
+                                    value={editAdvice}
+                                    onChange={e => setEditAdvice(e.target.value)}
+                                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 min-h-[60px]"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={() => handleEdit(tip.id)} className="btn-primary btn-sm text-xs">
+                                    <Check size={14} /> Enregistrer
+                                  </button>
+                                  <button onClick={() => setEditingTip(null)} className="btn-secondary btn-sm text-xs">
+                                    Annuler
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Mode lecture */
+                              <>
                                 {/* Rappel */}
-                                <td className="py-2 px-2 text-gray-700">
-                                  {isEditing ? (
-                                    <textarea
-                                      value={editContent}
-                                      onChange={e => setEditContent(e.target.value)}
-                                      className="w-full text-sm border border-gray-300 rounded px-2 py-1 min-h-[60px]"
-                                      autoFocus
-                                    />
-                                  ) : (
-                                    <span className="text-sm leading-relaxed">{tip.content}</span>
-                                  )}
-                                </td>
+                                <div className="mb-2">
+                                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">📚 Le savais-tu ?</p>
+                                  <p className="text-sm text-gray-800 leading-relaxed">{tip.content}</p>
+                                </div>
 
                                 {/* Conseil */}
-                                <td className="py-2 px-2 text-gray-600">
-                                  {isEditing ? (
-                                    <textarea
-                                      value={editAdvice}
-                                      onChange={e => setEditAdvice(e.target.value)}
-                                      className="w-full text-sm border border-gray-300 rounded px-2 py-1 min-h-[60px]"
-                                    />
-                                  ) : (
-                                    <span className="text-sm leading-relaxed italic">{tip.advice || '—'}</span>
-                                  )}
-                                </td>
+                                {tip.advice && (
+                                  <div className="mb-2">
+                                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">💡 Conseil</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed italic">{tip.advice}</p>
+                                  </div>
+                                )}
 
-                                {/* État */}
-                                <td className="py-2 px-1 text-center">
-                                  {tip.acted
-                                    ? <span className="text-xs" title="Lu par l'apprenant">✅</span>
-                                    : tip.sent
-                                    ? <span className="text-xs" title="Envoyé">📤</span>
-                                    : <span className="text-xs text-gray-400" title="En attente">⏳</span>
-                                  }
-                                </td>
-
-                                {/* Actions */}
-                                <td className="py-2 px-1 text-center">
-                                  {isEditing ? (
-                                    <div className="flex items-center justify-center gap-1">
-                                      <button onClick={() => handleEdit(tip.id)} className="text-green-600 hover:text-green-800 p-1">
-                                        <Check size={14} />
-                                      </button>
-                                      <button onClick={() => setEditingTip(null)} className="text-gray-500 hover:text-gray-700 p-1">
-                                        <X size={14} />
-                                      </button>
-                                    </div>
-                                  ) : isLocked ? (
-                                    <span className="text-[10px] text-gray-400">🔒</span>
-                                  ) : (
-                                    <div className="flex items-center justify-center gap-0.5">
-                                      <button
-                                        onClick={() => { setEditingTip(tip.id); setEditContent(tip.content); setEditAdvice(tip.advice || '') }}
-                                        className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                                        title="Modifier"
-                                      >
-                                        <Pencil size={13} />
-                                      </button>
-                                      <button
-                                        onClick={() => handleRegenerate(tip)}
-                                        disabled={regenerating === tip.id}
-                                        className="p-1 text-gray-400 hover:text-amber-600 transition-colors"
-                                        title="Régénérer"
-                                      >
-                                        {regenerating === tip.id
-                                          ? <Loader2 size={13} className="animate-spin" />
-                                          : <RefreshCw size={13} />
-                                        }
-                                      </button>
-                                      <button
-                                        onClick={() => handleDelete(tip.id)}
-                                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                        title="Supprimer"
-                                      >
-                                        <Trash2 size={13} />
-                                      </button>
-                                    </div>
-                                  )}
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
+                                {/* Boutons */}
+                                {!isLocked && (
+                                  <div className="flex items-center gap-1 pt-1 border-t border-gray-100 mt-2">
+                                    <button
+                                      onClick={() => { setEditingTip(tip.id); setEditContent(tip.content); setEditAdvice(tip.advice || '') }}
+                                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors"
+                                    >
+                                      <Pencil size={12} /> Modifier
+                                    </button>
+                                    <button
+                                      onClick={() => handleRegenerate(tip)}
+                                      disabled={regenerating === tip.id}
+                                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-amber-600 px-2 py-1 rounded-lg hover:bg-amber-50 transition-colors"
+                                    >
+                                      {regenerating === tip.id
+                                        ? <><Loader2 size={12} className="animate-spin" /> Génération...</>
+                                        : <><RefreshCw size={12} /> Régénérer</>
+                                      }
+                                    </button>
+                                    <button
+                                      onClick={() => handleDelete(tip.id)}
+                                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                                    >
+                                      <Trash2 size={12} /> Supprimer
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
 
                     {/* Bouton ajouter */}
