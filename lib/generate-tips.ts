@@ -45,18 +45,19 @@ Il travaille sur l'axe de progrès suivant :
 - Intitulé : "${axeSubject}"
 - Description : "${axeDescription}"
 
-Génère exactement 5 micro-défis concrets, un par semaine, pour l'aider à progresser sur cet axe sur une période de 2 à 3 mois.
+Génère exactement 5 rappels hebdomadaires, chacun composé de :
+1. Un RAPPEL : un concept, une méthode ou un principe vu en formation, expliqué en 2-3 phrases (max 200 caractères). Nomme le concept (ex: "Les 3 niveaux d'écoute", "La règle DESC", "Le ratio 5:1").
+2. Un CONSEIL : une mise en pratique concrète pour la semaine, en 1-2 phrases (max 200 caractères). Actionnable en 1 journée de travail.
 
 Règles :
-- Chaque défi = 1 phrase courte (max 120 caractères)
 - Tutoiement
-- Actionnable en 1 journée de travail
-- Progressif : semaine 1 = premier pas très simple, semaine 5 = défi ambitieux et structurant
-- Concret et spécifique (pas de généralités type "améliore ta communication")
+- Progressif : semaine 1 = concept de base et action simple, semaine 5 = concept avancé et mise en pratique ambitieuse
+- Concret et spécifique (pas de généralités)
 - Adapté au contexte professionnel et managérial
+- Les rappels doivent sonner comme des concepts de formation (citer des modèles, des auteurs, des frameworks quand c'est pertinent)
 
 Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
-["défi 1", "défi 2", "défi 3", "défi 4", "défi 5"]`
+[{"rappel": "...", "conseil": "..."}, {"rappel": "...", "conseil": "..."}, ...]`
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -68,7 +69,7 @@ Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 400,
+        max_tokens: 1200,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -88,19 +89,23 @@ Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
       return
     }
 
-    const tips: string[] = JSON.parse(jsonMatch[0])
+    const tips: Array<{ rappel: string; conseil: string } | string> = JSON.parse(jsonMatch[0])
     if (!Array.isArray(tips) || tips.length === 0) {
       console.error('[Tips] Tips vides ou invalides:', tips)
       return
     }
 
-    // Insérer les tips en base (max 10)
-    const rows = tips.slice(0, 5).map((content, i) => ({
-      axe_id: axeId,
-      learner_id: learnerId,
-      week_number: i + 1,
-      content: content.trim(),
-    }))
+    // Insérer les tips en base (max 5)
+    const rows = tips.slice(0, 5).map((tip, i) => {
+      const isNew = typeof tip === 'object' && tip.rappel
+      return {
+        axe_id: axeId,
+        learner_id: learnerId,
+        week_number: i + 1,
+        content: isNew ? (tip as any).rappel.trim() : String(tip).trim(),
+        advice: isNew ? (tip as any).conseil.trim() : null,
+      }
+    })
 
     const { error } = await supabaseAdmin.from('tips').insert(rows)
     if (error) {

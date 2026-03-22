@@ -10,7 +10,7 @@ export async function GET() {
   // Chercher le tip le plus récent envoyé mais pas encore "relevé"
   const { data: tip } = await supabase
     .from('tips')
-    .select('id, content, week_number, acted, axe_id, axe:axes(subject)')
+    .select('id, content, advice, week_number, acted, axe_id, axe:axes(subject)')
     .eq('learner_id', user.id)
     .eq('sent', true)
     .eq('acted', false)
