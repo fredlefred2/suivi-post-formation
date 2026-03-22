@@ -24,12 +24,19 @@ async function triggerTipsGeneration(userId: string, subject: string, descriptio
     // Récupérer le thème du groupe
     const { data: membership } = await supabaseAdmin
       .from('group_members')
-      .select('group:groups(theme)')
+      .select('group:groups(name, theme)')
       .eq('learner_id', userId)
       .limit(1)
       .single()
 
-    const groupTheme = (membership as any)?.group?.theme || 'Développement professionnel'
+    const groupName = (membership as any)?.group?.name || ''
+    const groupTheme = (membership as any)?.group?.theme
+
+    // Ne pas générer si en salle d'attente ou si pas de thème
+    if (!groupTheme || groupName.toLowerCase().includes('salle d\'attente')) {
+      console.log('[Tips] Pas de génération : apprenant en salle d\'attente ou pas de thème')
+      return
+    }
 
     await generateTips({
       axeId: axe.id,
