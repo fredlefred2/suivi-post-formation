@@ -104,6 +104,23 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.CLAUDE_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'CLAUDE_API_KEY manquante' }, { status: 500 })
 
+    // Récupérer le tip à régénérer pour connaître son axe_id
+    const { data: currentTip } = await supabaseAdmin.from('tips').select('axe_id').eq('id', tipId).single()
+
+    // Récupérer tous les tips existants du même axe pour les exclure
+    let existingList = ''
+    if (currentTip) {
+      const { data: siblings } = await supabaseAdmin
+        .from('tips')
+        .select('content')
+        .eq('axe_id', currentTip.axe_id)
+        .neq('id', tipId)
+      if (siblings && siblings.length > 0) {
+        existingList = '\n\nVoici les rappels déjà utilisés pour cet axe (NE PAS les reprendre, propose quelque chose de TOTALEMENT DIFFÉRENT) :\n' +
+          siblings.map((s, i) => `${i + 1}. ${s.content}`).join('\n')
+      }
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -117,9 +134,10 @@ export async function POST(request: NextRequest) {
         messages: [{
           role: 'user',
           content: `Tu es coach en formation professionnelle. Contexte : formation "${groupTheme}", axe "${axeSubject}".
-Génère UN rappel + UN conseil :
-1. RAPPEL : un concept/méthode vu en formation (2-3 phrases, max 200 car., cite le modèle/auteur)
+Génère UN rappel + UN conseil NOUVEAU et ORIGINAL :
+1. RAPPEL : un concept/méthode/modèle vu en formation (2-3 phrases, max 200 car., cite le modèle/auteur si pertinent)
 2. CONSEIL : une mise en pratique concrète pour la semaine (1-2 phrases, max 200 car., tutoiement)
+${existingList}
 Réponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`,
         }],
       }),
