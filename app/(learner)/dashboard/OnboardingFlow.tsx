@@ -28,6 +28,7 @@ type StepId = (typeof ALL_STEPS)[number]
 const MENU_NAV_ITEMS = [
   { selector: '[data-onboarding="nav-dashboard"]', label: '📊 Tableau de bord', desc: 'Vue d\'ensemble : ta dynamique de progression sur chaque axe, tes statistiques (actions, check-ins, streak) et ta frise météo.' },
   { selector: '[data-onboarding="nav-axes"]', label: '🎯 Mes actions', desc: 'Retrouve tes axes de progrès, ajoute et gère tes actions, et suis ton niveau pour chaque axe.' },
+  { selector: '[data-onboarding="nav-coaching"]', label: '✨ Coach', desc: 'Chaque semaine, ton coach t\'envoie un rappel de formation et un conseil pratique. Retrouve ici tout ton historique.' },
   { selector: '[data-onboarding="nav-checkin"]', label: '📋 Check-in', desc: 'Chaque semaine, fais le point : ta météo, tes réussites et tes difficultés.' },
   { selector: '[data-onboarding="nav-team"]', label: '👥 Team', desc: 'Découvre les actions de tes coéquipiers, encourage-les avec des likes et des commentaires !' },
 ]
