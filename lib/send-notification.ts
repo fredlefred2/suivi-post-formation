@@ -65,12 +65,15 @@ export async function sendNotification({ userId, type, title, body, data = {}, u
     badgeCount: count || 1,
   })
 
+  const pushOptions = { urgency: 'high' as const, TTL: 86400 }
+
   await Promise.allSettled(
     subs.map(async (sub) => {
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-          payload
+          payload,
+          pushOptions
         )
       } catch (err: any) {
         if (err.statusCode === 404 || err.statusCode === 410) {
@@ -108,22 +111,34 @@ export async function sendNotificationToMany(userIds: string[], params: Omit<Sen
 
   if (!allSubs?.length) return
 
-  // 3. Send push to all subscriptions in parallel
-  const payload = JSON.stringify({
-    title: params.title,
-    body: params.body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    url: params.url || '/',
-    badgeCount: 1,
-  })
+  // 3. Get unread counts per user
+  const countsByUser: Record<string, number> = {}
+  for (const uid of userIds) {
+    const { count } = await supabaseAdmin
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', uid)
+      .eq('read', false)
+    countsByUser[uid] = count || 1
+  }
+
+  const pushOptions = { urgency: 'high' as const, TTL: 86400 }
 
   await Promise.allSettled(
     allSubs.map(async (sub) => {
+      const payload = JSON.stringify({
+        title: params.title,
+        body: params.body,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        url: params.url || '/',
+        badgeCount: countsByUser[sub.user_id] || 1,
+      })
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-          payload
+          payload,
+          pushOptions
         )
       } catch (err: any) {
         if (err.statusCode === 404 || err.statusCode === 410) {
