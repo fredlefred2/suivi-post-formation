@@ -5,7 +5,7 @@
  * - Notification click handling (open/focus app)
  */
 
-const CACHE_NAME = 'yapluka-v6'
+const CACHE_NAME = 'yapluka-v7'
 const SHELL_URLS = [
   '/',
   '/manifest.json',
@@ -85,12 +85,10 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     self.registration.showNotification(title, options).then(() => {
-      // Ask all clients to update the app badge
-      return self.clients.matchAll({ type: 'window' }).then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: 'SET_BADGE', count: badgeCount })
-        })
-      })
+      // Update app badge directly (works even when app is closed)
+      if (self.navigator && self.navigator.setAppBadge) {
+        return self.navigator.setAppBadge(badgeCount)
+      }
     })
   )
 })
@@ -107,6 +105,10 @@ self.addEventListener('notificationclick', (event) => {
       const existing = clients.find((c) =>
         c.url.startsWith(self.location.origin)
       )
+
+      // Clear badge and close all notifications
+      if (self.navigator?.clearAppBadge) self.navigator.clearAppBadge().catch(() => {})
+      self.registration.getNotifications().then(notifs => notifs.forEach(n => n.close()))
 
       if (existing) {
         existing.postMessage({ type: 'CLEAR_BADGE' })
