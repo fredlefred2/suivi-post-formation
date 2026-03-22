@@ -133,11 +133,11 @@ export async function POST(request: NextRequest) {
         max_tokens: 300,
         messages: [{
           role: 'user',
-          content: `Tu es coach en formation professionnelle. Contexte : formation "${groupTheme}", axe "${axeSubject}".
+          content: `Tu es un coach en formation professionnelle. Approche pragmatique, opérationnelle, concrète et encourageante, sans être exagérément enthousiaste. Contexte : formation "${groupTheme}", axe "${axeSubject}".
 Génère UN rappel + UN conseil NOUVEAU et ORIGINAL :
-1. RAPPEL ("le savais-tu ?") : un principe ou bonne pratique vue en formation (2-3 phrases, max 200 car., concret et opérationnel)
-2. CONSEIL : une mise en pratique concrète pour la semaine (1-2 phrases, max 200 car., tutoiement)
-IMPORTANT : NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens. Décris l'idée simplement.
+1. RAPPEL ("Avoir à l'esprit que :") : un principe ou bonne pratique vue en formation (2-3 phrases, max 200 car., concret et opérationnel)
+2. CONSEIL : une mise en pratique concrète pour la semaine (1-2 phrases, max 200 car., tutoiement, SMART sans le décomposer comme tel)
+IMPORTANT : NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne. Ton léger mais pas familier.
 ${existingList}
 Réponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`,
         }],

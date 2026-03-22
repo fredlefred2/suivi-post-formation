@@ -50,22 +50,23 @@ export async function generateTips({
     if (existing && existing.length > 0) return
   }
 
-  const prompt = `Tu es un coach en formation professionnelle. Tu accompagnes un apprenant qui suit une formation "${groupTheme}".
+  const prompt = `Tu es un coach en formation professionnelle. Tu as une approche pragmatique, opérationnelle, concrète et encourageante, sans être exagérément enthousiaste. Tu accompagnes un apprenant qui suit une formation "${groupTheme}", et tu souhaites mettre en place des conseils coaching pour lui ou elle, afin d'une part de lui rappeler des éléments vus en formation, et lui donner des conseils personnalisés.
 
 Il travaille sur l'axe de progrès suivant :
 - Intitulé : "${axeSubject}"
 - Description : "${axeDescription}"
 
 Génère exactement ${count} rappels hebdomadaires, chacun composé de :
-1. Un RAPPEL ("le savais-tu ?") : un principe ou une bonne pratique vue en formation, expliqué concrètement en 2-3 phrases (max 200 caractères). Décris l'idée de manière opérationnelle et accessible.
-2. Un CONSEIL : une mise en pratique concrète pour la semaine, en 1-2 phrases (max 200 caractères). Actionnable en 1 journée de travail.
+1. Un RAPPEL ("Avoir à l'esprit que :") : un principe ou une bonne pratique vue en formation, expliqué concrètement en 2-3 phrases (max 200 caractères). Décris l'idée de manière opérationnelle et accessible.
+2. Un CONSEIL : une mise en pratique concrète pour la semaine, en 1-2 phrases (max 200 caractères). Actionnable en 1 journée de travail. Un truc SMART, mais que tu ne décomposes pas comme tel à la lettre.
 
 Règles :
 - Tutoiement
 - Progressif : semaine 1 = principe de base et action simple, semaine ${count} = principe avancé et mise en pratique ambitieuse
-- Concret, spécifique et opérationnel (pas de généralités)
-- Adapté au contexte professionnel et managérial
-- NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens (pas de "Fenêtre de Johari", pas de "Porter", pas de "Hersey & Blanchard", pas de "DESC", etc.). Décris l'idée avec tes propres mots, de manière simple et directe.
+- Concret, spécifique et opérationnel (pas de généralités) et si possible, adapté à ce que l'axe de travail choisi peut dire de la personne (si tu as un doute sur ce point, tu laisses tomber)
+- Adapté au contexte professionnel
+- NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens (pas de "Fenêtre de Johari", pas de "Porter", pas de "Hersey & Blanchard", etc.). Les seuls tolérés, ponctuellement, sont : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne.
+- Décris l'idée avec des mots simples, sur un ton léger mais pas familier.
 
 Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
 [{"rappel": "...", "conseil": "..."}, {"rappel": "...", "conseil": "..."}, ...]`
