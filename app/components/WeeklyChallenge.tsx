@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BookOpen, Lightbulb, Check, SkipForward, Loader2, ChevronDown } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 
 interface Tip {
   id: string
@@ -21,7 +21,6 @@ export default function WeeklyChallenge({ onChallengeAccepted }: WeeklyChallenge
   const [tip, setTip] = useState<Tip | null>(null)
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState(false)
-  const [showAdvice, setShowAdvice] = useState(false)
 
   const fetchNextTip = () => {
     fetch('/api/tips')
@@ -45,99 +44,71 @@ export default function WeeklyChallenge({ onChallengeAccepted }: WeeklyChallenge
     const adviceText = tip.advice ? `${tip.content} — ${tip.advice}` : tip.content
     onChallengeAccepted?.(adviceText, tip.axe_id)
     setActing(false)
-    setShowAdvice(false)
-    fetchNextTip()
-  }
-
-  const handleSkip = async () => {
-    setActing(true)
-    await fetch('/api/tips', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipId: tip.id, acted: true }),
-    })
-    setActing(false)
-    setShowAdvice(false)
     fetchNextTip()
   }
 
   const axeName = tip.axe?.subject || 'Ton axe'
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-sm">
-      {/* Icône décorative */}
-      <div className="absolute -right-2 -top-2 text-6xl opacity-10">📚</div>
+    <div className="relative overflow-hidden rounded-2xl shadow-sm"
+         style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 30%, #fcd34d 100%)' }}>
 
-      <div className="relative p-4">
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-            <BookOpen size={16} className="text-amber-600" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
-              Rappel de la semaine
-            </p>
-            <p className="text-[10px] text-amber-500">{axeName} · Semaine {tip.week_number}</p>
-          </div>
+      {/* Header avec avatar coach */}
+      <div className="px-4 pt-4 pb-2 flex items-start gap-3">
+        {/* Avatar coach */}
+        <div className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-2xl"
+             style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', boxShadow: '0 2px 8px rgba(245,158,11,0.4)' }}>
+          🧑‍🏫
         </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-amber-900">
+            Le conseil de ton coach
+          </p>
+          <p className="text-[11px] text-amber-700/70 mt-0.5">{axeName} · Semaine {tip.week_number}</p>
+        </div>
+      </div>
 
-        {/* Rappel (toujours visible) */}
-        <div className="bg-white/60 rounded-xl p-3 mb-2">
-          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wide mb-1">📚 Rappel</p>
-          <p className="text-sm text-gray-800 font-medium leading-relaxed">
+      {/* Bulle rappel */}
+      <div className="mx-4 mt-2">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-amber-200/50">
+          <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1.5">
+            💡 Le savais-tu ?
+          </p>
+          <p className="text-[13px] text-gray-800 leading-relaxed">
             {tip.content}
           </p>
         </div>
+      </div>
 
-        {/* Conseil (dépliable) */}
-        {tip.advice && (
-          <>
-            <button
-              onClick={() => setShowAdvice(!showAdvice)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-indigo-600 hover:bg-indigo-50/50 transition-all"
-            >
-              <span className="flex items-center gap-1.5">
-                <Lightbulb size={13} />
-                {showAdvice ? 'Masquer le conseil' : 'Voir le conseil de la semaine'}
-              </span>
-              <ChevronDown size={14} className={`transition-transform duration-200 ${showAdvice ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showAdvice && (
-              <div className="bg-indigo-50/50 rounded-xl p-3 mb-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-wide mb-1">💡 Conseil</p>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {tip.advice}
-                </p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Boutons */}
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={handleAccept}
-            disabled={acting}
-            className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95"
-            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
-          >
-            {acting ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Check size={14} />
-            )}
-            J'ai compris !
-          </button>
-          <button
-            onClick={handleSkip}
-            className="flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all"
-          >
-            <SkipForward size={14} />
-            Passer
-          </button>
+      {/* Bulle conseil */}
+      {tip.advice && (
+        <div className="mx-4 mt-2">
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-indigo-200/50">
+            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">
+              🎯 Cette semaine, essaye
+            </p>
+            <p className="text-[13px] text-gray-700 leading-relaxed">
+              {tip.advice}
+            </p>
+          </div>
         </div>
+      )}
+
+      {/* Bouton */}
+      <div className="px-4 pt-3 pb-4">
+        <button
+          onClick={handleAccept}
+          disabled={acting}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95 shadow-md"
+          style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', boxShadow: '0 4px 12px rgba(217,119,6,0.4)' }}
+        >
+          {acting ? (
+            <Loader2 size={15} className="animate-spin" />
+          ) : (
+            <Check size={15} />
+          )}
+          J'ai compris !
+        </button>
       </div>
     </div>
   )
