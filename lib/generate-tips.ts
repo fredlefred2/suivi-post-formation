@@ -45,18 +45,18 @@ Il travaille sur l'axe de progrès suivant :
 - Intitulé : "${axeSubject}"
 - Description : "${axeDescription}"
 
-Génère exactement 10 micro-défis concrets, un par semaine, pour l'aider à progresser sur cet axe.
+Génère exactement 5 micro-défis concrets, un par semaine, pour l'aider à progresser sur cet axe sur une période de 2 à 3 mois.
 
 Règles :
 - Chaque défi = 1 phrase courte (max 120 caractères)
 - Tutoiement
 - Actionnable en 1 journée de travail
-- Progressif : du plus simple (semaine 1) au plus ambitieux (semaine 10)
-- Concret et spécifique (pas de généralités)
-- Adapté au contexte professionnel
+- Progressif : semaine 1 = premier pas très simple, semaine 5 = défi ambitieux et structurant
+- Concret et spécifique (pas de généralités type "améliore ta communication")
+- Adapté au contexte professionnel et managérial
 
 Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
-["défi 1", "défi 2", ..., "défi 10"]`
+["défi 1", "défi 2", "défi 3", "défi 4", "défi 5"]`
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -68,7 +68,7 @@ Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 600,
+        max_tokens: 400,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -95,7 +95,7 @@ Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
     }
 
     // Insérer les tips en base (max 10)
-    const rows = tips.slice(0, 10).map((content, i) => ({
+    const rows = tips.slice(0, 5).map((content, i) => ({
       axe_id: axeId,
       learner_id: learnerId,
       week_number: i + 1,
