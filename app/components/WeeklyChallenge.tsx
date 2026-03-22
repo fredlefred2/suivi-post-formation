@@ -20,17 +20,18 @@ export default function WeeklyChallenge({ onChallengeAccepted }: WeeklyChallenge
   const [tip, setTip] = useState<Tip | null>(null)
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState(false)
-  const [dismissed, setDismissed] = useState(false)
 
-  useEffect(() => {
+  const fetchNextTip = () => {
     fetch('/api/tips')
       .then(r => r.json())
       .then(data => setTip(data.tip || null))
-      .catch(() => {})
+      .catch(() => setTip(null))
       .finally(() => setLoading(false))
-  }, [])
+  }
 
-  if (loading || !tip || dismissed) return null
+  useEffect(() => { fetchNextTip() }, [])
+
+  if (loading || !tip) return null
 
   const handleAccept = async () => {
     setActing(true)
@@ -40,16 +41,19 @@ export default function WeeklyChallenge({ onChallengeAccepted }: WeeklyChallenge
       body: JSON.stringify({ tipId: tip.id, acted: true }),
     })
     onChallengeAccepted?.(tip.content, tip.axe_id)
-    setDismissed(true)
+    setActing(false)
+    fetchNextTip()
   }
 
   const handleSkip = async () => {
+    setActing(true)
     await fetch('/api/tips', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tipId: tip.id, acted: true }),
     })
-    setDismissed(true)
+    setActing(false)
+    fetchNextTip()
   }
 
   const axeName = tip.axe?.subject || 'Ton axe'
