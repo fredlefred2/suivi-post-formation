@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { LayoutDashboard, Target, ClipboardCheck, Users } from 'lucide-react'
+import { LayoutDashboard, Target, ClipboardCheck, Users, Sparkles } from 'lucide-react'
 import LogoutButton from '@/app/components/LogoutButton'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
@@ -13,8 +13,9 @@ import TeamMessagePopup from '@/app/components/TeamMessagePopup'
 import PushRegistration from '@/app/components/PushRegistration'
 
 const navItems = [
-  { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
-  { href: '/axes', label: 'Mes actions', icon: Target, iconName: 'Target' },
+  { href: '/dashboard', label: 'Accueil', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
+  { href: '/axes', label: 'Actions', icon: Target, iconName: 'Target' },
+  { href: '/coaching', label: 'Coach', icon: Sparkles, iconName: 'Sparkles' },
   { href: '/checkin', label: 'Check-in', icon: ClipboardCheck, iconName: 'ClipboardCheck' },
   { href: '/team', label: 'Team', icon: Users, iconName: 'Users' },
 ]

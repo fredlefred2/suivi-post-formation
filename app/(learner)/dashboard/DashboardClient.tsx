@@ -77,7 +77,6 @@ export default function DashboardClient({
   const [currentSlide, setCurrentSlide] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
-  const [challengePrefill, setChallengePrefill] = useState<{ content: string; axeId: string } | null>(null)
   const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
 
   // Compteurs animes
@@ -247,13 +246,8 @@ export default function DashboardClient({
         </Link>
       )}
 
-      {/* ── Défi de la semaine ── */}
-      <WeeklyChallenge
-        onChallengeAccepted={(content, axeId) => {
-          setChallengePrefill({ content, axeId })
-          setQuickAddOpen(true)
-        }}
-      />
+      {/* ── Conseil du coach ── */}
+      <WeeklyChallenge />
 
       {/* ── Carousel axes compact ── */}
       {axes.length > 0 && (
@@ -437,9 +431,8 @@ export default function DashboardClient({
       <QuickAddAction
         axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}
         open={quickAddOpen}
-        onClose={() => { setQuickAddOpen(false); setChallengePrefill(null) }}
+        onClose={() => setQuickAddOpen(false)}
         onSuccess={() => router.refresh()}
-        prefill={challengePrefill}
       />
 
       {/* Quick Checkin Modal */}
