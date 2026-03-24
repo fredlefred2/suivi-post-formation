@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Download, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useOnboarding } from '@/lib/onboarding-context'
 import { usePathname } from 'next/navigation'
 
@@ -45,20 +45,33 @@ export const INSTALL_VISIBLE_KEY = 'install_prompt_visible'
 
 export default function InstallPrompt() {
   const pathname = usePathname()
-  const isLearnerRoute = pathname?.startsWith('/dashboard') || pathname?.startsWith('/axes') || pathname?.startsWith('/messages') || pathname?.startsWith('/team')
   const { isOnboarding } = useOnboarding()
   const [bannerType, setBannerType] = useState<'native' | 'guide-android' | 'guide-ios' | 'guide-ios-chrome' | null>(null)
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Signal global : InstallPrompt est-il visible ?
+  // Debounce : on attend que isOnboarding soit false pendant 2s avant de considérer l'onboarding terminé
+  const [onboardingStable, setOnboardingStable] = useState(isOnboarding)
   useEffect(() => {
-    if (bannerType) {
+    if (isOnboarding) {
+      setOnboardingStable(true)
+    } else {
+      const t = setTimeout(() => setOnboardingStable(false), 2000)
+      return () => clearTimeout(t)
+    }
+  }, [isOnboarding])
+
+  // Signal global : InstallPrompt est-il visible ?
+  const isLearnerRoute = pathname?.startsWith('/dashboard') || pathname?.startsWith('/axes') || pathname?.startsWith('/coaching') || pathname?.startsWith('/checkin') || pathname?.startsWith('/messages') || pathname?.startsWith('/team')
+  const shouldHide = !bannerType || (isLearnerRoute && onboardingStable)
+
+  useEffect(() => {
+    if (!shouldHide) {
       sessionStorage.setItem(INSTALL_VISIBLE_KEY, '1')
     } else {
       sessionStorage.removeItem(INSTALL_VISIBLE_KEY)
     }
-  }, [bannerType])
+  }, [shouldHide])
 
   useEffect(() => {
     // ── Enregistrer le Service Worker ──
@@ -141,42 +154,28 @@ export default function InstallPrompt() {
     setBannerType(null)
   }
 
-  // ── Rien à afficher si : pas de banner, onboarding en cours ──
-  if (!bannerType || (isLearnerRoute && isOnboarding)) return null
-
-  const motivationalMessage = "Ne manque rien : rappels, encouragements de ton équipe et conseils de ton coach, directement sur ton téléphone !"
+  // ── Rien à afficher ──
+  if (shouldHide) return null
 
   // ── Bandeau natif Android (beforeinstallprompt capté) ──
   if (bannerType === 'native') {
     return (
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
-          <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-              <Download size={22} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900">Installe YAPLUKA</p>
-              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{motivationalMessage}</p>
-              <div className="flex items-center gap-2 mt-3">
-                <button
-                  onClick={handleNativeInstall}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 active:scale-95 transition-all"
-                >
-                  Installer
-                </button>
-                <button
-                  onClick={dismiss}
-                  className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Plus tard
-                </button>
-              </div>
-            </div>
-            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
-              <X size={16} />
-            </button>
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
+          <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
+            <p className="text-xs text-gray-500 mt-0.5">Ne manque rien : encouragements, rappels et conseils directement sur ton tél !</p>
           </div>
+          <button
+            onClick={handleNativeInstall}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-500 transition-colors flex-shrink-0"
+          >
+            Installer
+          </button>
+          <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <X size={18} />
+          </button>
         </div>
       </div>
     )
@@ -186,30 +185,15 @@ export default function InstallPrompt() {
   if (bannerType === 'guide-android') {
     return (
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
-          <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-              <Download size={22} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900">Installe YAPLUKA</p>
-              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{motivationalMessage}</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Ouvre le menu <span className="font-semibold text-gray-800">&#8942;</span> de ton navigateur et choisis <span className="font-semibold text-gray-800">&quot;Installer l&apos;application&quot;</span>
-              </p>
-              <div className="mt-3">
-                <button
-                  onClick={dismiss}
-                  className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Plus tard
-                </button>
-              </div>
-            </div>
-            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
-              <X size={16} />
-            </button>
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
+          <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
+            <p className="text-xs text-gray-500 mt-0.5">Ne manque rien : encouragements, rappels et conseils directement sur ton tél !</p>
           </div>
+          <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <X size={18} />
+          </button>
         </div>
       </div>
     )
@@ -221,12 +205,10 @@ export default function InstallPrompt() {
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-              <Download size={22} className="text-white" />
-            </div>
+            <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900 mb-1">Installe YAPLUKA</p>
-              <p className="text-xs text-gray-500 leading-relaxed mb-2">{motivationalMessage}</p>
+              <p className="text-sm font-semibold text-gray-900 mb-1">Installer YAPLUKA</p>
+              <p className="text-xs text-gray-500 mb-2">Ne manque rien : encouragements, rappels et conseils directement sur ton tél !</p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
@@ -254,14 +236,12 @@ export default function InstallPrompt() {
                   </p>
                 </div>
               </div>
-              <div className="mt-3">
-                <button
-                  onClick={dismiss}
-                  className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Plus tard
-                </button>
-              </div>
+              <button
+                onClick={dismiss}
+                className="mt-3 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Plus tard
+              </button>
             </div>
             <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
               <X size={16} />
@@ -278,12 +258,10 @@ export default function InstallPrompt() {
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-              <Download size={22} className="text-white" />
-            </div>
+            <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900 mb-1">Installe YAPLUKA</p>
-              <p className="text-xs text-gray-500 leading-relaxed mb-2">{motivationalMessage}</p>
+              <p className="text-sm font-semibold text-gray-900 mb-1">Installer YAPLUKA</p>
+              <p className="text-xs text-gray-500 mb-2">Ne manque rien : encouragements, rappels et conseils directement sur ton tél !</p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
@@ -311,14 +289,12 @@ export default function InstallPrompt() {
                   </p>
                 </div>
               </div>
-              <div className="mt-3">
-                <button
-                  onClick={dismiss}
-                  className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Plus tard
-                </button>
-              </div>
+              <button
+                onClick={dismiss}
+                className="mt-3 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Plus tard
+              </button>
             </div>
             <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
               <X size={16} />
