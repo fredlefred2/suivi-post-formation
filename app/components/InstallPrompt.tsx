@@ -154,46 +154,39 @@ export default function InstallPrompt() {
     setBannerType(null)
   }
 
+  const [showGuide, setShowGuide] = useState(false)
+
   // ── Rien à afficher ──
   if (shouldHide) return null
 
-  // ── Bandeau natif Android (beforeinstallprompt capté) ──
-  if (bannerType === 'native') {
+  // ── Bandeau Android (natif ou guide) — même design ──
+  if (bannerType === 'native' || bannerType === 'guide-android') {
     return (
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
-          <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
-            <p className="text-xs text-gray-500 mt-0.5">Ne manque rien : encouragements, rappels et conseils directement sur ton tél !</p>
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
+          <div className="flex items-center gap-3">
+            <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
+              <p className="text-xs text-gray-500 mt-0.5">Ne manque rien : encouragements, rappels et conseils directement sur ton tél !</p>
+            </div>
+            <button
+              onClick={bannerType === 'native' ? handleNativeInstall : () => setShowGuide(true)}
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-500 transition-colors flex-shrink-0"
+            >
+              Installer
+            </button>
+            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+              <X size={18} />
+            </button>
           </div>
-          <button
-            onClick={handleNativeInstall}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-500 transition-colors flex-shrink-0"
-          >
-            Installer
-          </button>
-          <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
-            <X size={18} />
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Guide Android (prompt natif bloqué par Chrome) ──
-  if (bannerType === 'guide-android') {
-    return (
-      <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
-          <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
-            <p className="text-xs text-gray-500 mt-0.5">Ne manque rien : encouragements, rappels et conseils directement sur ton tél !</p>
-          </div>
-          <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
-            <X size={18} />
-          </button>
+          {showGuide && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <p className="text-xs text-gray-600">
+                Appuie sur <span className="font-semibold">&#8942;</span> (menu) en haut à droite puis choisis <span className="font-semibold">&quot;Installer l&apos;application&quot;</span>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     )
