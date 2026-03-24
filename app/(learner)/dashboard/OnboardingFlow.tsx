@@ -24,13 +24,13 @@ const ALL_STEPS = [
 
 type StepId = (typeof ALL_STEPS)[number]
 
-// Menu tour sub-steps
-const MENU_NAV_ITEMS = [
-  { selector: '[data-onboarding="nav-dashboard"]', label: '📊 Tableau de bord', desc: 'Vue d\'ensemble : ta dynamique de progression sur chaque axe, tes statistiques (actions, check-ins, streak) et ta frise météo.' },
-  { selector: '[data-onboarding="nav-axes"]', label: '🎯 Mes actions', desc: 'Retrouve tes axes de progrès, ajoute et gère tes actions, et suis ton niveau pour chaque axe.' },
-  { selector: '[data-onboarding="nav-coaching"]', label: '✨ Coach', desc: 'Chaque semaine, ton coach t\'envoie un rappel de formation et un conseil pratique. Retrouve ici tout ton historique.' },
-  { selector: '[data-onboarding="nav-checkin"]', label: '📋 Check-in', desc: 'Chaque semaine, fais le point : ta météo, tes réussites et tes difficultés.' },
-  { selector: '[data-onboarding="nav-team"]', label: '👥 Team', desc: 'Découvre les actions de tes coéquipiers, encourage-les avec des likes et des commentaires !' },
+// Menu tour — single screen listing all sections
+const MENU_SECTIONS = [
+  { icon: '📊', label: 'Accueil', desc: 'Ta progression, tes actions et ta météo.' },
+  { icon: '🎯', label: 'Actions', desc: 'Tes axes de progrès et toutes tes actions.' },
+  { icon: '✨', label: 'Coach', desc: 'Rappels de formation et conseils pratiques.' },
+  { icon: '📋', label: 'Check-in', desc: 'Ton bilan hebdo : météo, réussites, difficultés.' },
+  { icon: '👥', label: 'Team', desc: 'Les actions de tes coéquipiers à encourager !' },
 ]
 
 type Props = {
@@ -57,7 +57,6 @@ export default function OnboardingFlow({
   const { setIsOnboarding } = useOnboarding()
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
-  const [menuSubStep, setMenuSubStep] = useState(0)
   // Inline axis edit during onboarding
   const [editingAxeId, setEditingAxeId] = useState<string | null>(null)
   const [editSubject, setEditSubject] = useState('')
@@ -761,37 +760,35 @@ export default function OnboardingFlow({
     )
   }
 
-  // Step 10: Menu tour — sequential spotlights on bottom nav items
+  // Step 10: Menu tour — single screen listing all sections
   if (activeStep === 'menu-tour') {
-    const navItem = MENU_NAV_ITEMS[menuSubStep]
-    const isLast = menuSubStep >= MENU_NAV_ITEMS.length - 1
-
     return (
       <>
         {children}
         <CoachMark
-          key={`menu-${menuSubStep}`}
-          targetSelector={navItem.selector}
           stepLabel={stepLabel}
-          icon="👇"
-          title={navItem.label}
-          description={navItem.desc}
-          ctaLabel={isLast ? "C'est parti !" : 'Suivant →'}
+          icon="📱"
+          title="Ton espace YAPLUKA"
+          description="Voici tout ce que tu trouveras dans le menu en bas :"
+          extra={
+            <div style={{ marginTop: 8, marginBottom: 4 }}>
+              {MENU_SECTIONS.map((section) => (
+                <div key={section.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{section.icon}</span>
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#1f2937' }}>{section.label}</span>
+                    <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 4 }}>— {section.desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          }
+          ctaLabel="C'est parti !"
           onCta={() => {
-            if (isLast) {
-              acknowledge('menu-tour')
-              sessionStorage.removeItem(`onboarding_session_${userId}`)
-            } else {
-              setMenuSubStep((prev) => prev + 1)
-            }
+            acknowledge('menu-tour')
+            sessionStorage.removeItem(`onboarding_session_${userId}`)
           }}
-          onBack={() => {
-            if (menuSubStep > 0) {
-              setMenuSubStep((prev) => prev - 1)
-            } else {
-              goBack('menu-tour')
-            }
-          }}
+          onBack={() => goBack('menu-tour')}
         />
       </>
     )

@@ -11,6 +11,7 @@ import MessageIcon from '@/app/components/MessageIcon'
 import { OnboardingProvider } from '@/lib/onboarding-context'
 import TeamMessagePopup from '@/app/components/TeamMessagePopup'
 import PushRegistration from '@/app/components/PushRegistration'
+import InstallPrompt from '@/app/components/InstallPrompt'
 
 const navItems = [
   { href: '/dashboard', label: 'Accueil', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
@@ -122,6 +123,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
         }))} />
         <div className="h-16 sm:hidden" />
         <TeamMessagePopup userId={user.id} />
+        <InstallPrompt />
         <PushRegistration />
       </div>
     </OnboardingProvider>

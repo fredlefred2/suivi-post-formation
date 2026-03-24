@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Bell, X } from 'lucide-react'
+import { isStandalone, INSTALL_VISIBLE_KEY } from './InstallPrompt'
 
 /**
  * Convertit une clé VAPID base64url en Uint8Array
@@ -17,24 +18,63 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray
 }
 
-type PushState = 'loading' | 'unsupported' | 'denied' | 'prompt' | 'subscribed'
+const PUSH_DISMISS_KEY = 'push_dismissed_at'
+const PUSH_DENIED_KEY = 'push_denied_at'
+const PUSH_DISMISS_DELAY = 7 * 24 * 60 * 60 * 1000 // 7 jours
+const PUSH_DENIED_DELAY = 30 * 24 * 60 * 60 * 1000 // 30 jours
+
+type PushState = 'loading' | 'unsupported' | 'denied' | 'prompt' | 'subscribed' | 'hidden'
+
+function isPushDismissed() {
+  const ts = localStorage.getItem(PUSH_DISMISS_KEY)
+  if (!ts) return false
+  return Date.now() - parseInt(ts, 10) < PUSH_DISMISS_DELAY
+}
+
+function isPushDeniedHidden() {
+  const ts = localStorage.getItem(PUSH_DENIED_KEY)
+  if (!ts) return false
+  return Date.now() - parseInt(ts, 10) < PUSH_DENIED_DELAY
+}
 
 export default function PushRegistration() {
   const [state, setState] = useState<PushState>('loading')
-  const [debug, setDebug] = useState('')
 
   // ── Déterminer l'état initial ──
   useEffect(() => {
     async function checkState() {
+      // Ne montrer que si l'app est installée (standalone)
+      if (!isStandalone()) {
+        setState('hidden')
+        return
+      }
+
+      // Ne pas montrer si InstallPrompt est visible
+      if (sessionStorage.getItem(INSTALL_VISIBLE_KEY)) {
+        setState('hidden')
+        return
+      }
+
+      // Si "Plus tard" encore actif
+      if (isPushDismissed()) {
+        setState('hidden')
+        return
+      }
+
       // Support navigateur
       if (!('PushManager' in window) || !('serviceWorker' in navigator) || !('Notification' in window)) {
         setState('unsupported')
         return
       }
 
-      // Permission déjà refusée
+      // Permission refusée + délai 30j
       if (Notification.permission === 'denied') {
-        setState('denied')
+        if (isPushDeniedHidden()) {
+          setState('hidden')
+        } else {
+          localStorage.setItem(PUSH_DENIED_KEY, Date.now().toString())
+          setState('denied')
+        }
         return
       }
 
@@ -56,7 +96,6 @@ export default function PushRegistration() {
 
   // ── Forcer la mise à jour du SW + listener messages ──
   useEffect(() => {
-    // Force update du SW à chaque chargement
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistration().then(reg => {
         reg?.update().catch(() => {})
@@ -78,26 +117,25 @@ export default function PushRegistration() {
   async function doSubscribe(): Promise<boolean> {
     try {
       const reg = await navigator.serviceWorker.ready
-      setDebug('SW prêt')
 
-      // Récupérer ou créer la souscription
       let sub = await reg.pushManager.getSubscription()
 
       if (!sub) {
-        // Demander la permission si pas encore fait
         if (Notification.permission === 'default') {
           const perm = await Notification.requestPermission()
-          setDebug('Permission: ' + perm)
-          if (perm !== 'granted') return false
+          if (perm !== 'granted') {
+            if (perm === 'denied') {
+              localStorage.setItem(PUSH_DENIED_KEY, Date.now().toString())
+            }
+            return false
+          }
         }
 
-        // Récupérer la clé VAPID
         const res = await fetch('/api/push/vapid')
-        if (!res.ok) { setDebug('Erreur VAPID ' + res.status); return false }
+        if (!res.ok) return false
         const { publicKey } = await res.json()
-        if (!publicKey) { setDebug('Clé VAPID vide'); return false }
+        if (!publicKey) return false
 
-        setDebug('Création abo push...')
         const key = urlBase64ToUint8Array(publicKey)
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
@@ -105,9 +143,7 @@ export default function PushRegistration() {
         })
       }
 
-      // Envoyer au backend
       const json = sub.toJSON()
-      setDebug('Envoi au serveur...')
       const saveRes = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,16 +153,8 @@ export default function PushRegistration() {
         }),
       })
 
-      if (!saveRes.ok) {
-        const err = await saveRes.text()
-        setDebug('Erreur save: ' + err)
-        return false
-      }
-
-      setDebug('✅ OK')
-      return true
-    } catch (err: any) {
-      setDebug('Erreur: ' + (err?.message || String(err)))
+      return saveRes.ok
+    } catch {
       return false
     }
   }
@@ -134,12 +162,17 @@ export default function PushRegistration() {
   // ── Clic sur "Activer" ──
   async function handleActivate() {
     setState('loading')
-    setDebug('Démarrage...')
     const ok = await doSubscribe()
     setState(ok ? 'subscribed' : 'prompt')
   }
 
-  // ── Ne rien afficher si déjà abonné, non supporté, ou en chargement ──
+  // ── "Plus tard" ──
+  function dismissPush() {
+    localStorage.setItem(PUSH_DISMISS_KEY, Date.now().toString())
+    setState('hidden')
+  }
+
+  // ── Ne rien afficher si pas en état prompt ou denied ──
   if (state !== 'prompt' && state !== 'denied') return null
 
   return (
@@ -151,29 +184,34 @@ export default function PushRegistration() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900">
-              {state === 'denied' ? 'Notifications bloquées' : 'Activer les notifications'}
+              {state === 'denied' ? 'Notifications bloquées' : 'Active les notifications'}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
               {state === 'denied'
                 ? 'Va dans les réglages de ton navigateur pour les réactiver.'
-                : 'Sois alerté quand ton équipe agit ou quand ton formateur t\'écrit.'
+                : 'Sois prévenu quand ton équipe t\'encourage ou quand ton coach t\'envoie un conseil !'
               }
             </p>
-            {state === 'prompt' && (
+            <div className="flex items-center gap-2 mt-3">
+              {state === 'prompt' && (
+                <button
+                  onClick={handleActivate}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:scale-95 transition-all"
+                >
+                  Activer
+                </button>
+              )}
               <button
-                onClick={handleActivate}
-                className="mt-3 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:scale-95 transition-all"
+                onClick={dismissPush}
+                className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
               >
-                🔔 Activer
+                Plus tard
               </button>
-            )}
-            {debug && (
-              <p className="text-[10px] text-orange-600 mt-2 font-mono break-all">{debug}</p>
-            )}
+            </div>
           </div>
           <button
-            onClick={() => setState('subscribed')}
-            className="text-gray-500 hover:text-gray-600 p-1"
+            onClick={dismissPush}
+            className="text-gray-400 hover:text-gray-600 p-1"
           >
             <X size={16} />
           </button>

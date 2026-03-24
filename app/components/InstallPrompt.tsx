@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X } from 'lucide-react'
+import { Download, X } from 'lucide-react'
 import { useOnboarding } from '@/lib/onboarding-context'
 import { usePathname } from 'next/navigation'
 
@@ -15,7 +15,7 @@ const SESSION_DISMISS_KEY = 'install_dismissed_session'
 const REPROPOSE_DELAY = 1 * 24 * 60 * 60 * 1000 // 1 jour
 
 /** Vérifie si l'app tourne en mode standalone (installée) */
-function isStandalone() {
+export function isStandalone() {
   if (typeof window === 'undefined') return false
   if (window.matchMedia('(display-mode: standalone)').matches) return true
   // @ts-expect-error – Safari specific
@@ -25,7 +25,6 @@ function isStandalone() {
 
 /** Vérifie si le dismiss est encore actif */
 function isDismissed() {
-  // Si déjà fermé dans cette session de navigation → ne plus jamais réafficher
   if (sessionStorage.getItem(SESSION_DISMISS_KEY)) return true
   const ts = localStorage.getItem(DISMISS_KEY)
   if (!ts) return false
@@ -41,6 +40,9 @@ function isIOSSafari() {
   return isIOS && isSafari
 }
 
+/** Clé globale pour coordonner avec PushRegistration */
+export const INSTALL_VISIBLE_KEY = 'install_prompt_visible'
+
 export default function InstallPrompt() {
   const pathname = usePathname()
   const isLearnerRoute = pathname?.startsWith('/dashboard') || pathname?.startsWith('/axes') || pathname?.startsWith('/messages') || pathname?.startsWith('/team')
@@ -48,6 +50,15 @@ export default function InstallPrompt() {
   const [bannerType, setBannerType] = useState<'native' | 'guide-android' | 'guide-ios' | 'guide-ios-chrome' | null>(null)
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Signal global : InstallPrompt est-il visible ?
+  useEffect(() => {
+    if (bannerType) {
+      sessionStorage.setItem(INSTALL_VISIBLE_KEY, '1')
+    } else {
+      sessionStorage.removeItem(INSTALL_VISIBLE_KEY)
+    }
+  }, [bannerType])
 
   useEffect(() => {
     // ── Enregistrer le Service Worker ──
@@ -67,7 +78,6 @@ export default function InstallPrompt() {
       if (isIOSSafari()) {
         setBannerType('guide-ios')
       } else {
-        // Chrome iOS, Firefox iOS, etc. → dire d'ouvrir dans Safari
         setBannerType('guide-ios-chrome')
       }
       return
@@ -131,28 +141,42 @@ export default function InstallPrompt() {
     setBannerType(null)
   }
 
-  // ── Rien à afficher ──
+  // ── Rien à afficher si : pas de banner, onboarding en cours ──
   if (!bannerType || (isLearnerRoute && isOnboarding)) return null
+
+  const motivationalMessage = "Ne manque rien : rappels, encouragements de ton équipe et conseils de ton coach, directement sur ton téléphone !"
 
   // ── Bandeau natif Android (beforeinstallprompt capté) ──
   if (bannerType === 'native') {
     return (
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
-          <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
-            <p className="text-xs text-gray-500 mt-0.5">Accès rapide depuis votre écran d&apos;accueil</p>
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+              <Download size={22} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900">Installe YAPLUKA</p>
+              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{motivationalMessage}</p>
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  onClick={handleNativeInstall}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 active:scale-95 transition-all"
+                >
+                  Installer
+                </button>
+                <button
+                  onClick={dismiss}
+                  className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Plus tard
+                </button>
+              </div>
+            </div>
+            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+              <X size={16} />
+            </button>
           </div>
-          <button
-            onClick={handleNativeInstall}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-500 transition-colors flex-shrink-0"
-          >
-            Installer
-          </button>
-          <button onClick={dismiss} className="p-1 text-gray-500 hover:text-gray-600 flex-shrink-0">
-            <X size={18} />
-          </button>
         </div>
       </div>
     )
@@ -162,15 +186,30 @@ export default function InstallPrompt() {
   if (bannerType === 'guide-android') {
     return (
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in">
-          <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Installer YAPLUKA</p>
-            <p className="text-xs text-gray-500 mt-0.5">Accès rapide depuis votre écran d&apos;accueil</p>
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+              <Download size={22} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900">Installe YAPLUKA</p>
+              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{motivationalMessage}</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Ouvre le menu <span className="font-semibold text-gray-800">&#8942;</span> de ton navigateur et choisis <span className="font-semibold text-gray-800">&quot;Installer l&apos;application&quot;</span>
+              </p>
+              <div className="mt-3">
+                <button
+                  onClick={dismiss}
+                  className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Plus tard
+                </button>
+              </div>
+            </div>
+            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+              <X size={16} />
+            </button>
           </div>
-          <button onClick={dismiss} className="p-1 text-gray-500 hover:text-gray-600 flex-shrink-0">
-            <X size={18} />
-          </button>
         </div>
       </div>
     )
@@ -182,39 +221,50 @@ export default function InstallPrompt() {
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+              <Download size={22} className="text-white" />
+            </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900 mb-2">Installer YAPLUKA</p>
+              <p className="text-sm font-semibold text-gray-900 mb-1">Installe YAPLUKA</p>
+              <p className="text-xs text-gray-500 leading-relaxed mb-2">{motivationalMessage}</p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
                   <p className="text-xs text-gray-600">
-                    Appuyez sur{' '}
+                    Appuie sur{' '}
                     <span className="inline-flex items-center align-middle mx-0.5">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-600">
                         <path d="M12 5v14M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
                         <rect x="3" y="19" width="18" height="2" rx="1" fill="currentColor" stroke="none" />
                       </svg>
                     </span>{' '}
-                    <span className="font-semibold text-gray-800">Partager</span> en bas de l&apos;écran
+                    <span className="font-semibold text-gray-800">Partager</span> en bas
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
                   <p className="text-xs text-gray-600">
-                    Faites défiler et choisissez <span className="font-semibold text-gray-800">&quot;Sur l&apos;écran d&apos;accueil&quot;</span>
+                    Choisis <span className="font-semibold text-gray-800">&quot;Sur l&apos;écran d&apos;accueil&quot;</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
                   <p className="text-xs text-gray-600">
-                    Confirmez avec <span className="font-semibold text-gray-800">&quot;Ajouter&quot;</span>
+                    Confirme avec <span className="font-semibold text-gray-800">&quot;Ajouter&quot;</span>
                   </p>
                 </div>
               </div>
+              <div className="mt-3">
+                <button
+                  onClick={dismiss}
+                  className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Plus tard
+                </button>
+              </div>
             </div>
-            <button onClick={dismiss} className="p-1 text-gray-500 hover:text-gray-600 flex-shrink-0">
-              <X size={18} />
+            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+              <X size={16} />
             </button>
           </div>
         </div>
@@ -228,20 +278,23 @@ export default function InstallPrompt() {
       <div className="fixed top-0 left-0 right-0 z-[80] p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <img src="/icon-192.png" alt="YAPLUKA" className="w-12 h-12 rounded-xl flex-shrink-0" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+              <Download size={22} className="text-white" />
+            </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900 mb-2">Installer YAPLUKA</p>
+              <p className="text-sm font-semibold text-gray-900 mb-1">Installe YAPLUKA</p>
+              <p className="text-xs text-gray-500 leading-relaxed mb-2">{motivationalMessage}</p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
                   <p className="text-xs text-gray-600">
-                    Ouvrez cette page dans <span className="font-semibold text-gray-800">Safari</span>
+                    Ouvre cette page dans <span className="font-semibold text-gray-800">Safari</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
                   <p className="text-xs text-gray-600">
-                    Appuyez sur{' '}
+                    Appuie sur{' '}
                     <span className="inline-flex items-center align-middle mx-0.5">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-600">
                         <path d="M12 5v14M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -254,13 +307,21 @@ export default function InstallPrompt() {
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
                   <p className="text-xs text-gray-600">
-                    Choisissez <span className="font-semibold text-gray-800">&quot;Sur l&apos;écran d&apos;accueil&quot;</span>
+                    Choisis <span className="font-semibold text-gray-800">&quot;Sur l&apos;écran d&apos;accueil&quot;</span>
                   </p>
                 </div>
               </div>
+              <div className="mt-3">
+                <button
+                  onClick={dismiss}
+                  className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Plus tard
+                </button>
+              </div>
             </div>
-            <button onClick={dismiss} className="p-1 text-gray-500 hover:text-gray-600 flex-shrink-0">
-              <X size={18} />
+            <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+              <X size={16} />
             </button>
           </div>
         </div>

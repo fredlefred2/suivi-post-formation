@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { ToastProvider } from '@/app/components/Toast'
-import InstallPrompt from '@/app/components/InstallPrompt'
+
 import BugReportButton from '@/app/components/BugReportButton'
 import './globals.css'
 
@@ -31,7 +31,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ToastProvider>
           {children}
-          <InstallPrompt />
           <BugReportButton />
         </ToastProvider>
       </body>
