@@ -36,7 +36,7 @@ export async function assignToGroup(learnerId: string, groupId: string) {
   revalidatePath('/trainer/dashboard')
 
   // Générer les tips si le groupe a un thème et que l'apprenant a des axes sans tips
-  triggerTipsForNewGroupMember(learnerId, groupId)
+  await triggerTipsForNewGroupMember(learnerId, groupId)
 
   return { success: true }
 }
