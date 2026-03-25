@@ -3,8 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
-import { supabaseAdmin } from '@/lib/supabase-admin'
-import { generateTips } from '@/lib/generate-tips'
 
 export async function assignToGroup(learnerId: string, groupId: string) {
   const supabase = createClient()
@@ -35,54 +33,7 @@ export async function assignToGroup(learnerId: string, groupId: string) {
   revalidatePath(`/trainer/groups/${groupId}`)
   revalidatePath('/trainer/dashboard')
 
-  // Générer les tips si le groupe a un thème et que l'apprenant a des axes sans tips
-  await triggerTipsForNewGroupMember(learnerId, groupId)
-
   return { success: true }
-}
-
-// Génère les tips pour un apprenant qui vient d'être assigné à un groupe avec un thème
-async function triggerTipsForNewGroupMember(learnerId: string, groupId: string) {
-  try {
-    // Vérifier que le groupe a un thème (pas salle d'attente)
-    const { data: group } = await supabaseAdmin
-      .from('groups')
-      .select('name, theme')
-      .eq('id', groupId)
-      .single()
-
-    if (!group?.theme || group.name.toLowerCase().includes('salle d\'attente')) return
-
-    // Récupérer les axes de l'apprenant
-    const { data: axes } = await supabaseAdmin
-      .from('axes')
-      .select('id, subject, description')
-      .eq('learner_id', learnerId)
-
-    if (!axes || axes.length === 0) return
-
-    // Pour chaque axe, vérifier s'il a déjà des tips
-    for (const axe of axes) {
-      const { data: existingTips } = await supabaseAdmin
-        .from('tips')
-        .select('id')
-        .eq('axe_id', axe.id)
-        .limit(1)
-
-      if (existingTips && existingTips.length > 0) continue // déjà des tips
-
-      console.log(`[Tips] Génération pour ${axe.subject} (apprenant déplacé vers ${group.name})`)
-      await generateTips({
-        axeId: axe.id,
-        learnerId,
-        axeSubject: axe.subject,
-        axeDescription: axe.description || axe.subject,
-        groupTheme: group.theme,
-      })
-    }
-  } catch (err) {
-    console.error('[Tips] Erreur génération au déplacement:', err)
-  }
 }
 
 export async function removeFromGroup(learnerId: string, groupId: string) {

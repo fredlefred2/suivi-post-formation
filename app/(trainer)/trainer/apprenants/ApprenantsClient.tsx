@@ -45,8 +45,17 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
     setMsg(null)
     startTransition(async () => {
       const result = await assignToGroup(learner.id, selectedGroup)
-      if (result?.error) setMsg({ type: 'error', text: result.error })
-      else setMsg({ type: 'ok', text: 'Affecté !' })
+      if (result?.error) {
+        setMsg({ type: 'error', text: result.error })
+      } else {
+        setMsg({ type: 'ok', text: 'Affecté !' })
+        // Tips generation en arrière-plan (fire-and-forget)
+        fetch('/api/tips/generate-for-member', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ learnerId: learner.id, groupId: selectedGroup }),
+        }).catch(() => {})
+      }
     })
   }
 

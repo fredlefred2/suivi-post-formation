@@ -3,8 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
-import { supabaseAdmin } from '@/lib/supabase-admin'
-import { generateTips } from '@/lib/generate-tips'
 
 export async function createGroup(formData: FormData) {
   const supabase = createClient()
@@ -85,10 +83,7 @@ export async function addLearnerToGroup(groupId: string, email: string) {
   revalidatePath(`/trainer/groups/${groupId}`)
   revalidatePath('/trainer/dashboard')
 
-  // Générer les tips si le groupe a un thème
-  await triggerTipsForGroupMember(learner.id, groupId)
-
-  return { success: true, name: `${learner.first_name} ${learner.last_name}` }
+  return { success: true, name: `${learner.first_name} ${learner.last_name}`, learnerId: learner.id }
 }
 
 export async function addLearnerById(groupId: string, learnerId: string) {
@@ -130,52 +125,8 @@ export async function addLearnerById(groupId: string, learnerId: string) {
     return { error: error.message }
   }
 
-  // Générer les tips si le groupe a un thème
-  await triggerTipsForGroupMember(learnerId, groupId)
-
   revalidatePath(`/trainer/groups/${groupId}`)
   revalidatePath('/trainer/dashboard')
-}
-
-// Génère les tips pour un apprenant ajouté à un groupe avec thème
-async function triggerTipsForGroupMember(learnerId: string, groupId: string) {
-  try {
-    const { data: group } = await supabaseAdmin
-      .from('groups')
-      .select('name, theme')
-      .eq('id', groupId)
-      .single()
-
-    if (!group?.theme || group.name.toLowerCase().includes('salle d\'attente')) return
-
-    const { data: axes } = await supabaseAdmin
-      .from('axes')
-      .select('id, subject, description')
-      .eq('learner_id', learnerId)
-
-    if (!axes || axes.length === 0) return
-
-    for (const axe of axes) {
-      const { data: existing } = await supabaseAdmin
-        .from('tips')
-        .select('id')
-        .eq('axe_id', axe.id)
-        .limit(1)
-
-      if (existing && existing.length > 0) continue
-
-      console.log(`[Tips] Génération pour ${axe.subject} (ajout au groupe ${group.name})`)
-      await generateTips({
-        axeId: axe.id,
-        learnerId,
-        axeSubject: axe.subject,
-        axeDescription: axe.description || axe.subject,
-        groupTheme: group.theme,
-      })
-    }
-  } catch (err) {
-    console.error('[Tips] Erreur génération à l\'ajout au groupe:', err)
-  }
 }
 
 export async function removeLearnerFromGroup(groupId: string, learnerId: string) {
