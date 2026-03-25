@@ -148,8 +148,7 @@ function TipCard({ tip }: { tip: Tip }) {
 
       {/* Rappel */}
       <div className="mb-2">
-        <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-wide mb-0.5">📚 Le savais-tu ?</p>
-        <p className="text-sm text-gray-800 leading-relaxed">{tip.content}</p>
+        <p className="text-sm font-medium text-gray-900 leading-relaxed italic">« {tip.content} »</p>
       </div>
 
       {/* Conseil */}
