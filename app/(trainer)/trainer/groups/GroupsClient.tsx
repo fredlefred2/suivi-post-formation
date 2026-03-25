@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Plus, X, ChevronDown, MoreVertical } from 'lucide-react'
 import { createGroup, deleteGroup, removeLearnerFromGroup } from './actions'
@@ -32,27 +32,25 @@ export default function GroupsClient({
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
-  // Premier groupe ouvert par défaut
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(groups.length > 0 ? [groups[0].id] : [])
-  )
+  // Tous les groupes fermés par défaut
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-  const [reassigningLearnerId, setReassigningLearnerId] = useState<string | null>(null)
   const [deletingLearnerId, setDeletingLearnerId] = useState<string | null>(null)
   const [deletingLearnerGroupId, setDeletingLearnerGroupId] = useState<string | null>(null)
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
 
   // Fermer les menus quand on clique ailleurs
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenu(null)
-      }
+  const handleOutsideClick = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (!target.closest('[data-menu]')) {
+      setOpenMenu(null)
     }
-    if (openMenu) document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [openMenu])
+  }, [])
+
+  useEffect(() => {
+    if (openMenu) document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [openMenu, handleOutsideClick])
 
   function toggleGroup(id: string) {
     setExpandedGroups(prev => {
@@ -74,11 +72,10 @@ export default function GroupsClient({
   }
 
   function handleReassign(learnerId: string, fromGroupId: string, toGroupId: string) {
+    setOpenMenu(null)
     startTransition(async () => {
       await removeLearnerFromGroup(fromGroupId, learnerId)
       await assignToGroup(learnerId, toGroupId)
-      setReassigningLearnerId(null)
-      setOpenMenu(null)
     })
   }
 
@@ -97,6 +94,15 @@ export default function GroupsClient({
       await deleteGroup(deletingGroupId)
       setDeletingGroupId(null)
     })
+  }
+
+  function openDeleteLearner(learnerId: string, groupId: string) {
+    setOpenMenu(null)
+    // Petit délai pour que le menu se ferme avant d'ouvrir la modale
+    setTimeout(() => {
+      setDeletingLearnerId(learnerId)
+      setDeletingLearnerGroupId(groupId)
+    }, 50)
   }
 
   const deletingLearner = deletingLearnerId && deletingLearnerGroupId
@@ -160,7 +166,7 @@ export default function GroupsClient({
             const isExpanded = expandedGroups.has(group.id)
 
             return (
-              <div key={group.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div key={group.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-visible">
                 {/* Header du groupe */}
                 <div className="flex items-center gap-3 px-4 py-3.5">
                   <button
@@ -188,7 +194,7 @@ export default function GroupsClient({
                   </button>
 
                   {/* Menu groupe */}
-                  <div className="relative" ref={openMenu === `group-${group.id}` ? menuRef : null}>
+                  <div className="relative" data-menu>
                     <button
                       onClick={() => setOpenMenu(openMenu === `group-${group.id}` ? null : `group-${group.id}`)}
                       className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
@@ -196,7 +202,7 @@ export default function GroupsClient({
                       <MoreVertical size={16} />
                     </button>
                     {openMenu === `group-${group.id}` && (
-                      <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1">
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-30 py-1">
                         <Link
                           href={`/trainer/groups/${group.id}`}
                           className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -223,87 +229,87 @@ export default function GroupsClient({
                       <div>
                         {members
                           .sort((a, b) => a.last_name.localeCompare(b.last_name, 'fr'))
-                          .map((m) => (
-                            <div key={m.learner_id}>
-                              <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
-                                {/* Avatar */}
-                                <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-800 font-semibold flex items-center justify-center text-xs shrink-0">
-                                  {m.first_name[0]}{m.last_name[0]}
-                                </div>
+                          .map((m, idx) => {
+                            const isLastTwo = idx >= members.length - 2
 
-                                {/* Nom cliquable */}
-                                <Link
-                                  href={`/trainer/learner/${m.learner_id}?from=groups&group=${group.id}`}
-                                  className="flex-1 min-w-0"
-                                >
-                                  <p className="text-sm font-medium text-gray-800 hover:text-indigo-600 transition-colors truncate">
-                                    {m.first_name} {m.last_name}
-                                  </p>
-                                </Link>
+                            return (
+                              <div key={m.learner_id}>
+                                <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
+                                  {/* Avatar */}
+                                  <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-800 font-semibold flex items-center justify-center text-xs shrink-0">
+                                    {m.first_name[0]}{m.last_name[0]}
+                                  </div>
 
-                                {/* Pastille tips */}
-                                {m.tips_total > 0 ? (
-                                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                                    m.tips_sent > 0
-                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                      : 'bg-gray-100 text-gray-500 border border-gray-200'
-                                  }`}>
-                                    {m.tips_sent}/{m.tips_total}
-                                  </span>
-                                ) : (
-                                  <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-400 border border-gray-200 shrink-0">
-                                    —
-                                  </span>
-                                )}
-                                <span className={`text-base shrink-0 ${m.tips_total > 0 ? '' : 'opacity-25'}`}>🥷</span>
-
-                                {/* Menu membre */}
-                                <div className="relative" ref={openMenu === m.learner_id ? menuRef : null}>
-                                  <button
-                                    onClick={() => setOpenMenu(openMenu === m.learner_id ? null : m.learner_id)}
-                                    className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+                                  {/* Nom cliquable */}
+                                  <Link
+                                    href={`/trainer/learner/${m.learner_id}?from=groups&group=${group.id}`}
+                                    className="flex-1 min-w-0"
                                   >
-                                    <MoreVertical size={14} />
-                                  </button>
-                                  {openMenu === m.learner_id && (
-                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1">
-                                      {/* Réaffecter */}
-                                      {groups.filter(g => g.id !== group.id).length > 0 && (
-                                        <>
-                                          <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">Réaffecter à</p>
-                                          {groups
-                                            .filter(g => g.id !== group.id)
-                                            .map(g => (
-                                              <button
-                                                key={g.id}
-                                                disabled={isPending}
-                                                onClick={() => handleReassign(m.learner_id, group.id, g.id)}
-                                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                                              >
-                                                <span>🔄</span> {g.name}
-                                              </button>
-                                            ))}
-                                          <div className="border-t border-gray-100 my-1" />
-                                        </>
-                                      )}
-                                      <button
-                                        onClick={() => {
-                                          setDeletingLearnerId(m.learner_id)
-                                          setDeletingLearnerGroupId(group.id)
-                                          setOpenMenu(null)
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                      >
-                                        <span>🗑️</span> Supprimer
-                                      </button>
-                                    </div>
+                                    <p className="text-sm font-medium text-gray-800 hover:text-indigo-600 transition-colors truncate">
+                                      {m.first_name} {m.last_name}
+                                    </p>
+                                  </Link>
+
+                                  {/* Pastille tips */}
+                                  {m.tips_total > 0 ? (
+                                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                                      m.tips_sent > 0
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : 'bg-gray-100 text-gray-500 border border-gray-200'
+                                    }`}>
+                                      {m.tips_sent}/{m.tips_total}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-400 border border-gray-200 shrink-0">
+                                      —
+                                    </span>
                                   )}
+                                  <span className={`text-base shrink-0 ${m.tips_total > 0 ? '' : 'opacity-25'}`}>🥷</span>
+
+                                  {/* Menu membre */}
+                                  <div className="relative" data-menu>
+                                    <button
+                                      onClick={() => setOpenMenu(openMenu === m.learner_id ? null : m.learner_id)}
+                                      className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+                                    >
+                                      <MoreVertical size={14} />
+                                    </button>
+                                    {openMenu === m.learner_id && (
+                                      <div className={`absolute right-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-30 py-1 ${
+                                        isLastTwo ? 'bottom-full mb-1' : 'top-full mt-1'
+                                      }`}>
+                                        {/* Réaffecter */}
+                                        {groups.filter(g => g.id !== group.id).length > 0 && (
+                                          <>
+                                            <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">Réaffecter à</p>
+                                            {groups
+                                              .filter(g => g.id !== group.id)
+                                              .map(g => (
+                                                <button
+                                                  key={g.id}
+                                                  disabled={isPending}
+                                                  onClick={() => handleReassign(m.learner_id, group.id, g.id)}
+                                                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                                                >
+                                                  <span>🔄</span> {g.name}
+                                                </button>
+                                              ))}
+                                            <div className="border-t border-gray-100 my-1" />
+                                          </>
+                                        )}
+                                        <button
+                                          onClick={() => openDeleteLearner(m.learner_id, group.id)}
+                                          className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                        >
+                                          <span>🗑️</span> Supprimer
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-
-                              {/* Ancien dropdown réaffectation inline — supprimé, intégré dans le menu ... */}
-                            </div>
-                          ))}
+                            )
+                          })}
                       </div>
                     )}
                   </div>
