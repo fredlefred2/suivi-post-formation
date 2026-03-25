@@ -57,7 +57,7 @@ export default function WeeklyChallenge() {
         >
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
-            🧑‍🏫
+            🥷
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-amber-900 text-sm">Ton coach a un conseil pour toi</p>
@@ -94,7 +94,7 @@ export default function WeeklyChallenge() {
 
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-white/20 shadow-lg">
-                  🧑‍🏫
+                  🥷
                 </div>
                 <div>
                   <p className="text-white font-bold text-base">Le conseil de ton coach</p>
@@ -106,10 +106,13 @@ export default function WeeklyChallenge() {
             {/* Corps */}
             <div className="bg-white px-5 py-4 space-y-3">
               {/* Rappel */}
-              <div className="rounded-xl p-3.5 bg-amber-50 border border-amber-200/60">
-                <p className="text-[13px] font-medium text-gray-900 leading-relaxed italic">
-                  « {tip.content} »
-                </p>
+              <div className="flex gap-3 items-start">
+                <span className="text-2xl shrink-0 mt-0.5">🥷</span>
+                <div className="relative bg-amber-50 border border-amber-200/60 rounded-2xl rounded-tl-sm px-3.5 py-3">
+                  <p className="text-[13px] text-gray-800 leading-relaxed">
+                    {tip.content}
+                  </p>
+                </div>
               </div>
 
               {/* Conseil */}
