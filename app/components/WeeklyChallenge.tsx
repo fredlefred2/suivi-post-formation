@@ -109,7 +109,7 @@ export default function WeeklyChallenge() {
               <div className="flex gap-3 items-start">
                 <span className="text-2xl shrink-0 mt-0.5">🥷</span>
                 <div className="relative bg-amber-50 border border-amber-200/60 rounded-2xl rounded-tl-sm px-3.5 py-3">
-                  <p className="text-[13px] text-gray-800 leading-relaxed">
+                  <p className="text-[13px] font-semibold text-gray-800 leading-relaxed">
                     {tip.content}
                   </p>
                 </div>

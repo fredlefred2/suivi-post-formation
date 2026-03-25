@@ -150,7 +150,7 @@ function TipCard({ tip }: { tip: Tip }) {
       <div className="flex gap-2.5 items-start mb-2">
         <span className="text-xl shrink-0 mt-0.5">🥷</span>
         <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-3 py-2.5">
-          <p className="text-sm text-gray-800 leading-relaxed">{tip.content}</p>
+          <p className="text-sm font-semibold text-gray-800 leading-relaxed">{tip.content}</p>
         </div>
       </div>
 
