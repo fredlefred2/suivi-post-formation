@@ -195,7 +195,7 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
                             {isEditing ? (
                               <div className="space-y-2">
                                 <div>
-                                  <label className="text-[10px] font-semibold text-gray-500 uppercase mb-0.5 block">📚 Le savais-tu ?</label>
+                                  <label className="text-[10px] font-semibold text-gray-500 uppercase mb-0.5 block">🥷 Rappel</label>
                                   <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
                                     className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 min-h-[60px]" autoFocus />
                                 </div>
@@ -213,7 +213,7 @@ export default function TrainerTipsManager({ groupId, groupTheme }: { groupId: s
                               <>
                                 {/* Rappel */}
                                 <div className="mb-2">
-                                  <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-wide mb-0.5">📚 Le savais-tu ?</p>
+                                  <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-wide mb-0.5">🥷 Rappel</p>
                                   <p className="text-sm text-gray-800 leading-relaxed">{tip.content}</p>
                                 </div>
 

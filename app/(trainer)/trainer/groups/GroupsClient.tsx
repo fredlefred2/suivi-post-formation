@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Trash2, Shuffle, UserPlus, X, Sparkles } from 'lucide-react'
+import { Plus, X, ChevronDown, MoreVertical } from 'lucide-react'
 import { createGroup, deleteGroup, removeLearnerFromGroup } from './actions'
 import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
 
 type Group = {
   id: string
   name: string
+  theme: string | null
   created_at: string
   group_members: Array<{ count: number }>
 }
@@ -17,6 +18,8 @@ type MemberInfo = {
   learner_id: string
   first_name: string
   last_name: string
+  tips_total: number
+  tips_sent: number
 }
 
 export default function GroupsClient({
@@ -29,10 +32,35 @@ export default function GroupsClient({
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
-  const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
+  // Premier groupe ouvert par défaut
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(groups.length > 0 ? [groups[0].id] : [])
+  )
+  const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [reassigningLearnerId, setReassigningLearnerId] = useState<string | null>(null)
   const [deletingLearnerId, setDeletingLearnerId] = useState<string | null>(null)
   const [deletingLearnerGroupId, setDeletingLearnerGroupId] = useState<string | null>(null)
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Fermer les menus quand on clique ailleurs
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenu(null)
+      }
+    }
+    if (openMenu) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [openMenu])
+
+  function toggleGroup(id: string) {
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -50,6 +78,7 @@ export default function GroupsClient({
       await removeLearnerFromGroup(fromGroupId, learnerId)
       await assignToGroup(learnerId, toGroupId)
       setReassigningLearnerId(null)
+      setOpenMenu(null)
     })
   }
 
@@ -62,31 +91,53 @@ export default function GroupsClient({
     })
   }
 
-  // Trouver le nom de l'apprenant en cours de suppression
+  function handleDeleteGroup() {
+    if (!deletingGroupId) return
+    startTransition(async () => {
+      await deleteGroup(deletingGroupId)
+      setDeletingGroupId(null)
+    })
+  }
+
   const deletingLearner = deletingLearnerId && deletingLearnerGroupId
     ? membersMap[deletingLearnerGroupId]?.find((m) => m.learner_id === deletingLearnerId)
     : null
 
+  const deletingGroup = deletingGroupId
+    ? groups.find((g) => g.id === deletingGroupId)
+    : null
+
   return (
     <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="page-title">Groupes</h1>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors"
+        >
+          <Plus size={14} /> Nouveau
+        </button>
+      </div>
+
       {/* Formulaire de création */}
-      {showForm ? (
+      {showForm && (
         <div className="card border-2 border-indigo-100">
-          <h2 className="section-title mb-4">Nouveau groupe</h2>
+          <p className="font-semibold text-gray-800 text-sm mb-3">Nouveau groupe</p>
           <form onSubmit={handleCreate} className="space-y-3">
             <div>
               <label className="label">Nom du groupe *</label>
-              <input name="name" required className="input" placeholder="Ex: Management niveau 1 — Octobre 2024" />
+              <input name="name" required className="input" placeholder="Ex: Management — Oct. 2024" />
             </div>
             <div>
               <label className="label">Thème de la formation</label>
-              <input name="theme" className="input" placeholder="Ex: Management de proximité, Communication assertive..." />
-              <p className="text-xs text-gray-500 mt-1">Utilisé pour générer des défis personnalisés aux apprenants</p>
+              <input name="theme" className="input" placeholder="Ex: Communication assertive..." />
+              <p className="text-xs text-gray-400 mt-1">Utilisé pour générer des défis personnalisés</p>
             </div>
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
             <div className="flex gap-2">
               <button type="submit" disabled={isPending} className="btn-primary">
-                {isPending ? 'Création...' : 'Créer le groupe'}
+                {isPending ? 'Création...' : 'Créer'}
               </button>
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">
                 Annuler
@@ -94,10 +145,6 @@ export default function GroupsClient({
             </div>
           </form>
         </div>
-      ) : (
-        <button onClick={() => setShowForm(true)} className="btn-primary">
-          <Plus size={16} /> Créer un groupe
-        </button>
       )}
 
       {/* Liste des groupes */}
@@ -110,108 +157,153 @@ export default function GroupsClient({
           {groups.map((group) => {
             const memberCount = group.group_members[0]?.count ?? 0
             const members = membersMap[group.id] ?? []
-            const isExpanded = expandedGroupId === group.id
+            const isExpanded = expandedGroups.has(group.id)
 
             return (
-              <div key={group.id}>
-                <div className="card flex items-center gap-3">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{group.name}</p>
-                    <p className="text-sm text-gray-500">{memberCount} participant{memberCount > 1 ? 's' : ''}</p>
+              <div key={group.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {/* Header du groupe */}
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <button
+                    onClick={() => toggleGroup(group.id)}
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-lg shrink-0">
+                      👥
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-gray-900 text-[15px] truncate">{group.name}</p>
+                        <span className="text-[11px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium shrink-0">
+                          {memberCount}
+                        </span>
+                      </div>
+                      {group.theme && (
+                        <p className="text-xs text-gray-400 mt-0.5 truncate">{group.theme}</p>
+                      )}
+                    </div>
+                    <ChevronDown
+                      size={18}
+                      className={`text-gray-400 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  {/* Menu groupe */}
+                  <div className="relative" ref={openMenu === `group-${group.id}` ? menuRef : null}>
+                    <button
+                      onClick={() => setOpenMenu(openMenu === `group-${group.id}` ? null : `group-${group.id}`)}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+                    {openMenu === `group-${group.id}` && (
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1">
+                        <Link
+                          href={`/trainer/groups/${group.id}`}
+                          className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <span>🥷</span> Gérer les tips
+                        </Link>
+                        <button
+                          onClick={() => { setDeletingGroupId(group.id); setOpenMenu(null) }}
+                          className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <span>🗑️</span> Supprimer le groupe
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <Link
-                    href={`/trainer/groups/${group.id}`}
-                    className="px-3 py-2 rounded-xl border bg-white border-gray-200 text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 text-sm font-medium transition-colors"
-                    title="Rappels & Conseils"
-                  >
-                    <Sparkles size={16} />
-                  </Link>
-                  <button
-                    onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
-                    className={`px-3 py-2 rounded-xl border text-sm font-medium transition-colors ${
-                      isExpanded
-                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                        : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-200 hover:text-indigo-600'
-                    }`}
-                    title="Gérer les participants"
-                  >
-                    <Shuffle size={16} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`Supprimer le groupe "${group.name}" ?`)) {
-                        startTransition(() => deleteGroup(group.id))
-                      }
-                    }}
-                    className="btn-danger px-3 py-2"
-                  >
-                    <Trash2 size={16} />
-                  </button>
                 </div>
 
-                {/* Panneau membres expandé */}
+                {/* Membres */}
                 {isExpanded && (
-                  <div className="mt-1 ml-2 mr-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                  <div className="border-t border-gray-100">
                     {members.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center py-3">Aucun participant dans ce groupe</p>
+                      <p className="text-sm text-gray-400 text-center py-6">Aucun participant dans ce groupe</p>
                     ) : (
-                      <div className="space-y-2">
+                      <div>
                         {members
                           .sort((a, b) => a.last_name.localeCompare(b.last_name, 'fr'))
                           .map((m) => (
-                          <div key={m.learner_id}>
-                            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-100">
-                              <span className="text-sm font-medium text-gray-800 flex-1">
-                                {m.first_name} {m.last_name}
-                              </span>
-                              <button
-                                onClick={() => setReassigningLearnerId(
-                                  reassigningLearnerId === m.learner_id ? null : m.learner_id
-                                )}
-                                disabled={isPending}
-                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-indigo-800 bg-indigo-100 border border-indigo-300 rounded-lg hover:bg-indigo-200 transition-colors disabled:opacity-50"
-                              >
-                                <UserPlus size={14} />
-                                Affecter
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setDeletingLearnerId(m.learner_id)
-                                  setDeletingLearnerGroupId(group.id)
-                                }}
-                                disabled={isPending}
-                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
-                              >
-                                <Trash2 size={14} />
-                                Supprimer
-                              </button>
-                            </div>
+                            <div key={m.learner_id}>
+                              <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
+                                {/* Avatar */}
+                                <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-800 font-semibold flex items-center justify-center text-xs shrink-0">
+                                  {m.first_name[0]}{m.last_name[0]}
+                                </div>
 
-                            {/* Dropdown réaffectation : autres groupes */}
-                            {reassigningLearnerId === m.learner_id && (
-                              <div className="mt-1 ml-4 p-2 bg-white border border-indigo-100 rounded-lg shadow-sm">
-                                <p className="text-xs text-gray-500 mb-1.5 font-medium">Réaffecter à :</p>
-                                <div className="space-y-1">
-                                  {groups
-                                    .filter((g) => g.id !== group.id)
-                                    .map((g) => (
+                                {/* Nom cliquable */}
+                                <Link
+                                  href={`/trainer/learner/${m.learner_id}?from=groups&group=${group.id}`}
+                                  className="flex-1 min-w-0"
+                                >
+                                  <p className="text-sm font-medium text-gray-800 hover:text-indigo-600 transition-colors truncate">
+                                    {m.first_name} {m.last_name}
+                                  </p>
+                                </Link>
+
+                                {/* Pastille tips */}
+                                {m.tips_total > 0 ? (
+                                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                                    m.tips_sent > 0
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : 'bg-gray-100 text-gray-500 border border-gray-200'
+                                  }`}>
+                                    {m.tips_sent}/{m.tips_total}
+                                  </span>
+                                ) : (
+                                  <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-400 border border-gray-200 shrink-0">
+                                    —
+                                  </span>
+                                )}
+                                <span className={`text-base shrink-0 ${m.tips_total > 0 ? '' : 'opacity-25'}`}>🥷</span>
+
+                                {/* Menu membre */}
+                                <div className="relative" ref={openMenu === m.learner_id ? menuRef : null}>
+                                  <button
+                                    onClick={() => setOpenMenu(openMenu === m.learner_id ? null : m.learner_id)}
+                                    className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+                                  >
+                                    <MoreVertical size={14} />
+                                  </button>
+                                  {openMenu === m.learner_id && (
+                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1">
+                                      {/* Réaffecter */}
+                                      {groups.filter(g => g.id !== group.id).length > 0 && (
+                                        <>
+                                          <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">Réaffecter à</p>
+                                          {groups
+                                            .filter(g => g.id !== group.id)
+                                            .map(g => (
+                                              <button
+                                                key={g.id}
+                                                disabled={isPending}
+                                                onClick={() => handleReassign(m.learner_id, group.id, g.id)}
+                                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                                              >
+                                                <span>🔄</span> {g.name}
+                                              </button>
+                                            ))}
+                                          <div className="border-t border-gray-100 my-1" />
+                                        </>
+                                      )}
                                       <button
-                                        key={g.id}
-                                        disabled={isPending}
-                                        onClick={() => handleReassign(m.learner_id, group.id, g.id)}
-                                        className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition-colors disabled:opacity-50"
+                                        onClick={() => {
+                                          setDeletingLearnerId(m.learner_id)
+                                          setDeletingLearnerGroupId(group.id)
+                                          setOpenMenu(null)
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                                       >
-                                        {g.name}
+                                        <span>🗑️</span> Supprimer
                                       </button>
-                                    ))}
-                                  {groups.filter((g) => g.id !== group.id).length === 0 && (
-                                    <p className="text-xs text-gray-500 px-3 py-2">Aucun autre groupe disponible</p>
+                                    </div>
                                   )}
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        ))}
+
+                              {/* Ancien dropdown réaffectation inline — supprimé, intégré dans le menu ... */}
+                            </div>
+                          ))}
                       </div>
                     )}
                   </div>
@@ -247,6 +339,37 @@ export default function GroupsClient({
                 <button
                   disabled={isPending}
                   onClick={handleDeleteLearner}
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {isPending ? 'Suppression...' : 'Supprimer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup confirmation suppression groupe */}
+      {deletingGroupId && deletingGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setDeletingGroupId(null)} />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full">
+            <button onClick={() => setDeletingGroupId(null)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-600">
+              <X size={18} />
+            </button>
+            <div className="p-6 text-center">
+              <span className="text-4xl">🗑️</span>
+              <h3 className="text-lg font-bold text-gray-800 mt-3">Supprimer ce groupe ?</h3>
+              <p className="text-sm text-gray-500 mt-2">
+                Le groupe <strong className="text-gray-700">{deletingGroup.name}</strong> sera supprimé. Les participants ne seront pas supprimés.
+              </p>
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setDeletingGroupId(null)} className="btn-secondary flex-1">
+                  Annuler
+                </button>
+                <button
+                  disabled={isPending}
+                  onClick={handleDeleteGroup}
                   className="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
                   {isPending ? 'Suppression...' : 'Supprimer'}
