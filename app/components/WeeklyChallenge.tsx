@@ -107,11 +107,8 @@ export default function WeeklyChallenge() {
             <div className="bg-white px-5 py-4 space-y-3">
               {/* Rappel */}
               <div className="rounded-xl p-3.5 bg-amber-50 border border-amber-200/60">
-                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1.5">
-                  💡 Le savais-tu ?
-                </p>
-                <p className="text-[13px] text-gray-800 leading-relaxed">
-                  {tip.content}
+                <p className="text-[13px] font-medium text-gray-900 leading-relaxed italic">
+                  « {tip.content} »
                 </p>
               </div>
 
