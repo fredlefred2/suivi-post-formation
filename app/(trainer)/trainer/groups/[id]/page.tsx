@@ -5,7 +5,13 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import TrainerTipsManager from '@/app/components/TrainerTipsManager'
 
-export default async function GroupDetailPage({ params }: { params: { id: string } }) {
+export default async function GroupDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams: { learner?: string }
+}) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -25,13 +31,14 @@ export default async function GroupDetailPage({ params }: { params: { id: string
           ← Retour aux groupes
         </Link>
         <h1 className="page-title mt-2">{group.name}</h1>
-        {group.theme && (
-          <p className="text-sm text-gray-500 mt-1">📚 {group.theme}</p>
-        )}
       </div>
 
       {/* Gestion des rappels & conseils */}
-      <TrainerTipsManager groupId={params.id} groupTheme={group.theme || group.name} />
+      <TrainerTipsManager
+        groupId={params.id}
+        groupTheme={group.theme || group.name}
+        initialLearnerId={searchParams.learner}
+      />
     </div>
   )
 }

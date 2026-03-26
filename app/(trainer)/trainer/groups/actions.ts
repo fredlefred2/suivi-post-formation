@@ -30,6 +30,24 @@ export async function deleteGroup(groupId: string) {
   revalidatePath('/trainer/dashboard')
 }
 
+export async function updateGroupTheme(groupId: string, theme: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  const { error } = await supabase
+    .from('groups')
+    .update({ theme: theme.trim() || null })
+    .eq('id', groupId)
+    .eq('trainer_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/trainer/groups/${groupId}`)
+  revalidatePath('/trainer/groups')
+  return { success: true }
+}
+
 export async function addLearnerToGroup(groupId: string, email: string) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()

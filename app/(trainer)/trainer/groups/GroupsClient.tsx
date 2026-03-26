@@ -132,12 +132,12 @@ export default function GroupsClient({
           <p className="font-semibold text-gray-800 text-sm mb-3">Nouveau groupe</p>
           <form onSubmit={handleCreate} className="space-y-3">
             <div>
-              <label className="label">Nom du groupe *</label>
-              <input name="name" required className="input" placeholder="Ex: Management — Oct. 2024" />
+              <label className="label text-xs">Nom du groupe *</label>
+              <input name="name" required className="input text-sm py-2.5" placeholder="Ex: Management — Oct. 2024" />
             </div>
             <div>
-              <label className="label">Thème de la formation</label>
-              <input name="theme" className="input" placeholder="Ex: Communication assertive..." />
+              <label className="label text-xs">Thème de la formation</label>
+              <textarea name="theme" className="input text-sm py-2.5 min-h-[100px] resize-y" placeholder="Ex: Communication assertive, gestion des conflits, leadership situationnel..." />
               <p className="text-xs text-gray-400 mt-1">Utilisé pour générer des défis personnalisés</p>
             </div>
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
@@ -240,9 +240,9 @@ export default function GroupsClient({
                                     {m.first_name[0]}{m.last_name[0]}
                                   </div>
 
-                                  {/* Nom cliquable */}
+                                  {/* Nom cliquable → page apprenants, groupe sélectionné, learner en focus */}
                                   <Link
-                                    href={`/trainer/learner/${m.learner_id}?from=groups&group=${group.id}`}
+                                    href={`/trainer/apprenants?group=${group.id}&learner=${m.learner_id}`}
                                     className="flex-1 min-w-0"
                                   >
                                     <p className="text-sm font-medium text-gray-800 hover:text-indigo-600 transition-colors truncate">
@@ -250,21 +250,26 @@ export default function GroupsClient({
                                     </p>
                                   </Link>
 
-                                  {/* Pastille tips */}
-                                  {m.tips_total > 0 ? (
-                                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                                      m.tips_sent > 0
-                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                        : 'bg-gray-100 text-gray-500 border border-gray-200'
-                                    }`}>
-                                      {m.tips_sent}/{m.tips_total}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-400 border border-gray-200 shrink-0">
-                                      —
-                                    </span>
-                                  )}
-                                  <span className={`text-base shrink-0 ${m.tips_total > 0 ? '' : 'opacity-25'}`}>🥷</span>
+                                  {/* Pastille tips → cliquable vers gestion tips */}
+                                  <Link
+                                    href={`/trainer/groups/${group.id}?learner=${m.learner_id}`}
+                                    className="flex items-center gap-1 shrink-0"
+                                  >
+                                    {m.tips_total > 0 ? (
+                                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity ${
+                                        m.tips_sent > 0
+                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                          : 'bg-gray-100 text-gray-500 border border-gray-200'
+                                      }`}>
+                                        {m.tips_sent}/{m.tips_total}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-400 border border-gray-200">
+                                        —
+                                      </span>
+                                    )}
+                                    <span className={`text-base ${m.tips_total > 0 ? '' : 'opacity-25'}`}>🥷</span>
+                                  </Link>
 
                                   {/* Menu membre */}
                                   <div className="relative" data-menu>
