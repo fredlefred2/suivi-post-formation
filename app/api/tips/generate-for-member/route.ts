@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { generateTips } from '@/lib/generate-tips'
 
@@ -9,24 +8,6 @@ import { generateTips } from '@/lib/generate-tips'
  * Appelé en fire-and-forget depuis le client après l'affectation.
  */
 export async function POST(req: NextRequest) {
-  // Vérifier l'authentification
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-  }
-
-  // Vérifier que c'est un formateur
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'trainer') {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
-  }
-
   const { learnerId, groupId } = await req.json()
   if (!learnerId || !groupId) {
     return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
@@ -41,6 +22,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (!group?.theme || group.name.toLowerCase().includes('salle d\'attente')) {
+      console.log(`[Tips] Skipped: pas de thème pour le groupe ${group?.name || groupId}`)
       return NextResponse.json({ skipped: true, reason: 'no-theme' })
     }
 
@@ -51,6 +33,7 @@ export async function POST(req: NextRequest) {
       .eq('learner_id', learnerId)
 
     if (!axes || axes.length === 0) {
+      console.log(`[Tips] Skipped: pas d'axes pour l'apprenant ${learnerId}`)
       return NextResponse.json({ skipped: true, reason: 'no-axes' })
     }
 
@@ -75,6 +58,7 @@ export async function POST(req: NextRequest) {
       generated++
     }
 
+    console.log(`[Tips] Terminé: ${generated} axes générés pour ${learnerId}`)
     return NextResponse.json({ success: true, generated })
   } catch (err) {
     console.error('[Tips] Erreur génération:', err)
