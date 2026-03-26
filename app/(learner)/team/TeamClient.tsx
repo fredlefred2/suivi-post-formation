@@ -1,20 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Users, TrendingUp, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import type { ActionFeedbackData } from '@/lib/types'
 import { useCountUp } from '@/lib/useCountUp'
-
-const WEATHER_POINTS: Record<string, number> = { stormy: 0, cloudy: 1, sunny: 2 }
-
-function getOverallWeatherEmoji(score: number) {
-  if (score < 0.4) return '\u{1F327}\u{FE0F}'   // stormy
-  if (score < 0.8) return '\u{1F325}\u{FE0F}'   // nuage gris
-  if (score < 1.2) return '\u26C5'               // mitigé
-  if (score <= 1.6) return '\u{1F324}\u{FE0F}'  // soleil + petits nuages
-  return '\u2600\u{FE0F}'                         // ça roule
-}
 
 function getDynamiqueForCount(count: number) {
   if (count === 0) return { icon: '⚪', level: 0, label: 'Veille' }
@@ -65,6 +55,7 @@ type Props = {
   recentActionsCount: number
   weatherCounts: { sunny: number; cloudy: number; stormy: number }
   totalWithCheckin: number
+  isCheckinOpen: boolean
   scoringData: ScoringEntry[]
   recentActions: RecentAction[]
   feedbackMap: Record<string, ActionFeedbackData>
@@ -81,6 +72,7 @@ export default function TeamClient({
   scoringData,
   recentActions,
   feedbackMap,
+  isCheckinOpen,
 }: Props) {
   const [showAllActions, setShowAllActions] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -114,15 +106,7 @@ export default function TeamClient({
     setShowAllActions(true)
   }, [])
 
-  // Météo générale
-  const overallScore = totalWithCheckin > 0
-    ? Object.entries(weatherCounts).reduce((acc, [key, count]) => acc + count * (WEATHER_POINTS[key] ?? 0), 0) / totalWithCheckin
-    : -1
-  const overallEmoji = overallScore >= 0 ? getOverallWeatherEmoji(overallScore) : null
-
-  // Indice d'action moyen
-  const avgActions = membersCount > 0 ? Math.round(totalActions / membersCount) : 0
-  const actionIndice = getDynamiqueForCount(avgActions)
+  // Pas besoin d'indice moyen ni météo agrégée — on utilise la distribution
 
   // Scoring trié
   const sorted = [...scoringData]
@@ -141,53 +125,55 @@ export default function TeamClient({
     <div className="space-y-6 pb-4">
       <h1 className="page-title">{groupName}</h1>
 
-      {/* ── Bloc 1 : Membres + Météo générale ── */}
-      <div className="card py-5 px-4">
-        <div className="grid grid-cols-2 divide-x divide-gray-100">
-          {/* Membres */}
-          <div className="text-center px-2">
-            <Users size={28} className="mx-auto text-indigo-500 mb-1.5" />
-            <p className="text-3xl font-bold text-gray-800">{animatedMembers}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Membres</p>
+      {/* ── Bloc principal : 3 colonnes compactes ── */}
+      <div className="card p-4">
+        <div className="grid grid-cols-3 gap-3">
+          {/* Colonne 1 : Membres */}
+          <div className="text-center">
+            <div className="text-3xl font-black text-gray-800">{animatedMembers}</div>
+            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">membre{membersCount !== 1 ? 's' : ''}</p>
           </div>
-          {/* Météo */}
-          <div className="text-center px-2 flex flex-col items-center justify-center">
-            {overallEmoji ? (
-              <>
-                <p className="text-xs text-gray-500 mb-2">Météo générale</p>
-                <span className="text-6xl leading-none">{overallEmoji}</span>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-gray-500 mb-2">Météo générale</p>
-                <span className="text-5xl text-gray-300">-</span>
-                <p className="text-[11px] text-gray-400 mt-1">Pas de check-in</p>
-              </>
+
+          {/* Colonne 2 : Actions cette semaine */}
+          <div className="text-center">
+            <div className={`text-3xl font-black ${recentActionsCount > 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+              {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
+            </div>
+            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">cette semaine</p>
+          </div>
+
+          {/* Colonne 3 : Actions totales */}
+          <div className="text-center">
+            <div className="text-3xl font-black text-gray-800">{totalActions}</div>
+            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">actions</p>
+          </div>
+        </div>
+
+        {/* Météo distribution semaine passée */}
+        {totalWithCheckin > 0 && (
+          <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-gray-100">
+            <span className="text-[11px] text-gray-500">Météo S-1</span>
+            {weatherCounts.sunny > 0 && (
+              <span className="text-sm">☀️ <span className="text-xs font-semibold text-gray-600">{weatherCounts.sunny}</span></span>
+            )}
+            {weatherCounts.cloudy > 0 && (
+              <span className="text-sm">⛅ <span className="text-xs font-semibold text-gray-600">{weatherCounts.cloudy}</span></span>
+            )}
+            {weatherCounts.stormy > 0 && (
+              <span className="text-sm">⛈️ <span className="text-xs font-semibold text-gray-600">{weatherCounts.stormy}</span></span>
             )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* ── Bloc 2 : Actions cette semaine + Indice d'action ── */}
-      <div className="card py-5 px-4">
-        <div className="grid grid-cols-2 divide-x divide-gray-100">
-          {/* Delta actions cette semaine (gauche) */}
-          <div className="text-center px-2">
-            <TrendingUp size={28} className="mx-auto text-emerald-500 mb-1.5" />
-            <p className={`text-3xl font-bold ${recentActionsCount > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
-              {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">Actions cette semaine</p>
-          </div>
-          {/* Indice d'action (droite) */}
-          <div className="text-center px-2 flex flex-col items-center justify-center">
-            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${LEVEL_AVATAR_COLORS[actionIndice.level] ?? LEVEL_AVATAR_COLORS[0]}`}>
-              <span className="text-4xl leading-none">{actionIndice.icon}</span>
-            </div>
-            <p className="text-sm font-semibold text-gray-700 mt-2">{actionIndice.label}</p>
-          </div>
+      {/* ── Empty state : aucune action récente ── */}
+      {recentActions.length === 0 && (
+        <div className="card text-center py-6">
+          <p className="text-2xl mb-2">💤</p>
+          <p className="text-sm text-gray-500">Aucune action r&eacute;cente de l&apos;&eacute;quipe</p>
+          <p className="text-xs text-gray-500 mt-1">Sois le premier &agrave; en ajouter une ! 🚀</p>
         </div>
-      </div>
+      )}
 
       {/* ── Carrousel actions récentes ── */}
       {recentActions.length > 0 && (
@@ -225,7 +211,7 @@ export default function TeamClient({
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
                 <div className="flex items-center justify-between mt-2">
-                  <p className="text-[10px] text-gray-400">
+                  <p className="text-[10px] text-gray-500">
                     {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
                   {feedbackMap[action.id] && (feedbackMap[action.id].likes_count > 0 || feedbackMap[action.id].comments_count > 0) && (
@@ -260,7 +246,7 @@ export default function TeamClient({
 
       {recentActions.length === 0 && (
         <div className="card text-center py-6">
-          <p className="text-gray-400 text-sm">Aucune action ces 7 derniers jours</p>
+          <p className="text-gray-500 text-sm">Aucune action cette semaine</p>
         </div>
       )}
 
@@ -268,12 +254,12 @@ export default function TeamClient({
       <div className="card">
         <h2 className="section-title mb-3">Tous en action</h2>
         {sorted.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">Aucun membre</p>
+          <p className="text-sm text-gray-500 italic">Aucun membre</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-400 border-b border-gray-100">
+                <tr className="text-xs text-gray-500 border-b border-gray-100">
                   <th className="text-left pb-2 font-medium">#</th>
                   <th className="text-left pb-2 font-medium">Nom</th>
                   <th className="text-center pb-2 font-medium">Actions</th>
@@ -285,7 +271,7 @@ export default function TeamClient({
               <tbody>
                 {sorted.map((learner, idx) => (
                   <tr key={learner.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-1.5 text-xs text-gray-400 w-6">{idx + 1}</td>
+                    <td className="py-1.5 text-xs text-gray-500 w-6">{idx + 1}</td>
                     <td className="py-1.5 font-medium text-gray-800 truncate max-w-[140px]">
                       {learner.name}
                     </td>
@@ -307,12 +293,12 @@ export default function TeamClient({
       {showAllActions && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowAllActions(false)} />
-          <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col">
+          <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col pb-[max(0px,env(safe-area-inset-bottom))]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="font-bold text-gray-800">Actions des 7 derniers jours</h3>
+              <h3 className="font-bold text-gray-800">Actions de la semaine</h3>
               <button
                 onClick={() => setShowAllActions(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                className="text-gray-500 hover:text-gray-600 transition-colors p-1"
               >
                 <X size={20} />
               </button>
@@ -332,7 +318,7 @@ export default function TeamClient({
                       </p>
                       <p className="text-xs text-indigo-500">{action.axe_subject}</p>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-500">
                       {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>

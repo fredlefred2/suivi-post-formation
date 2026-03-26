@@ -1,12 +1,37 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { LayoutDashboard, Target, ClipboardCheck, Users, MessageCircle, Bell } from 'lucide-react'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
+import CoachMark from '@/app/components/CoachMark'
+import { updateAxeFast } from '@/app/(learner)/axes/actions'
+
+// All step IDs in order (10 steps, axes 2-3 skippable)
+const ALL_STEPS = [
+  'welcome',       // 1. Bienvenue
+  'axis-1',        // 2. Crée ton 1er axe (obligatoire)
+  'axis-2',        // 3. Crée ton 2e axe (optionnel)
+  'axis-3',        // 4. Crée ton 3e axe (optionnel)
+  'add-action',    // 5. Ajouter une action (coach mark)
+  'progression',   // 6. Ta dynamique de progression (coach mark)
+  'feedback-info', // 7. Likes & commentaires (coach mark centré)
+  'delete-info',   // 8. Modifier & supprimer (coach mark centré)
+  'checkin',       // 9. Le check-in hebdomadaire (coach mark)
+  'menu-tour',     // 10. Ton espace YAPLUKA (coach marks séquentiels)
+] as const
+
+type StepId = (typeof ALL_STEPS)[number]
+
+// Menu tour — single screen listing all sections
+const MENU_SECTIONS = [
+  { icon: '📊', label: 'Accueil', desc: 'Ta progression, tes actions et ta météo.' },
+  { icon: '🎯', label: 'Actions', desc: 'Tes axes de progrès et toutes tes actions.' },
+  { icon: '✨', label: 'Coach', desc: 'Rappels de formation et conseils pratiques.' },
+  { icon: '📋', label: 'Check-in', desc: 'Ton bilan hebdo : météo, réussites, difficultés.' },
+  { icon: '👥', label: 'Team', desc: 'Les actions de tes coéquipiers à encourager !' },
+]
 
 type Props = {
   userId: string
@@ -15,31 +40,42 @@ type Props = {
   totalActions: number
   totalCheckins: number
   firstActionId?: string | null
+  axes: { id: string; subject: string; description: string | null; difficulty: string; completedCount: number }[]
   children: React.ReactNode
 }
 
 export default function OnboardingFlow({
-  userId, firstName, axesCount, totalActions, totalCheckins,
-  firstActionId, children,
+  userId,
+  firstName,
+  axesCount,
+  totalActions,
+  totalCheckins,
+  firstActionId,
+  axes,
+  children,
 }: Props) {
-  const router = useRouter()
   const { setIsOnboarding } = useOnboarding()
   const [ack, setAck] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
+  // Inline axis edit during onboarding
+  const [editingAxeId, setEditingAxeId] = useState<string | null>(null)
+  const [editSubject, setEditSubject] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editDifficulty, setEditDifficulty] = useState('moyen')
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editSaving, setEditSaving] = useState(false)
 
   useEffect(() => {
     const stored = getOnboardingAck(userId)
     const isOnboardingDone = stored['menu-tour'] === true
 
-    // Vérifier si on est dans une session d'onboarding active
+    // Check for active onboarding session
     const sessionKey = `onboarding_session_${userId}`
     const isActiveSession = sessionStorage.getItem(sessionKey) === 'true'
 
-    // Si l'apprenant a >= 1 axe et n'est PAS dans une session d'onboarding active
-    // → auto-compléter tout l'onboarding (il est revenu après avoir quitté)
+    // Existing users with axes and no active session → auto-complete everything
     if (axesCount >= 1 && !isOnboardingDone && !isActiveSession) {
-      const allSteps = ['welcome', 'axis-1', 'axis-2', 'axis-3', 'first-action', 'edit-delete', 'feedback-intro', 'progression', 'checkin', 'menu-tour']
-      for (const step of allSteps) {
+      for (const step of ALL_STEPS) {
         if (!stored[step]) {
           stored[step] = true
           acknowledgeStep(step, userId)
@@ -47,14 +83,14 @@ export default function OnboardingFlow({
       }
     }
 
-    // Si l'apprenant a 0 axes et l'onboarding n'est pas terminé → démarrer la session
+    // 0 axes and onboarding not done → start session
     if (axesCount === 0 && !isOnboardingDone) {
       sessionStorage.setItem(sessionKey, 'true')
     }
 
-    // Auto-compléter les étapes de démo si l'apprenant a déjà des actions (legacy)
+    // Users with actions → auto-complete from progression onwards
     if (totalActions >= 1) {
-      const autoSteps = ['first-action', 'edit-delete', 'feedback-intro', 'progression', 'checkin', 'menu-tour']
+      const autoSteps: StepId[] = ['progression', 'add-action', 'feedback-info', 'delete-info', 'checkin', 'menu-tour']
       for (const step of autoSteps) {
         if (!stored[step]) {
           stored[step] = true
@@ -67,14 +103,14 @@ export default function OnboardingFlow({
     setMounted(true)
   }, [axesCount, totalActions, userId])
 
-  function acknowledge(stepId: string) {
+  const acknowledge = useCallback((stepId: string) => {
     acknowledgeStep(stepId, userId)
     setAck((prev) => ({ ...prev, [stepId]: true }))
-  }
+  }, [userId])
 
   function skipAxis2() {
     acknowledgeStep('skip-axis-2', userId)
-    acknowledgeStep('skip-axis-3', userId) // Si on saute le 2e, on saute aussi le 3e
+    acknowledgeStep('skip-axis-3', userId) // Skip axe 2 → auto-skip axe 3
     setAck((prev) => ({ ...prev, 'skip-axis-2': true, 'skip-axis-3': true }))
   }
 
@@ -83,253 +119,77 @@ export default function OnboardingFlow({
     setAck((prev) => ({ ...prev, 'skip-axis-3': true }))
   }
 
-  const steps: {
-    id: string
-    title: string
-    icon: string
-    bravo?: string
-    description: string
-    extra?: React.ReactNode
-    isCompleted: boolean
-    cta: { label: string; href?: string; action?: () => void }
-    skipAction?: () => void
-  }[] = [
-    // ── Étape 1 : Bienvenue ──
-    {
-      id: 'welcome',
-      title: `Bienvenue ${firstName} !`,
-      icon: 'yapluka',
-      description: 'YAPLUKA t\'accompagne pour transformer ta formation en actions concrètes. Voici le programme :',
-      extra: (
-        <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
-          {[
-            { n: '1', text: <>Définis tes <strong>axes</strong> de progrès</> },
-            { n: '2', text: <>Ajoute une <strong>action concrète</strong></> },
-            { n: '3', text: <>Découvre la <strong>dynamique</strong> de progression</> },
-            { n: '4', text: <>Comprends le <strong>check-in</strong> hebdomadaire</> },
-          ].map((s) => (
-            <div key={s.n} className="flex items-center gap-3 text-sm">
-              <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
-              <span className="text-gray-600">{s.text}</span>
-            </div>
-          ))}
-        </div>
-      ),
-      isCompleted: axesCount >= 1 || ack['welcome'] === true,
-      cta: { label: 'C\'est parti !', href: '/axes?onboarding=create' },
-    },
+  function openEditLastAxe() {
+    const lastAxe = axes[axes.length - 1]
+    if (!lastAxe) return
+    setEditingAxeId(lastAxe.id)
+    setEditSubject(lastAxe.subject)
+    setEditDescription(lastAxe.description || '')
+    setEditDifficulty(lastAxe.difficulty || 'moyen')
+    setEditError(null)
+  }
 
-    // ── Étape 2 : Axe 1 (OBLIGATOIRE) ──
-    {
-      id: 'axis-1',
-      title: 'Crée ton 1er axe de progrès',
-      icon: '🎯',
-      description: 'Un axe représente un domaine que tu souhaites améliorer suite à ta formation. Remplis le formulaire qui va s\'afficher.',
-      extra: (
-        <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
-          <p className="font-medium mb-1">Exemple d&apos;axe :</p>
-          <p className="text-indigo-600">&laquo; Déléguer efficacement &raquo; — Difficulté : Intermédiaire</p>
-        </div>
-      ),
-      isCompleted: axesCount >= 1,
-      cta: { label: 'Créer mon 1er axe', href: '/axes?onboarding=create' },
-    },
+  async function handleEditAxeSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingAxeId) return
+    setEditError(null)
+    setEditSaving(true)
+    const result = await updateAxeFast(editingAxeId, editSubject, editDescription || null, editDifficulty)
+    if (result?.error) { setEditError(result.error); setEditSaving(false); return }
+    setEditSaving(false)
+    setEditingAxeId(null)
+  }
 
-    // ── Étape 3 : Axe 2 (OPTIONNEL) ──
-    {
-      id: 'axis-2',
-      title: 'Crée ton 2e axe',
-      icon: '🎯',
-      bravo: '🎉 Bravo ! Ton 1er axe est créé !',
-      description: 'Excellent début ! Continue sur ta lancée. Tu peux aussi le faire plus tard.',
-      extra: (
-        <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
-          <p className="font-medium mb-1">Idée d&apos;axe :</p>
-          <p className="text-indigo-600">&laquo; Mieux communiquer en réunion &raquo;</p>
-        </div>
-      ),
-      isCompleted: axesCount >= 2 || ack['skip-axis-2'] === true,
-      cta: { label: 'Créer mon 2e axe', href: '/axes?onboarding=create' },
-      skipAction: skipAxis2,
-    },
+  // Go back to previous step (un-acknowledge current step's predecessor)
+  const goBack = useCallback((fromStep: StepId) => {
+    const idx = ALL_STEPS.indexOf(fromStep)
+    if (idx <= 0) return
 
-    // ── Étape 4 : Axe 3 (OPTIONNEL, sauté si axe 2 sauté) ──
-    {
-      id: 'axis-3',
-      title: 'Crée ton 3e et dernier axe',
-      icon: '🎯',
-      bravo: '🎉 Super ! 2 axes déjà définis !',
-      description: 'Plus qu\'un axe et tu auras posé toutes les bases de ta progression ! Tu peux aussi le faire plus tard.',
-      extra: (
-        <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
-          <p className="font-medium mb-1">Idée d&apos;axe :</p>
-          <p className="text-indigo-600">&laquo; Gérer mon temps et mes priorités &raquo;</p>
-        </div>
-      ),
-      isCompleted: axesCount >= 3 || ack['skip-axis-3'] === true || ack['skip-axis-2'] === true,
-      cta: { label: 'Créer mon 3e axe', href: '/axes?onboarding=create' },
-      skipAction: skipAxis3,
-    },
+    // Si on est sur la première étape coach mark (add-action) → éditer le dernier axe
+    if (fromStep === 'add-action') {
+      openEditLastAxe()
+      return
+    }
 
-    // ── Étape 5 : Démo auto des actions ──
-    {
-      id: 'first-action',
-      title: 'Découvre la gestion des actions',
-      icon: '⚡',
-      bravo: axesCount >= 3
-        ? '🎉 Parfait ! Tes 3 axes sont définis !'
-        : axesCount >= 2
-        ? '🎉 Super ! Tes axes sont définis !'
-        : '🎉 Ton axe est créé !',
-      description: 'On va te montrer comment ajouter, modifier et supprimer une action. Tout se fait automatiquement, suis le guide !',
-      extra: (
-        <div className="bg-amber-50 rounded-xl p-3 mt-3 text-left text-sm text-amber-800">
-          <p className="font-medium mb-1">Tu vas découvrir :</p>
-          <ul className="space-y-1 text-amber-600">
-            <li>➕ Ajouter une action</li>
-            <li>✏️ Modifier une action</li>
-            <li>❤️ Likes et 💬 commentaires</li>
-            <li>🗑️ Supprimer une action</li>
-            <li>💬 Envoyer un message à ton formateur</li>
-            <li>🔔 Suivre tes notifications</li>
-          </ul>
-        </div>
-      ),
-      isCompleted: ack['edit-delete'] ?? false,
-      cta: {
-        label: 'C\'est parti !',
-        action: () => router.push('/axes?onboarding=auto-demo'),
-      },
-    },
+    // Find the previous visible step
+    for (let i = idx - 1; i >= 0; i--) {
+      const prev = ALL_STEPS[i]
+      // Skip auto-completed axis steps
+      if (prev === 'axis-1' && axesCount >= 1) continue
+      if (prev === 'axis-2' && (axesCount >= 2 || ack['skip-axis-2'])) continue
+      if (prev === 'axis-3' && (axesCount >= 3 || ack['skip-axis-3'] || ack['skip-axis-2'])) continue
 
-    // ── Étape 6 : Dynamique de progression ──
-    {
-      id: 'progression',
-      title: 'Ta dynamique de progression',
-      icon: 'yapluka',
-      bravo: '🎉 Bien joué ! Tu maîtrises la gestion des actions !',
-      description: 'Plus tu ajoutes d\'actions, plus ta dynamique monte ! Voici les 5 niveaux que tu peux atteindre :',
-      extra: (
-        <div className="flex flex-col gap-1 mt-2 max-w-xs mx-auto w-full">
-          {[
-            { icon: '⚪', label: 'Veille', desc: '0 action', color: 'bg-slate-100 text-slate-700' },
-            { icon: '👣', label: 'Impulsion', desc: '1-2 actions', color: 'bg-sky-100 text-sky-700' },
-            { icon: '🥁', label: 'Rythme', desc: '3-5 actions', color: 'bg-emerald-100 text-emerald-700' },
-            { icon: '🔥', label: 'Intensité', desc: '6-8 actions', color: 'bg-orange-100 text-orange-700' },
-            { icon: '🚀', label: 'Propulsion', desc: '9+ actions', color: 'bg-rose-100 text-rose-700' },
-          ].map((level) => (
-            <div key={level.label} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${level.color}`}>
-              <span className="text-base">{level.icon}</span>
-              <span className="font-medium text-xs flex-1">{level.label}</span>
-              <span className="text-[10px] opacity-70">{level.desc}</span>
-            </div>
-          ))}
-        </div>
-      ),
-      isCompleted: ack['progression'] ?? false,
-      cta: { label: 'Compris !', action: () => acknowledge('progression') },
-    },
+      // Un-ack the previous step so IT becomes active
+      const stored = getOnboardingAck(userId)
+      delete stored[prev]
+      localStorage.setItem(`onboarding_${userId}`, JSON.stringify(stored))
+      setAck((a) => {
+        const next = { ...a }
+        delete next[prev]
+        return next
+      })
+      return
+    }
+  }, [userId, axesCount, ack]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    // ── Étape 7 : Check-in hebdomadaire ──
-    {
-      id: 'checkin',
-      title: 'Le check-in hebdomadaire',
-      icon: '📋',
-      bravo: '🎉 Tu y es presque !',
-      description: 'Chaque vendredi, prends 2 minutes pour ton check-in : donne ta météo de la semaine, note ce qui a bien fonctionné et les difficultés rencontrées.',
-      extra: (
-        <div className="flex items-center justify-center gap-4 mt-3">
-          {[
-            { icon: '☀️', label: 'Ça roule' },
-            { icon: '⛅', label: 'Mitigé' },
-            { icon: '⛈️', label: 'Difficile' },
-          ].map((w) => (
-            <div key={w.label} className="flex flex-col items-center gap-1">
-              <span className="text-2xl">{w.icon}</span>
-              <span className="text-xs text-gray-500">{w.label}</span>
-            </div>
-          ))}
-        </div>
-      ),
-      isCompleted: ack['checkin'] ?? false,
-      cta: { label: 'Ok, compris !', action: () => acknowledge('checkin') },
-    },
+  // Determine which step is active
+  const getActiveStep = useCallback((): StepId | null => {
+    for (const step of ALL_STEPS) {
+      // axis-1 auto-completes when axesCount >= 1
+      if (step === 'axis-1' && axesCount >= 1) continue
+      // axis-2 auto-completes when axesCount >= 2 OR skipped
+      if (step === 'axis-2' && (axesCount >= 2 || ack['skip-axis-2'])) continue
+      // axis-3 auto-completes when axesCount >= 3 OR skipped (including cascade from axis-2 skip)
+      if (step === 'axis-3' && (axesCount >= 3 || ack['skip-axis-3'] || ack['skip-axis-2'])) continue
+      if (!ack[step]) return step
+    }
+    return null
+  }, [ack, axesCount])
 
-    // ── Étape 8 : Tour des menus ──
-    {
-      id: 'menu-tour',
-      title: 'Ton espace YAPLUKA',
-      icon: 'yapluka',
-      bravo: '🎉 Félicitations, la prise en main est terminée !',
-      description: 'Retrouve ces espaces dans le menu en bas de ton écran.',
-      extra: (
-        <div className="grid grid-cols-2 gap-2 mt-2 w-full">
-          {[
-            {
-              Icon: LayoutDashboard, label: 'Tableau de bord',
-              desc: 'Progression, stats et actions récentes.',
-              gradient: 'from-indigo-500 to-indigo-600',
-              bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700',
-            },
-            {
-              Icon: Target, label: 'Mes actions',
-              desc: 'Gère tes actions pour chaque axe.',
-              gradient: 'from-amber-500 to-orange-500',
-              bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700',
-            },
-            {
-              Icon: ClipboardCheck, label: 'Check-in',
-              desc: 'Météo, réussites et difficultés.',
-              gradient: 'from-emerald-500 to-teal-500',
-              bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700',
-            },
-            {
-              Icon: Users, label: 'Team',
-              desc: 'Météo et actions de tes coéquipiers.',
-              gradient: 'from-purple-500 to-pink-500',
-              bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700',
-            },
-            {
-              Icon: MessageCircle, label: 'Messages',
-              desc: 'Échange directement avec ton formateur.',
-              gradient: 'from-cyan-500 to-blue-500',
-              bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700',
-            },
-            {
-              Icon: Bell, label: 'Notifications',
-              desc: 'Likes, commentaires et messages reçus.',
-              gradient: 'from-yellow-500 to-amber-500',
-              bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700',
-            },
-          ].map((item, i) => (
-            <div key={item.label} className={`${item.bg} border ${item.border} rounded-xl p-2 text-left`}
-                 style={{ animation: `fade-in 0.3s ease-out ${i * 0.1}s both` }}>
-              <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-1`}>
-                <item.Icon size={15} className="text-white" />
-              </div>
-              <p className={`text-xs font-semibold ${item.text} mb-0.5`}>{item.label}</p>
-              <p className="text-[10px] text-gray-500 leading-snug">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      ),
-      isCompleted: ack['menu-tour'] ?? false,
-      cta: {
-        label: 'C\'est parti !',
-        action: () => {
-          acknowledge('menu-tour')
-          // Nettoyer la session d'onboarding
-          sessionStorage.removeItem(`onboarding_session_${userId}`)
-        },
-      },
-    },
-  ]
+  const activeStep = mounted ? getActiveStep() : null
+  const isActive = mounted && activeStep !== null
 
-  // Compute active step
-  const activeIndex = mounted ? steps.findIndex((s) => !s.isCompleted) : -2
-  const isActive = mounted && activeIndex !== -1
-
-  // Cas spécial : onboarding terminé mais 0 axes (l'apprenant a tout supprimé)
+  // Onboarding done but 0 axes → needs axis block
   const onboardingDone = mounted && ack['menu-tour'] === true
   const needsAxisBlock = mounted && axesCount === 0 && onboardingDone
 
@@ -340,17 +200,108 @@ export default function OnboardingFlow({
   }, [mounted, isActive, needsAxisBlock, setIsOnboarding])
 
   // Scroll to top when onboarding transitions from active → completed
-  const prevActiveRef = useRef<number>(-2)
+  const prevStepRef = useRef<StepId | null>(null)
   useEffect(() => {
-    if (prevActiveRef.current >= 0 && activeIndex === -1) {
+    if (prevStepRef.current !== null && activeStep === null) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-    prevActiveRef.current = activeIndex
-  }, [activeIndex])
+    prevStepRef.current = activeStep
+  }, [activeStep])
 
   if (!mounted) return null
 
-  // Blocage : onboarding terminé mais 0 axes → forcer la création
+  // ── Modale d'édition inline (onboarding) ──
+  if (editingAxeId) {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-0 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden flex flex-col flex-1">
+            {/* Header gradient */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4 shrink-0">
+              <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
+              <p className="text-indigo-100 text-xs mt-0.5">Modifie les détails de ton axe</p>
+            </div>
+
+            <form onSubmit={handleEditAxeSubmit} className="p-5 space-y-5 flex-1 flex flex-col">
+              <div>
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Intitulé de l&apos;axe</label>
+                <input
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                  Moyens envisagés <span className="font-normal text-gray-500">(optionnel)</span>
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-700 mb-2 block">Niveau de difficulté</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: 'facile', emoji: '🟢', label: 'Facile' },
+                    { key: 'moyen', emoji: '🟡', label: 'Moyen' },
+                    { key: 'difficile', emoji: '🔴', label: 'Difficile' },
+                  ]).map(({ key, emoji, label }) => {
+                    const isSelected = editDifficulty === key
+                    return (
+                      <label key={key} className="cursor-pointer">
+                        <input
+                          type="radio" name="edit-difficulty" value={key} className="sr-only"
+                          checked={isSelected}
+                          onChange={() => setEditDifficulty(key)}
+                        />
+                        <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
+                          isSelected
+                            ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}>
+                          <span className="text-lg">{emoji}</span>
+                          <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+              {editError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{editError}</p>}
+              <div className="flex gap-3 pt-1 mt-auto">
+                <button
+                  type="submit"
+                  disabled={editSaving}
+                  className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98] ${editSaving ? 'opacity-60' : ''}`}
+                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+                >
+                  {editSaving ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                      Enregistrement...
+                    </span>
+                  ) : '✓ Valider'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingAxeId(null)}
+                  className="px-5 py-3 rounded-xl font-semibold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Blocking overlay: onboarding done but 0 axes → force creation
   if (needsAxisBlock) {
     return (
       <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
@@ -373,77 +324,476 @@ export default function OnboardingFlow({
   }
 
   // All done → show normal dashboard
-  if (activeIndex === -1) return <>{children}</>
+  if (activeStep === null) return <>{children}</>
 
-  const activeStep = steps[activeIndex]
+  // Helper: visual step number (skip axis-2/3 if they're auto-completed)
+  const visibleSteps = ALL_STEPS.filter(s => {
+    if (s === 'axis-2' && (axesCount >= 2 || ack['skip-axis-2'])) return false
+    if (s === 'axis-3' && (axesCount >= 3 || ack['skip-axis-3'] || ack['skip-axis-2'])) return false
+    return true
+  })
+  const stepIndex = visibleSteps.indexOf(activeStep)
+  const stepLabel = `${stepIndex + 1}/${visibleSteps.length}`
 
-  return (
-    <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
-      <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
-        {/* Step indicator */}
-        <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-          <span className="text-xs font-semibold text-indigo-600">
-            Étape {activeIndex + 1}/{steps.length}
-          </span>
-          <div className="flex items-center gap-1">
-            {steps.map((s, i) => (
-              <div
-                key={s.id}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i < activeIndex ? 'w-3 bg-emerald-400'
-                  : i === activeIndex ? 'w-5 bg-indigo-500'
-                  : 'w-3 bg-gray-200'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Bravo banner */}
-        {activeStep.bravo && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 mb-2 text-center shrink-0">
-            <p className="text-sm font-semibold text-emerald-700">{activeStep.bravo}</p>
-          </div>
-        )}
-
-        {/* Active step content — centered, fills available space */}
-        <div key={activeStep.id} className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
-          {activeStep.icon === 'yapluka' ? (
-            <Image src="/yapluka-symbol.png" alt="YAPLUKA" width={48} height={45} className="drop-shadow-md" />
-          ) : (
-            <div className="text-4xl">{activeStep.icon}</div>
-          )}
-          <h2 className="text-lg font-bold text-gray-800">{activeStep.title}</h2>
-          <p className="text-sm text-gray-500 leading-relaxed">{activeStep.description}</p>
-          {activeStep.extra}
-        </div>
-
-        {/* CTA button + optional skip — always visible at bottom */}
-        <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
-          {activeStep.cta.href ? (
-            <Link href={activeStep.cta.href} className="btn-primary">
-              {activeStep.cta.label}
-            </Link>
-          ) : (
-            <button
-              onClick={activeStep.cta.action}
-              className="btn-primary"
-            >
-              {activeStep.cta.label}
-            </button>
-          )}
-          {activeStep.skipAction && (
-            <div>
-              <button
-                onClick={activeStep.skipAction}
-                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
-              >
-                Plus tard
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+  // Step indicator dots
+  const renderDots = (currentIdx: number) => (
+    <div className="flex items-center gap-1">
+      {visibleSteps.map((s, i) => (
+        <div
+          key={s}
+          className={`h-1.5 rounded-full transition-all duration-300 ${
+            i < currentIdx ? 'w-3 bg-emerald-400'
+            : i === currentIdx ? 'w-5 bg-indigo-500'
+            : 'w-3 bg-gray-200'
+          }`}
+        />
+      ))}
     </div>
   )
+
+  // ═══════════════════════════════════════════════════
+  // FULL-SCREEN MODAL STEPS (1-4: welcome + axes)
+  // ═══════════════════════════════════════════════════
+
+  // ── Step 1: Welcome ──
+  if (activeStep === 'welcome') {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
+            <span className="text-xs font-semibold text-indigo-600">Étape {stepLabel}</span>
+            {renderDots(stepIndex)}
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
+            <Image src="/yapluka-symbol.png" alt="YAPLUKA" width={48} height={45} className="drop-shadow-md" />
+            <h2 className="text-lg font-bold text-gray-800">Bienvenue {firstName} !</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              YAPLUKA t&apos;accompagne pour transformer ta formation en actions concrètes. On te guide en 3 minutes !
+            </p>
+            <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
+              {[
+                { n: '1', text: <>Définis tes <strong>axes</strong> de progrès</> },
+                { n: '2', text: <>Découvre ta <strong>dynamique</strong> de progression</> },
+                { n: '3', text: <>Comprends le <strong>check-in</strong> hebdomadaire</> },
+              ].map((s) => (
+                <div key={s.n} className="flex items-center gap-3 text-sm">
+                  <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
+                  <span className="text-gray-600">{s.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-3 pb-1 text-center shrink-0">
+            <Link
+              href="/axes?onboarding=create"
+              onClick={() => acknowledge('welcome')}
+              className="btn-primary"
+            >
+              C&apos;est parti !
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Step 2: Axis 1 (obligatoire) ──
+  if (activeStep === 'axis-1') {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
+            <span className="text-xs font-semibold text-indigo-600">Étape {stepLabel}</span>
+            {renderDots(stepIndex)}
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
+            <div className="text-4xl">🎯</div>
+            <h2 className="text-lg font-bold text-gray-800">Crée ton 1er axe de progrès</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Un axe représente un domaine que tu souhaites améliorer suite à ta formation.
+            </p>
+            <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
+              <p className="font-medium mb-1">Exemple d&apos;axe :</p>
+              <p className="text-indigo-600">&laquo; Déléguer efficacement &raquo; — Difficulté : Intermédiaire</p>
+            </div>
+          </div>
+
+          <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
+            <Link href="/axes?onboarding=create" className="btn-primary">
+              Créer mon 1er axe
+            </Link>
+            <div>
+              <button
+                onClick={() => {
+                  // Retour à welcome : un-ack welcome
+                  const stored = getOnboardingAck(userId)
+                  delete stored['welcome']
+                  localStorage.setItem(`onboarding_${userId}`, JSON.stringify(stored))
+                  setAck((a) => { const n = { ...a }; delete n['welcome']; return n })
+                }}
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
+              >
+                ← Retour
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Step 3: Axis 2 (optionnel, skippable) ──
+  if (activeStep === 'axis-2') {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
+            <span className="text-xs font-semibold text-indigo-600">Étape {stepLabel}</span>
+            {renderDots(stepIndex)}
+          </div>
+
+          {/* Bravo banner */}
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 mb-2 text-center shrink-0">
+            <p className="text-sm font-semibold text-emerald-700">🎉 Bravo ! Ton 1er axe est créé !</p>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
+            <div className="text-4xl">🎯</div>
+            <h2 className="text-lg font-bold text-gray-800">Crée ton 2e axe</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Excellent début ! Continue sur ta lancée. Tu peux aussi le faire plus tard.
+            </p>
+            <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
+              <p className="font-medium mb-1">Idée d&apos;axe :</p>
+              <p className="text-indigo-600">&laquo; Mieux communiquer en réunion &raquo;</p>
+            </div>
+          </div>
+
+          <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
+            <Link href="/axes?onboarding=create" className="btn-primary">
+              Créer mon 2e axe
+            </Link>
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={openEditLastAxe}
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
+              >
+                ← Modifier mon axe
+              </button>
+              <button
+                onClick={skipAxis2}
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
+              >
+                Plus tard →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Step 4: Axis 3 (optionnel, skippable) ──
+  if (activeStep === 'axis-3') {
+    return (
+      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
+        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
+          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
+            <span className="text-xs font-semibold text-indigo-600">Étape {stepLabel}</span>
+            {renderDots(stepIndex)}
+          </div>
+
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 mb-2 text-center shrink-0">
+            <p className="text-sm font-semibold text-emerald-700">🎉 Super ! 2 axes déjà définis !</p>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
+            <div className="text-4xl">🎯</div>
+            <h2 className="text-lg font-bold text-gray-800">Crée ton 3e et dernier axe</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Plus qu&apos;un axe et tu auras posé toutes les bases de ta progression ! Tu peux aussi le faire plus tard.
+            </p>
+            <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
+              <p className="font-medium mb-1">Idée d&apos;axe :</p>
+              <p className="text-indigo-600">&laquo; Gérer mon temps et mes priorités &raquo;</p>
+            </div>
+          </div>
+
+          <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
+            <Link href="/axes?onboarding=create" className="btn-primary">
+              Créer mon 3e axe
+            </Link>
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={openEditLastAxe}
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
+              >
+                ← Modifier mes axes
+              </button>
+              <button
+                onClick={skipAxis3}
+                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
+              >
+                Plus tard →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ═══════════════════════════════════════════════════
+  // COACH MARKS TRANSLUCIDES (5-10: sur le dashboard)
+  // ═══════════════════════════════════════════════════
+
+  // Step 5: Progression — spotlight on first axis card
+  if (activeStep === 'progression') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          targetSelector='[data-onboarding="progression"]'
+          stepLabel={stepLabel}
+          icon="📈"
+          title="Ta dynamique de progression"
+          description="Chaque action enregistrée te fait progresser. Voici les 5 niveaux que tu peux atteindre :"
+          extra={
+            <div style={{ marginTop: 8, marginBottom: 4 }}>
+              {/* Piste de progression colorée */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, position: 'relative' }}>
+                {[
+                  { icon: '⚪', label: 'Veille', color: '#94a3b8', bg: '#f1f5f9' },
+                  { icon: '👣', label: 'Impulsion', color: '#0ea5e9', bg: '#e0f2fe' },
+                  { icon: '🥁', label: 'Rythme', color: '#10b981', bg: '#d1fae5' },
+                  { icon: '🔥', label: 'Intensité', color: '#f97316', bg: '#ffedd5' },
+                  { icon: '🚀', label: 'Propulsion', color: '#ec4899', bg: '#fce7f3' },
+                ].map((level, i) => (
+                  <div key={level.label} style={{ display: 'flex', alignItems: 'center' }}>
+                    {i > 0 && (
+                      <div style={{
+                        width: 16,
+                        height: 3,
+                        background: `linear-gradient(90deg, ${[
+                          { icon: '⚪', label: 'Veille', color: '#94a3b8', bg: '#f1f5f9' },
+                          { icon: '👣', label: 'Impulsion', color: '#0ea5e9', bg: '#e0f2fe' },
+                          { icon: '🥁', label: 'Rythme', color: '#10b981', bg: '#d1fae5' },
+                          { icon: '🔥', label: 'Intensité', color: '#f97316', bg: '#ffedd5' },
+                          { icon: '🚀', label: 'Propulsion', color: '#ec4899', bg: '#fce7f3' },
+                        ][i - 1].color}, ${level.color})`,
+                        borderRadius: 2,
+                      }} />
+                    )}
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: level.bg,
+                        border: `2px solid ${level.color}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14,
+                      }}>
+                        {level.icon}
+                      </div>
+                      <p style={{ fontSize: 8, color: level.color, marginTop: 2, fontWeight: 600, lineHeight: 1 }}>{level.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          }
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('progression')}
+          onBack={() => goBack('progression')}
+        />
+      </>
+    )
+  }
+
+  // Step 6: Add action — spotlight on FAB (explanatory only)
+  if (activeStep === 'add-action') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          targetSelector='[data-onboarding="fab-action"]'
+          stepLabel={stepLabel}
+          icon="➕"
+          title="Ajouter une action"
+          description="Ce bouton te permet d'enregistrer chaque action concrète que tu mènes au quotidien. Tu choisis l'axe concerné, tu décris ce que tu as fait, et c'est enregistré ! Plus tu en ajoutes, plus tu progresses."
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('add-action')}
+          onBack={() => goBack('add-action')}
+        />
+      </>
+    )
+  }
+
+  // Step 7: Feedback — informational bubble (centered, no target)
+  if (activeStep === 'feedback-info') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          stepLabel={stepLabel}
+          icon="❤️"
+          title="Likes & commentaires"
+          description="Ton formateur et tes coéquipiers peuvent liker ❤️ et commenter 💬 tes actions pour t'encourager. Et toi aussi, tu peux liker et commenter les actions des autres dans l'onglet Team !"
+          extra={
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 24,
+              marginTop: 8,
+              marginBottom: 4,
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: 28 }}>❤️</span>
+                <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Liker</p>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: 28 }}>💬</span>
+                <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Commenter</p>
+              </div>
+            </div>
+          }
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('feedback-info')}
+          onBack={() => goBack('feedback-info')}
+        />
+      </>
+    )
+  }
+
+  // Step 8: Delete — informational bubble (centered, no target)
+  if (activeStep === 'delete-info') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          stepLabel={stepLabel}
+          icon="✏️"
+          title="Modifier & supprimer"
+          description="Depuis l'écran « Mes actions », tu peux à tout moment :"
+          extra={
+            <div style={{ marginTop: 6, marginBottom: 4, textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 18 }}>✏️</span>
+                <span style={{ fontSize: 13, color: '#6b7280' }}><strong>Modifier</strong> le texte d&apos;une action</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>🗑️</span>
+                <span style={{ fontSize: 13, color: '#6b7280' }}><strong>Supprimer</strong> une action si besoin</span>
+              </div>
+            </div>
+          }
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('delete-info')}
+          onBack={() => goBack('delete-info')}
+        />
+      </>
+    )
+  }
+
+  // Step 9: Check-in — informational bubble with alert banner mockup
+  if (activeStep === 'checkin') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          stepLabel={stepLabel}
+          icon="📋"
+          title="Le check-in hebdomadaire"
+          description="Chaque vendredi, un bandeau apparaîtra pour te rappeler de faire ton check-in. On te demandera :"
+          extra={
+            <div style={{ marginTop: 8, marginBottom: 6 }}>
+              {/* Ce qu'on demande */}
+              <div style={{ textAlign: 'left', marginBottom: 10 }}>
+                {[
+                  { icon: '🌤️', text: 'Ta météo de la semaine (ça roule, mitigé, difficile)' },
+                  { icon: '✅', text: 'Tes réussites et avancées' },
+                  { icon: '⚡', text: 'Tes difficultés rencontrées' },
+                ].map((item) => (
+                  <div key={item.icon} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>{item.icon}</span>
+                    <span style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.4 }}>{item.text}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Mockup du bandeau alerte */}
+              <div style={{
+                background: '#fffbeb',
+                border: '1px solid #fcd34d',
+                borderRadius: 12,
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}>
+                <span style={{ fontSize: 16, color: '#d97706' }}>⚠️</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#78350f', margin: 0 }}>Check-in en attente</p>
+                  <p style={{ fontSize: 11, color: '#92400e', margin: 0 }}>Semaine du 10 au 16 mars</p>
+                </div>
+                <span style={{
+                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  color: 'white',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '4px 10px',
+                  borderRadius: 8,
+                }}>Faire</span>
+              </div>
+            </div>
+          }
+          ctaLabel="Ok, compris !"
+          onCta={() => acknowledge('checkin')}
+          onBack={() => goBack('checkin')}
+        />
+      </>
+    )
+  }
+
+  // Step 10: Menu tour — single screen listing all sections
+  if (activeStep === 'menu-tour') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          stepLabel={stepLabel}
+          icon="📱"
+          title="Ton espace YAPLUKA"
+          description="Voici tout ce que tu trouveras dans le menu en bas :"
+          extra={
+            <div style={{ marginTop: 8, marginBottom: 4 }}>
+              {MENU_SECTIONS.map((section) => (
+                <div key={section.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{section.icon}</span>
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#1f2937' }}>{section.label}</span>
+                    <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 4 }}>— {section.desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          }
+          ctaLabel="C'est parti !"
+          onCta={() => {
+            acknowledge('menu-tour')
+            sessionStorage.removeItem(`onboarding_session_${userId}`)
+          }}
+          onBack={() => goBack('menu-tour')}
+        />
+      </>
+    )
+  }
+
+  // Fallback
+  return <>{children}</>
 }

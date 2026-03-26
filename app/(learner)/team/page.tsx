@@ -45,7 +45,7 @@ export default async function TeamPage() {
         <div className="card text-center py-10 space-y-3">
           <span className="text-5xl">⏳</span>
           <p className="text-gray-700 font-medium">Vous êtes en salle d&apos;attente</p>
-          <p className="text-sm text-gray-400">Votre formateur va bientôt vous affecter à un groupe. L&apos;espace Team sera alors accessible.</p>
+          <p className="text-sm text-gray-500">Votre formateur va bientôt vous affecter à un groupe. L&apos;espace Team sera alors accessible.</p>
         </div>
       </div>
     )
@@ -103,10 +103,14 @@ export default async function TeamPage() {
     axeSubjectMap[axe.id] = axe.subject
   })
 
-  // ── Actions des 7 derniers jours ──
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString()
+  // ── Actions depuis lundi (semaine ISO) ──
+  const now = new Date()
+  const dayOfWeekNow = now.getDay()
+  const diffToMonday = dayOfWeekNow === 0 ? 6 : dayOfWeekNow - 1
+  const thisMonday = new Date(now)
+  thisMonday.setHours(0, 0, 0, 0)
+  thisMonday.setDate(now.getDate() - diffToMonday)
+  const thisMondayStr = thisMonday.toISOString()
 
   const allActions = axes.flatMap((axe) =>
     (axe.actions ?? []).map((a) => ({
@@ -121,7 +125,7 @@ export default async function TeamPage() {
 
   const totalActions = allActions.length
   const recentActions = allActions
-    .filter((a) => a.created_at >= sevenDaysAgoStr)
+    .filter((a) => a.created_at >= thisMondayStr)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   // ── Checkins pour la météo ──
@@ -133,14 +137,18 @@ export default async function TeamPage() {
         .order('created_at', { ascending: false })
     : { data: [] as Array<{ learner_id: string; weather: string; created_at: string }> }
 
-  // Dernier checkin par membre
-  const latestCheckins: Record<string, string> = {}
-  ;(checkinsRaw ?? []).forEach((c) => {
-    if (!latestCheckins[c.learner_id]) latestCheckins[c.learner_id] = c.weather
-  })
+  // Météo semaine passée (ISO : lundi précédent → dimanche)
+  const lastMonday = new Date(thisMonday)
+  lastMonday.setDate(thisMonday.getDate() - 7)
+  const lastMondayStr = lastMonday.toISOString()
+  const thisMondayStrForWeather = thisMonday.toISOString()
 
+  const lastWeekCheckins = (checkinsRaw ?? []).filter(
+    (c) => c.created_at >= lastMondayStr && c.created_at < thisMondayStrForWeather
+  )
   const weatherCounts = { sunny: 0, cloudy: 0, stormy: 0 }
-  Object.values(latestCheckins).forEach((w) => {
+  lastWeekCheckins.forEach((c) => {
+    const w = c.weather as string
     if (w === 'sunny' || w === 'cloudy' || w === 'stormy') weatherCounts[w]++
   })
   const totalWithCheckin = weatherCounts.sunny + weatherCounts.cloudy + weatherCounts.stormy
@@ -181,6 +189,10 @@ export default async function TeamPage() {
     }
   })
 
+  // Check-in ouvert : vendredi (5), samedi (6), dimanche (0), lundi (1)
+  const dayOfWeek = now.getDay()
+  const isCheckinOpen = dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0 || dayOfWeek === 1
+
   return (
     <TeamClient
       groupId={groupId}
@@ -190,6 +202,7 @@ export default async function TeamPage() {
       recentActionsCount={recentActions.length}
       weatherCounts={weatherCounts}
       totalWithCheckin={totalWithCheckin}
+      isCheckinOpen={isCheckinOpen}
       scoringData={memberIds.map((lid) => {
         const axesCounts = learnerAxesMap[lid] ?? []
         const total = axesCounts.reduce((a, b) => a + b, 0)

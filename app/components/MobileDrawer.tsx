@@ -31,8 +31,7 @@ type Props = {
 export default function MobileDrawer({ variant = 'learner' }: Props) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  let onboardingDisabled = false
-  try { onboardingDisabled = useOnboarding().isOnboarding } catch { /* outside provider (trainer layout) */ }
+  const { isOnboarding: onboardingDisabled } = useOnboarding()
 
   const searchParams = useSearchParams()
   const navItems = variant === 'trainer' ? trainerNavItems : learnerNavItems
@@ -114,7 +113,7 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
                       borderLeft: '3px solid #6366f1',
                     } : {}}
                   >
-                    <Icon size={18} className={isActive ? 'text-indigo-500' : 'text-gray-400'} />
+                    <Icon size={18} className={isActive ? 'text-indigo-500' : 'text-gray-500'} />
                     {label}
                   </Link>
                 )

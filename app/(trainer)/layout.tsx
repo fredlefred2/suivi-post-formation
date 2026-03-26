@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { logout } from '@/app/(auth)/actions'
-import { LogOut } from 'lucide-react'
+import LogoutButton from '@/app/components/LogoutButton'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 import MessageIcon from '@/app/components/MessageIcon'
 import TrainerSidebar from '@/app/components/TrainerSidebar'
+import PushRegistration from '@/app/components/PushRegistration'
 
 const navItems = [
   { href: '/trainer/dashboard', label: 'Accueil', iconName: 'LayoutDashboard' },
@@ -59,7 +59,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
   return (
     <div className="min-h-screen flex flex-col">
       {/* ── Header gradient fort ── */}
-      <header className="text-white sticky top-0 z-10" style={{
+      <header className="text-white sticky top-0 z-20" style={{
         background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 60%, #6366f1 100%)',
         boxShadow: '0 4px 20px rgba(49, 46, 129, 0.3)',
       }}>
@@ -75,11 +75,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
           </div>
           <div className="flex items-center gap-1">
             <MessageIcon variant="trainer" currentUserId={user.id} allLearners={allLearners} />
-            <form action={logout}>
-              <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">
-                <LogOut size={18} />
-              </button>
-            </form>
+            <LogoutButton />
           </div>
         </div>
       </header>
@@ -102,6 +98,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
         shortLabel: label,
       }))} />
       <div className="h-16 sm:hidden" />
+      <PushRegistration />
     </div>
   )
 }

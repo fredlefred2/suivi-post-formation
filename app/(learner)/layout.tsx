@@ -2,19 +2,21 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { logout } from '@/app/(auth)/actions'
-import { LayoutDashboard, Target, ClipboardCheck, Users, LogOut } from 'lucide-react'
+import { LayoutDashboard, Target, ClipboardCheck, Users, Sparkles } from 'lucide-react'
+import LogoutButton from '@/app/components/LogoutButton'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 import NotificationBell from '@/app/components/NotificationBell'
 import MessageIcon from '@/app/components/MessageIcon'
 import { OnboardingProvider } from '@/lib/onboarding-context'
 import TeamMessagePopup from '@/app/components/TeamMessagePopup'
-import WhatsNewPopup from '@/app/components/WhatsNewPopup'
+import PushRegistration from '@/app/components/PushRegistration'
+import InstallPrompt from '@/app/components/InstallPrompt'
 
 const navItems = [
-  { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
-  { href: '/axes', label: 'Mes actions', icon: Target, iconName: 'Target' },
+  { href: '/dashboard', label: 'Accueil', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
+  { href: '/axes', label: 'Actions', icon: Target, iconName: 'Target' },
+  { href: '/coaching', label: 'Coach', icon: Sparkles, iconName: 'Sparkles' },
   { href: '/checkin', label: 'Check-in', icon: ClipboardCheck, iconName: 'ClipboardCheck' },
   { href: '/team', label: 'Team', icon: Users, iconName: 'Users' },
 ]
@@ -85,11 +87,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
             <div className="flex items-center gap-1">
               <MessageIcon variant="learner" currentUserId={user.id} trainerId={trainerId} trainerName={trainerName} />
               <NotificationBell />
-              <form action={logout}>
-                <button type="submit" className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90">
-                  <LogOut size={18} />
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
         </header>
@@ -102,7 +100,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
             {navItems.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href}
                 className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-500 hover:text-indigo-800 hover:bg-indigo-100 rounded-xl transition-all duration-200 font-medium group active:scale-[0.97]">
-                <Icon size={17} className="text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                <Icon size={17} className="text-gray-500 group-hover:text-indigo-600 transition-colors" />
                 {label}
               </Link>
             ))}
@@ -125,7 +123,8 @@ export default async function LearnerLayout({ children }: { children: React.Reac
         }))} />
         <div className="h-16 sm:hidden" />
         <TeamMessagePopup userId={user.id} />
-        <WhatsNewPopup userId={user.id} />
+        <InstallPrompt />
+        <PushRegistration />
       </div>
     </OnboardingProvider>
   )

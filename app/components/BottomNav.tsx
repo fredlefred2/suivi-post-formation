@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import {
   LayoutDashboard, Target, ClipboardCheck, History,
-  Users, GraduationCap,
+  Users, GraduationCap, Sparkles,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useOnboarding } from '@/lib/onboarding-context'
@@ -16,6 +16,7 @@ const iconMap: Record<string, LucideIcon> = {
   History,
   Users,
   GraduationCap,
+  Sparkles,
 }
 
 type NavItem = {
@@ -28,8 +29,7 @@ type NavItem = {
 export default function BottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  let disabled = false
-  try { disabled = useOnboarding().isOnboarding } catch { /* outside provider (trainer layout) */ }
+  const { isOnboarding: disabled } = useOnboarding()
 
   const isTrainer = pathname.startsWith('/trainer')
 
@@ -53,6 +53,7 @@ export default function BottomNav({ items }: { items: NavItem[] }) {
           if (!Icon) return null
           return (
             <Link key={href} href={getGroupHref(href)}
+              data-onboarding={`nav-${href.split('/').pop()}`}
               className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-all duration-150 font-medium active:scale-90 ${
                 isActive ? 'text-white' : 'text-gray-500'
               }`}

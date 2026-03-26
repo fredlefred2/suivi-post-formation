@@ -1,84 +1,100 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerClient()
+    const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ notifications: [] })
-
-    // Récupérer les actions de l'utilisateur avec leur description
-    const { data: myActions } = await admin
-      .from('actions')
-      .select('id, description')
-      .eq('learner_id', user.id)
-
-    if (!myActions || myActions.length === 0) {
-      return NextResponse.json({ notifications: [] })
+    if (!user) {
+      return NextResponse.json({ notifications: [], unreadCount: 0 })
     }
 
-    const actionIds = myActions.map((a) => a.id)
-    const actionMap = Object.fromEntries(myActions.map((a) => [a.id, a.description]))
+    const unreadOnly = request.nextUrl.searchParams.get('unread_only') === 'true'
 
-    // Récupérer les 20 derniers likes (pas les miens)
-    const { data: likes } = await admin
-      .from('action_likes')
-      .select('action_id, created_at, trainer_id, profiles!inner(first_name)')
-      .in('action_id', actionIds)
-      .neq('trainer_id', user.id)
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(30)
 
-    // Récupérer les 20 derniers commentaires (pas les miens)
-    const { data: comments } = await admin
-      .from('action_comments')
-      .select('action_id, created_at, trainer_id, profiles!inner(first_name)')
-      .in('action_id', actionIds)
-      .neq('trainer_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(20)
-
-    // Fusionner et trier
-    type NotifItem = {
-      type: 'like' | 'comment'
-      personName: string
-      actionDescription: string
-      createdAt: string
+    if (unreadOnly) {
+      query = query.eq('read', false)
     }
 
-    const notifications: NotifItem[] = []
+    const { data: notifications, error } = await query
 
-    for (const like of (likes ?? [])) {
-      const profile = like.profiles as unknown as { first_name: string }
-      notifications.push({
-        type: 'like',
-        personName: profile?.first_name || 'Quelqu\'un',
-        actionDescription: actionMap[like.action_id] || 'Action',
-        createdAt: like.created_at,
-      })
+    if (error) {
+      console.error('Error fetching notifications:', error)
+      return NextResponse.json({ notifications: [], unreadCount: 0 })
     }
 
-    for (const comment of (comments ?? [])) {
-      const profile = comment.profiles as unknown as { first_name: string }
-      notifications.push({
-        type: 'comment',
-        personName: profile?.first_name || 'Quelqu\'un',
-        actionDescription: actionMap[comment.action_id] || 'Action',
-        createdAt: comment.created_at,
-      })
+    // Count unread separately (always needed for badge)
+    const { count: unreadCount } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false)
+
+    return NextResponse.json({
+      notifications: notifications ?? [],
+      unreadCount: unreadCount ?? 0,
+    })
+  } catch (err) {
+    console.error('Notifications GET error:', err)
+    return NextResponse.json({ notifications: [], unreadCount: 0 })
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
 
-    // Trier par date desc et limiter à 20
-    notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    const body = await request.json()
+    const { ids, all } = body as { ids?: string[]; all?: boolean }
 
-    return NextResponse.json({ notifications: notifications.slice(0, 20) })
-  } catch {
-    return NextResponse.json({ notifications: [] })
+    if (all) {
+      // Mark all notifications as read for this user
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false)
+
+      if (error) {
+        console.error('Error marking all as read:', error)
+        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+      }
+    } else if (ids && Array.isArray(ids) && ids.length > 0) {
+      // Mark specific notifications as read
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .in('id', ids)
+
+      if (error) {
+        console.error('Error marking notifications as read:', error)
+        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+      }
+    } else {
+      return NextResponse.json({ error: 'Paramètres invalides : ids ou all requis' }, { status: 400 })
+    }
+
+    // Return updated unread count
+    const { count: unreadCount } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false)
+
+    return NextResponse.json({ unreadCount: unreadCount ?? 0 })
+  } catch (err) {
+    console.error('Notifications PATCH error:', err)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

@@ -2,8 +2,9 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { getCurrentWeek, expectedCheckins, calculateStreak, getCheckinContext } from '@/lib/utils'
+import { getCurrentWeek, calculateStreak, getCheckinContext } from '@/lib/utils'
 import { getDynamique } from '@/lib/axeHelpers'
+import type { ActionFeedbackData } from '@/lib/types'
 import OnboardingFlow from './OnboardingFlow'
 import DashboardClient from './DashboardClient'
 
@@ -21,7 +22,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase.from('profiles').select('first_name, created_at').eq('id', user!.id).single(),
     supabase.from('axes')
-      .select('id, subject, difficulty, actions(id, created_at)')
+      .select('id, subject, description, difficulty, initial_score, actions(id, description, created_at)')
       .eq('learner_id', user!.id)
       .order('created_at'),
     supabase.from('checkins')
@@ -39,25 +40,27 @@ export default async function DashboardPage() {
   // Check-in affiché seulement si fenêtre ouverte (ven→lun) ET pas encore fait
   const checkinDone = !checkinCtx.isOpen || !!checkinForTargetWeek
   const totalCheckins = allCheckins?.length ?? 0
-  const expected = profile?.created_at ? expectedCheckins(profile.created_at) : 0
-
   // Total actions menées
   const totalCompletedActions = axes?.reduce((acc, axe) => {
     return acc + ((axe.actions as { id: string }[])?.length ?? 0)
   }, 0) ?? 0
 
-  // Delta actions des 7 derniers jours
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  // Delta actions de la semaine ISO courante (depuis lundi 00h)
+  const now = new Date()
+  const dayOfWeekNow = now.getDay() // 0=dim, 1=lun, ..., 6=sam
+  const diffToMonday = dayOfWeekNow === 0 ? 6 : dayOfWeekNow - 1
+  const thisMonday = new Date(now)
+  thisMonday.setHours(0, 0, 0, 0)
+  thisMonday.setDate(now.getDate() - diffToMonday)
   const deltaActionsThisWeek = axes?.reduce((acc, axe) => {
     return acc + ((axe.actions as { id: string; created_at: string }[]) ?? [])
-      .filter(a => a.created_at >= sevenDaysAgo.toISOString()).length
+      .filter(a => a.created_at >= thisMonday.toISOString()).length
   }, 0) ?? 0
 
-  // Dernière météo enregistrée
-  const lastWeather = allCheckins?.length
-    ? (allCheckins[allCheckins.length - 1].weather as string | null)
-    : null
+  // Frise météo : les 4 derniers check-ins
+  const weatherHistory = (allCheckins ?? [])
+    .slice(-4)
+    .map(c => c.weather as string)
 
   // Streak (semaines consécutives de check-in)
   const streak = calculateStreak(
@@ -66,24 +69,25 @@ export default async function DashboardPage() {
     year
   )
 
-  // Actions de la semaine dernière (pour le récap)
-  const twoWeeksAgo = new Date()
-  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  // Actions de la semaine ISO précédente (lundi→dimanche, stable)
+  // thisMonday déjà calculé plus haut
+  const lastMonday = new Date(thisMonday)
+  lastMonday.setDate(thisMonday.getDate() - 7)
   const lastWeekActions = axes?.reduce((acc, axe) => {
     return acc + ((axe.actions as { id: string; created_at: string }[]) ?? [])
-      .filter(a => a.created_at >= twoWeeksAgo.toISOString() && a.created_at < oneWeekAgo.toISOString()).length
+      .filter(a => a.created_at >= lastMonday.toISOString() && a.created_at < thisMonday.toISOString()).length
   }, 0) ?? 0
+
+  // Admin client (réutilisé pour rang + feedback)
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   // Rang dans le groupe
   let rank: number | null = null
   let groupSize: number | null = null
   try {
-    const admin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
     const { data: membership } = await admin
       .from('group_members')
       .select('group_id')
@@ -126,15 +130,46 @@ export default async function DashboardPage() {
     ((axe.actions as { id: string }[]) ?? []).map((a) => a.id)
   )[0] ?? null
 
+  // Feedback (likes + commentaires) pour les actions du dashboard
+  const allActionIds = (axes ?? []).flatMap(
+    (axe) => ((axe.actions ?? []) as { id: string }[]).map((a) => a.id)
+  )
+
+  const [{ data: likesData }, { data: commentsData }] = await Promise.all([
+    allActionIds.length > 0
+      ? admin.from('action_likes').select('action_id').in('action_id', allActionIds)
+      : Promise.resolve({ data: [] as { action_id: string }[] }),
+    allActionIds.length > 0
+      ? admin.from('action_comments').select('action_id').in('action_id', allActionIds)
+      : Promise.resolve({ data: [] as { action_id: string }[] }),
+  ])
+
+  // Comptes par axe
+  const likesCountByAxe: Record<string, number> = {}
+  const commentsCountByAxe: Record<string, number> = {}
+  ;(axes ?? []).forEach((axe) => {
+    const actionIds = new Set(((axe.actions ?? []) as { id: string }[]).map(a => a.id))
+    likesCountByAxe[axe.id] = (likesData ?? []).filter(l => actionIds.has(l.action_id)).length
+    commentsCountByAxe[axe.id] = (commentsData ?? []).filter(c => actionIds.has(c.action_id)).length
+  })
+
   // Axes formatés pour le client
   const axeItems = (axes ?? []).map((axe, index) => {
-    const completedCount = ((axe.actions as { id: string }[]) ?? []).length
+    const actions = (axe.actions ?? []) as { id: string; description: string; created_at: string }[]
+    const completedCount = actions.length
+    const lastAction = actions.length > 0
+      ? actions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+      : null
     return {
       id: axe.id,
       index,
       subject: axe.subject,
+      description: (axe as { description?: string | null }).description ?? null,
       completedCount,
       dyn: getDynamique(completedCount),
+      likesCount: likesCountByAxe[axe.id] ?? 0,
+      commentsCount: commentsCountByAxe[axe.id] ?? 0,
+      lastAction: lastAction ? { description: lastAction.description, date: lastAction.created_at } : null,
     }
   })
 
@@ -154,16 +189,16 @@ export default async function DashboardPage() {
       totalActions={totalCompletedActions}
       totalCheckins={totalCheckins}
       firstActionId={firstActionId}
+      axes={axeItems.map(a => ({ id: a.id, subject: a.subject, description: a.description, difficulty: (axes ?? []).find(x => x.id === a.id)?.difficulty ?? 'moyen', completedCount: a.completedCount }))}
     >
       <DashboardClient
         firstName={profile?.first_name ?? ''}
         checkinDone={checkinDone}
         checkinWeekLabel={checkinCtx.weekLabel}
         totalCheckins={totalCheckins}
-        expectedCheckins={expected}
         totalActions={totalCompletedActions}
         deltaActionsThisWeek={deltaActionsThisWeek}
-        lastWeather={lastWeather}
+        weatherHistory={weatherHistory}
         axesCount={axesCount}
         axes={axeItems}
         stepsData={stepsData}
@@ -171,6 +206,8 @@ export default async function DashboardPage() {
         rank={rank}
         groupSize={groupSize}
         lastWeekActions={lastWeekActions}
+        checkinIsOpen={checkinCtx.isOpen}
+        axesForCheckin={(axes ?? []).map(a => ({ id: a.id, initial_score: a.initial_score ?? 1 }))}
       />
     </OnboardingFlow>
   )

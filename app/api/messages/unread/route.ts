@@ -15,6 +15,6 @@ export async function GET() {
     .eq('receiver_id', user.id)
     .eq('is_read', false)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
   return NextResponse.json({ count: count ?? 0 })
 }

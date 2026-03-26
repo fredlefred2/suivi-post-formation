@@ -3,12 +3,11 @@
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Pencil } from 'lucide-react'
-import { createAxe, deleteAxe, updateAxe, createAction, updateAction, deleteAction } from './actions'
+import { createAxe, createAxeFast, deleteAxe, updateAxe, createAction, updateAction, deleteAction } from './actions'
 import type { Axe, Action, ActionFeedbackData, Difficulty } from '@/lib/types'
-import { MessageCircle, Bell } from 'lucide-react'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
-import { acknowledgeStep } from '@/lib/onboarding'
+import QuickAddAction from '@/app/components/QuickAddAction'
 import { useOnboarding } from '@/lib/onboarding-context'
 import { MARKERS, getDynamique, getCurrentLevelIndex, getProgress, getCurrentLevel, getNextLevel, getActionPhaseIcon } from '@/lib/axeHelpers'
 import { useToast } from '@/app/components/Toast'
@@ -40,10 +39,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const { setIsOnboarding } = useOnboarding()
   const [levelUpInfo, setLevelUpInfo] = useState<{ icon: string; label: string } | null>(null)
   const isOnboardingCreate = onboarding === 'create'
-  const isHighlightAdd = onboarding === 'highlight-add'
-  const isHighlightDelete = onboarding === 'highlight-delete'
-  const isAutoDemo = onboarding === 'auto-demo'
-  const isOnboardingMode = isOnboardingCreate || isAutoDemo || isHighlightAdd || isHighlightDelete
+  const isOnboardingMode = isOnboardingCreate
   const [showAxeForm, setShowAxeForm] = useState(isOnboardingCreate)
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null)
 
@@ -54,19 +50,17 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   }, [isOnboardingMode, setIsOnboarding])
   const [addActionAxeId, setAddActionAxeId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Force index 0 during highlight/demo onboarding modes
-  const [currentIndex, setCurrentIndex] = useState(isHighlightAdd || isHighlightDelete || isAutoDemo ? 0 : initialIndex)
-  // Auto-demo state
-  const [demoPhase, setDemoPhase] = useState(0) // 0=creating, 1=add, 2=edit, 3=feedback, 4=delete
-  const [demoActionId, setDemoActionId] = useState<string | null>(null)
-  const demoCreatedRef = useRef(false)
+  const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [editingActionId, setEditingActionId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
   const [deletingActionId, setDeletingActionId] = useState<string | null>(null)
   const [deletingAxeStep, setDeletingAxeStep] = useState<0 | 1 | 2>(0) // 0=fermé, 1=avertissement, 2=confirmation
   const [deletingAxeId, setDeletingAxeId] = useState<string | null>(null)
   // État édition d'axe
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [highlightAxeId, setHighlightAxeId] = useState<string | null>(null)
   const [editingAxe, setEditingAxe] = useState<AxeWithActions | null>(null)
   const [editAxeSubject, setEditAxeSubject] = useState('')
   const [editAxeDescription, setEditAxeDescription] = useState('')
@@ -97,58 +91,11 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     setCurrentIndex(closestIndex)
   }, [])
 
-  // Auto-demo : créer automatiquement une action d'exemple
-  useEffect(() => {
-    if (!isAutoDemo || axes.length === 0 || demoCreatedRef.current) return
-    demoCreatedRef.current = true
-    const fd = new FormData()
-    fd.set('axe_id', axes[0].id)
-    fd.set('description', "J'ai préparé le compte-rendu de la réunion")
-    startTransition(async () => {
-      const result = await createAction(fd)
-      if (result?.id) setDemoActionId(result.id)
-      setDemoPhase(1)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAutoDemo])
-
-  // Auto-demo : finaliser la démo
-  async function finishDemo() {
-    if (demoActionId) {
-      startTransition(async () => {
-        await deleteAction(demoActionId)
-        if (userId) {
-          acknowledgeStep('first-action', userId)
-          acknowledgeStep('feedback-intro', userId)
-          acknowledgeStep('edit-delete', userId)
-        }
-        router.push('/dashboard')
-      })
-    } else {
-      if (userId) {
-        acknowledgeStep('first-action', userId)
-        acknowledgeStep('feedback-intro', userId)
-        acknowledgeStep('edit-delete', userId)
-      }
-      router.push('/dashboard')
-    }
-  }
-
-  // Demo phase data (6 phases)
-  const demoPhases = [
-    { icon: '➕', text: 'Le bouton « Ajouter » permet de créer des actions concrètes pour chaque axe.' },
-    { icon: '✏️', text: 'Le bouton ✏️ permet de modifier le texte d\'une action à tout moment.' },
-    { icon: '💬', text: 'Ton formateur et tes coéquipiers peuvent ❤️ liker et 💬 commenter tes actions.' },
-    { icon: '🗑️', text: 'Le bouton 🗑️ permet de supprimer une action.' },
-    { icon: '💬', text: 'L\'icône message en haut à droite te permet d\'envoyer un message privé à ton formateur.', highlight: 'message' },
-    { icon: '🔔', text: 'La cloche te notifie des nouveautés : likes, commentaires et messages de ton formateur.', highlight: 'bell' },
-  ]
-
   // Scroll initial vers l'index demandé
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container || axes.length === 0) return
-    const targetIndex = isHighlightAdd || isHighlightDelete || isAutoDemo ? 0 : initialIndex
+    const targetIndex = initialIndex
     if (targetIndex > 0 && targetIndex < axes.length) {
       const card = container.children[targetIndex] as HTMLElement
       if (card) {
@@ -162,17 +109,23 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     e.preventDefault()
     setError(null)
     const formData = new FormData(e.currentTarget)
-    startTransition(async () => {
-      const result = await createAxe(formData)
-      if (result?.error) setError(result.error)
-      else if (isOnboardingCreate) {
-        router.push('/dashboard')
-      } else {
-        setShowAxeForm(false)
-        setSelectedDifficulty(null)
-        setCurrentIndex(axes.length)
-      }
-    })
+    if (isOnboardingCreate) {
+      // En onboarding : action rapide (revalide uniquement /dashboard)
+      setIsSaving(true)
+      const result = await createAxeFast(formData)
+      if (result?.error) { setError(result.error); setIsSaving(false) }
+      else router.push('/dashboard')
+    } else {
+      startTransition(async () => {
+        const result = await createAxe(formData)
+        if (result?.error) setError(result.error)
+        else {
+          setShowAxeForm(false)
+          setSelectedDifficulty(null)
+          setCurrentIndex(axes.length)
+        }
+      })
+    }
   }
 
   async function handleCreateAction(e: React.FormEvent<HTMLFormElement>, axeId: string) {
@@ -187,11 +140,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
     startTransition(async () => {
       const result = await createAction(formData)
       if (result?.error) return
-
-      if (isHighlightAdd) {
-        router.push('/dashboard')
-        return
-      }
 
       setAddActionAxeId(null)
 
@@ -230,7 +178,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const deletingAxe = deletingAxeId ? axes.find(a => a.id === deletingAxeId) : null
 
   return (
-    <div className={`space-y-6 ${isAutoDemo ? 'pb-28' : 'pb-4'}`}>
+    <div className="space-y-6 pb-4">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Mes actions de progrès</h1>
         {axes.length < 3 && !isOnboardingCreate && (
@@ -240,70 +188,93 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         )}
       </div>
 
-      {isHighlightAdd && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
-          <span className="text-xl">⚡</span>
-          <p className="text-sm font-semibold text-amber-800">Cliquez sur le bouton « + Ajouter » qui clignote ci-dessous</p>
-        </div>
-      )}
-      {isHighlightDelete && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
-          <span className="text-xl">🗑️</span>
-          <p className="text-sm font-semibold text-amber-800">Cliquez sur l&apos;icône de suppression 🗑️ qui clignote</p>
-        </div>
-      )}
-      {isAutoDemo && demoPhase === 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
-          <span className="text-xl animate-spin">⏳</span>
-          <p className="text-sm font-semibold text-indigo-800">Préparation de la démo...</p>
-        </div>
-      )}
-
       {/* Formulaire nouvel axe */}
       {showAxeForm && (
-        <div className="card border-indigo-100 border-2">
-          <h2 className="section-title mb-4">Nouvel axe de progrès</h2>
-          <form onSubmit={handleCreateAxe} className="space-y-4">
+        <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden">
+          {/* Header gradient */}
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4">
+            <h2 className="text-white font-bold text-base">🎯 Nouvel axe de progrès</h2>
+            <p className="text-indigo-100 text-xs mt-0.5">Définis un domaine à améliorer</p>
+          </div>
+
+          <form onSubmit={handleCreateAxe} className="p-5 space-y-5">
+            {/* Sujet */}
             <div>
-              <label className="label">Sujet / intitulé de l&apos;axe *</label>
-              <input name="subject" required className="input" placeholder="Ex: Déléguer efficacement" />
+              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Intitulé de l&apos;axe</label>
+              <input
+                name="subject"
+                required
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-gray-500"
+                placeholder="Ex : Déléguer efficacement"
+              />
             </div>
+
+            {/* Description */}
             <div>
-              <label className="label">Description (optionnel)</label>
-              <textarea name="description" className="input h-20 resize-none" placeholder="Décrivez ce que vous souhaitez améliorer..." />
+              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                Moyens envisagés <span className="font-normal text-gray-500">(optionnel)</span>
+              </label>
+              <textarea
+                name="description"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20 placeholder:text-gray-500"
+                placeholder="Comment comptez-vous progresser sur cet axe ?"
+              />
             </div>
+
+            {/* Difficulté */}
             <div>
-              <label className="label">Niveau de difficulté de cet axe *</label>
-              <p className="text-xs text-gray-400 mb-2">Ce niveau reste fixe et ne sera pas modifié lors des check-ins.</p>
-              <div className="flex gap-3 mt-1">
-                {(['facile', 'moyen', 'difficile'] as const).map((d) => {
-                  const isSelected = selectedDifficulty === d
+              <label className="text-xs font-semibold text-gray-700 mb-2 block">Niveau de difficulté</label>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { key: 'facile' as const, emoji: '🟢', label: 'Facile' },
+                  { key: 'moyen' as const, emoji: '🟡', label: 'Moyen' },
+                  { key: 'difficile' as const, emoji: '🔴', label: 'Difficile' },
+                ]).map(({ key, emoji, label }) => {
+                  const isSelected = selectedDifficulty === key
                   return (
-                    <label key={d} className="flex-1 cursor-pointer">
+                    <label key={key} className="cursor-pointer">
                       <input
-                        type="radio" name="difficulty" value={d} required className="sr-only"
-                        checked={selectedDifficulty === d}
-                        onChange={() => setSelectedDifficulty(d)}
+                        type="radio" name="difficulty" value={key} required className="sr-only"
+                        checked={isSelected}
+                        onChange={() => setSelectedDifficulty(key)}
                       />
-                      <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 ${
+                      <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
                         isSelected
-                          ? `${DIFFICULTY_COLORS[d]} scale-105 shadow-lg`
-                          : 'border-gray-200 bg-white text-gray-600'
+                          ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
                       }`}>
-                        <p className="text-xs font-bold">{DIFFICULTY_LABELS[d]}</p>
+                        <span className="text-lg">{emoji}</span>
+                        <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
                       </div>
                     </label>
                   )
                 })}
               </div>
             </div>
+
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
-            <div className="flex gap-2">
-              <button type="submit" disabled={isPending} className="btn-primary">
-                {isPending ? 'Enregistrement...' : 'Enregistrer'}
+
+            {/* Boutons */}
+            <div className="flex gap-3 pt-1">
+              <button
+                type="submit"
+                disabled={isPending || isSaving}
+                className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98] ${(isPending || isSaving) ? 'opacity-60' : ''}`}
+                style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+              >
+                {(isPending || isSaving) ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                    Enregistrement...
+                  </span>
+                ) : '✓ Enregistrer'}
               </button>
               {!isOnboardingCreate && (
-                <button type="button" onClick={() => { setShowAxeForm(false); setError(null) }} className="btn-secondary">
+                <button
+                  type="button"
+                  onClick={() => { setShowAxeForm(false); setError(null); setSelectedDifficulty(null) }}
+                  className="px-5 py-3 rounded-xl font-semibold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                >
                   Annuler
                 </button>
               )}
@@ -315,7 +286,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {/* État vide */}
       {axes.length === 0 && !showAxeForm && (
         <div className="card text-center py-10">
-          <p className="text-gray-400 mb-4">Vous n&apos;avez pas encore défini d&apos;axes de progrès.</p>
+          <p className="text-gray-500 mb-4">Vous n&apos;avez pas encore défini d&apos;axes de progrès.</p>
           <button onClick={() => setShowAxeForm(true)} className="btn-primary">
             <Plus size={16} /> Définir mon premier axe
           </button>
@@ -328,24 +299,35 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
+            className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
           >
             {axes.map((axe, axeIndex) => {
               const dyn = getDynamique(axe.actions.length)
               const progress = getProgress(axe.actions.length)
               const levelIdx = getCurrentLevelIndex(axe.actions.length)
               const level = getCurrentLevel(axe.actions.length)
+              const cardGradient = levelIdx === 0
+                ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'
+                : levelIdx === 1
+                ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
+                : levelIdx === 2
+                ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+                : levelIdx === 3
+                ? 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)'
+                : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)'
               return (
                 <div
                   key={axe.id}
-                  className={`snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl border-2 p-4 ${dyn.color}`}
+                  className="snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl p-4 flex flex-col max-h-[calc(100dvh-11rem)]"
+                  style={{ background: cardGradient }}
                 >
-                  {/* Ligne 1 : numéro + titre + supprimer */}
-                  <div className="flex items-start gap-3">
-                    <span className="w-9 h-9 rounded-full bg-white/60 border border-current/20 flex items-center justify-center text-base font-bold shrink-0 mt-0.5">
+                 <div className="shrink-0">
+                  {/* Titre + boutons edit/delete */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
                       {axeIndex + 1}
                     </span>
-                    <p className="font-bold text-base leading-snug line-clamp-2 flex-1">{axe.subject}</p>
+                    <p className="font-bold text-sm leading-snug line-clamp-1 flex-1">{axe.subject}</p>
                     <div className="flex items-center gap-0.5 shrink-0">
                       <button
                         onClick={() => {
@@ -371,58 +353,89 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                     </div>
                   </div>
 
-                  {/* Ligne 2 : actions + niveau */}
-                  <div className="flex items-center gap-2 mt-3">
-                    <span className="text-sm font-semibold">
-                      {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
-                    </span>
-                    <span className="opacity-30">·</span>
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{level.icon}</span>
-                    <span className="text-sm font-medium opacity-80">
-                      Niveau {level.label}
-                    </span>
+                  {/* Moyens / description */}
+                  <div className="h-[32px] mt-1">
+                    {axe.description ? (
+                      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{axe.description}</p>
+                    ) : (
+                      <p className="text-xs text-gray-500 italic">—</p>
+                    )}
                   </div>
 
-                  {/* Barre de progression */}
-                  <div className="mt-3 relative">
-                    <div className="h-3 bg-white/60 rounded-full overflow-hidden">
+                  {/* Niveau actuel - hero */}
+                  <div className="flex items-center justify-center h-[40px] gap-2">
+                    <span className="text-3xl drop-shadow-sm">{level.icon}</span>
+                    <span className="text-sm font-bold text-gray-700">{level.label}</span>
+                  </div>
+
+                  {/* Piste de progression avec jalons */}
+                  <div className="relative h-[20px] mx-1">
+                    <div className="absolute top-[6px] inset-x-0 h-2 bg-white/50 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-current opacity-60 transition-all duration-500"
-                        style={{ width: `${progress}%` }}
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${progress}%`,
+                          background: levelIdx === 0
+                            ? '#94a3b8'
+                            : levelIdx === 1
+                            ? '#38bdf8'
+                            : levelIdx === 2
+                            ? '#34d399'
+                            : levelIdx === 3
+                            ? '#fb923c'
+                            : '#f472b6',
+                        }}
                       />
                     </div>
-                    <div className="relative h-5 mt-0.5">
-                      {MARKERS.map((m, i) => (
-                        <span
-                          key={i}
-                          className={`absolute -translate-x-1/2 text-sm ${i <= levelIdx ? 'opacity-100' : 'opacity-25'}`}
-                          style={{ left: `${m.pos * 100}%` }}
-                        >
-                          {m.icon}
-                        </span>
-                      ))}
+                    <div className="flex justify-between absolute inset-x-0 top-0">
+                      {MARKERS.map((m, i) => {
+                        const reached = i <= levelIdx
+                        const isCurrent = i === levelIdx
+                        return (
+                          <div
+                            key={i}
+                            className={`flex items-center justify-center rounded-full transition-all ${
+                              isCurrent
+                                ? 'w-5 h-5 bg-white shadow-md ring-2 ring-current/40 text-sm z-10'
+                                : reached
+                                ? 'w-4 h-4 mt-0.5 bg-white/90 shadow-sm text-[11px]'
+                                : 'w-4 h-4 mt-0.5 bg-white/40 text-[11px]'
+                            }`}
+                          >
+                            <span className={reached ? '' : 'opacity-30 grayscale text-[10px]'}>{m.icon}</span>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
 
-                  {/* Séparateur + Actions menées */}
-                  <div className="border-t border-current/10 pt-3 mt-2">
+                  {/* Compteur actions + delta */}
+                  <div className="h-[20px] flex items-center justify-center mt-1">
+                    <p className="text-center text-xs font-semibold text-gray-600">
+                      {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
+                      {axe.actions.length < 9 && (
+                        <span className="font-normal text-gray-500"> · encore {9 - axe.actions.length} pour 🚀</span>
+                      )}
+                    </p>
+                  </div>
+                 </div>
+
+                  {/* Séparateur + titre Actions menées (fixe) */}
+                  <div className="border-t border-current/10 pt-3 mt-2 shrink-0">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium text-gray-700">
                         Actions menées
                         {axe.actions.length > 0 && (
-                          <span className="ml-1.5 text-xs font-normal text-gray-400">({axe.actions.length})</span>
+                          <span className="ml-1.5 text-xs font-normal text-gray-500">({axe.actions.length})</span>
                         )}
                       </p>
-                      <button
-                        onClick={() => { if (!isAutoDemo) setAddActionAxeId(addActionAxeId === axe.id ? null : axe.id) }}
-                        className={`btn-primary text-xs px-3 py-1.5 ${(isHighlightAdd || (isAutoDemo && demoPhase === 1)) && axeIndex === 0 ? 'onboarding-pulse' : ''}`}
-                      >
-                        <Plus size={14} /> Ajouter
-                      </button>
                     </div>
+                  </div>
 
+                  {/* Liste d'actions (scrollable) */}
+                  <div className="flex-1 min-h-0 overflow-y-auto">
                     {axe.actions.length === 0 && (
-                      <p className="text-xs text-gray-400 italic">Aucune action enregistrée</p>
+                      <p className="text-xs text-gray-500 italic">Aucune action enregistrée</p>
                     )}
 
                     {(() => {
@@ -435,40 +448,35 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                         <ul className="space-y-2">
                           {displaySorted.map((action, actionIndex) => {
                             const rank = rankMap.get(action.id) ?? 1
-                            // Pulse conditionnels pour l'onboarding
-                            const shouldPulseEdit = isAutoDemo && demoPhase === 2 && axeIndex === 0 && actionIndex === 0
-                            const shouldPulseFeedback = isAutoDemo && demoPhase === 3 && axeIndex === 0 && actionIndex === 0
-                            const shouldPulseDelete = (isHighlightDelete || (isAutoDemo && demoPhase === 4)) && axeIndex === 0 && actionIndex === 0
+                            const isNewlyAdded = highlightAxeId === axe.id && actionIndex === 0
                             return (
-                              <li key={action.id} className="flex items-start gap-2">
+                              <li key={action.id} className={`flex items-start gap-2 rounded-lg px-1 -mx-1 transition-colors duration-1000 ${isNewlyAdded ? 'bg-indigo-100' : ''}`}>
                                 <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{getActionPhaseIcon(rank)}</span>
                                 <div className="flex-1 min-w-0">
                                   <span className="text-sm text-gray-700">{action.description}</span>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-xs text-gray-400">{formatDate(action.created_at)}</span>
-                                    <div className={shouldPulseFeedback ? 'rounded-lg onboarding-pulse px-1' : ''}>
-                                      <ActionFeedback
-                                        actionId={action.id}
-                                        feedback={feedbackMap[action.id] ?? emptyFeedback}
-                                        canInteract={false}
-                                      />
-                                    </div>
+                                    <span className="text-xs text-gray-500">{formatDate(action.created_at)}</span>
+                                    <ActionFeedback
+                                      actionId={action.id}
+                                      feedback={feedbackMap[action.id] ?? emptyFeedback}
+                                      canInteract={false}
+                                    />
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0 mt-0.5">
                                   <button
-                                    onClick={() => { if (!isAutoDemo) { setEditingActionId(action.id); setEditingText(action.description) } }}
-                                    className={`text-gray-300 hover:text-indigo-500 transition-colors ${shouldPulseEdit ? 'p-1.5 rounded-full onboarding-pulse' : 'p-0.5'}`}
+                                    onClick={() => { setEditingActionId(action.id); setEditingText(action.description) }}
+                                    className="text-gray-300 hover:text-indigo-500 transition-colors p-0.5"
                                     title="Modifier"
                                   >
-                                    <Pencil size={shouldPulseEdit ? 16 : 13} />
+                                    <Pencil size={13} />
                                   </button>
                                   <button
-                                    onClick={() => { if (!isAutoDemo) setDeletingActionId(action.id) }}
-                                    className={`text-gray-300 hover:text-red-400 transition-colors ${shouldPulseDelete ? 'p-1.5 rounded-full onboarding-pulse' : 'p-0.5'}`}
+                                    onClick={() => setDeletingActionId(action.id)}
+                                    className="text-gray-300 hover:text-red-400 transition-colors p-0.5"
                                     title="Supprimer"
                                   >
-                                    <Trash2 size={shouldPulseDelete ? 16 : 13} />
+                                    <Trash2 size={13} />
                                   </button>
                                 </div>
                               </li>
@@ -638,35 +646,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         </div>
       )}
 
-      {/* Bandeau auto-demo fixe en bas */}
-      {isAutoDemo && demoPhase >= 1 && demoPhase <= 6 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4 flex items-center gap-3 animate-fade-in-up">
-            {demoPhases[demoPhase - 1].highlight === 'message' ? (
-              <MessageCircle size={24} className="shrink-0 text-indigo-500 animate-pulse" />
-            ) : demoPhases[demoPhase - 1].highlight === 'bell' ? (
-              <Bell size={24} className="shrink-0 text-amber-500 animate-pulse" />
-            ) : (
-              <span className="text-2xl shrink-0">{demoPhases[demoPhase - 1].icon}</span>
-            )}
-            <p className="text-sm text-gray-700 flex-1">{demoPhases[demoPhase - 1].text}</p>
-            <button
-              onClick={() => {
-                if (demoPhase < 6) {
-                  setDemoPhase(demoPhase + 1)
-                } else {
-                  finishDemo()
-                }
-              }}
-              disabled={isPending}
-              className="btn-primary text-xs px-4 py-2 shrink-0"
-            >
-              {isPending ? '...' : demoPhase < 6 ? 'Suivant →' : 'Compris !'}
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Célébration de niveau */}
       {levelUpInfo && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setLevelUpInfo(null)}>
@@ -675,8 +654,8 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
             <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
             <div className="animate-level-up-text">
               <p className="text-xl font-bold text-gray-900 mb-1">Niveau {levelUpInfo.label}</p>
-              <p className="text-lg font-semibold text-indigo-600">débloqué !</p>
-              <p className="text-sm text-gray-400 mt-3">Continue comme ça 💪</p>
+              <p className="text-lg font-semibold text-gray-500">débloqué !</p>
+              <p className="text-sm text-gray-500 mt-3">Continue comme ça 💪</p>
             </div>
           </div>
         </div>
@@ -707,10 +686,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                   setDeletingActionId(null)
                   startTransition(async () => {
                     await deleteAction(actionId)
-                    if (isHighlightDelete && userId) {
-                      acknowledgeStep('edit-delete', userId)
-                      router.push('/dashboard')
-                    }
                   })
                 }}
                 className="px-5 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
@@ -721,61 +696,127 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           </div>
         </div>
       )}
+      {/* FAB — Bouton flottant "Ajouter une action" */}
+      {axes.length > 0 && !isOnboardingMode && (
+        <button
+          onClick={() => setQuickAddOpen(true)}
+          className="fixed bottom-20 right-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
+            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.4)',
+          }}
+          title="Ajouter une action"
+        >
+          <Plus size={24} strokeWidth={2.5} />
+        </button>
+      )}
+
+      {/* Quick Add Action Modal */}
+      <QuickAddAction
+        axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.actions.length }))}
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        onSuccess={(axeId) => {
+          // Scroll vers la carte de l'axe concerné
+          const axeIndex = axes.findIndex(a => a.id === axeId)
+          if (axeIndex >= 0) {
+            setCurrentIndex(axeIndex)
+            const container = scrollContainerRef.current
+            if (container && container.children[axeIndex]) {
+              (container.children[axeIndex] as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+            }
+          }
+          // Flash sur la dernière action ajoutée
+          setHighlightAxeId(axeId)
+          setTimeout(() => setHighlightAxeId(null), 2000)
+          router.refresh()
+        }}
+      />
+
       {/* Modale d'édition d'axe */}
       {editingAxe && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setEditingAxe(null)} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-            <h3 className="font-semibold text-gray-900 text-lg">Modifier l&apos;axe de progrès</h3>
-            <form onSubmit={handleUpdateAxe} className="space-y-4">
+          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
+            {/* Header gradient */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4">
+              <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
+              <p className="text-indigo-100 text-xs mt-0.5">Modifie les détails de ton axe</p>
+            </div>
+
+            <form onSubmit={handleUpdateAxe} className="p-5 space-y-5">
+              {/* Sujet */}
               <div>
-                <label className="label">Sujet / intitulé de l&apos;axe *</label>
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Intitulé de l&apos;axe</label>
                 <input
                   value={editAxeSubject}
                   onChange={(e) => setEditAxeSubject(e.target.value)}
                   required
-                  className="input"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
                 />
               </div>
+
+              {/* Description */}
               <div>
-                <label className="label">Description (optionnel)</label>
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                  Moyens envisagés <span className="font-normal text-gray-500">(optionnel)</span>
+                </label>
                 <textarea
                   value={editAxeDescription}
                   onChange={(e) => setEditAxeDescription(e.target.value)}
-                  className="input h-20 resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20"
                 />
               </div>
+
+              {/* Difficulté */}
               <div>
-                <label className="label">Niveau de difficulté *</label>
-                <div className="flex gap-3 mt-1">
-                  {(['facile', 'moyen', 'difficile'] as const).map((d) => {
-                    const isSelected = editAxeDifficulty === d
+                <label className="text-xs font-semibold text-gray-700 mb-2 block">Niveau de difficulté</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: 'facile' as const, emoji: '🟢', label: 'Facile' },
+                    { key: 'moyen' as const, emoji: '🟡', label: 'Moyen' },
+                    { key: 'difficile' as const, emoji: '🔴', label: 'Difficile' },
+                  ]).map(({ key, emoji, label }) => {
+                    const isSelected = editAxeDifficulty === key
                     return (
-                      <label key={d} className="flex-1 cursor-pointer">
+                      <label key={key} className="cursor-pointer">
                         <input
-                          type="radio" name="edit-difficulty" value={d} className="sr-only"
-                          checked={editAxeDifficulty === d}
-                          onChange={() => setEditAxeDifficulty(d)}
+                          type="radio" name="edit-difficulty" value={key} className="sr-only"
+                          checked={isSelected}
+                          onChange={() => setEditAxeDifficulty(key)}
                         />
-                        <div className={`text-center py-4 border-2 rounded-xl transition-all duration-200 ${
+                        <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
                           isSelected
-                            ? `${DIFFICULTY_COLORS[d]} scale-105 shadow-lg`
-                            : 'border-gray-200 bg-white text-gray-600'
+                            ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}>
-                          <p className="text-xs font-bold">{DIFFICULTY_LABELS[d]}</p>
+                          <span className="text-lg">{emoji}</span>
+                          <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
                         </div>
                       </label>
                     )
                   })}
                 </div>
               </div>
+
               {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
-              <div className="flex gap-3 justify-end">
-                <button type="button" onClick={() => setEditingAxe(null)} className="btn-secondary px-5">
-                  Annuler
+
+              {/* Boutons */}
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+                >
+                  {isPending ? 'Enregistrement...' : '✓ Valider'}
                 </button>
-                <button type="submit" disabled={isPending} className="btn-primary px-5">
-                  {isPending ? 'Enregistrement...' : 'Valider'}
+                <button
+                  type="button"
+                  onClick={() => setEditingAxe(null)}
+                  className="px-5 py-3 rounded-xl font-semibold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                >
+                  Annuler
                 </button>
               </div>
             </form>

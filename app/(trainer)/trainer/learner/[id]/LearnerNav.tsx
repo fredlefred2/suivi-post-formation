@@ -107,7 +107,7 @@ export default function LearnerNav({
                   <span className={`text-sm ${g.id === currentGroupId ? 'text-indigo-700 font-medium' : 'text-gray-700'}`}>
                     {g.name}
                   </span>
-                  <span className="ml-auto text-xs text-gray-400">{g.count} app.</span>
+                  <span className="ml-auto text-xs text-gray-500">{g.count} app.</span>
                 </button>
               ))}
             </div>

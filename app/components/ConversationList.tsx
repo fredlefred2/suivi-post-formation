@@ -79,7 +79,7 @@ export default function ConversationList({
     return (
       <div className="text-center py-12 px-4">
         <MessageCircle size={40} className="mx-auto text-gray-300 mb-3" />
-        <p className="text-sm text-gray-400">Aucune conversation</p>
+        <p className="text-sm text-gray-500">Aucune conversation</p>
       </div>
     )
   }
@@ -102,12 +102,12 @@ export default function ConversationList({
               <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
                 {conv.firstName} {conv.lastName}
               </p>
-              <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">
+              <span className="text-[10px] text-gray-500 flex-shrink-0 ml-2">
                 {timeAgo(conv.lastMessageAt)}
               </span>
             </div>
             <div className="flex items-center justify-between mt-0.5">
-              <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'text-gray-700 font-medium' : 'text-gray-400'}`}>
+              <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'text-gray-700 font-medium' : 'text-gray-500'}`}>
                 {conv.lastMessageByMe ? 'Vous : ' : ''}{conv.lastMessage}
               </p>
               {conv.unreadCount > 0 && (

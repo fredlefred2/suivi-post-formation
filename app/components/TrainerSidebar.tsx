@@ -35,7 +35,7 @@ export default function TrainerSidebar() {
               className={`flex items-center gap-2.5 px-3 py-2.5 text-sm hover:text-indigo-800 hover:bg-indigo-100 rounded-xl transition-all duration-200 font-medium group active:scale-[0.97] ${
                 isActive ? 'text-indigo-800 bg-indigo-50' : 'text-gray-500'
               }`}>
-              <Icon size={17} className={`transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600'}`} />
+              <Icon size={17} className={`transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-500 group-hover:text-indigo-600'}`} />
               {label}
             </Link>
           )

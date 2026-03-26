@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ChevronDown, Users, TrendingUp, X, ClipboardCheck, Download, Loader2 } from 'lucide-react'
+import { ChevronDown, X, Download, Loader2 } from 'lucide-react'
+import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import TrainerTeamMessages from '@/app/components/TrainerTeamMessages'
@@ -41,22 +42,15 @@ export type UnassignedLearner = {
   last_name: string
 }
 
-const WEATHER_POINTS: Record<string, number> = { stormy: 0, cloudy: 1, sunny: 2 }
-
-function getOverallWeatherEmoji(score: number) {
-  if (score < 0.4) return '🌧️'
-  if (score < 0.8) return '🌥️'
-  if (score < 1.2) return '⛅'
-  if (score <= 1.6) return '🌤️'
-  return '☀️'
+const WEATHER_ICONS: Record<string, string> = {
+  sunny: '☀️',
+  cloudy: '⛅',
+  stormy: '⛈️',
 }
 
 function getDynamiqueForCount(count: number) {
-  if (count === 0) return { icon: '⚪', level: 0, label: 'Veille' }
-  if (count <= 2) return { icon: '👣', level: 1, label: 'Impulsion' }
-  if (count <= 5) return { icon: '🥁', level: 2, label: 'Rythme' }
-  if (count <= 8) return { icon: '🔥', level: 3, label: 'Intensité' }
-  return { icon: '🚀', level: 4, label: 'Propulsion' }
+  const dyn = getDynamique(count)
+  return { icon: dyn.icon, level: getCurrentLevelIndex(count), label: dyn.label }
 }
 
 const LEVEL_CARD_COLORS: Record<number, string> = {
@@ -81,6 +75,7 @@ type Props = {
   actions: ActionData[]
   currentWeek: number
   currentYear: number
+  isCheckinOpen: boolean
   unassignedLearners?: UnassignedLearner[]
   learnerAxesMap?: Record<string, number[]>
   initialGroup?: string
@@ -93,13 +88,13 @@ export default function TrainerDashboardClient({
   actions,
   currentWeek,
   currentYear,
+  isCheckinOpen,
   unassignedLearners = [],
   learnerAxesMap = {},
   initialGroup,
   currentUserId,
 }: Props) {
   // ── State ──
-  // Initialiser sans localStorage pour éviter le mismatch d'hydration
   const [selectedOption, setSelectedOption] = useState<string>(
     initialGroup && initialGroup !== 'all' && groups.some(g => g.id === initialGroup)
       ? initialGroup
@@ -112,7 +107,7 @@ export default function TrainerDashboardClient({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Restaurer le localStorage APRÈS hydration
+  // Restaurer le localStorage APRES hydration
   useEffect(() => {
     if (!initialGroup || initialGroup === 'all') {
       const stored = localStorage.getItem('trainer_selected_group')
@@ -129,7 +124,7 @@ export default function TrainerDashboardClient({
     localStorage.setItem('trainer_selected_group', option)
   }
 
-  // Fermeture dropdown au clic extérieur
+  // Fermeture dropdown au clic exterieur
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -145,7 +140,7 @@ export default function TrainerDashboardClient({
       ? 'Tous les groupes'
       : groups.find((g) => g.id === selectedOption)?.name ?? 'Groupe'
 
-  // ── Données filtrées ──
+  // ── Donnees filtrees ──
   const filteredGroups = selectedOption === 'all' ? groups : groups.filter((g) => g.id === selectedOption)
 
   const filteredLearnerIds = useMemo(() => {
@@ -168,41 +163,40 @@ export default function TrainerDashboardClient({
   const thisWeekCheckins = filteredCheckins.filter((c) => c.week_number === currentWeek && c.year === currentYear)
   const filteredActions = actions.filter((a) => filteredLearnerIds.has(a.learner_id))
 
-  // Actions 7 derniers jours
-  const sevenDaysAgo = useMemo(() => {
-    const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString()
+  // Actions semaine ISO courante (depuis lundi)
+  const thisMondayISO = useMemo(() => {
+    const now = new Date()
+    const day = now.getDay()
+    const diff = day === 0 ? 6 : day - 1
+    const monday = new Date(now)
+    monday.setHours(0, 0, 0, 0)
+    monday.setDate(now.getDate() - diff)
+    return monday.toISOString()
   }, [])
-  const recentActionsFiltered = filteredActions.filter((a) => a.created_at >= sevenDaysAgo)
+  const recentActionsFiltered = filteredActions.filter((a) => a.created_at >= thisMondayISO)
 
-  // Actions pour le carousel (les 10 plus récentes filtrées)
+  // Actions pour le carousel (les 10 plus recentes filtrees)
   const carouselActions = filteredActions.slice(0, 10)
 
-  // ── Météo générale ──
-  const weatherSummary = useMemo(() => {
-    const latestByLearner: Record<string, CheckinData> = {}
-    ;[...filteredCheckins]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .forEach((c) => { if (!latestByLearner[c.learner_id]) latestByLearner[c.learner_id] = c })
+  // ── Meteo : distribution semaine passée ──
+  const prevWeek = useMemo(() => {
+    let w = currentWeek - 1, y = currentYear
+    if (w <= 0) { w = 52; y-- }
+    return { week: w, year: y }
+  }, [currentWeek, currentYear])
 
+  const weatherDistribution = useMemo(() => {
+    const lastWeekCheckins = filteredCheckins.filter(
+      (c) => c.week_number === prevWeek.week && c.year === prevWeek.year
+    )
     const counts = { sunny: 0, cloudy: 0, stormy: 0 }
-    Object.values(latestByLearner).forEach((c) => {
-      const w = c.weather as 'sunny' | 'cloudy' | 'stormy'
-      if (counts[w] !== undefined) counts[w]++
+    lastWeekCheckins.forEach((c) => {
+      if (c.weather in counts) counts[c.weather as keyof typeof counts]++
     })
     return counts
-  }, [filteredCheckins])
+  }, [filteredCheckins, prevWeek])
 
-  const totalWithCheckin = weatherSummary.sunny + weatherSummary.cloudy + weatherSummary.stormy
-  const overallScore = totalWithCheckin > 0
-    ? Object.entries(weatherSummary).reduce((acc, [key, count]) => acc + count * (WEATHER_POINTS[key] ?? 0), 0) / totalWithCheckin
-    : -1
-  const overallEmoji = overallScore >= 0 ? getOverallWeatherEmoji(overallScore) : null
-
-  // ── Indice d'action moyen ──
-  const avgActions = filteredLearnerIds.size > 0
-    ? Math.round(filteredActions.length / filteredLearnerIds.size)
-    : 0
-  const actionIndice = getDynamiqueForCount(avgActions)
+  const totalWithCheckin = weatherDistribution.sunny + weatherDistribution.cloudy + weatherDistribution.stormy
 
   // ── Check-ins manquants ──
   const thisWeekCheckinLearnerIds = new Set(thisWeekCheckins.map((c) => c.learner_id))
@@ -212,7 +206,47 @@ export default function TrainerDashboardClient({
   }, [filteredGroups, thisWeekCheckinLearnerIds])
   const missingCount = missingCheckinMembers.length
 
-  // ── Compteurs animés ──
+  // ── Semaine passée : % check-ins réalisés ──
+  const lastWeekInfo = useMemo(() => {
+    // Semaine précédente
+    let prevWeek = currentWeek - 1
+    let prevYear = currentYear
+    if (prevWeek <= 0) { prevWeek = 52; prevYear-- }
+
+    const lastWeekCheckins = filteredCheckins.filter(
+      (c) => c.week_number === prevWeek && c.year === prevYear
+    )
+    const uniqueLearnersChecked = new Set(lastWeekCheckins.map((c) => c.learner_id)).size
+    const totalMembers = filteredLearnerIds.size
+    const pct = totalMembers > 0 ? Math.round((uniqueLearnersChecked / totalMembers) * 100) : 0
+
+    // Calculer les dates lundi → dimanche de la semaine passée
+    const now = new Date()
+    const day = now.getDay()
+    const diffToMonday = day === 0 ? 6 : day - 1
+    const thisMonday = new Date(now)
+    thisMonday.setHours(0, 0, 0, 0)
+    thisMonday.setDate(now.getDate() - diffToMonday)
+    const lastMonday = new Date(thisMonday)
+    lastMonday.setDate(thisMonday.getDate() - 7)
+    const lastSunday = new Date(thisMonday)
+    lastSunday.setDate(thisMonday.getDate() - 1)
+
+    const fmt = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    const label = `${fmt(lastMonday)} - ${fmt(lastSunday)}`
+
+    // Prochain check-in : vendredi de cette semaine (ou vendredi prochain si déjà passé)
+    const nextFriday = new Date(thisMonday)
+    nextFriday.setDate(thisMonday.getDate() + 4) // lundi + 4 = vendredi
+    if (now > nextFriday) {
+      nextFriday.setDate(nextFriday.getDate() + 7)
+    }
+    const nextCheckinLabel = nextFriday.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+    return { pct, label, nextCheckinLabel, uniqueLearnersChecked, totalMembers }
+  }, [currentWeek, currentYear, filteredCheckins, filteredLearnerIds])
+
+  // ── Compteurs animes ──
   const animatedMembers = useCountUp(filteredLearnerIds.size)
   const animatedDelta = useCountUp(recentActionsFiltered.length)
 
@@ -244,15 +278,15 @@ export default function TrainerDashboardClient({
       const totalActions = axesCounts.reduce((a, b) => a + b, 0)
       const dyns = [0, 1, 2].map((i) => getDynamiqueForCount(axesCounts[i] ?? 0))
       const totalLevel = dyns.reduce((a, m) => a + m.level, 0)
-      return { id: lid, name: learnerNameMap[lid] ?? 'Inconnu', totalActions, dyns, totalLevel }
+      // Derniere meteo
+      const learnerCheckins = filteredCheckins
+        .filter(c => c.learner_id === lid)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      const lastWeather = learnerCheckins.length > 0 ? learnerCheckins[0].weather : null
+      return { id: lid, name: learnerNameMap[lid] ?? 'Inconnu', totalActions, dyns, totalLevel, lastWeather }
     }).sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
-  }, [filteredLearnerIds, learnerAxesMap, learnerNameMap])
+  }, [filteredLearnerIds, learnerAxesMap, learnerNameMap, filteredCheckins])
 
-  function getInitials(first: string, last: string) {
-    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
-  }
-
-  // Petit point radio visuel
   function RadioDot({ active }: { active: boolean }) {
     return (
       <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? 'border-indigo-600' : 'border-gray-300'}`}>
@@ -266,7 +300,7 @@ export default function TrainerDashboardClient({
     setIsDownloading(true)
     try {
       const res = await fetch(`/api/group-report?groupId=${selectedOption}`)
-      if (!res.ok) throw new Error('Erreur téléchargement')
+      if (!res.ok) throw new Error('Erreur telechargement')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -286,177 +320,170 @@ export default function TrainerDashboardClient({
   const apprenantLink = `/trainer/apprenants?group=${selectedOption}`
 
   return (
-    <div className="space-y-6 pb-4">
+    <div className="space-y-4 pb-4">
 
-      {/* ── Dropdown sélection groupe + bouton rapport ── */}
+      {/* ── Dropdown selection groupe + bouton rapport ── */}
       <div className="flex items-center gap-2">
-      <div className="relative" ref={dropdownRef}>
-        <button
-          onClick={() => setDropdownOpen((o) => !o)}
-          className={`flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-colors shadow-sm min-w-[220px] justify-between ${
-            dropdownOpen
-              ? 'border-indigo-400 text-indigo-700 ring-2 ring-indigo-100'
-              : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-700'
-          }`}
-        >
-          <span className="truncate">📊 {selectionLabel}</span>
-          <ChevronDown size={16} className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
-        </button>
+        <div className="relative flex-1" ref={dropdownRef}>
+          <button
+            onClick={() => setDropdownOpen((o) => !o)}
+            className={`w-full flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-colors shadow-sm justify-between ${
+              dropdownOpen
+                ? 'border-indigo-400 text-indigo-700 ring-2 ring-indigo-100'
+                : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-700'
+            }`}
+          >
+            <span className="truncate">{selectionLabel}</span>
+            <ChevronDown size={16} className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
 
-        {dropdownOpen && (
-          <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[260px]">
-            <button
-              onClick={() => selectOption('all')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${selectedOption === 'all' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
-            >
-              <RadioDot active={selectedOption === 'all'} />
-              <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
-                Tous les groupes
-                <span className="ml-1 font-normal text-gray-400">({groups.length})</span>
-              </span>
-              <span className="ml-auto text-xs text-gray-400">
-                {groups.reduce((acc, g) => acc + g.members.length, 0)} app.
-              </span>
-            </button>
-            <div className="py-1">
-              {groups.map((g) => {
-                const isSalleAttente = g.name === 'Salle d\'attente'
-                return (
-                  <button
-                    key={g.id}
-                    onClick={() => selectOption(g.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                      selectedOption === g.id
-                        ? isSalleAttente ? 'bg-amber-50' : 'bg-indigo-50'
-                        : isSalleAttente ? 'hover:bg-amber-50' : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <RadioDot active={selectedOption === g.id} />
-                    <span className={`text-sm ${
-                      selectedOption === g.id
-                        ? isSalleAttente ? 'text-amber-700 font-medium' : 'text-indigo-700 font-medium'
-                        : isSalleAttente ? 'text-amber-600' : 'text-gray-700'
-                    }`}>
-                      {isSalleAttente ? '⚪ ' : ''}{g.name}
-                    </span>
-                    <span className="ml-auto text-xs text-gray-400">{g.members.length} app.</span>
-                  </button>
-                )
-              })}
+          {dropdownOpen && (
+            <div className="absolute top-full mt-1.5 left-0 right-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+              <button
+                onClick={() => selectOption('all')}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${selectedOption === 'all' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+              >
+                <RadioDot active={selectedOption === 'all'} />
+                <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
+                  Tous les groupes
+                  <span className="ml-1 font-normal text-gray-500">({groups.length})</span>
+                </span>
+                <span className="ml-auto text-xs text-gray-500">
+                  {groups.reduce((acc, g) => acc + g.members.length, 0)} app.
+                </span>
+              </button>
+              <div className="py-1">
+                {groups.map((g) => {
+                  const isSalleAttente = g.name === 'Salle d\'attente'
+                  return (
+                    <button
+                      key={g.id}
+                      onClick={() => selectOption(g.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                        selectedOption === g.id
+                          ? isSalleAttente ? 'bg-amber-50' : 'bg-indigo-50'
+                          : isSalleAttente ? 'hover:bg-amber-50' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <RadioDot active={selectedOption === g.id} />
+                      <span className={`text-sm ${
+                        selectedOption === g.id
+                          ? isSalleAttente ? 'text-amber-700 font-medium' : 'text-indigo-700 font-medium'
+                          : isSalleAttente ? 'text-amber-600' : 'text-gray-700'
+                      }`}>
+                        {isSalleAttente ? '⚪ ' : ''}{g.name}
+                      </span>
+                      <span className="ml-auto text-xs text-gray-500">{g.members.length} app.</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Bouton telecharger rapport PDF */}
+        {selectedOption !== 'all' && (
+          <button
+            onClick={handleDownloadReport}
+            disabled={isDownloading}
+            className="flex items-center gap-1.5 px-3 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+            title="Telecharger le rapport PDF"
+          >
+            {isDownloading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
+            <span className="hidden sm:inline">{isDownloading ? 'Generation...' : 'Rapport'}</span>
+          </button>
+        )}
+      </div>
+
+      {/* ── Bloc principal : 3 colonnes compactes ── */}
+      <div className="card p-4">
+        <div className="grid grid-cols-3 gap-3">
+
+          {/* Colonne 1 : Membres */}
+          <Link href={apprenantLink} className="text-center group">
+            <div className="text-3xl font-black text-gray-800">
+              {animatedMembers}
+            </div>
+            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">membre{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
+          </Link>
+
+          {/* Colonne 2 : Actions cette semaine */}
+          <Link href={apprenantLink} className="text-center group">
+            <div className={`text-3xl font-black ${recentActionsFiltered.length > 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+              {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
+            </div>
+            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">cette semaine</p>
+          </Link>
+
+          {/* Colonne 3 : Check-ins */}
+          <div className="text-center">
+            {isCheckinOpen ? (
+              missingCount === 0 ? (
+                <>
+                  <div className="text-3xl font-black text-emerald-600">✓</div>
+                  <p className="text-[11px] text-emerald-600 mt-0.5 leading-tight font-medium">tous a jour</p>
+                </>
+              ) : (
+                <>
+                  <div className="text-3xl font-black text-amber-600">{missingCount}</div>
+                  <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">en attente</p>
+                </>
+              )
+            ) : (
+              <>
+                <div className={`text-3xl font-black ${lastWeekInfo.pct === 100 ? 'text-emerald-600' : lastWeekInfo.pct >= 50 ? 'text-indigo-600' : 'text-amber-600'}`}>
+                  {lastWeekInfo.pct}%
+                </div>
+                <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">check-ins</p>
+              </>
+            )}
+          </div>
+
+        </div>
+
+        {/* Meteo distribution */}
+        {totalWithCheckin > 0 && (
+          <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-gray-100">
+            <span className="text-[11px] text-gray-500">Meteo S-1</span>
+            {weatherDistribution.sunny > 0 && (
+              <span className="text-sm">☀️ <span className="text-xs font-semibold text-gray-600">{weatherDistribution.sunny}</span></span>
+            )}
+            {weatherDistribution.cloudy > 0 && (
+              <span className="text-sm">⛅ <span className="text-xs font-semibold text-gray-600">{weatherDistribution.cloudy}</span></span>
+            )}
+            {weatherDistribution.stormy > 0 && (
+              <span className="text-sm">⛈️ <span className="text-xs font-semibold text-gray-600">{weatherDistribution.stormy}</span></span>
+            )}
           </div>
         )}
       </div>
 
-      {/* Bouton télécharger rapport PDF */}
-      {selectedOption !== 'all' && (
-        <button
-          onClick={handleDownloadReport}
-          disabled={isDownloading}
-          className="flex items-center gap-1.5 px-3 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-          title="Télécharger le rapport PDF"
-        >
-          {isDownloading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Download size={16} />
-          )}
-          <span className="hidden sm:inline">{isDownloading ? 'Génération...' : 'Rapport'}</span>
-        </button>
+      {/* ── Bandeau check-ins en attente (uniquement si fenêtre ouverte) ── */}
+      {isCheckinOpen && missingCount > 0 && (
+        <div className="rounded-xl px-4 py-2.5 bg-amber-50 border border-amber-200">
+          <p className="text-sm text-amber-800">
+            <span className="font-semibold">Check-ins en attente :</span>{' '}
+            {missingCheckinMembers.slice(0, 4).map((m) => m.first_name).join(', ')}
+            {missingCheckinMembers.length > 4 && ` et ${missingCheckinMembers.length - 4} autre${missingCheckinMembers.length - 4 > 1 ? 's' : ''}`}
+          </p>
+        </div>
       )}
-      </div>
-
-      {/* ── Bloc 1 : Membres + Météo générale ── */}
-      <div className="card py-5 px-4">
-        <div className="grid grid-cols-2 divide-x divide-gray-100">
-          <Link href={apprenantLink} className="text-center px-2 hover:opacity-80 transition-opacity">
-            <Users size={28} className="mx-auto text-indigo-500 mb-1.5" />
-            <p className="text-3xl font-bold text-gray-800">{animatedMembers}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Membre{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
-          </Link>
-          <div className="text-center px-2 flex flex-col items-center justify-center">
-            {overallEmoji ? (
-              <>
-                <p className="text-xs text-gray-500 mb-2">Météo générale</p>
-                <span className="text-6xl leading-none">{overallEmoji}</span>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-gray-500 mb-2">Météo générale</p>
-                <span className="text-5xl text-gray-300">-</span>
-                <p className="text-[11px] text-gray-400 mt-1">Pas de check-in</p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Bloc 2 : Actions cette semaine + Indice d'action ── */}
-      <Link href={apprenantLink} className="card py-5 px-4 block hover:border-indigo-200 transition-colors">
-        <div className="grid grid-cols-2 divide-x divide-gray-100">
-          <div className="text-center px-2">
-            <TrendingUp size={28} className="mx-auto text-emerald-500 mb-1.5" />
-            <p className={`text-3xl font-bold ${recentActionsFiltered.length > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
-              {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">Actions cette semaine</p>
-          </div>
-          <div className="text-center px-2 flex flex-col items-center justify-center">
-            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${LEVEL_AVATAR_COLORS[actionIndice.level] ?? LEVEL_AVATAR_COLORS[0]}`}>
-              <span className="text-4xl leading-none">{actionIndice.icon}</span>
-            </div>
-            <p className="text-sm font-semibold text-gray-700 mt-2">{actionIndice.label}</p>
-          </div>
-        </div>
-      </Link>
-
-      {/* ── Bloc 3 : Check-ins manquants ── */}
-      <div className="card py-5 px-4">
-        <div className="grid grid-cols-2 divide-x divide-gray-100">
-          <div className="text-center px-2 flex flex-col items-center justify-center">
-            {missingCount === 0 ? (
-              <>
-                <span className="text-4xl leading-none mb-1">✅</span>
-                <p className="text-lg font-bold text-emerald-600">100%</p>
-                <p className="text-xs text-gray-500 mt-0.5">Check-ins complets</p>
-              </>
-            ) : (
-              <>
-                <ClipboardCheck size={32} className="text-indigo-400 mb-1" />
-                <p className="text-lg font-bold text-gray-800">{missingCount} en attente</p>
-                <p className="text-xs text-gray-500 mt-0.5">sur {filteredLearnerIds.size} participant{filteredLearnerIds.size > 1 ? 's' : ''}</p>
-              </>
-            )}
-          </div>
-          <div className="px-3 flex flex-col justify-center">
-            {missingCount === 0 ? (
-              <p className="text-sm text-emerald-600 text-center">Tous les check-ins sont à jour ✅</p>
-            ) : (
-              <div className="space-y-0.5 max-h-[80px] overflow-y-auto scrollbar-hide">
-                {missingCheckinMembers.slice(0, 5).map((m) => (
-                  <p key={m.learner_id} className="text-sm text-amber-700 truncate">
-                    · {m.first_name}
-                  </p>
-                ))}
-                {missingCheckinMembers.length > 5 && (
-                  <p className="text-xs text-gray-400 italic">et {missingCheckinMembers.length - 5} autre{missingCheckinMembers.length - 5 > 1 ? 's' : ''}</p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* ── Messages de la team ── */}
       {selectedOption !== 'all' && (
         <TrainerTeamMessages groupId={selectedOption} currentUserId={currentUserId} />
       )}
 
-      {/* ── Carousel actions récentes ── */}
+      {/* ── Carousel actions recentes ── */}
       {carouselActions.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="section-title">Actions récentes</h2>
+            <h2 className="text-sm font-bold text-gray-700">Actions recentes</h2>
             <button onClick={handleOpenAll} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline">
               Voir tout
             </button>
@@ -472,11 +499,11 @@ export default function TrainerDashboardClient({
                 <Link
                   key={action.id}
                   href={`/trainer/apprenants?group=${learnerGroupMap[action.learner_id] ?? ''}&learner=${action.learner_id}`}
-                  className={`flex-shrink-0 w-[220px] bg-gradient-to-br ${LEVEL_CARD_COLORS[dyn.level] ?? LEVEL_CARD_COLORS[0]} rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md active:scale-[0.98]`}
+                  className={`flex-shrink-0 w-[220px] bg-gradient-to-br ${LEVEL_CARD_COLORS[dyn.level] ?? LEVEL_CARD_COLORS[0]} rounded-xl p-3 text-left transition-all duration-200 hover:shadow-md active:scale-[0.98]`}
                   style={{ scrollSnapAlign: 'start' }}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-base`}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className={`w-7 h-7 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-sm`}>
                       {dyn.icon}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -487,8 +514,8 @@ export default function TrainerDashboardClient({
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-[10px] text-gray-400">
+                  <div className="flex items-center justify-between mt-1.5">
+                    <p className="text-[10px] text-gray-500">
                       {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </p>
                     {(action.feedback.likes_count > 0 || action.feedback.comments_count > 0) && (
@@ -503,12 +530,12 @@ export default function TrainerDashboardClient({
             })}
           </div>
           {carouselActions.length > 1 && (
-            <div className="flex justify-center gap-1 mt-3">
+            <div className="flex justify-center gap-1 mt-2">
               {carouselActions.map((_, i) => (
                 <div
                   key={i}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentSlide % carouselActions.length ? 'w-4 bg-indigo-500' : 'w-1.5 bg-gray-200'
+                    i === currentSlide % carouselActions.length ? 'w-3.5 bg-indigo-500' : 'w-1.5 bg-gray-200'
                   }`}
                 />
               ))}
@@ -519,18 +546,18 @@ export default function TrainerDashboardClient({
 
       {carouselActions.length === 0 && filteredLearnerIds.size > 0 && (
         <div className="card text-center py-6">
-          <p className="text-gray-400 text-sm">Aucune action enregistrée</p>
+          <p className="text-gray-500 text-sm">Aucune action enregistree</p>
         </div>
       )}
 
       {/* ── Tous en action ── */}
       {filteredLearnerIds.size > 0 && sorted.length > 0 && (
         <div className="card">
-          <h2 className="section-title mb-3">Tous en action</h2>
+          <h2 className="text-sm font-bold text-gray-700 mb-3">Tous en action</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-400 border-b border-gray-100">
+                <tr className="text-xs text-gray-500 border-b border-gray-100">
                   <th className="text-left pb-2 font-medium">#</th>
                   <th className="text-left pb-2 font-medium">Participant</th>
                   <th className="text-center pb-2 font-medium">Actions</th>
@@ -542,13 +569,16 @@ export default function TrainerDashboardClient({
               <tbody>
                 {sorted.map((learner, idx) => (
                   <tr key={learner.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-1.5 text-xs text-gray-400 w-6">{idx + 1}</td>
-                    <td className="py-1.5 font-medium text-gray-800 truncate max-w-[140px]">
+                    <td className="py-1.5 text-xs text-gray-500 w-6">{idx + 1}</td>
+                    <td className="py-1.5 font-medium text-gray-800 max-w-[140px]">
                       <Link
                         href={`/trainer/apprenants?group=${learnerGroupMap[learner.id] ?? ''}&learner=${learner.id}`}
-                        className="hover:text-indigo-600 transition-colors"
+                        className="hover:text-indigo-600 transition-colors flex items-center gap-1.5"
                       >
-                        {learner.name}
+                        <span className="truncate">{learner.name}</span>
+                        {learner.lastWeather && (
+                          <span className="text-xs shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>
+                        )}
                       </Link>
                     </td>
                     <td className="py-1.5 text-center font-semibold text-gray-700">{learner.totalActions}</td>
@@ -565,14 +595,14 @@ export default function TrainerDashboardClient({
         </div>
       )}
 
-      {/* ── Modale : toutes les actions récentes ── */}
+      {/* ── Modale : toutes les actions recentes ── */}
       {showAllActions && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowAllActions(false)} />
-          <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col">
+          <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col pb-[max(0px,env(safe-area-inset-bottom))]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="font-bold text-gray-800">Actions récentes</h3>
-              <button onClick={() => setShowAllActions(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+              <h3 className="font-bold text-gray-800">Actions recentes</h3>
+              <button onClick={() => setShowAllActions(false)} className="text-gray-500 hover:text-gray-600 transition-colors p-1">
                 <X size={20} />
               </button>
             </div>
@@ -594,7 +624,7 @@ export default function TrainerDashboardClient({
                       </p>
                       <p className="text-xs text-indigo-500">{action.axe_subject}</p>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-500">
                       {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>

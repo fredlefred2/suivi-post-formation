@@ -37,11 +37,11 @@ function FeedbackModal({ open, onClose, children }: { open: boolean, onClose: ()
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div
         ref={ref}
-        className="relative bg-white w-full sm:w-auto sm:min-w-[280px] sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-xl"
+        className="relative bg-white w-full sm:w-auto sm:min-w-[280px] sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-xl pb-[max(0px,env(safe-area-inset-bottom))]"
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-600 transition-colors"
         >
           <X size={18} />
         </button>
@@ -146,7 +146,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
       <FeedbackModal open={showLikers} onClose={() => setShowLikers(false)}>
         <p className="text-sm font-semibold text-gray-700 mb-3">❤️ Aimé par</p>
         {feedback.likers.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">Personne encore</p>
+          <p className="text-sm text-gray-500 italic">Personne encore</p>
         ) : (
           <ul className="space-y-1.5">
             {feedback.likers.map((l, i) => (
@@ -188,7 +188,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
         <p className="text-sm font-semibold text-gray-700 mb-3">💬 Commentaires</p>
 
         {feedback.comments.length === 0 && !canInteract && (
-          <p className="text-sm text-gray-400 italic">Aucun commentaire</p>
+          <p className="text-sm text-gray-500 italic">Aucun commentaire</p>
         )}
 
         {feedback.comments.length > 0 && (
@@ -200,7 +200,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
                     {c.trainer_first_name} {c.trainer_last_name}
                   </span>
                   <span className="text-gray-300">·</span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-500">
                     {new Date(c.created_at).toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'short',

@@ -218,7 +218,7 @@ export default async function LearnerDetailPage({
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-emerald-500 mb-1.5"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
             <p className="text-3xl font-bold text-gray-800">
               {totalCheckins}
-              {expected > 0 && <span className="text-sm font-normal text-gray-400">/{expected}</span>}
+              {expected > 0 && <span className="text-sm font-normal text-gray-500">/{expected}</span>}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">Check-ins</p>
           </div>
@@ -233,7 +233,7 @@ export default async function LearnerDetailPage({
               <>
                 <p className="text-xs text-gray-500 mb-2">Dernière météo</p>
                 <span className="text-5xl text-gray-300">-</span>
-                <p className="text-[11px] text-gray-400 mt-1">Pas de check-in</p>
+                <p className="text-[11px] text-gray-500 mt-1">Pas de check-in</p>
               </>
             )}
           </div>
@@ -251,7 +251,7 @@ export default async function LearnerDetailPage({
           </div>
           {/* Delta cette semaine */}
           <div className="text-center px-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mx-auto ${actionsThisWeek > 0 ? 'text-emerald-500' : 'text-gray-400'} mb-1.5`}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mx-auto ${actionsThisWeek > 0 ? 'text-emerald-500' : 'text-gray-500'} mb-1.5`}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             <p className={`text-3xl font-bold ${actionsThisWeek > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
               {actionsThisWeek > 0 ? `+${actionsThisWeek}` : '0'}
             </p>
@@ -317,7 +317,7 @@ export default async function LearnerDetailPage({
         <div className="card text-center py-10">
           <p className="text-4xl mb-3">🌱</p>
           <p className="text-gray-500 font-medium">Ce participant n&apos;a pas encore commencé.</p>
-          <p className="text-gray-400 text-sm mt-1">Aucun axe ni check-in enregistré pour le moment.</p>
+          <p className="text-gray-500 text-sm mt-1">Aucun axe ni check-in enregistré pour le moment.</p>
         </div>
       )}
 

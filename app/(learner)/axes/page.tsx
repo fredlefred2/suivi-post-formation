@@ -64,7 +64,7 @@ export default async function AxesPage({
   })
 
   const initialIndex = searchParams.index !== undefined
-    ? Math.max(0, parseInt(searchParams.index) || 0)
+    ? Math.max(0, parseInt(searchParams.index, 10) || 0)
     : 0
 
   return <AxesClient key={initialIndex} axes={axes ?? []} initialIndex={initialIndex} feedbackMap={feedbackMap} onboarding={searchParams.onboarding} userId={user!.id} />

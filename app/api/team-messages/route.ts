@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendNotificationToMany } from '@/lib/send-notification'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +34,7 @@ export async function GET(req: NextRequest) {
 
   const { data: messages, error } = await query
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
 
   // Renverser pour avoir du plus ancien au plus récent
   const sorted = (messages ?? []).reverse().map((m) => {
@@ -84,6 +86,30 @@ export async function POST(req: NextRequest) {
     .select('id, group_id, sender_id, content, created_at')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ message: data })
+  if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
+
+  // Répondre immédiatement, puis envoyer les notifications
+  const response = NextResponse.json({ message: data })
+
+  // Notifications — on attend pour ne pas être tué par Vercel
+  try {
+    const [{ data: members }, { data: senderProfile }] = await Promise.all([
+      supabaseAdmin.from('group_members').select('learner_id').eq('group_id', groupId),
+      supabaseAdmin.from('profiles').select('first_name').eq('id', user.id).single(),
+    ])
+    const learnerIds = (members || []).map((m) => m.learner_id).filter((id) => id !== user.id)
+    if (learnerIds.length > 0) {
+      const preview = content.trim().length > 60 ? content.trim().substring(0, 60) + '…' : content.trim()
+      await sendNotificationToMany(learnerIds, {
+        type: 'team_message',
+        title: `📢 Message de ${senderProfile?.first_name || 'votre formateur'}`,
+        body: preview,
+        url: '/team',
+        data: { groupId },
+        pushOnly: true,
+      })
+    }
+  } catch { /* silencieux */ }
+
+  return response
 }

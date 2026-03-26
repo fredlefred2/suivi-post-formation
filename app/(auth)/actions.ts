@@ -36,7 +36,7 @@ export async function register(formData: FormData) {
   if (role === 'trainer') {
     const trainerKey = (formData.get('trainer_key') as string ?? '').trim().toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    if (trainerKey !== 'theatre') {
+    if (trainerKey !== (process.env.TRAINER_REGISTRATION_KEY || 'theatre').toLowerCase()) {
       return { error: 'Clé formateur incorrecte.' }
     }
   }

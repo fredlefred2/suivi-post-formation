@@ -34,7 +34,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       difficulties: formData.get('difficulties') as string || null,
       axes: axes.map(axe => ({
         id: axe.id,
-        score: parseInt(formData.get(`score_${axe.id}`) as string) || axe.initial_score,
+        score: parseInt(formData.get(`score_${axe.id}`) as string, 10) || axe.initial_score,
       })),
     }
 
@@ -46,6 +46,10 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       })
 
       if (!res.ok) {
+        if (res.status === 401) {
+          window.location.href = '/login'
+          return
+        }
         const data = await res.json()
         setError(data.error || 'Erreur lors de l\'enregistrement')
         setSubmitting(false)
@@ -78,7 +82,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
         ) : (
           <p className="text-sm text-gray-500">Premier check-in de la série, continue ! 💪</p>
         )}
-        <p className="text-xs text-gray-400">Redirection dans quelques secondes…</p>
+        <p className="text-xs text-gray-500">Redirection dans quelques secondes…</p>
         <a href="/dashboard" className="btn-primary inline-block mt-2">
           Retour au dashboard
         </a>
@@ -96,7 +100,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       {/* Météo */}
       <div className="card">
         <h2 className="section-title mb-1">Comment s&apos;est passée ta semaine ? *</h2>
-        <p className="text-sm text-gray-400 mb-4">{weekLabel ? `${weekLabel} — Ta météo générale` : 'Ta météo générale'}</p>
+        <p className="text-sm text-gray-500 mb-4">{weekLabel ? `${weekLabel} — Ta météo générale` : 'Ta météo générale'}</p>
         <div className="grid grid-cols-3 gap-3">
           {weatherOptions.map((opt) => {
             const isSelected = selectedWeather === opt.value
@@ -129,7 +133,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       {/* Ce qui a bien fonctionné */}
       <div className="card">
         <label className="section-title block mb-1">Ce qui a bien fonctionné</label>
-        <p className="text-sm text-gray-400 mb-3">Actions réussies, victoires, apprentissages positifs...</p>
+        <p className="text-sm text-gray-500 mb-3">Actions réussies, victoires, apprentissages positifs...</p>
         <textarea
           name="what_worked"
           className="input h-28 resize-none"
@@ -140,7 +144,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
       {/* Difficultés */}
       <div className="card">
         <label className="section-title block mb-1">Difficultés rencontrées</label>
-        <p className="text-sm text-gray-400 mb-3">Obstacles, blocages, points d&apos;amélioration...</p>
+        <p className="text-sm text-gray-500 mb-3">Obstacles, blocages, points d&apos;amélioration...</p>
         <textarea
           name="difficulties"
           className="input h-28 resize-none"
@@ -155,7 +159,7 @@ export default function CheckinForm({ axes, weekLabel, streak = 0 }: { axes: Axe
 
       {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 
-      <button type="submit" disabled={submitting} className="btn-primary w-full py-3 text-base">
+      <button type="submit" disabled={submitting} className="btn-primary btn-lg w-full">
         {submitting ? 'Enregistrement...' : 'Valider mon check-in ✓'}
       </button>
     </form>

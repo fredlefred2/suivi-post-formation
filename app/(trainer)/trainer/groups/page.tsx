@@ -40,20 +40,40 @@ export default async function GroupsPage() {
   const profileMap: Record<string, { first_name: string; last_name: string }> = {}
   profiles?.forEach((p) => { profileMap[p.id] = { first_name: p.first_name, last_name: p.last_name } })
 
-  // Structure enrichie : membres par groupe
-  const membersMap: Record<string, Array<{ learner_id: string; first_name: string; last_name: string }>> = {}
+  // Tips par apprenant : total et envoyés
+  const { data: tipsRaw } = learnerIds.length > 0
+    ? await admin.from('tips').select('learner_id, sent').in('learner_id', learnerIds)
+    : { data: [] as Array<{ learner_id: string; sent: boolean }> }
+
+  const tipsMap: Record<string, { total: number; sent: number }> = {}
+  ;(tipsRaw ?? []).forEach((t) => {
+    if (!tipsMap[t.learner_id]) tipsMap[t.learner_id] = { total: 0, sent: 0 }
+    tipsMap[t.learner_id].total++
+    if (t.sent) tipsMap[t.learner_id].sent++
+  })
+
+  // Structure enrichie : membres par groupe avec tips
+  const membersMap: Record<string, Array<{
+    learner_id: string
+    first_name: string
+    last_name: string
+    tips_total: number
+    tips_sent: number
+  }>> = {}
   ;(membersRaw ?? []).forEach((m) => {
     if (!membersMap[m.group_id]) membersMap[m.group_id] = []
+    const tips = tipsMap[m.learner_id] ?? { total: 0, sent: 0 }
     membersMap[m.group_id].push({
       learner_id: m.learner_id,
       first_name: profileMap[m.learner_id]?.first_name ?? '',
       last_name: profileMap[m.learner_id]?.last_name ?? '',
+      tips_total: tips.total,
+      tips_sent: tips.sent,
     })
   })
 
   return (
     <div className="space-y-6 pb-4">
-      <h1 className="page-title">Gestion des groupes</h1>
       <GroupsClient groups={groups ?? []} membersMap={membersMap} />
     </div>
   )

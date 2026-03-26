@@ -11,6 +11,7 @@ export async function createGroup(formData: FormData) {
 
   const { error } = await supabase.from('groups').insert({
     name: formData.get('name') as string,
+    theme: (formData.get('theme') as string) || null,
     trainer_id: user.id,
   })
 
@@ -27,6 +28,24 @@ export async function deleteGroup(groupId: string) {
   await supabase.from('groups').delete().eq('id', groupId).eq('trainer_id', user.id)
   revalidatePath('/trainer/groups')
   revalidatePath('/trainer/dashboard')
+}
+
+export async function updateGroupTheme(groupId: string, theme: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  const { error } = await supabase
+    .from('groups')
+    .update({ theme: theme.trim() || null })
+    .eq('id', groupId)
+    .eq('trainer_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/trainer/groups/${groupId}`)
+  revalidatePath('/trainer/groups')
+  return { success: true }
 }
 
 export async function addLearnerToGroup(groupId: string, email: string) {
@@ -81,7 +100,8 @@ export async function addLearnerToGroup(groupId: string, email: string) {
 
   revalidatePath(`/trainer/groups/${groupId}`)
   revalidatePath('/trainer/dashboard')
-  return { success: true, name: `${learner.first_name} ${learner.last_name}` }
+
+  return { success: true, name: `${learner.first_name} ${learner.last_name}`, learnerId: learner.id }
 }
 
 export async function addLearnerById(groupId: string, learnerId: string) {

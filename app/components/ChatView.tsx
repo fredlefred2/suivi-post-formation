@@ -49,7 +49,7 @@ export default function ChatView({
   useEffect(() => {
     fetchMessages()
     markAsRead()
-    const interval = setInterval(fetchMessages, 10_000)
+    const interval = setInterval(fetchMessages, 30_000)
     return () => clearInterval(interval)
   }, [userId])
 
@@ -161,7 +161,7 @@ export default function ChatView({
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-400">Démarrez la conversation</p>
+            <p className="text-sm text-gray-500">Démarrez la conversation</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -176,7 +176,7 @@ export default function ChatView({
                   }`}
                 >
                   <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                  <p className={`text-[10px] mt-1 ${isMine ? 'text-indigo-200' : 'text-gray-400'}`}>
+                  <p className={`text-[10px] mt-1 ${isMine ? 'text-indigo-200' : 'text-gray-500'}`}>
                     {formatTime(msg.created_at)}
                   </p>
                 </div>
