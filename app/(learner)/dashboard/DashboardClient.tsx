@@ -205,40 +205,7 @@ export default function DashboardClient({
 
         </div>
 
-        {/* Frise meteo */}
-        {weatherHistory.length > 0 && (
-          <Link href="/checkin" className="flex items-center justify-center gap-1 mt-3 pt-3 border-t border-gray-100">
-            <span className="text-[11px] text-gray-500 mr-1">Meteo</span>
-            {weatherHistory.map((w, i) => (
-              <span
-                key={i}
-                className={`text-xl transition-all ${i === weatherHistory.length - 1 ? 'text-2xl' : 'opacity-50'}`}
-              >
-                {WEATHER_ICONS[w] ?? '❓'}
-              </span>
-            ))}
-            {weatherHistory.length < 4 && (
-              <span className="text-gray-200 text-lg ml-0.5">{'· '.repeat(4 - weatherHistory.length)}</span>
-            )}
-          </Link>
-        )}
       </div>
-
-      {/* ── Bouton Nouvelle Action (pleine largeur dans le flow) ── */}
-      {axes.length > 0 && (
-        <button
-          data-onboarding="fab-action"
-          onClick={() => setQuickAddOpen(true)}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[15px] font-bold text-white active:scale-[0.97] transition-transform"
-          style={{
-            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
-            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.35)',
-          }}
-        >
-          <Plus size={20} strokeWidth={2.5} />
-          Nouvelle action
-        </button>
-      )}
 
       {/* ── Empty state : aucun axe ── */}
       {axes.length === 0 && totalActions === 0 && (
@@ -314,13 +281,6 @@ export default function DashboardClient({
                     </span>
                   </div>
 
-                  {/* Feedback */}
-                  {(axe.likesCount > 0 || axe.commentsCount > 0) && (
-                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-white/50">
-                      {axe.likesCount > 0 && <span className="text-xs text-pink-500 font-semibold">❤️ {axe.likesCount}</span>}
-                      {axe.commentsCount > 0 && <span className="text-xs text-gray-500 font-semibold">💬 {axe.commentsCount}</span>}
-                    </div>
-                  )}
                 </div>
               </Link>
             )
@@ -330,6 +290,22 @@ export default function DashboardClient({
 
       {/* ── Conseil du coach (après les axes) ── */}
       <WeeklyChallenge />
+
+      {/* ── Bouton flottant "Nouvelle action" centré en bas ── */}
+      {axes.length > 0 && (
+        <button
+          data-onboarding="fab-action"
+          onClick={() => setQuickAddOpen(true)}
+          className="fixed bottom-20 left-1/2 -translate-x-1/2 sm:hidden z-30 flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white active:scale-95 transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
+            boxShadow: '0 4px 20px rgba(79, 70, 229, 0.4)',
+          }}
+        >
+          <Plus size={18} strokeWidth={2.5} />
+          Nouvelle action
+        </button>
+      )}
 
       {/* Quick Add Action Modal */}
       <QuickAddAction
