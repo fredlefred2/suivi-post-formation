@@ -219,7 +219,20 @@ export default function ApprenantsClient({
 
   return (
     <div className="space-y-6 pb-4">
-      <h1 className="page-title">Participants</h1>
+      <div
+        className="rounded-2xl p-4 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
+          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+        }}
+      >
+        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
+        <div className="relative">
+          <h1 className="text-xl font-extrabold text-white">Participants</h1>
+          <p className="text-xs text-indigo-200 mt-0.5">{learners.length} inscrit{learners.length !== 1 ? 's' : ''}</p>
+        </div>
+      </div>
 
       {learners.length === 0 ? (
         <div className="card text-center py-10 text-gray-500 text-sm">

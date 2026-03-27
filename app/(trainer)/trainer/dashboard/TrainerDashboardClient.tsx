@@ -400,67 +400,67 @@ export default function TrainerDashboardClient({
         )}
       </div>
 
-      {/* ── Bloc principal : 3 colonnes compactes ── */}
-      <div className="card p-4">
-        <div className="grid grid-cols-3 gap-3">
+      {/* ── Bloc principal : gradient indigo harmonisé ── */}
+      <div
+        className="rounded-2xl p-4 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
+          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+        }}
+      >
+        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
 
-          {/* Colonne 1 : Membres */}
-          <Link href={apprenantLink} className="text-center group">
-            <div className="text-3xl font-black text-gray-800">
-              {animatedMembers}
-            </div>
-            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">membre{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
+        {/* Titre + météo moyenne */}
+        <div className="relative flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-extrabold text-white">{selectionLabel}</h1>
+            <p className="text-xs text-indigo-200 mt-0.5">{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
+          </div>
+          {totalWithCheckin > 0 && (() => {
+            const max = Math.max(weatherDistribution.sunny, weatherDistribution.cloudy, weatherDistribution.stormy)
+            const avgEmoji = weatherDistribution.sunny === max ? '☀️' : weatherDistribution.cloudy === max ? '⛅' : '⛈️'
+            return <span className="text-3xl drop-shadow-lg">{avgEmoji}</span>
+          })()}
+        </div>
+
+        {/* Stats en 3 colonnes glass */}
+        <div className="relative grid grid-cols-3 gap-2">
+          <Link href={apprenantLink} className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
+            <div className="text-2xl font-black text-white">{animatedMembers}</div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">membre{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
           </Link>
 
-          {/* Colonne 2 : Actions cette semaine */}
-          <Link href={apprenantLink} className="text-center group">
-            <div className={`text-3xl font-black ${recentActionsFiltered.length > 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+          <Link href={apprenantLink} className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
+            <div className={`text-2xl font-black ${recentActionsFiltered.length > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
               {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
             </div>
-            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">cette semaine</p>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
           </Link>
 
-          {/* Colonne 3 : Check-ins */}
-          <div className="text-center">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
             {isCheckinOpen ? (
               missingCount === 0 ? (
                 <>
-                  <div className="text-3xl font-black text-emerald-600">✓</div>
-                  <p className="text-[11px] text-emerald-600 mt-0.5 leading-tight font-medium">tous a jour</p>
+                  <div className="text-2xl font-black text-emerald-300">✓</div>
+                  <p className="text-[10px] text-emerald-300 mt-0.5 leading-tight font-medium">tous à jour</p>
                 </>
               ) : (
                 <>
-                  <div className="text-3xl font-black text-amber-600">{missingCount}</div>
-                  <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">en attente</p>
+                  <div className="text-2xl font-black text-amber-300">{missingCount}</div>
+                  <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">en attente</p>
                 </>
               )
             ) : (
               <>
-                <div className={`text-3xl font-black ${lastWeekInfo.pct === 100 ? 'text-emerald-600' : lastWeekInfo.pct >= 50 ? 'text-indigo-600' : 'text-amber-600'}`}>
+                <div className={`text-2xl font-black ${lastWeekInfo.pct === 100 ? 'text-emerald-300' : lastWeekInfo.pct >= 50 ? 'text-white' : 'text-amber-300'}`}>
                   {lastWeekInfo.pct}%
                 </div>
-                <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">check-ins</p>
+                <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
               </>
             )}
           </div>
-
         </div>
-
-        {/* Meteo distribution */}
-        {totalWithCheckin > 0 && (
-          <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-gray-100">
-            <span className="text-[11px] text-gray-500">Meteo S-1</span>
-            {weatherDistribution.sunny > 0 && (
-              <span className="text-sm">☀️ <span className="text-xs font-semibold text-gray-600">{weatherDistribution.sunny}</span></span>
-            )}
-            {weatherDistribution.cloudy > 0 && (
-              <span className="text-sm">⛅ <span className="text-xs font-semibold text-gray-600">{weatherDistribution.cloudy}</span></span>
-            )}
-            {weatherDistribution.stormy > 0 && (
-              <span className="text-sm">⛈️ <span className="text-xs font-semibold text-gray-600">{weatherDistribution.stormy}</span></span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* ── Bandeau check-ins en attente (uniquement si fenêtre ouverte) ── */}
@@ -479,49 +479,61 @@ export default function TrainerDashboardClient({
         <TrainerTeamMessages groupId={selectedOption} currentUserId={currentUserId} />
       )}
 
-      {/* ── Carousel actions recentes ── */}
-      {carouselActions.length > 0 && (
-        <div className="card">
+      {/* ── Actions récentes ── */}
+      {carouselActions.length > 0 ? (
+        <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-gray-700">Actions recentes</h2>
-            <button onClick={handleOpenAll} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline">
-              Voir tout
+            <h2 className="text-sm font-bold text-gray-800">Actions récentes</h2>
+            <button onClick={handleOpenAll} className="text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
+              Voir tout →
             </button>
           </div>
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto scrollbar-thin pb-2"
-            style={{ scrollSnapType: 'x mandatory' }}
+            className="flex gap-3 overflow-x-auto pb-2"
+            style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
           >
             {carouselActions.map((action) => {
               const dyn = getDynamiqueForCount(action.axe_action_count)
+              const borderColors: Record<number, string> = {
+                0: '#94a3b8', 1: '#38bdf8', 2: '#34d399', 3: '#fb923c', 4: '#fb7185',
+              }
+              const bc = borderColors[dyn.level] ?? borderColors[0]
               return (
                 <Link
                   key={action.id}
                   href={`/trainer/apprenants?group=${learnerGroupMap[action.learner_id] ?? ''}&learner=${action.learner_id}`}
-                  className={`flex-shrink-0 w-[220px] bg-gradient-to-br ${LEVEL_CARD_COLORS[dyn.level] ?? LEVEL_CARD_COLORS[0]} rounded-xl p-3 text-left transition-all duration-200 hover:shadow-md active:scale-[0.98]`}
-                  style={{ scrollSnapAlign: 'start' }}
+                  className="flex-shrink-0 w-[240px] bg-white rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] relative overflow-hidden"
+                  style={{
+                    scrollSnapAlign: 'start',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03)',
+                    borderLeft: `3px solid ${bc}`,
+                  }}
                 >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className={`w-7 h-7 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-sm`}>
-                      {dyn.icon}
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${bc}, ${bc}dd)` }}
+                    >
+                      {action.learner_first_name.charAt(0)}{action.learner_last_name.charAt(0)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-gray-700 truncate">
+                      <p className="text-xs font-bold text-gray-800 truncate">
                         {action.learner_first_name} {action.learner_last_name}
                       </p>
-                      <p className="text-[10px] text-indigo-500 truncate">{action.axe_subject}</p>
+                      <p className="text-[10px] text-indigo-500 font-medium truncate">{action.axe_subject}</p>
                     </div>
+                    <span className="text-base shrink-0">{dyn.icon}</span>
                   </div>
-                  <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <p className="text-[10px] text-gray-500">
+                  <p className="text-[13px] text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
+                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-100">
+                    <p className="text-[10px] text-gray-400 font-medium">
                       {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </p>
                     {(action.feedback.likes_count > 0 || action.feedback.comments_count > 0) && (
                       <div className="flex items-center gap-2 text-[10px]">
-                        {action.feedback.likes_count > 0 && <span className="text-pink-400">❤️ {action.feedback.likes_count}</span>}
-                        {action.feedback.comments_count > 0 && <span className="text-indigo-400">💬 {action.feedback.comments_count}</span>}
+                        {action.feedback.likes_count > 0 && <span className="text-pink-400 font-semibold">❤️ {action.feedback.likes_count}</span>}
+                        {action.feedback.comments_count > 0 && <span className="text-indigo-400 font-semibold">💬 {action.feedback.comments_count}</span>}
                       </div>
                     )}
                   </div>
@@ -530,67 +542,94 @@ export default function TrainerDashboardClient({
             })}
           </div>
           {carouselActions.length > 1 && (
-            <div className="flex justify-center gap-1 mt-2">
+            <div className="flex justify-center gap-1 mt-3">
               {carouselActions.map((_, i) => (
                 <div
                   key={i}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentSlide % carouselActions.length ? 'w-3.5 bg-indigo-500' : 'w-1.5 bg-gray-200'
+                    i === currentSlide % carouselActions.length ? 'w-4 bg-indigo-500' : 'w-1.5 bg-gray-200'
                   }`}
                 />
               ))}
             </div>
           )}
         </div>
-      )}
-
-      {carouselActions.length === 0 && filteredLearnerIds.size > 0 && (
-        <div className="card text-center py-6">
-          <p className="text-gray-500 text-sm">Aucune action enregistree</p>
+      ) : filteredLearnerIds.size > 0 ? (
+        <div className="rounded-2xl bg-white p-6 text-center" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+          <p className="text-gray-500 text-sm">Aucune action enregistrée</p>
         </div>
-      )}
+      ) : null}
 
-      {/* ── Tous en action ── */}
+      {/* ── Classement ── */}
       {filteredLearnerIds.size > 0 && sorted.length > 0 && (
-        <div className="card">
-          <h2 className="text-sm font-bold text-gray-700 mb-3">Tous en action</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-gray-500 border-b border-gray-100">
-                  <th className="text-left pb-2 font-medium">#</th>
-                  <th className="text-left pb-2 font-medium">Participant</th>
-                  <th className="text-center pb-2 font-medium">Actions</th>
-                  <th className="text-center pb-2 font-medium">Axe 1</th>
-                  <th className="text-center pb-2 font-medium">Axe 2</th>
-                  <th className="text-center pb-2 font-medium">Axe 3</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.map((learner, idx) => (
-                  <tr key={learner.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-1.5 text-xs text-gray-500 w-6">{idx + 1}</td>
-                    <td className="py-1.5 font-medium text-gray-800 max-w-[140px]">
-                      <Link
-                        href={`/trainer/apprenants?group=${learnerGroupMap[learner.id] ?? ''}&learner=${learner.id}`}
-                        className="hover:text-indigo-600 transition-colors flex items-center gap-1.5"
-                      >
-                        <span className="truncate">{learner.name}</span>
-                        {learner.lastWeather && (
-                          <span className="text-xs shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>
-                        )}
-                      </Link>
-                    </td>
-                    <td className="py-1.5 text-center font-semibold text-gray-700">{learner.totalActions}</td>
+        <div>
+          <h2 className="text-sm font-bold text-gray-800 mb-3">Classement</h2>
+          <div className="space-y-2">
+            {sorted.map((learner, idx) => {
+              const isTop3 = idx < 3
+              const rankColors: Record<number, { bg: string; border: string; text: string; badge: string }> = {
+                0: { bg: 'linear-gradient(135deg, #fef9c3 0%, #fde68a 100%)', border: '1px solid #fbbf24', text: '#92400e', badge: '#f59e0b' },
+                1: { bg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', border: '1px solid #cbd5e1', text: '#475569', badge: '#94a3b8' },
+                2: { bg: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', border: '1px solid #fdba74', text: '#9a3412', badge: '#f97316' },
+              }
+              const rc = rankColors[idx]
+              return (
+                <Link
+                  key={learner.id}
+                  href={`/trainer/apprenants?group=${learnerGroupMap[learner.id] ?? ''}&learner=${learner.id}`}
+                  className="rounded-2xl p-3.5 flex items-center gap-3 transition-all duration-200 hover:shadow-md"
+                  style={isTop3 && rc ? {
+                    background: rc.bg,
+                    border: rc.border,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  } : {
+                    background: 'white',
+                    border: '1px solid #f1f5f9',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+                  }}
+                >
+                  {/* Rang */}
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0"
+                    style={isTop3 && rc ? {
+                      background: rc.badge,
+                      color: 'white',
+                      boxShadow: `0 2px 8px ${rc.badge}66`,
+                    } : {
+                      background: '#f1f5f9',
+                      color: '#94a3b8',
+                    }}
+                  >
+                    {idx + 1}
+                  </div>
+
+                  {/* Nom + actions + météo */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-bold truncate" style={{ color: isTop3 && rc ? rc.text : '#1f2937' }}>
+                        {learner.name}
+                      </p>
+                      {learner.lastWeather && (
+                        <span className="text-sm shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-gray-500 font-medium">{learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}</p>
+                  </div>
+
+                  {/* Icônes dynamique des axes */}
+                  <div className="flex items-center gap-1 shrink-0">
                     {learner.dyns.map((m, i) => (
-                      <td key={i} className="py-1.5 text-center">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm ${LEVEL_AVATAR_COLORS[m.level] ?? LEVEL_AVATAR_COLORS[0]}`}>{m.icon}</span>
-                      </td>
+                      <span
+                        key={i}
+                        className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-sm ${LEVEL_AVATAR_COLORS[m.level] ?? LEVEL_AVATAR_COLORS[0]}`}
+                      >
+                        {m.icon}
+                      </span>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </div>
       )}
