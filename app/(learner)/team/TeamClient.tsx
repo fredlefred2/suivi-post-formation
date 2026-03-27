@@ -273,7 +273,7 @@ export default function TeamClient({
 
       {/* ── Classement — Tous en action ── */}
       <div>
-        <h2 className="text-sm font-bold text-gray-800 mb-3">Classement</h2>
+        <h2 className="text-sm font-bold text-gray-800 mb-3">L&apos;équipe en action</h2>
         {sorted.length === 0 ? (
           <p className="text-sm text-gray-500 italic">Aucun membre</p>
         ) : (

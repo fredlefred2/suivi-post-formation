@@ -188,6 +188,21 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         )}
       </div>
 
+      {/* Bouton Nouvelle Action — full width harmonisé avec dashboard */}
+      {axes.length > 0 && !isOnboardingMode && (
+        <button
+          onClick={() => setQuickAddOpen(true)}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-white active:scale-[0.97] transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
+            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.35)',
+          }}
+        >
+          <Plus size={20} strokeWidth={2.5} />
+          <span className="text-[15px] font-bold">Nouvelle action</span>
+        </button>
+      )}
+
       {/* Formulaire nouvel axe */}
       {showAxeForm && (
         <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden">
@@ -674,20 +689,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           </div>
         </div>
       )}
-      {/* FAB — Bouton flottant "Ajouter une action" */}
-      {axes.length > 0 && !isOnboardingMode && (
-        <button
-          onClick={() => setQuickAddOpen(true)}
-          className="fixed bottom-20 right-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"
-          style={{
-            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
-            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.4)',
-          }}
-          title="Ajouter une action"
-        >
-          <Plus size={24} strokeWidth={2.5} />
-        </button>
-      )}
+      {/* FAB supprimé — remplacé par bouton full-width en haut */}
 
       {/* Quick Add Action Modal */}
       <QuickAddAction
