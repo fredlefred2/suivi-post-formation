@@ -255,53 +255,48 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
             >
               <div className="space-y-5">
 
-                {/* Nom */}
-                <h2 className="page-title text-center">{learner.firstName} {learner.lastName}</h2>
+                {/* ── Header gradient indigo ──────────────────────── */}
+                <div
+                  className="rounded-2xl p-4 relative overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
+                    boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+                  }}
+                >
+                  <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+                  <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
 
-                {/* ── Bloc compact : 3 colonnes ──────────────────────── */}
-                <div className="card p-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    {/* Colonne 1 : Cette semaine */}
-                    <div className="text-center">
-                      <div className={`text-3xl font-black ${learner.actionsThisWeek > 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
-                        {learner.actionsThisWeek > 0 ? `+${learner.actionsThisWeek}` : '0'}
-                      </div>
-                      <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">cette semaine</p>
+                  {/* Nom + dernière météo */}
+                  <div className="relative flex items-start justify-between mb-4">
+                    <div>
+                      <h2 className="text-xl font-extrabold text-white">{learner.firstName} {learner.lastName}</h2>
+                      <p className="text-xs text-indigo-200 mt-0.5">{learner.axes.length} axe{learner.axes.length !== 1 ? 's' : ''} de progrès</p>
                     </div>
-
-                    {/* Colonne 2 : Total actions */}
-                    <div className="text-center">
-                      <div className="text-3xl font-black text-gray-800">{learner.totalActions}</div>
-                      <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">actions</p>
-                    </div>
-
-                    {/* Colonne 3 : Check-ins */}
-                    <div className="text-center">
-                      <div className="text-3xl font-black text-gray-800">{learner.totalCheckins}</div>
-                      <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">check-ins</p>
-                    </div>
+                    {learner.lastWeather && (
+                      <span className="text-3xl drop-shadow-lg">{WEATHER_ICONS[learner.lastWeather] ?? '❓'}</span>
+                    )}
                   </div>
 
-                  {/* Frise météo */}
-                  {learner.checkins.length > 0 && (
-                    <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
-                      <span className="text-[11px] text-gray-500 mr-1">Meteo</span>
-                      {[...learner.checkins]
-                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-                        .slice(-4)
-                        .map((ci, i, arr) => (
-                          <span
-                            key={ci.id}
-                            className={`text-xl transition-all ${i === arr.length - 1 ? 'text-2xl' : 'opacity-50'}`}
-                          >
-                            {WEATHER_ICONS[ci.weather] ?? '❓'}
-                          </span>
-                        ))}
-                      {learner.checkins.length < 4 && (
-                        <span className="text-gray-200 text-lg ml-0.5">{'· '.repeat(4 - Math.min(learner.checkins.length, 4))}</span>
-                      )}
+                  {/* Stats en 3 colonnes glass */}
+                  <div className="relative grid grid-cols-3 gap-2">
+                    <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+                      <div className={`text-2xl font-black ${learner.actionsThisWeek > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
+                        {learner.actionsThisWeek > 0 ? `+${learner.actionsThisWeek}` : '0'}
+                      </div>
+                      <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
                     </div>
-                  )}
+                    <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+                      <div className="text-2xl font-black text-white">{learner.totalActions}</div>
+                      <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
+                    </div>
+                    <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+                      <div className="text-2xl font-black text-white">
+                        {learner.totalCheckins}
+                        {learner.expectedCheckins > 0 && <span className="text-sm font-normal text-indigo-300">/{learner.expectedCheckins}</span>}
+                      </div>
+                      <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* ── Axes de progrès ───────────────────────────────────── */}
