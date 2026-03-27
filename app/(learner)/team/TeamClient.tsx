@@ -135,10 +135,28 @@ export default function TeamClient({
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
         <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
 
-        {/* Titre du groupe */}
-        <div className="relative mb-4">
-          <h1 className="text-xl font-extrabold text-white">{groupName}</h1>
-          <p className="text-xs text-indigo-200 mt-0.5">{membersCount} participant{membersCount !== 1 ? 's' : ''}</p>
+        {/* Titre du groupe + météo en haut à droite */}
+        <div className="relative flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-extrabold text-white">{groupName}</h1>
+            <p className="text-xs text-indigo-200 mt-0.5">{membersCount} participant{membersCount !== 1 ? 's' : ''}</p>
+          </div>
+          {totalWithCheckin > 0 && (
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="flex items-center gap-1.5">
+                {weatherCounts.sunny > 0 && (
+                  <span className="text-lg drop-shadow-lg">☀️<span className="text-[10px] font-bold text-white ml-0.5">{weatherCounts.sunny}</span></span>
+                )}
+                {weatherCounts.cloudy > 0 && (
+                  <span className="text-lg drop-shadow-lg">⛅<span className="text-[10px] font-bold text-white ml-0.5">{weatherCounts.cloudy}</span></span>
+                )}
+                {weatherCounts.stormy > 0 && (
+                  <span className="text-lg drop-shadow-lg">⛈️<span className="text-[10px] font-bold text-white ml-0.5">{weatherCounts.stormy}</span></span>
+                )}
+              </div>
+              <span className="text-[9px] text-indigo-200">météo S-1</span>
+            </div>
+          )}
         </div>
 
         {/* Stats en 3 colonnes glass */}
@@ -163,79 +181,73 @@ export default function TeamClient({
             <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
           </div>
         </div>
-
-        {/* Météo distribution semaine passée */}
-        {totalWithCheckin > 0 && (
-          <div className="relative flex items-center justify-center gap-4 mt-3 pt-3 border-t border-white/15">
-            <span className="text-[10px] text-indigo-200 font-medium">Météo S-1</span>
-            {weatherCounts.sunny > 0 && (
-              <span className="text-base">☀️ <span className="text-xs font-bold text-white">{weatherCounts.sunny}</span></span>
-            )}
-            {weatherCounts.cloudy > 0 && (
-              <span className="text-base">⛅ <span className="text-xs font-bold text-white">{weatherCounts.cloudy}</span></span>
-            )}
-            {weatherCounts.stormy > 0 && (
-              <span className="text-base">⛈️ <span className="text-xs font-bold text-white">{weatherCounts.stormy}</span></span>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* ── Empty state : aucune action récente ── */}
-      {recentActions.length === 0 && (
-        <div className="card text-center py-6">
+      {/* ── Actions récentes ── */}
+      {recentActions.length === 0 ? (
+        <div className="rounded-2xl bg-white p-6 text-center" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           <p className="text-2xl mb-2">💤</p>
           <p className="text-sm text-gray-500">Aucune action r&eacute;cente de l&apos;&eacute;quipe</p>
-          <p className="text-xs text-gray-500 mt-1">Sois le premier &agrave; en ajouter une ! 🚀</p>
+          <p className="text-xs text-gray-400 mt-1">Sois le premier &agrave; en ajouter une !</p>
         </div>
-      )}
-
-      {/* ── Carrousel actions récentes ── */}
-      {recentActions.length > 0 && (
-        <div className="card">
+      ) : (
+        <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="section-title">Actions récentes</h2>
-            <button onClick={handleOpenAll} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline">
-              Voir tout
+            <h2 className="text-sm font-bold text-gray-800">Actions récentes</h2>
+            <button onClick={handleOpenAll} className="text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
+              Voir tout →
             </button>
           </div>
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto scrollbar-thin pb-2"
-            style={{ scrollSnapType: 'x mandatory' }}
+            className="flex gap-3 overflow-x-auto pb-2"
+            style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
           >
             {recentActions.map((action) => {
               const dyn = getDynamiqueForCount(action.axe_action_count)
+              const borderColors: Record<number, string> = {
+                0: '#94a3b8', 1: '#38bdf8', 2: '#34d399', 3: '#fb923c', 4: '#fb7185',
+              }
               return (
               <button
                 key={action.id}
                 onClick={handleOpenAll}
-                className={`flex-shrink-0 w-[220px] bg-gradient-to-br ${LEVEL_CARD_COLORS[dyn.level] ?? LEVEL_CARD_COLORS[0]} rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md active:scale-[0.98]`}
-                style={{ scrollSnapAlign: 'start' }}
+                className="flex-shrink-0 w-[240px] bg-white rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] relative overflow-hidden"
+                style={{
+                  scrollSnapAlign: 'start',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03)',
+                  borderLeft: `3px solid ${borderColors[dyn.level] ?? borderColors[0]}`,
+                }}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-base`}>
-                    {dyn.icon}
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                    style={{
+                      background: `linear-gradient(135deg, ${borderColors[dyn.level] ?? borderColors[0]}, ${borderColors[dyn.level] ?? borderColors[0]}dd)`,
+                    }}
+                  >
+                    {getInitials(action.learner_first_name, action.learner_last_name)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-gray-700 truncate">
+                    <p className="text-xs font-bold text-gray-800 truncate">
                       {action.learner_first_name} {action.learner_last_name}
                     </p>
-                    <p className="text-[10px] text-indigo-500 truncate">{action.axe_subject}</p>
+                    <p className="text-[10px] text-indigo-500 font-medium truncate">{action.axe_subject}</p>
                   </div>
+                  <span className="text-base shrink-0">{dyn.icon}</span>
                 </div>
-                <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-[10px] text-gray-500">
+                <p className="text-[13px] text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
+                <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-100">
+                  <p className="text-[10px] text-gray-400 font-medium">
                     {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </p>
                   {feedbackMap[action.id] && (feedbackMap[action.id].likes_count > 0 || feedbackMap[action.id].comments_count > 0) && (
                     <div className="flex items-center gap-2 text-[10px]">
                       {feedbackMap[action.id].likes_count > 0 && (
-                        <span className="text-pink-400">{'\u2764\u{FE0F}'} {feedbackMap[action.id].likes_count}</span>
+                        <span className="text-pink-400 font-semibold">{'\u2764\u{FE0F}'} {feedbackMap[action.id].likes_count}</span>
                       )}
                       {feedbackMap[action.id].comments_count > 0 && (
-                        <span className="text-indigo-400">{'\u{1F4AC}'} {feedbackMap[action.id].comments_count}</span>
+                        <span className="text-indigo-400 font-semibold">{'\u{1F4AC}'} {feedbackMap[action.id].comments_count}</span>
                       )}
                     </div>
                   )}
@@ -259,47 +271,72 @@ export default function TeamClient({
         </div>
       )}
 
-      {recentActions.length === 0 && (
-        <div className="card text-center py-6">
-          <p className="text-gray-500 text-sm">Aucune action cette semaine</p>
-        </div>
-      )}
-
-      {/* ── Tous en action ── */}
-      <div className="card">
-        <h2 className="section-title mb-3">Tous en action</h2>
+      {/* ── Classement — Tous en action ── */}
+      <div>
+        <h2 className="text-sm font-bold text-gray-800 mb-3">Classement</h2>
         {sorted.length === 0 ? (
           <p className="text-sm text-gray-500 italic">Aucun membre</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-gray-500 border-b border-gray-100">
-                  <th className="text-left pb-2 font-medium">#</th>
-                  <th className="text-left pb-2 font-medium">Nom</th>
-                  <th className="text-center pb-2 font-medium">Actions</th>
-                  <th className="text-center pb-2 font-medium">Axe 1</th>
-                  <th className="text-center pb-2 font-medium">Axe 2</th>
-                  <th className="text-center pb-2 font-medium">Axe 3</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.map((learner, idx) => (
-                  <tr key={learner.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-1.5 text-xs text-gray-500 w-6">{idx + 1}</td>
-                    <td className="py-1.5 font-medium text-gray-800 truncate max-w-[140px]">
+          <div className="space-y-2">
+            {sorted.map((learner, idx) => {
+              const isTop3 = idx < 3
+              const rankColors: Record<number, { bg: string; border: string; text: string; badge: string }> = {
+                0: { bg: 'linear-gradient(135deg, #fef9c3 0%, #fde68a 100%)', border: '1px solid #fbbf24', text: '#92400e', badge: '#f59e0b' },
+                1: { bg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', border: '1px solid #cbd5e1', text: '#475569', badge: '#94a3b8' },
+                2: { bg: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', border: '1px solid #fdba74', text: '#9a3412', badge: '#f97316' },
+              }
+              const rc = rankColors[idx]
+              return (
+                <div
+                  key={learner.id}
+                  className="rounded-2xl p-3.5 flex items-center gap-3 transition-all duration-200"
+                  style={isTop3 && rc ? {
+                    background: rc.bg,
+                    border: rc.border,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  } : {
+                    background: 'white',
+                    border: '1px solid #f1f5f9',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+                  }}
+                >
+                  {/* Rang */}
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0"
+                    style={isTop3 && rc ? {
+                      background: rc.badge,
+                      color: 'white',
+                      boxShadow: `0 2px 8px ${rc.badge}66`,
+                    } : {
+                      background: '#f1f5f9',
+                      color: '#94a3b8',
+                    }}
+                  >
+                    {idx + 1}
+                  </div>
+
+                  {/* Nom + actions */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate" style={{ color: isTop3 && rc ? rc.text : '#1f2937' }}>
                       {learner.name}
-                    </td>
-                    <td className="py-1.5 text-center font-semibold text-gray-700">{learner.totalActions}</td>
+                    </p>
+                    <p className="text-[10px] text-gray-500 font-medium">{learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}</p>
+                  </div>
+
+                  {/* Icônes dynamique des axes */}
+                  <div className="flex items-center gap-1 shrink-0">
                     {learner.dyns.map((m, i) => (
-                      <td key={i} className="py-1.5 text-center">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm ${LEVEL_AVATAR_COLORS[m.level] ?? LEVEL_AVATAR_COLORS[0]}`}>{m.icon}</span>
-                      </td>
+                      <span
+                        key={i}
+                        className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-sm ${LEVEL_AVATAR_COLORS[m.level] ?? LEVEL_AVATAR_COLORS[0]}`}
+                      >
+                        {m.icon}
+                      </span>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
