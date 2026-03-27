@@ -198,64 +198,53 @@ export default async function LearnerDetailPage({
       >
       <div className="space-y-6">
 
-      {/* ── Nom de l'apprenant ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <h1 className="page-title">{profile.first_name} {profile.last_name}</h1>
-        <Link
-          href={`/trainer/messages?with=${params.id}`}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors"
-        >
-          <MessageCircle size={14} />
-          Message
-        </Link>
-      </div>
+      {/* ── Header gradient : nom + météo + stats ─────────────────────────── */}
+      <div
+        className="rounded-2xl p-4 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
+          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+        }}
+      >
+        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
 
-      {/* ── Bloc 1 : Check-ins + Dernière météo ───────────────────────────── */}
-      <div className="card py-5 px-4">
-        <div className="grid grid-cols-2 divide-x divide-gray-100">
-          {/* Check-ins */}
-          <div className="text-center px-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-emerald-500 mb-1.5"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
-            <p className="text-3xl font-bold text-gray-800">
-              {totalCheckins}
-              {expected > 0 && <span className="text-sm font-normal text-gray-500">/{expected}</span>}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">Check-ins</p>
+        {/* Ligne 1 : Nom + météo + bouton message */}
+        <div className="relative flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-extrabold text-white">{profile.first_name} {profile.last_name}</h1>
+            <p className="text-xs text-indigo-200 mt-0.5">{(axes ?? []).length} axe{(axes ?? []).length !== 1 ? 's' : ''} de progrès</p>
           </div>
-          {/* Dernière météo */}
-          <div className="text-center px-2 flex flex-col items-center justify-center">
-            {weatherEmoji ? (
-              <>
-                <p className="text-xs text-gray-500 mb-2">Dernière météo</p>
-                <span className="text-6xl leading-none">{weatherEmoji}</span>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-gray-500 mb-2">Dernière météo</p>
-                <span className="text-5xl text-gray-300">-</span>
-                <p className="text-[11px] text-gray-500 mt-1">Pas de check-in</p>
-              </>
-            )}
+          <div className="flex items-center gap-2">
+            {weatherEmoji && <span className="text-3xl drop-shadow-lg">{weatherEmoji}</span>}
+            <Link
+              href={`/trainer/messages?with=${params.id}`}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-white/90 hover:bg-white transition-colors"
+            >
+              <MessageCircle size={13} />
+              Message
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* ── Bloc 2 : Actions + Delta cette semaine ────────────────────────── */}
-      <div className="card py-5 px-4">
-        <div className="grid grid-cols-2 divide-x divide-gray-100">
-          {/* Total actions */}
-          <div className="text-center px-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-amber-500 mb-1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <p className="text-3xl font-bold text-gray-800">{totalActions}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Actions menées</p>
+        {/* Stats en 3 colonnes glass */}
+        <div className="relative grid grid-cols-3 gap-2">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className="text-2xl font-black text-white">{totalActions}</div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
           </div>
-          {/* Delta cette semaine */}
-          <div className="text-center px-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mx-auto ${actionsThisWeek > 0 ? 'text-emerald-500' : 'text-gray-500'} mb-1.5`}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            <p className={`text-3xl font-bold ${actionsThisWeek > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className={`text-2xl font-black ${actionsThisWeek > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
               {actionsThisWeek > 0 ? `+${actionsThisWeek}` : '0'}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">Cette semaine</p>
+            </div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
+          </div>
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className="text-2xl font-black text-white">
+              {totalCheckins}
+              {expected > 0 && <span className="text-sm font-normal text-indigo-300">/{expected}</span>}
+            </div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
           </div>
         </div>
       </div>
