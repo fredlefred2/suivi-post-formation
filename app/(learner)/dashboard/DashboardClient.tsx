@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { AlertCircle, Plus, Flame, Trophy } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
@@ -54,6 +54,17 @@ function getEncouragement(delta: number, streak: number): string {
   return "C'est le moment de s'y mettre !"
 }
 
+// Gradients par niveau
+const LEVEL_GRADIENTS = [
+  'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)', // violet — Veille
+  'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)', // blue — Impulsion
+  'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', // green — Rythme
+  'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', // orange — Intensité
+  'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)', // rose — Propulsion
+]
+
+const LEVEL_BAR_COLORS = ['#a78bfa', '#38bdf8', '#34d399', '#fb923c', '#f472b6']
+
 export default function DashboardClient({
   firstName,
   checkinDone,
@@ -74,36 +85,12 @@ export default function DashboardClient({
   onboardingStep,
 }: Props & { onboardingStep?: string }) {
   const router = useRouter()
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
 
   // Compteurs animes
   const animatedActions = useCountUp(totalActions)
   const animatedDelta = useCountUp(deltaActionsThisWeek)
-
-  // Auto-scroll carousel toutes les 3s
-  useEffect(() => {
-    if (axes.length <= 1) return
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % axes.length)
-    }, 3000)
-    return () => clearInterval(timer)
-  }, [axes.length])
-
-  // Scroll programmatique
-  useEffect(() => {
-    if (!scrollRef.current || scrollRef.current.children.length === 0) return
-    const firstCard = scrollRef.current.children[0] as HTMLElement
-    if (!firstCard) return
-    const cardWidth = firstCard.getBoundingClientRect().width
-    const gap = 12
-    scrollRef.current.scrollTo({
-      left: currentSlide * (cardWidth + gap),
-      behavior: 'smooth',
-    })
-  }, [currentSlide])
 
   // Barre de progression onboarding
   const doneCount = stepsData.filter((s) => s.done).length
@@ -117,7 +104,7 @@ export default function DashboardClient({
   const encouragement = getEncouragement(deltaActionsThisWeek, streak)
 
   return (
-    <div className="space-y-4 pb-20 sm:pb-4">
+    <div className="space-y-3 pb-20 sm:pb-4">
 
       {/* En-tete + message contextuel */}
       <div>
@@ -136,16 +123,16 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Alerte check-in (visible ven->lun si pas encore fait) */}
+      {/* Alerte check-in compact (visible ven->lun si pas encore fait) */}
       {!checkinDone && (
         <button
           onClick={() => setQuickCheckinOpen(true)}
-          className="w-full rounded-xl px-4 py-3 flex items-center gap-3 bg-amber-50 border border-amber-300 text-left active:scale-[0.98] transition-transform"
+          className="w-full rounded-xl px-4 py-2.5 flex items-center gap-3 bg-amber-50 border border-amber-300 text-left active:scale-[0.98] transition-transform"
         >
-          <AlertCircle className="text-amber-600 shrink-0" size={20} />
+          <AlertCircle className="text-amber-600 shrink-0" size={18} />
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-amber-900 text-sm">Check-in en attente</p>
-            <p className="text-xs text-amber-700">{checkinWeekLabel}</p>
+            <p className="font-semibold text-amber-900 text-sm">Check-in en attente</p>
+            <p className="text-[11px] text-amber-700">{checkinWeekLabel}</p>
           </div>
           <span className="btn-primary text-sm shrink-0 py-1.5 px-3">Faire</span>
         </button>
@@ -237,6 +224,22 @@ export default function DashboardClient({
         )}
       </div>
 
+      {/* ── Bouton Nouvelle Action (pleine largeur dans le flow) ── */}
+      {axes.length > 0 && (
+        <button
+          data-onboarding="fab-action"
+          onClick={() => setQuickAddOpen(true)}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[15px] font-bold text-white active:scale-[0.97] transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
+            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.35)',
+          }}
+        >
+          <Plus size={20} strokeWidth={2.5} />
+          Nouvelle action
+        </button>
+      )}
+
       {/* ── Empty state : aucun axe ── */}
       {axes.length === 0 && totalActions === 0 && (
         <Link href="/axes" className="card p-5 text-center border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition-colors">
@@ -246,154 +249,87 @@ export default function DashboardClient({
         </Link>
       )}
 
-      {/* ── Conseil du coach ── */}
-      <WeeklyChallenge />
-
-      {/* ── Carousel axes compact ── */}
+      {/* ── Axes pleine largeur, empilés ── */}
       {axes.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-gray-700">Mes axes de progres</h2>
             {axesCount < 3 && (
-              <Link href="/axes" className="text-xs text-indigo-600 hover:underline">
+              <Link href="/axes" className="text-xs text-indigo-600 hover:underline font-semibold">
                 + Ajouter
               </Link>
             )}
           </div>
 
-          <div
-            ref={scrollRef}
-            className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1"
-          >
-            {axes.map((axe) => {
-              const levelIdx = getCurrentLevelIndex(axe.completedCount)
-              const progress = getProgress(axe.completedCount)
-              const currentMarker = MARKERS[levelIdx]
+          {axes.map((axe) => {
+            const levelIdx = getCurrentLevelIndex(axe.completedCount)
+            const progress = getProgress(axe.completedCount)
+            const currentMarker = MARKERS[levelIdx]
 
-              return (
-                <Link
-                  key={axe.id}
-                  href={`/axes?index=${axe.index}`}
-                  {...(axe.index === 0 ? { 'data-onboarding': 'progression' } : {})}
-                  className="snap-center shrink-0 w-[min(85vw,340px)] rounded-2xl flex flex-col hover:shadow-xl transition-all overflow-hidden"
-                  style={{
-                    background: levelIdx === 0
-                      ? 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)'
-                      : levelIdx === 1
-                      ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
-                      : levelIdx === 2
-                      ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
-                      : levelIdx === 3
-                      ? 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)'
-                      : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)',
-                  }}
-                >
-                  <div className="p-4">
-                    {/* Titre — 2 lignes max */}
-                    <div className="flex items-start gap-2">
-                      <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                        {axe.index + 1}
-                      </span>
-                      <p className="font-bold text-sm leading-snug line-clamp-2 flex-1 text-gray-800">{axe.subject}</p>
-                    </div>
+            return (
+              <Link
+                key={axe.id}
+                href={`/axes?index=${axe.index}`}
+                {...(axe.index === 0 ? { 'data-onboarding': 'progression' } : {})}
+                className="block rounded-2xl overflow-hidden hover:shadow-lg transition-shadow"
+                style={{ background: LEVEL_GRADIENTS[levelIdx] ?? LEVEL_GRADIENTS[0] }}
+              >
+                <div className="p-4">
+                  {/* Titre */}
+                  <div className="flex items-start gap-2">
+                    <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                      {axe.index + 1}
+                    </span>
+                    <p className="font-bold text-sm leading-snug line-clamp-2 flex-1 text-gray-800">{axe.subject}</p>
+                  </div>
 
-                    {/* Barre de progression simplifiée */}
-                    <div className="mt-4 flex items-center gap-2.5">
-                      <span className="text-lg">{currentMarker.icon}</span>
-                      <div className="flex-1">
-                        <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                              width: `${progress}%`,
-                              background: levelIdx === 0
-                                ? '#a78bfa'
-                                : levelIdx === 1
-                                ? '#38bdf8'
-                                : levelIdx === 2
-                                ? '#34d399'
-                                : levelIdx === 3
-                                ? '#fb923c'
-                                : '#f472b6',
-                            }}
-                          />
-                        </div>
+                  {/* Barre de progression */}
+                  <div className="mt-3 flex items-center gap-2.5">
+                    <span className="text-lg">{currentMarker.icon}</span>
+                    <div className="flex-1">
+                      <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{
+                            width: `${progress}%`,
+                            background: LEVEL_BAR_COLORS[levelIdx] ?? LEVEL_BAR_COLORS[0],
+                          }}
+                        />
                       </div>
-                      <span className={`text-lg ${levelIdx >= 4 ? '' : 'opacity-30'}`}>🚀</span>
                     </div>
-
-                    {/* Niveau + compteur sur 1 ligne */}
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className={`text-xs font-semibold ${axe.dyn.color.split(' ')[0]}`}>{axe.dyn.label}</span>
-                      <span className="text-xs text-gray-500">
-                        {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
-                        {axe.completedCount === 0 && (
-                          <span className={`font-medium ml-1 ${axe.dyn.color.split(' ')[0]}`}>· commence !</span>
-                        )}
-                        {axe.completedCount > 0 && axe.completedCount < 9 && (
-                          <span className={`font-medium ml-1 ${axe.dyn.color.split(' ')[0]}`}>· encore {axe.dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
-                        )}
-                      </span>
-                    </div>
+                    <span className={`text-lg ${levelIdx >= 4 ? '' : 'opacity-30'}`}>🚀</span>
                   </div>
 
-                  {/* Footer compact */}
-                  <div className="bg-white/40 px-4 py-2 border-t border-white/50">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-gray-500 line-clamp-1 flex-1 min-w-0">
-                        {axe.lastAction ? (
-                          <>
-                            {axe.lastAction.description}
-                            <span className="text-gray-400"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-                          </>
-                        ) : (
-                          <span className="text-gray-400 italic">Aucune action</span>
-                        )}
-                      </p>
-                      {(axe.likesCount > 0 || axe.commentsCount > 0) && (
-                        <div className="flex items-center gap-2 ml-2 shrink-0">
-                          {axe.likesCount > 0 && <span className="text-xs text-pink-500 font-semibold">❤️ {axe.likesCount}</span>}
-                          {axe.commentsCount > 0 && <span className="text-xs text-gray-500 font-semibold">💬 {axe.commentsCount}</span>}
-                        </div>
+                  {/* Niveau + compteur */}
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className={`text-xs font-semibold ${axe.dyn.color.split(' ')[0]}`}>{axe.dyn.label}</span>
+                    <span className="text-xs text-gray-500">
+                      {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
+                      {axe.completedCount === 0 && (
+                        <span className={`font-medium ml-1 ${axe.dyn.color.split(' ')[0]}`}>· commence !</span>
                       )}
-                    </div>
+                      {axe.completedCount > 0 && axe.completedCount < 9 && (
+                        <span className={`font-medium ml-1 ${axe.dyn.color.split(' ')[0]}`}>· encore {axe.dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
+                      )}
+                    </span>
                   </div>
-                </Link>
-              )
-            })}
-          </div>
 
-          {/* Dots indicateurs */}
-          {axes.length > 1 && (
-            <div className="flex justify-center gap-1">
-              {axes.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentSlide % axes.length ? 'w-3.5 bg-indigo-500' : 'w-1.5 bg-gray-200'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+                  {/* Feedback */}
+                  {(axe.likesCount > 0 || axe.commentsCount > 0) && (
+                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-white/50">
+                      {axe.likesCount > 0 && <span className="text-xs text-pink-500 font-semibold">❤️ {axe.likesCount}</span>}
+                      {axe.commentsCount > 0 && <span className="text-xs text-gray-500 font-semibold">💬 {axe.commentsCount}</span>}
+                    </div>
+                  )}
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
 
-      {/* FAB -- Bouton flottant "Ajouter une action" (mobile) */}
-      {axes.length > 0 && (
-        <button
-          data-onboarding="fab-action"
-          onClick={() => setQuickAddOpen(true)}
-          className="fixed bottom-20 right-4 sm:hidden z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"
-          style={{
-            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
-            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.4)',
-          }}
-          title="Ajouter une action"
-        >
-          <Plus size={24} strokeWidth={2.5} />
-        </button>
-      )}
+      {/* ── Conseil du coach (après les axes) ── */}
+      <WeeklyChallenge />
 
       {/* Quick Add Action Modal */}
       <QuickAddAction
