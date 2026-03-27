@@ -115,70 +115,48 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
               <p className="font-bold text-sm leading-snug line-clamp-1 flex-1">{axe.subject}</p>
             </div>
 
-            {/* Moyens / description */}
-            <div className="h-[32px] mt-1">
-              {axe.description ? (
-                <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{axe.description}</p>
-              ) : (
-                <p className="text-xs text-gray-500 italic">—</p>
-              )}
-            </div>
+            {/* Description */}
+            {axe.description && (
+              <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-1 ml-8">{axe.description}</p>
+            )}
 
-            {/* Niveau actuel - hero */}
-            <div className="flex items-center justify-center h-[40px] gap-2">
-              <span className="text-3xl drop-shadow-sm">{level.icon}</span>
-              <span className="text-sm font-bold text-gray-700">{level.label}</span>
-            </div>
-
-            {/* Piste de progression avec jalons */}
-            <div className="relative h-[20px] mx-1">
-              <div className="absolute top-[6px] inset-x-0 h-2 bg-white/50 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{
-                    width: `${progress}%`,
-                    background: levelIdx === 0
-                      ? '#94a3b8'
-                      : levelIdx === 1
-                      ? '#38bdf8'
-                      : levelIdx === 2
-                      ? '#34d399'
-                      : levelIdx === 3
-                      ? '#fb923c'
-                      : '#f472b6',
-                  }}
-                />
+            {/* Barre de progression simplifiée */}
+            <div className="mt-3 flex items-center gap-2.5">
+              <span className="text-lg">{level.icon}</span>
+              <div className="flex-1">
+                <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${progress}%`,
+                      background: levelIdx === 0
+                        ? '#a78bfa'
+                        : levelIdx === 1
+                        ? '#38bdf8'
+                        : levelIdx === 2
+                        ? '#34d399'
+                        : levelIdx === 3
+                        ? '#fb923c'
+                        : '#f472b6',
+                    }}
+                  />
+                </div>
               </div>
-              <div className="flex justify-between absolute inset-x-0 top-0">
-                {MARKERS.map((m, i) => {
-                  const reached = i <= levelIdx
-                  const isCurrent = i === levelIdx
-                  return (
-                    <div
-                      key={i}
-                      className={`flex items-center justify-center rounded-full transition-all ${
-                        isCurrent
-                          ? 'w-5 h-5 bg-white shadow-md ring-2 ring-current/40 text-sm z-10'
-                          : reached
-                          ? 'w-4 h-4 mt-0.5 bg-white/90 shadow-sm text-[11px]'
-                          : 'w-4 h-4 mt-0.5 bg-white/40 text-[11px]'
-                      }`}
-                    >
-                      <span className={reached ? '' : 'opacity-30 grayscale text-[10px]'}>{m.icon}</span>
-                    </div>
-                  )
-                })}
-              </div>
+              <span className={`text-lg ${levelIdx >= 4 ? '' : 'opacity-30'}`}>🚀</span>
             </div>
 
-            {/* Compteur actions + delta */}
-            <div className="h-[20px] flex items-center justify-center mt-1">
-              <p className="text-center text-xs font-semibold text-gray-600">
+            {/* Niveau + compteur sur 1 ligne */}
+            <div className="mt-2 flex items-center justify-between">
+              <span className={`text-xs font-semibold ${dyn.color.split(' ')[0]}`}>{dyn.label}</span>
+              <span className="text-xs text-gray-500">
                 {actionsCount} action{actionsCount !== 1 ? 's' : ''}
-                {actionsCount < 9 && (
-                  <span className="font-normal text-gray-500"> · encore {9 - actionsCount} pour 🚀</span>
+                {actionsCount === 0 && (
+                  <span className={`font-medium ml-1 ${dyn.color.split(' ')[0]}`}>· commence !</span>
                 )}
-              </p>
+                {actionsCount > 0 && actionsCount < 9 && (
+                  <span className={`font-medium ml-1 ${dyn.color.split(' ')[0]}`}>· encore {dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
+                )}
+              </span>
             </div>
 
             {/* Séparateur + Actions menées */}
