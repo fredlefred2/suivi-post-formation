@@ -9,7 +9,7 @@ export const MARKERS = [
 ]
 
 export function getDynamique(count: number) {
-  if (count === 0) return { label: 'Veille',       icon: '⚪', color: 'text-slate-700   bg-slate-100   border-slate-300',   delta: 1 }
+  if (count === 0) return { label: 'Veille',       icon: '⚪', color: 'text-violet-700  bg-violet-100  border-violet-300',  delta: 1 }
   if (count <= 2) return { label: 'Impulsion',    icon: '👣', color: 'text-sky-800    bg-sky-100    border-sky-300',    delta: 3 - count }
   if (count <= 5) return { label: 'Rythme',       icon: '🥁', color: 'text-emerald-800 bg-emerald-100 border-emerald-300', delta: 6 - count }
   if (count <= 8) return { label: 'Intensité',    icon: '🔥', color: 'text-orange-800  bg-orange-100  border-orange-300',  delta: 9 - count }
