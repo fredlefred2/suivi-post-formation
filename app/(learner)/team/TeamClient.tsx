@@ -123,44 +123,59 @@ export default function TeamClient({
 
   return (
     <div className="space-y-6 pb-4">
-      <h1 className="page-title">{groupName}</h1>
+      {/* ── Bloc principal : gradient indigo harmonisé avec dashboard ── */}
+      <div
+        className="rounded-2xl p-4 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
+          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+        }}
+      >
+        {/* Cercles décoratifs */}
+        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
 
-      {/* ── Bloc principal : 3 colonnes compactes ── */}
-      <div className="card p-4">
-        <div className="grid grid-cols-3 gap-3">
-          {/* Colonne 1 : Membres */}
-          <div className="text-center">
-            <div className="text-3xl font-black text-gray-800">{animatedMembers}</div>
-            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">membre{membersCount !== 1 ? 's' : ''}</p>
+        {/* Titre du groupe */}
+        <div className="relative mb-4">
+          <h1 className="text-xl font-extrabold text-white">{groupName}</h1>
+          <p className="text-xs text-indigo-200 mt-0.5">{membersCount} participant{membersCount !== 1 ? 's' : ''}</p>
+        </div>
+
+        {/* Stats en 3 colonnes glass */}
+        <div className="relative grid grid-cols-3 gap-2">
+          {/* Membres */}
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className="text-2xl font-black text-white">{animatedMembers}</div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">membre{membersCount !== 1 ? 's' : ''}</p>
           </div>
 
-          {/* Colonne 2 : Actions cette semaine */}
-          <div className="text-center">
-            <div className={`text-3xl font-black ${recentActionsCount > 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+          {/* Actions cette semaine */}
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className={`text-2xl font-black ${recentActionsCount > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
               {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
             </div>
-            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">cette semaine</p>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
           </div>
 
-          {/* Colonne 3 : Actions totales */}
-          <div className="text-center">
-            <div className="text-3xl font-black text-gray-800">{totalActions}</div>
-            <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">actions</p>
+          {/* Actions totales */}
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className="text-2xl font-black text-white">{totalActions}</div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
           </div>
         </div>
 
         {/* Météo distribution semaine passée */}
         {totalWithCheckin > 0 && (
-          <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-gray-100">
-            <span className="text-[11px] text-gray-500">Météo S-1</span>
+          <div className="relative flex items-center justify-center gap-4 mt-3 pt-3 border-t border-white/15">
+            <span className="text-[10px] text-indigo-200 font-medium">Météo S-1</span>
             {weatherCounts.sunny > 0 && (
-              <span className="text-sm">☀️ <span className="text-xs font-semibold text-gray-600">{weatherCounts.sunny}</span></span>
+              <span className="text-base">☀️ <span className="text-xs font-bold text-white">{weatherCounts.sunny}</span></span>
             )}
             {weatherCounts.cloudy > 0 && (
-              <span className="text-sm">⛅ <span className="text-xs font-semibold text-gray-600">{weatherCounts.cloudy}</span></span>
+              <span className="text-base">⛅ <span className="text-xs font-bold text-white">{weatherCounts.cloudy}</span></span>
             )}
             {weatherCounts.stormy > 0 && (
-              <span className="text-sm">⛈️ <span className="text-xs font-semibold text-gray-600">{weatherCounts.stormy}</span></span>
+              <span className="text-base">⛈️ <span className="text-xs font-bold text-white">{weatherCounts.stormy}</span></span>
             )}
           </div>
         )}
