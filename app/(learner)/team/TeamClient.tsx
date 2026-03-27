@@ -141,22 +141,12 @@ export default function TeamClient({
             <h1 className="text-xl font-extrabold text-white">{groupName}</h1>
             <p className="text-xs text-indigo-200 mt-0.5">{membersCount} participant{membersCount !== 1 ? 's' : ''}</p>
           </div>
-          {totalWithCheckin > 0 && (
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="flex items-center gap-1.5">
-                {weatherCounts.sunny > 0 && (
-                  <span className="text-lg drop-shadow-lg">☀️<span className="text-[10px] font-bold text-white ml-0.5">{weatherCounts.sunny}</span></span>
-                )}
-                {weatherCounts.cloudy > 0 && (
-                  <span className="text-lg drop-shadow-lg">⛅<span className="text-[10px] font-bold text-white ml-0.5">{weatherCounts.cloudy}</span></span>
-                )}
-                {weatherCounts.stormy > 0 && (
-                  <span className="text-lg drop-shadow-lg">⛈️<span className="text-[10px] font-bold text-white ml-0.5">{weatherCounts.stormy}</span></span>
-                )}
-              </div>
-              <span className="text-[9px] text-indigo-200">météo S-1</span>
-            </div>
-          )}
+          {totalWithCheckin > 0 && (() => {
+            // Météo moyenne : majorité simple
+            const max = Math.max(weatherCounts.sunny, weatherCounts.cloudy, weatherCounts.stormy)
+            const avgEmoji = weatherCounts.sunny === max ? '☀️' : weatherCounts.cloudy === max ? '⛅' : '⛈️'
+            return <span className="text-3xl drop-shadow-lg">{avgEmoji}</span>
+          })()}
         </div>
 
         {/* Stats en 3 colonnes glass */}
@@ -271,45 +261,35 @@ export default function TeamClient({
         </div>
       )}
 
-      {/* ── Classement — Tous en action ── */}
+      {/* ── Trio de tête ── */}
+      {sorted.length > 0 && (
       <div>
-        <h2 className="text-sm font-bold text-gray-800 mb-3">L&apos;équipe en action</h2>
-        {sorted.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">Aucun membre</p>
-        ) : (
+        <h2 className="text-sm font-bold text-gray-800 mb-3">Trio de t&ecirc;te</h2>
           <div className="space-y-2">
-            {sorted.map((learner, idx) => {
-              const isTop3 = idx < 3
+            {sorted.slice(0, 3).map((learner, idx) => {
               const rankColors: Record<number, { bg: string; border: string; text: string; badge: string }> = {
                 0: { bg: 'linear-gradient(135deg, #fef9c3 0%, #fde68a 100%)', border: '1px solid #fbbf24', text: '#92400e', badge: '#f59e0b' },
                 1: { bg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', border: '1px solid #cbd5e1', text: '#475569', badge: '#94a3b8' },
                 2: { bg: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', border: '1px solid #fdba74', text: '#9a3412', badge: '#f97316' },
               }
-              const rc = rankColors[idx]
+              const rc = rankColors[idx]!
               return (
                 <div
                   key={learner.id}
                   className="rounded-2xl p-3.5 flex items-center gap-3 transition-all duration-200"
-                  style={isTop3 && rc ? {
+                  style={{
                     background: rc.bg,
                     border: rc.border,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  } : {
-                    background: 'white',
-                    border: '1px solid #f1f5f9',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
                   }}
                 >
                   {/* Rang */}
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0"
-                    style={isTop3 && rc ? {
+                    style={{
                       background: rc.badge,
                       color: 'white',
                       boxShadow: `0 2px 8px ${rc.badge}66`,
-                    } : {
-                      background: '#f1f5f9',
-                      color: '#94a3b8',
                     }}
                   >
                     {idx + 1}
@@ -317,7 +297,7 @@ export default function TeamClient({
 
                   {/* Nom + actions */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate" style={{ color: isTop3 && rc ? rc.text : '#1f2937' }}>
+                    <p className="text-sm font-bold truncate" style={{ color: rc.text }}>
                       {learner.name}
                     </p>
                     <p className="text-[10px] text-gray-500 font-medium">{learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}</p>
@@ -338,8 +318,8 @@ export default function TeamClient({
               )
             })}
           </div>
-        )}
       </div>
+      )}
 
       {/* ── Modale : toutes les actions récentes ── */}
       {showAllActions && (

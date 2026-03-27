@@ -179,13 +179,29 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
 
   return (
     <div className="space-y-6 pb-4">
-      <div className="flex items-center justify-between">
-        <h1 className="page-title">Mes actions de progrès</h1>
-        {axes.length < 3 && !isOnboardingCreate && (
-          <button onClick={() => setShowAxeForm(true)} className="btn-primary">
-            <Plus size={16} /> Ajouter un axe
-          </button>
-        )}
+      <div
+        className="rounded-2xl p-4 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
+          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+        }}
+      >
+        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
+        <div className="relative flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-extrabold text-white">Mes actions</h1>
+            <p className="text-xs text-indigo-200 mt-0.5">{axes.length} axe{axes.length !== 1 ? 's' : ''} de progrès</p>
+          </div>
+          {axes.length < 3 && !isOnboardingCreate && (
+            <button
+              onClick={() => setShowAxeForm(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-white/90 hover:bg-white transition-colors"
+            >
+              <Plus size={14} /> Ajouter un axe
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Bouton Nouvelle Action — full width harmonisé avec dashboard */}
