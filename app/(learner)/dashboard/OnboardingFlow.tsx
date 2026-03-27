@@ -566,7 +566,7 @@ export default function OnboardingFlow({
               {/* Piste de progression colorée */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, position: 'relative' }}>
                 {[
-                  { icon: '⚪', label: 'Veille', color: '#94a3b8', bg: '#f1f5f9' },
+                  { icon: '⚪', label: 'Veille', color: '#7c3aed', bg: '#ede9fe' },
                   { icon: '👣', label: 'Impulsion', color: '#0ea5e9', bg: '#e0f2fe' },
                   { icon: '🥁', label: 'Rythme', color: '#10b981', bg: '#d1fae5' },
                   { icon: '🔥', label: 'Intensité', color: '#f97316', bg: '#ffedd5' },
@@ -578,7 +578,7 @@ export default function OnboardingFlow({
                         width: 16,
                         height: 3,
                         background: `linear-gradient(90deg, ${[
-                          { icon: '⚪', label: 'Veille', color: '#94a3b8', bg: '#f1f5f9' },
+                          { icon: '⚪', label: 'Veille', color: '#7c3aed', bg: '#ede9fe' },
                           { icon: '👣', label: 'Impulsion', color: '#0ea5e9', bg: '#e0f2fe' },
                           { icon: '🥁', label: 'Rythme', color: '#10b981', bg: '#d1fae5' },
                           { icon: '🔥', label: 'Intensité', color: '#f97316', bg: '#ffedd5' },

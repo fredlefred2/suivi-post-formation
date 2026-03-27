@@ -278,7 +278,7 @@ export default function DashboardClient({
                   className="snap-center shrink-0 w-[min(85vw,340px)] rounded-2xl flex flex-col hover:shadow-xl transition-all overflow-hidden"
                   style={{
                     background: levelIdx === 0
-                      ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'
+                      ? 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)'
                       : levelIdx === 1
                       ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
                       : levelIdx === 2

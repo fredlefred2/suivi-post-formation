@@ -307,7 +307,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               const levelIdx = getCurrentLevelIndex(axe.actions.length)
               const level = getCurrentLevel(axe.actions.length)
               const cardGradient = levelIdx === 0
-                ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'
+                ? 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)'
                 : levelIdx === 1
                 ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
                 : levelIdx === 2
