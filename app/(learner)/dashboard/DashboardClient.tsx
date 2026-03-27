@@ -22,7 +22,7 @@ type AxeItem = {
   subject: string
   description: string | null
   completedCount: number
-  dyn: { label: string; icon: string; color: string }
+  dyn: { label: string; icon: string; color: string; delta: number }
   likesCount: number
   commentsCount: number
   lastAction: { description: string; date: string } | null
@@ -289,105 +289,73 @@ export default function DashboardClient({
                   }}
                 >
                   <div className="p-4">
-                    {/* Titre — hauteur fixe */}
-                    <div className="flex items-center gap-2 h-[24px]">
-                      <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
+                    {/* Titre — 2 lignes max */}
+                    <div className="flex items-start gap-2">
+                      <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                         {axe.index + 1}
                       </span>
-                      <p className="font-bold text-sm leading-snug line-clamp-1 flex-1 text-gray-800">{axe.subject}</p>
+                      <p className="font-bold text-sm leading-snug line-clamp-2 flex-1 text-gray-800">{axe.subject}</p>
                     </div>
 
-                    {/* Moyens / description — hauteur fixe (2 lignes réservées) */}
-                    <div className="h-[32px] mt-1">
-                      {axe.description ? (
-                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{axe.description}</p>
-                      ) : (
-                        <p className="text-xs text-gray-500 italic">—</p>
-                      )}
-                    </div>
-
-                    {/* Niveau actuel - hero — hauteur fixe */}
-                    <div className="flex items-center justify-center h-[40px] gap-2">
-                      <span className="text-3xl drop-shadow-sm">{currentMarker.icon}</span>
-                      <span className="text-sm font-bold text-gray-700">{axe.dyn.label}</span>
-                    </div>
-
-                    {/* Piste de progression — hauteur fixe */}
-                    <div className="relative h-[20px] mx-1">
-                      <div className="absolute top-[6px] inset-x-0 h-2 bg-white/50 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-700"
-                          style={{
-                            width: `${progress}%`,
-                            background: levelIdx === 0
-                              ? '#94a3b8'
-                              : levelIdx === 1
-                              ? '#38bdf8'
-                              : levelIdx === 2
-                              ? '#34d399'
-                              : levelIdx === 3
-                              ? '#fb923c'
-                              : '#f472b6',
-                          }}
-                        />
+                    {/* Barre de progression simplifiée */}
+                    <div className="mt-4 flex items-center gap-2.5">
+                      <span className="text-lg">{currentMarker.icon}</span>
+                      <div className="flex-1">
+                        <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: `${progress}%`,
+                              background: levelIdx === 0
+                                ? '#a78bfa'
+                                : levelIdx === 1
+                                ? '#38bdf8'
+                                : levelIdx === 2
+                                ? '#34d399'
+                                : levelIdx === 3
+                                ? '#fb923c'
+                                : '#f472b6',
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="flex justify-between absolute inset-x-0 top-0">
-                        {MARKERS.map((m, i) => {
-                          const reached = i <= levelIdx
-                          const isCurrent = i === levelIdx
-                          return (
-                            <div
-                              key={i}
-                              className={`flex items-center justify-center rounded-full transition-all ${
-                                isCurrent
-                                  ? 'w-5 h-5 bg-white shadow-md ring-2 ring-current/40 text-sm z-10'
-                                  : reached
-                                  ? 'w-4 h-4 mt-0.5 bg-white/90 shadow-sm text-[11px]'
-                                  : 'w-4 h-4 mt-0.5 bg-white/40 text-[11px]'
-                              }`}
-                            >
-                              <span className={reached ? '' : 'opacity-30 grayscale text-[10px]'}>{m.icon}</span>
-                            </div>
-                          )
-                        })}
-                      </div>
+                      <span className={`text-lg ${levelIdx >= 4 ? '' : 'opacity-30'}`}>🚀</span>
                     </div>
 
-                    {/* Compteur actions — hauteur fixe */}
-                    <div className="h-[20px] flex items-center justify-center mt-1">
-                      <p className="text-center text-xs font-semibold text-gray-600">
+                    {/* Niveau + compteur sur 1 ligne */}
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className={`text-xs font-semibold ${axe.dyn.color.split(' ')[0]}`}>{axe.dyn.label}</span>
+                      <span className="text-xs text-gray-500">
                         {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
-                        {axe.completedCount < 9 && (
-                          <span className="font-normal text-gray-500"> · encore {9 - axe.completedCount} pour 🚀</span>
+                        {axe.completedCount === 0 && (
+                          <span className={`font-medium ml-1 ${axe.dyn.color.split(' ')[0]}`}>· commence !</span>
                         )}
-                      </p>
+                        {axe.completedCount > 0 && axe.completedCount < 9 && (
+                          <span className={`font-medium ml-1 ${axe.dyn.color.split(' ')[0]}`}>· encore {axe.dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
+                        )}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Footer — toujours affiché, hauteurs fixes */}
-                  <div className="bg-white/50 px-4 py-2 border-t border-white/60">
-                    {/* Zone likes + commentaires — hauteur fixe */}
-                    <div className="flex items-center justify-center gap-5 text-sm h-[22px]">
-                      {axe.likesCount > 0 && (
-                        <span className="flex items-center gap-1 text-pink-500 font-semibold">❤️ {axe.likesCount}</span>
-                      )}
-                      {axe.commentsCount > 0 && (
-                        <span className="flex items-center gap-1 text-gray-500 font-semibold">💬 {axe.commentsCount}</span>
-                      )}
-                    </div>
-
-                    {/* Zone derniere action — hauteur fixe */}
-                    <div className="h-[18px] mt-1">
-                      <p className="text-xs text-gray-500 line-clamp-1">
+                  {/* Footer compact */}
+                  <div className="bg-white/40 px-4 py-2 border-t border-white/50">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-500 line-clamp-1 flex-1 min-w-0">
                         {axe.lastAction ? (
                           <>
-                            <span className="font-medium text-gray-600">Derniere :</span> {axe.lastAction.description}
-                            <span className="text-gray-500"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                            {axe.lastAction.description}
+                            <span className="text-gray-400"> · {new Date(axe.lastAction.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                           </>
                         ) : (
-                          <span className="text-gray-500 italic">Aucune action</span>
+                          <span className="text-gray-400 italic">Aucune action</span>
                         )}
                       </p>
+                      {(axe.likesCount > 0 || axe.commentsCount > 0) && (
+                        <div className="flex items-center gap-2 ml-2 shrink-0">
+                          {axe.likesCount > 0 && <span className="text-xs text-pink-500 font-semibold">❤️ {axe.likesCount}</span>}
+                          {axe.commentsCount > 0 && <span className="text-xs text-gray-500 font-semibold">💬 {axe.commentsCount}</span>}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
