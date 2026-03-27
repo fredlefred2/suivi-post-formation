@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { AlertCircle, Plus, Flame, Trophy } from 'lucide-react'
+import { AlertCircle, Plus } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
 import { MARKERS, getCurrentLevelIndex, getProgress } from '@/lib/axeHelpers'
 import QuickAddAction from '@/app/components/QuickAddAction'
@@ -107,60 +107,65 @@ export default function DashboardClient({
     <TipProvider>
       <div className="space-y-3 pb-20 sm:pb-4">
 
-        {/* ── 1. Header + Stats fusionnés ── */}
-        <div className="card p-4" data-onboarding="checkin-area">
-          <div className="flex items-center justify-between mb-3">
+        {/* ── 1. Header + Stats — design avec gradient et relief ── */}
+        <div
+          className="rounded-2xl p-4 relative overflow-hidden"
+          data-onboarding="checkin-area"
+          style={{
+            background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
+            boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+          }}
+        >
+          {/* Cercle décoratif */}
+          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+          <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
+
+          {/* Ligne 1 : Bonjour + dernière météo */}
+          <div className="relative flex items-start justify-between mb-4">
             <div>
-              <h1 className="text-xl font-extrabold text-gray-900">Bonjour {firstName} 👋</h1>
-              <p className="text-xs text-gray-500 mt-0.5">{encouragement}</p>
+              <h1 className="text-xl font-extrabold text-white">Bonjour {firstName} 👋</h1>
+              <p className="text-xs text-indigo-200 mt-0.5">{encouragement}</p>
             </div>
-            {/* Micro météo dans le header */}
+            {/* Dernière météo bien visible */}
             {weatherHistory.length > 0 && (
-              <Link href="/checkin" className="flex items-center gap-0.5">
-                {weatherHistory.slice(-4).map((w, i, arr) => (
-                  <span
-                    key={i}
-                    className={`transition-all ${i === arr.length - 1 ? 'text-xl' : 'text-sm opacity-40'}`}
-                  >
-                    {WEATHER_ICONS[w] ?? '❓'}
-                  </span>
-                ))}
+              <Link href="/checkin" className="flex flex-col items-center">
+                <span className="text-3xl drop-shadow-lg">
+                  {WEATHER_ICONS[weatherHistory[weatherHistory.length - 1]] ?? '❓'}
+                </span>
+                <span className="text-[9px] text-indigo-200 mt-0.5">ma météo</span>
               </Link>
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3 text-center">
-            {/* Colonne 1 : Cette semaine */}
-            <Link href="/axes">
-              <div className={`text-3xl font-black ${deltaActionsThisWeek > 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+          {/* Stats en 3 colonnes avec fond semi-transparent */}
+          <div className="relative grid grid-cols-3 gap-2">
+            {/* Cette semaine */}
+            <Link href="/axes" className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
+              <div className={`text-2xl font-black ${deltaActionsThisWeek > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
                 {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
               </div>
-              <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">cette semaine</p>
+              <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
             </Link>
 
-            {/* Colonne 2 : Total actions */}
-            <Link href="/axes">
-              <div className="text-3xl font-black text-gray-800">{animatedActions}</div>
-              <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">actions</p>
+            {/* Total actions */}
+            <Link href="/axes" className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
+              <div className="text-2xl font-black text-white">{animatedActions}</div>
+              <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
               {rank && rank <= 3 && groupSize && groupSize > 1 && (
-                <div className="flex items-center justify-center gap-0.5 mt-1">
-                  <Trophy size={11} className="text-amber-500" />
-                  <span className="text-[11px] font-bold text-amber-600">
-                    {rank === 1 ? '🥇 1er' : rank === 2 ? '🥈 2e' : '🥉 3e'}
-                  </span>
-                </div>
+                <p className="text-[10px] font-bold text-amber-300 mt-0.5">
+                  {rank === 1 ? '1er' : rank === 2 ? '2e' : '3e'} du groupe
+                </p>
               )}
             </Link>
 
-            {/* Colonne 3 : Check-ins + streak */}
-            <Link href="/checkin">
-              <div className="text-3xl font-black text-gray-800">{totalCheckins}</div>
-              <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">check-ins</p>
+            {/* Check-ins + streak */}
+            <Link href="/checkin" className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
+              <div className="text-2xl font-black text-white">{totalCheckins}</div>
+              <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
               {streak >= 2 && (
-                <div className="flex items-center justify-center gap-0.5 mt-1">
-                  <Flame size={11} className="text-orange-500" />
-                  <span className="text-[11px] font-bold text-orange-600">{streak} sem.</span>
-                </div>
+                <p className="text-[10px] font-bold text-orange-300 mt-0.5">
+                  🔥 {streak} sem.
+                </p>
               )}
             </Link>
           </div>
