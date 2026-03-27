@@ -57,6 +57,14 @@ const config: Config = {
       },
     },
   },
+  safelist: [
+    // Classes dynamiques utilisées dans axeHelpers.ts (getDynamique)
+    'text-violet-700', 'bg-violet-100', 'border-violet-300',
+    'text-sky-800', 'bg-sky-100', 'border-sky-300',
+    'text-emerald-800', 'bg-emerald-100', 'border-emerald-300',
+    'text-orange-800', 'bg-orange-100', 'border-orange-300',
+    'text-rose-800', 'bg-rose-100', 'border-rose-300',
+  ],
   plugins: [],
 }
 
