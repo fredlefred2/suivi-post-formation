@@ -124,6 +124,7 @@ Réponds UNIQUEMENT avec un objet JSON (pas de texte autour) avec cette structur
 - Les managerActions doivent être des phrases que le manager peut appliquer dès cette semaine`
 
   try {
+    console.log(`[AI Report] Appel Claude pour ${data.learners.length} apprenants...`)
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -133,23 +134,25 @@ Réponds UNIQUEMENT avec un objet JSON (pas de texte autour) avec cette structur
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 3000,
+        max_tokens: 4096,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
 
     if (!response.ok) {
-      console.error('[AI Report] Claude API error:', response.status, await response.text())
+      const errText = await response.text()
+      console.error('[AI Report] Claude API error:', response.status, errText)
       return null
     }
 
     const result = await response.json()
     const text = result.content?.[0]?.text || ''
+    console.log('[AI Report] Réponse Claude reçue, longueur:', text.length, 'stop_reason:', result.stop_reason)
 
     // Extraire le JSON
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      console.error('[AI Report] Impossible de parser la réponse:', text)
+      console.error('[AI Report] Impossible de parser la réponse:', text.substring(0, 500))
       return null
     }
 
@@ -157,10 +160,11 @@ Réponds UNIQUEMENT avec un objet JSON (pas de texte autour) avec cette structur
 
     // Validation basique
     if (!analysis.groupSummary || !analysis.learnerAnalyses || !analysis.alerts) {
-      console.error('[AI Report] Réponse incomplète:', analysis)
+      console.error('[AI Report] Réponse incomplète:', JSON.stringify(analysis).substring(0, 500))
       return null
     }
 
+    console.log('[AI Report] Analyse OK:', analysis.learnerAnalyses.length, 'apprenants,', analysis.alerts.length, 'points d\'attention')
     return analysis
   } catch (err) {
     console.error('[AI Report] Erreur:', err)

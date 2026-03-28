@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // secondes — nécessaire pour l'analyse IA + génération PDF
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -255,7 +256,9 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Analyse IA (non bloquante : si l'IA échoue, le PDF sort quand même) ──
+    console.log('[Group Report] Lancement analyse IA...')
     const aiAnalysis = await generateAIAnalysis(reportData)
+    console.log('[Group Report] Analyse IA:', aiAnalysis ? 'OK' : 'ÉCHEC (null)')
 
     // ── Génération du PDF (React-PDF) ──
     const pdfBuffer = await renderToBuffer(
