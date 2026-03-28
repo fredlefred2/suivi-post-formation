@@ -295,17 +295,48 @@ export default function TrainerDashboardClient({
     )
   }
 
+  const [downloadStatus, setDownloadStatus] = useState('')
+
   const handleDownloadReport = useCallback(async () => {
     if (isDownloading || selectedOption === 'all') return
     setIsDownloading(true)
     try {
-      const res = await fetch(`/api/group-report?groupId=${selectedOption}`)
-      if (!res.ok) throw new Error('Erreur telechargement')
-      const blob = await res.blob()
+      // Étape 1 : Récupérer les données du groupe
+      setDownloadStatus('Collecte des donnees...')
+      const dataRes = await fetch(`/api/group-report?groupId=${selectedOption}&mode=data`)
+      if (!dataRes.ok) throw new Error('Erreur récupération données')
+      const reportData = await dataRes.json()
+
+      // Étape 2 : Analyse IA (route Edge, 30s de timeout)
+      setDownloadStatus('Analyse en cours...')
+      let aiAnalysis = null
+      try {
+        const aiRes = await fetch('/api/ai-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reportData),
+        })
+        if (aiRes.ok) {
+          aiAnalysis = await aiRes.json()
+        }
+      } catch {
+        // Si l'IA échoue, on continue sans
+      }
+
+      // Étape 3 : Générer le PDF avec les données + analyse IA
+      setDownloadStatus('Generation du PDF...')
+      const pdfRes = await fetch('/api/group-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportData, aiAnalysis }),
+      })
+      if (!pdfRes.ok) throw new Error('Erreur génération PDF')
+
+      const blob = await pdfRes.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = res.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] ?? 'rapport.pdf'
+      a.download = pdfRes.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] ?? 'rapport.pdf'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -314,6 +345,7 @@ export default function TrainerDashboardClient({
       console.error('Erreur rapport PDF:', err)
     } finally {
       setIsDownloading(false)
+      setDownloadStatus('')
     }
   }, [isDownloading, selectedOption])
 
@@ -395,7 +427,7 @@ export default function TrainerDashboardClient({
             ) : (
               <Download size={16} />
             )}
-            <span className="hidden sm:inline">{isDownloading ? 'Generation...' : 'Rapport'}</span>
+            <span className="hidden sm:inline">{isDownloading ? (downloadStatus || 'Generation...') : 'Rapport'}</span>
           </button>
         )}
       </div>

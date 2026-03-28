@@ -1,5 +1,4 @@
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60 // secondes — nécessaire pour l'analyse IA + génération PDF
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -8,7 +7,7 @@ import { weeksSince } from '@/lib/utils'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { GroupReportDocument } from '@/lib/pdf/react-pdf-report'
 import type { GroupReportData, LearnerReportData, WeekWeather } from '@/lib/pdf/group-report'
-import { generateAIAnalysis } from '@/lib/pdf/ai-analysis'
+import type { AIReportAnalysis } from '@/lib/pdf/ai-analysis'
 
 export async function GET(request: NextRequest) {
   try {
@@ -255,17 +254,19 @@ export async function GET(request: NextRequest) {
       learners,
     }
 
-    // ── Analyse IA (non bloquante : si l'IA échoue, le PDF sort quand même) ──
-    console.log('[Group Report] Lancement analyse IA...')
-    const aiAnalysis = await generateAIAnalysis(reportData)
-    console.log('[Group Report] Analyse IA:', aiAnalysis ? 'OK' : 'ÉCHEC (null)')
+    // ── Mode : JSON (pour le client) ou PDF direct ──
+    const mode = request.nextUrl.searchParams.get('mode')
 
-    // ── Génération du PDF (React-PDF) ──
+    if (mode === 'data') {
+      // Retourne les données en JSON (le client appellera l'IA séparément)
+      return NextResponse.json(reportData)
+    }
+
+    // ── Génération du PDF sans IA (GET classique) ──
     const pdfBuffer = await renderToBuffer(
-      GroupReportDocument({ data: reportData, aiAnalysis })
+      GroupReportDocument({ data: reportData })
     )
 
-    // ── Nom du fichier ──
     const safeGroupName = group.name
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -285,6 +286,48 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     console.error('Erreur génération rapport PDF:', err)
+    return NextResponse.json(
+      { error: 'Erreur lors de la génération du rapport' },
+      { status: 500 },
+    )
+  }
+}
+
+// ── POST : Génération PDF avec analyse IA (passée dans le body) ──
+export async function POST(request: NextRequest) {
+  try {
+    const { reportData, aiAnalysis } = await request.json() as {
+      reportData: GroupReportData
+      aiAnalysis: AIReportAnalysis | null
+    }
+
+    if (!reportData) {
+      return NextResponse.json({ error: 'reportData manquant' }, { status: 400 })
+    }
+
+    const pdfBuffer = await renderToBuffer(
+      GroupReportDocument({ data: reportData, aiAnalysis })
+    )
+
+    const safeGroupName = reportData.groupName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .toLowerCase()
+    const dateFile = new Date().toISOString().slice(0, 10)
+    const filename = `rapport-${safeGroupName}-${dateFile}.pdf`
+
+    return new NextResponse(new Uint8Array(pdfBuffer), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': String(pdfBuffer.length),
+      },
+    })
+  } catch (err) {
+    console.error('Erreur génération rapport PDF (POST):', err)
     return NextResponse.json(
       { error: 'Erreur lors de la génération du rapport' },
       { status: 500 },
