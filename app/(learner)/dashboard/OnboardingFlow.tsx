@@ -14,8 +14,8 @@ const ALL_STEPS = [
   'axis-1',        // 2. Crée ton 1er axe (obligatoire)
   'axis-2',        // 3. Crée ton 2e axe (optionnel)
   'axis-3',        // 4. Crée ton 3e axe (optionnel)
-  'add-action',    // 5. Ajouter une action (coach mark)
-  'progression',   // 6. Ta dynamique de progression (coach mark)
+  'progression',   // 5. Ta dynamique de progression (coach mark sur carte axe)
+  'add-action',    // 6. Ajouter une action (coach mark sur bouton pleine largeur)
   'feedback-info', // 7. Likes & commentaires (coach mark centré)
   'delete-info',   // 8. Modifier & supprimer (coach mark centré)
   'checkin',       // 9. Le check-in hebdomadaire (coach mark)
@@ -145,8 +145,8 @@ export default function OnboardingFlow({
     const idx = ALL_STEPS.indexOf(fromStep)
     if (idx <= 0) return
 
-    // Si on est sur la première étape coach mark (add-action) → éditer le dernier axe
-    if (fromStep === 'add-action') {
+    // Si on est sur la première étape coach mark (progression) → éditer le dernier axe
+    if (fromStep === 'progression') {
       openEditLastAxe()
       return
     }
@@ -550,7 +550,7 @@ export default function OnboardingFlow({
   // COACH MARKS TRANSLUCIDES (5-10: sur le dashboard)
   // ═══════════════════════════════════════════════════
 
-  // Step 5: Progression — spotlight on first axis card
+  // Step 5: Progression — spotlight on first axis card (colored gradient)
   if (activeStep === 'progression') {
     return (
       <>
@@ -560,7 +560,7 @@ export default function OnboardingFlow({
           stepLabel={stepLabel}
           icon="📈"
           title="Ta dynamique de progression"
-          description="Chaque action enregistrée te fait progresser. Voici les 5 niveaux que tu peux atteindre :"
+          description="Chaque axe change de couleur selon tes actions. Voici les 5 niveaux que tu peux atteindre :"
           extra={
             <div style={{ marginTop: 8, marginBottom: 4 }}>
               {/* Piste de progression colorée */}
@@ -616,7 +616,7 @@ export default function OnboardingFlow({
     )
   }
 
-  // Step 6: Add action — spotlight on FAB (explanatory only)
+  // Step 6: Add action — spotlight on full-width button
   if (activeStep === 'add-action') {
     return (
       <>
@@ -625,8 +625,8 @@ export default function OnboardingFlow({
           targetSelector='[data-onboarding="fab-action"]'
           stepLabel={stepLabel}
           icon="➕"
-          title="Ajouter une action"
-          description="Ce bouton te permet d'enregistrer chaque action concrète que tu mènes au quotidien. Tu choisis l'axe concerné, tu décris ce que tu as fait, et c'est enregistré ! Plus tu en ajoutes, plus tu progresses."
+          title="Enregistre tes actions"
+          description="Appuie sur « Nouvelle action » pour enregistrer ce que tu mets en pratique au quotidien. Tu choisis l'axe concerné, tu décris ce que tu as fait, et c'est comptabilisé ! Plus tu en ajoutes, plus ta carte d'axe monte en couleur."
           ctaLabel="Compris !"
           onCta={() => acknowledge('add-action')}
           onBack={() => goBack('add-action')}
