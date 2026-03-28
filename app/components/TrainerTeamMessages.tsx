@@ -102,59 +102,47 @@ export default function TrainerTeamMessages({
   const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="section-title">
-          <MessageSquare size={16} className="inline mr-1.5 -mt-0.5" />
-          Message à la team
-        </h2>
-        {messages.length > 0 && (
-          <button
-            onClick={() => setShowAll(true)}
-            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
-          >
-            Voir tout ({messages.length})
-          </button>
-        )}
-      </div>
-
-      {/* Last message preview */}
-      {loading ? (
-        <div className="h-12 rounded-xl bg-gray-100 animate-pulse mb-3" />
-      ) : lastMessage ? (
-        <div className="bg-gray-50 rounded-xl px-3.5 py-2.5 mb-3">
-          <div className="flex items-baseline gap-2 mb-0.5">
-            <span className="text-[10px] text-gray-500 font-medium">Dernier message</span>
-            <span className="text-[10px] text-gray-500">{timeAgo(lastMessage.createdAt)}</span>
-          </div>
-          <p className="text-sm text-gray-600 line-clamp-2">{lastMessage.content}</p>
-        </div>
-      ) : (
-        <div className="text-center py-4 mb-3">
-          <MessageSquare size={28} className="mx-auto text-gray-300 mb-1.5" />
-          <p className="text-sm text-gray-500">Aucun message envoyé</p>
-        </div>
-      )}
-
-      {/* Input */}
-      <div className="flex items-end gap-2">
-        <textarea
+    <div className="rounded-2xl bg-white/80 backdrop-blur-sm px-3.5 py-3" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03)' }}>
+      {/* Ligne compacte : icône + input + send */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => messages.length > 0 && setShowAll(true)}
+          className="relative shrink-0 w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 hover:bg-indigo-100 transition-colors"
+          title={lastMessage ? `Dernier message : ${timeAgo(lastMessage.createdAt)}` : 'Messages à la team'}
+        >
+          <MessageSquare size={16} />
+          {messages.length > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center">
+              {messages.length}
+            </span>
+          )}
+        </button>
+        <input
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Écrire à la team…"
-          rows={1}
+          placeholder="Message à la team…"
           maxLength={500}
-          className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent max-h-20"
+          className="flex-1 min-w-0 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent bg-white"
         />
         <button
           onClick={handleSend}
           disabled={!input.trim() || sending}
-          className="p-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90"
+          className="shrink-0 p-2 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90"
         >
           <Send size={16} />
         </button>
       </div>
+      {/* Hint dernier message */}
+      {!loading && lastMessage && (
+        <button
+          onClick={() => setShowAll(true)}
+          className="mt-1.5 text-[10px] text-gray-400 hover:text-indigo-500 transition-colors truncate block w-full text-left pl-11"
+        >
+          Dernier : &ldquo;{lastMessage.content.slice(0, 50)}{lastMessage.content.length > 50 ? '…' : ''}&rdquo; · {timeAgo(lastMessage.createdAt)}
+        </button>
+      )}
 
       {/* Modal: all messages */}
       {showAll && (

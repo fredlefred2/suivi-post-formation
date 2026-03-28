@@ -474,11 +474,6 @@ export default function TrainerDashboardClient({
         </div>
       )}
 
-      {/* ── Messages de la team ── */}
-      {selectedOption !== 'all' && (
-        <TrainerTeamMessages groupId={selectedOption} currentUserId={currentUserId} />
-      )}
-
       {/* ── Actions récentes ── */}
       {carouselActions.length > 0 ? (
         <div>
@@ -632,6 +627,11 @@ export default function TrainerDashboardClient({
             })}
           </div>
         </div>
+      )}
+
+      {/* ── Message à la team (barre compacte en bas) ── */}
+      {selectedOption !== 'all' && (
+        <TrainerTeamMessages groupId={selectedOption} currentUserId={currentUserId} />
       )}
 
       {/* ── Modale : toutes les actions recentes ── */}
