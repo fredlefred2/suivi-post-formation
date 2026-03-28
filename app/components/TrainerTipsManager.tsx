@@ -51,6 +51,24 @@ export default function TrainerTipsManager({
   const [editingTheme, setEditingTheme] = useState(false)
   const [themeInput, setThemeInput] = useState(groupTheme)
   const [savingTheme, setSavingTheme] = useState(false)
+  const [rewritingTheme, setRewritingTheme] = useState(false)
+
+  const handleRewriteTheme = async () => {
+    if (!themeInput.trim() || themeInput.trim().length < 5) return
+    setRewritingTheme(true)
+    try {
+      const res = await fetch('/api/theme/rewrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: themeInput }),
+      })
+      const data = await res.json()
+      if (data.rewritten) setThemeInput(data.rewritten)
+    } catch {
+      // silently fail
+    }
+    setRewritingTheme(false)
+  }
 
   const fetchTips = useCallback(async () => {
     const res = await fetch(`/api/tips/admin?groupId=${groupId}`)
@@ -166,15 +184,25 @@ export default function TrainerTipsManager({
                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 min-h-[80px]"
                 autoFocus
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <button onClick={handleSaveTheme} disabled={savingTheme} className="btn-primary btn-sm text-xs">
                   <Check size={14} /> {savingTheme ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
                 <button onClick={() => { setEditingTheme(false); setThemeInput(theme) }} className="btn-secondary btn-sm text-xs">
                   Annuler
                 </button>
+                {themeInput.trim().length >= 5 && (
+                  <button
+                    onClick={handleRewriteTheme}
+                    disabled={rewritingTheme}
+                    className="flex items-center gap-1 ml-auto text-xs text-violet-600 hover:text-violet-700 font-medium transition-colors disabled:opacity-50"
+                  >
+                    {rewritingTheme ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    {rewritingTheme ? 'Réécriture...' : 'Reformuler'}
+                  </button>
+                )}
               </div>
-              <p className="text-[11px] text-gray-400">Les tips déjà générés ne changent pas. Les prochaines régénérations tiendront compte du nouveau thème.</p>
+              <p className="text-[11px] text-gray-400">Cliquez sur Reformuler pour structurer le thème, puis sur Enregistrer pour valider.</p>
             </div>
           ) : (
             <div className="flex-1 min-w-0">
