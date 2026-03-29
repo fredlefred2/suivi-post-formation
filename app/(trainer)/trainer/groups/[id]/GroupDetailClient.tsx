@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, Download, Pencil, Loader2 } from 'lucide-react'
+import { ChevronLeft, Download, Loader2 } from 'lucide-react'
 import { getDynamique } from '@/lib/axeHelpers'
 import TrainerTeamMessages from '@/app/components/TrainerTeamMessages'
+import TrainerTipsManager from '@/app/components/TrainerTipsManager'
 import type { GroupMember, GroupAction } from './page'
 
 const WEATHER_ICONS: Record<string, string> = { sunny: '☀️', cloudy: '⛅', stormy: '⛈️' }
@@ -186,12 +187,15 @@ export default function GroupDetailClient({
                 : <><Download size={14} /> Rapport</>
               }
             </button>
-            <Link
-              href={`/trainer/groups/${group.id}/tips`}
+            <button
+              onClick={() => {
+                const el = document.getElementById('tips-section')
+                if (el) el.scrollIntoView({ behavior: 'smooth' })
+              }}
               className="flex items-center gap-1.5 px-3.5 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-xl transition-all border border-white/20"
             >
-              <Pencil size={14} /> Gérer
-            </Link>
+              🥷 Tips
+            </button>
           </div>
         </div>
       </div>
@@ -305,6 +309,16 @@ export default function GroupDetailClient({
               )
             })}
           </div>
+        </div>
+      )}
+
+      {/* Tips section */}
+      {members.length > 0 && (
+        <div id="tips-section">
+          <TrainerTipsManager
+            groupId={group.id}
+            groupTheme={group.theme || group.name}
+          />
         </div>
       )}
 
