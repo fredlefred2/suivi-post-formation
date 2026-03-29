@@ -66,7 +66,7 @@ export default function LoginPage() {
               S&apos;inscrire
             </Link>
           </div>
-          <p className="text-center text-[11px] text-indigo-300/30 mt-4">V1.26</p>
+          <p className="text-center text-[11px] text-indigo-300/30 mt-4">V1.27</p>
         </div>
       </div>
     </div>
