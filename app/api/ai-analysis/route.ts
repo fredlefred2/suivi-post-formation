@@ -1,7 +1,7 @@
 export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server'
-import type { GroupReportData } from '@/lib/pdf/group-report'
+import type { GroupReportData } from '@/lib/pdf/report-types'
 import type { AIReportAnalysis } from '@/lib/pdf/ai-analysis'
 
 export async function POST(request: NextRequest) {

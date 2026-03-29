@@ -1,4 +1,4 @@
-import type { GroupReportData } from './group-report'
+import type { GroupReportData } from './report-types'
 
 // ── Types retournés par l'analyse IA ──
 

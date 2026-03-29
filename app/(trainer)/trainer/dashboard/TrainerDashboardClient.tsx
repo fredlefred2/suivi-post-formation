@@ -318,9 +318,13 @@ export default function TrainerDashboardClient({
         })
         if (aiRes.ok) {
           aiAnalysis = await aiRes.json()
+          console.log('[PDF] Analyse IA reçue:', Object.keys(aiAnalysis))
+        } else {
+          const errText = await aiRes.text()
+          console.error('[PDF] Erreur analyse IA:', aiRes.status, errText)
         }
-      } catch {
-        // Si l'IA échoue, on continue sans
+      } catch (aiErr) {
+        console.error('[PDF] Exception analyse IA:', aiErr)
       }
 
       // Étape 3 : Générer le PDF avec les données + analyse IA
