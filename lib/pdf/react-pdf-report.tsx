@@ -581,7 +581,7 @@ function AlertsAndRecommendationsPage({ aiAnalysis, dateStr }: { aiAnalysis: AIR
     yellow: { bg: '#fffbeb', border: C.sunny, text: '#92400e', badge: '#d97706' },
     green: { bg: '#f0fdf4', border: C.green, text: '#166534', badge: '#16a34a' },
   }
-  const alertLabels: Record<string, string> = { red: 'A SUIVRE', yellow: 'A NOTER', green: 'POSITIF' }
+  const alertLabels: Record<string, string> = { red: 'A ACCOMPAGNER', yellow: 'A ENCOURAGER', green: 'BONNE DYNAMIQUE' }
 
   return (
     <PageShell dateStr={dateStr}>
@@ -591,11 +591,11 @@ function AlertsAndRecommendationsPage({ aiAnalysis, dateStr }: { aiAnalysis: AIR
           SUIVI
         </Text>
         <Text style={{ fontSize: 22, fontFamily: 'Helvetica-Bold', color: C.textDark }}>
-          Points d'attention & Recommandations
+          Suivi individuel & Recommandations
         </Text>
       </View>
 
-      <SectionHeader title="Points d'attention par participant" accent={C.sunny} />
+      <SectionHeader title="Situation par participant" accent={C.sunny} />
       <View style={{ marginHorizontal: 40, gap: 6 }}>
         {aiAnalysis.alerts.map((alert, i) => {
           const colors = alertColors[alert.level] || alertColors.yellow

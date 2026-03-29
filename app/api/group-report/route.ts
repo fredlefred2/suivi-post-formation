@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
         const weekKey = `${d.getFullYear()}-${Math.ceil((d.getTime() - new Date(d.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}`
         actionsByWeek.add(weekKey)
       })
-      const regularityPct = ws > 0 ? Math.round((actionsByWeek.size / ws) * 100) : 0
+      const regularityPct = ws > 0 ? Math.min(100, Math.round((actionsByWeek.size / ws) * 100)) : 0
 
       return {
         id: lid,

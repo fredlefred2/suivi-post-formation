@@ -56,7 +56,7 @@ ${JSON.stringify(learnersContext)}
   "managerRecommendations": ["Reco 1","Reco 2","Reco 3"]
 }
 
-RÈGLES : concis, pas de jargon formation, comportements observables, bienveillant. red=inactif, yellow=vigilance, green=positif. 1 alerte+1 analyse par participant.`
+RÈGLES : concis, pas de jargon formation, comportements observables, bienveillant. red=besoin d'accompagnement, yellow=à encourager, green=bonne dynamique. 1 entrée alerts + 1 analyse par participant. Le message dans alerts doit être positif et constructif, jamais alarmiste.`
 
     // Appel Claude en STREAMING
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
