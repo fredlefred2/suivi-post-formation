@@ -309,7 +309,7 @@ export default function TrainerDashboardClient({
       if (!dataRes.ok) throw new Error(`Erreur récupération données (${dataRes.status})`)
       const reportData = await dataRes.json()
 
-      // Étape 2 : Analyse IA (route Edge, 30s de timeout, pas besoin d'auth)
+      // Étape 2 : Analyse IA (route Edge streaming pour éviter timeout)
       setDownloadStatus('Analyse en cours...')
       let aiAnalysis = null
       try {
@@ -319,8 +319,15 @@ export default function TrainerDashboardClient({
           body: JSON.stringify(reportData),
         })
         if (aiRes.ok) {
-          aiAnalysis = await aiRes.json()
-          console.log('[PDF] Analyse IA reçue:', Object.keys(aiAnalysis))
+          // La réponse est un stream de texte brut (pas du JSON direct)
+          const rawText = await aiRes.text()
+          const jsonMatch = rawText.match(/\{[\s\S]*\}/)
+          if (jsonMatch) {
+            aiAnalysis = JSON.parse(jsonMatch[0])
+            console.log('[PDF] Analyse IA reçue:', Object.keys(aiAnalysis))
+          } else {
+            console.error('[PDF] Pas de JSON dans la réponse IA:', rawText.substring(0, 200))
+          }
         } else {
           const errText = await aiRes.text()
           console.error('[PDF] Erreur analyse IA:', aiRes.status, errText)
