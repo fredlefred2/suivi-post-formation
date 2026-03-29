@@ -305,8 +305,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'reportData manquant' }, { status: 400 })
     }
 
+    console.log('[PDF POST] reportData.learners:', reportData.learners?.length, 'aiAnalysis:', aiAnalysis ? `OK (${aiAnalysis.learnerAnalyses?.length} analyses, ${aiAnalysis.alerts?.length} alertes)` : 'null')
+
     const pdfBuffer = await renderToBuffer(
-      GroupReportDocument({ data: reportData, aiAnalysis })
+      GroupReportDocument({ data: reportData, aiAnalysis: aiAnalysis ?? undefined })
     )
 
     const safeGroupName = reportData.groupName

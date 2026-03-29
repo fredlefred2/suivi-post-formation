@@ -329,6 +329,7 @@ export default function TrainerDashboardClient({
 
       // Étape 3 : Générer le PDF avec les données + analyse IA
       setDownloadStatus('Generation du PDF...')
+      console.log('[PDF] Envoi POST avec aiAnalysis:', aiAnalysis ? `OK (${aiAnalysis.learnerAnalyses?.length} analyses)` : 'null')
       const pdfRes = await fetch('/api/group-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
