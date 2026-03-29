@@ -9,7 +9,7 @@ export type GroupListItem = {
   name: string
   theme: string | null
   memberCount: number
-  avgWeather: 'sunny' | 'cloudy' | 'stormy' | null
+  members: Array<{ learner_id: string; first_name: string; last_name: string }>
 }
 
 export default async function TrainerDashboardPage() {
@@ -38,53 +38,37 @@ export default async function TrainerDashboardPage() {
         .in('group_id', groupIds)
     : { data: [] as Array<{ group_id: string; learner_id: string }> }
 
-  const memberCountMap: Record<string, number> = {}
-  const learnersByGroup: Record<string, string[]> = {}
-  ;(membersRaw ?? []).forEach((m) => {
-    memberCountMap[m.group_id] = (memberCountMap[m.group_id] ?? 0) + 1
-    if (!learnersByGroup[m.group_id]) learnersByGroup[m.group_id] = []
-    learnersByGroup[m.group_id].push(m.learner_id)
-  })
-
   const allLearnerIds = Array.from(new Set(membersRaw?.map((m) => m.learner_id) ?? []))
 
-  // ── 3. Derniers check-ins pour météo moyenne ────────────────────
-  // On prend le dernier check-in de chaque apprenant
-  const { data: checkinsRaw } = allLearnerIds.length > 0
-    ? await admin
-        .from('checkins')
-        .select('learner_id, weather')
-        .in('learner_id', allLearnerIds)
-        .order('created_at', { ascending: false })
-    : { data: [] as Array<{ learner_id: string; weather: string }> }
+  // ── 3. Profils ──────────────────────────────────────────────────
+  const { data: profiles } = allLearnerIds.length > 0
+    ? await admin.from('profiles').select('id, first_name, last_name').in('id', allLearnerIds)
+    : { data: [] as Array<{ id: string; first_name: string; last_name: string }> }
 
-  // Dernier check-in par apprenant
-  const lastWeatherMap: Record<string, string> = {}
-  ;(checkinsRaw ?? []).forEach((c) => {
-    if (!lastWeatherMap[c.learner_id]) lastWeatherMap[c.learner_id] = c.weather
+  const profileMap: Record<string, { first_name: string; last_name: string }> = {}
+  profiles?.forEach((p) => { profileMap[p.id] = { first_name: p.first_name, last_name: p.last_name } })
+
+  // ── 4. Construction des groupes ─────────────────────────────────
+  const groups: GroupListItem[] = (groupsRaw ?? []).map((g) => {
+    const gMembers = (membersRaw ?? [])
+      .filter((m) => m.group_id === g.id)
+      .map((m) => ({
+        learner_id: m.learner_id,
+        first_name: profileMap[m.learner_id]?.first_name ?? '',
+        last_name: profileMap[m.learner_id]?.last_name ?? '',
+      }))
+      .sort((a, b) => a.last_name.localeCompare(b.last_name, 'fr'))
+
+    return {
+      id: g.id,
+      name: g.name,
+      theme: g.theme,
+      memberCount: gMembers.length,
+      members: gMembers,
+    }
   })
 
-  // Calcul météo moyenne par groupe
-  function avgWeather(groupId: string): 'sunny' | 'cloudy' | 'stormy' | null {
-    const members = learnersByGroup[groupId] ?? []
-    const weathers = members.map((id) => lastWeatherMap[id]).filter(Boolean)
-    if (weathers.length === 0) return null
-    const scores = weathers.map((w) => w === 'sunny' ? 5 : w === 'cloudy' ? 3 : 1)
-    const avg = scores.reduce((a, b) => a + b, 0) / scores.length
-    if (avg >= 4) return 'sunny'
-    if (avg >= 2) return 'cloudy'
-    return 'stormy'
-  }
-
-  const groups: GroupListItem[] = (groupsRaw ?? []).map((g) => ({
-    id: g.id,
-    name: g.name,
-    theme: g.theme,
-    memberCount: memberCountMap[g.id] ?? 0,
-    avgWeather: avgWeather(g.id),
-  }))
-
-  // ── 4. Apprenants non affectés (salle d'attente) ────────────────
+  // ── 5. Apprenants non affectés (salle d'attente) ────────────────
   const { data: allGroupMembers } = await admin
     .from('group_members')
     .select('learner_id')

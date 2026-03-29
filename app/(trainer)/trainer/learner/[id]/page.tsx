@@ -206,12 +206,7 @@ export default async function LearnerDetailPage({
     }
   })
 
-  // ── Météo count ─────────────────────────────────────────────────
-  const weatherCount = {
-    sunny:  (checkins ?? []).filter((c) => c.weather === 'sunny').length,
-    cloudy: (checkins ?? []).filter((c) => c.weather === 'cloudy').length,
-    stormy: (checkins ?? []).filter((c) => c.weather === 'stormy').length,
-  }
+  // (weatherCount supprimé — on ne montre que la frise)
 
   return (
     <div className="space-y-4 pb-20">
@@ -288,7 +283,7 @@ export default async function LearnerDetailPage({
         </div>
       </div>
 
-      {/* ── Axes de progrès ──────────────────────────────────────────── */}
+      {/* ── Axes de progrès (repliés par défaut) ────────────────────── */}
       {axes && axes.length > 0 && (
         <LearnerAxesSection
           axes={(axes ?? []).map((axe, i) => ({
@@ -300,28 +295,14 @@ export default async function LearnerDetailPage({
             actions: axe.actions as ActionRow[],
           }))}
           feedbackMap={feedbackMap}
+          defaultCollapsed={true}
         />
       )}
 
-      {/* ── Historique météo ─────────────────────────────────────────── */}
+      {/* ── Historique météo (frise seule) ────────────────────────────── */}
       {checkins && checkins.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <h2 className="font-bold text-gray-800 text-base mb-3">🌤 Historique météo</h2>
-
-          {/* Résumé 3 blocs */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            {(['sunny', 'cloudy', 'stormy'] as const).map((w) => (
-              <div key={w} className={`rounded-lg p-3 text-center ${WEATHER_COLORS[w]}`}>
-                <p className="text-2xl">{WEATHER_ICONS[w]}</p>
-                <p className="font-bold text-lg mt-0.5">{weatherCount[w]}</p>
-                <p className="text-xs mt-0.5">
-                  {checkins.length > 0 ? `${Math.round((weatherCount[w] / checkins.length) * 100)}%` : '0%'}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Timeline pills */}
           <div className="flex flex-wrap gap-1.5">
             {[...checkins].reverse().map((ci) => (
               <span
@@ -338,23 +319,32 @@ export default async function LearnerDetailPage({
         </div>
       )}
 
-      {/* ── Derniers check-ins ───────────────────────────────────────── */}
+      {/* ── Derniers check-ins (datés par semaine) ────────────────────── */}
       {lastCheckins.length > 0 && (lastCheckins[0].what_worked || lastCheckins[0].difficulties) && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <h2 className="font-bold text-gray-800 text-base mb-3">📋 Derniers check-ins</h2>
-          <div className="space-y-3">
-            {lastCheckins[0].what_worked && (
-              <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-                <p className="text-xs font-semibold text-emerald-700 mb-1">✓ Ce qui a marché</p>
-                <p className="text-sm text-emerald-900 leading-relaxed">{lastCheckins[0].what_worked}</p>
+          <div className="space-y-4">
+            {lastCheckins.filter((ci) => ci.what_worked || ci.difficulties).map((ci, idx) => (
+              <div key={idx}>
+                <p className="text-xs font-semibold text-gray-500 mb-2">
+                  {WEATHER_ICONS[ci.weather]} Semaine {ci.week} ({ci.year})
+                </p>
+                <div className="space-y-2">
+                  {ci.what_worked && (
+                    <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                      <p className="text-xs font-semibold text-emerald-700 mb-1">✓ Ce qui a marché</p>
+                      <p className="text-sm text-emerald-900 leading-relaxed">{ci.what_worked}</p>
+                    </div>
+                  )}
+                  {ci.difficulties && (
+                    <div className="bg-red-50 rounded-xl p-3 border border-red-100">
+                      <p className="text-xs font-semibold text-red-700 mb-1">△ Difficultés</p>
+                      <p className="text-sm text-red-900 leading-relaxed">{ci.difficulties}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-            {lastCheckins[0].difficulties && (
-              <div className="bg-red-50 rounded-xl p-3 border border-red-100">
-                <p className="text-xs font-semibold text-red-700 mb-1">△ Difficultés</p>
-                <p className="text-sm text-red-900 leading-relaxed">{lastCheckins[0].difficulties}</p>
-              </div>
-            )}
+            ))}
           </div>
         </div>
       )}

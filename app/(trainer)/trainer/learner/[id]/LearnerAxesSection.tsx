@@ -34,6 +34,7 @@ type AxeData = {
 type Props = {
   axes: AxeData[]
   feedbackMap: Record<string, ActionFeedbackData>
+  defaultCollapsed?: boolean
 }
 
 const emptyFeedback: ActionFeedbackData = {
@@ -53,11 +54,25 @@ function formatDate(dateStr: string) {
 
 const MAX_VISIBLE_ACTIONS = 3
 
-export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
+export default function LearnerAxesSection({ axes, feedbackMap, defaultCollapsed = false }: Props) {
+  // expandedAxes = voir toutes les actions (au-delà de MAX_VISIBLE)
   const [expandedAxes, setExpandedAxes] = useState<Set<string>>(new Set())
+  // openAxes = montrer/masquer la zone actions (pour mode collapsed)
+  const [openAxes, setOpenAxes] = useState<Set<string>>(
+    defaultCollapsed ? new Set() : new Set(axes.map((a) => a.id))
+  )
 
   function toggleExpand(axeId: string) {
     setExpandedAxes((prev) => {
+      const next = new Set(prev)
+      if (next.has(axeId)) next.delete(axeId)
+      else next.add(axeId)
+      return next
+    })
+  }
+
+  function toggleOpen(axeId: string) {
+    setOpenAxes((prev) => {
       const next = new Set(prev)
       if (next.has(axeId)) next.delete(axeId)
       else next.add(axeId)
@@ -76,6 +91,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
         const levelIdx = getCurrentLevelIndex(actionsCount)
         const level = getCurrentLevel(actionsCount)
         const isExpanded = expandedAxes.has(axe.id)
+        const isOpen = openAxes.has(axe.id)
 
         // Tri chronologique pour les rangs, antichrono pour l'affichage
         const chronoSorted = [...axe.actions].sort(
@@ -107,13 +123,34 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
             className="rounded-2xl border-2 p-4"
             style={{ background: cardGradient }}
           >
-            {/* Titre */}
-            <div className="flex items-center gap-2">
+            {/* Titre (cliquable si defaultCollapsed) */}
+            <button
+              onClick={() => defaultCollapsed && toggleOpen(axe.id)}
+              className={`flex items-center gap-2 w-full text-left ${defaultCollapsed ? 'cursor-pointer' : ''}`}
+            >
               <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
                 {axe.index + 1}
               </span>
               <p className="font-bold text-sm leading-snug line-clamp-1 flex-1">{axe.subject}</p>
-            </div>
+              {defaultCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                />
+              )}
+            </button>
+
+            {/* Quand fermé : juste le label du niveau à côté */}
+            {defaultCollapsed && !isOpen && (
+              <div className="mt-1.5 flex items-center gap-2 ml-8">
+                <span className="text-xs">{level.icon}</span>
+                <span className={`text-xs font-semibold ${dyn.color.split(' ')[0]}`}>{dyn.label}</span>
+                <span className="text-xs text-gray-500">{actionsCount} action{actionsCount !== 1 ? 's' : ''}</span>
+              </div>
+            )}
+
+            {/* Contenu dépliable */}
+            {isOpen && <>
 
             {/* Description */}
             {axe.description && (
@@ -218,6 +255,8 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
                 </>
               )}
             </div>
+
+            </>}{/* fin isOpen */}
           </div>
         )
       })}

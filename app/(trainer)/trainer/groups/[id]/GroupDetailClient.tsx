@@ -3,19 +3,19 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Download, Loader2 } from 'lucide-react'
-import { getDynamique } from '@/lib/axeHelpers'
+import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import TrainerTeamMessages from '@/app/components/TrainerTeamMessages'
-import TrainerTipsManager from '@/app/components/TrainerTipsManager'
 import type { GroupMember, GroupAction } from './page'
 
 const WEATHER_ICONS: Record<string, string> = { sunny: '☀️', cloudy: '⛅', stormy: '⛈️' }
 
-const LEVEL_COLORS: Record<string, string> = {
-  Veille: 'bg-slate-100 text-slate-600',
-  Impulsion: 'bg-sky-100 text-sky-700',
-  'Rythme': 'bg-emerald-100 text-emerald-700',
-  'Intensité': 'bg-orange-100 text-orange-700',
-  Propulsion: 'bg-rose-100 text-rose-700',
+// Couleurs identiques au TeamClient apprenant
+const LEVEL_AVATAR_COLORS: Record<number, string> = {
+  0: 'bg-slate-200 text-slate-700',
+  1: 'bg-sky-200 text-sky-700',
+  2: 'bg-emerald-200 text-emerald-700',
+  3: 'bg-orange-200 text-orange-700',
+  4: 'bg-rose-200 text-rose-700',
 }
 
 const LEVEL_BORDER: Record<string, string> = {
@@ -24,18 +24,6 @@ const LEVEL_BORDER: Record<string, string> = {
   'Rythme': 'border-l-emerald-400',
   'Intensité': 'border-l-orange-400',
   Propulsion: 'border-l-rose-400',
-}
-
-const RANK_STYLES: Record<number, string> = {
-  1: 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200',
-  2: 'bg-gradient-to-r from-gray-50 to-slate-50 border-slate-200',
-  3: 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200',
-}
-
-const RANK_CIRCLE: Record<number, string> = {
-  1: 'bg-amber-400 text-white',
-  2: 'bg-slate-400 text-white',
-  3: 'bg-orange-400 text-white',
 }
 
 function formatDate(dateStr: string) {
@@ -50,6 +38,9 @@ export default function GroupDetailClient({
   pendingCheckins,
   avgWeather,
   actionsThisWeek,
+  groupRegularity,
+  checkinPct,
+  isCheckinOpen,
   currentUserId,
 }: {
   group: { id: string; name: string; theme: string | null }
@@ -58,6 +49,9 @@ export default function GroupDetailClient({
   pendingCheckins: string[]
   avgWeather: string | null
   actionsThisWeek: number
+  groupRegularity: number
+  checkinPct: number
+  isCheckinOpen: boolean
   currentUserId: string
 }) {
   const carouselRef = useRef<HTMLDivElement>(null)
@@ -142,66 +136,70 @@ export default function GroupDetailClient({
         <span className="text-gray-700 font-semibold truncate">{group.name}</span>
       </div>
 
-      {/* Hero block gradient */}
-      <div className="rounded-2xl overflow-hidden relative" style={{
-        background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
-      }}>
-        {/* Decorative circles */}
-        <div className="absolute top-4 right-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
-        <div className="absolute bottom-2 left-6 w-16 h-16 bg-white/10 rounded-full blur-lg" />
+      {/* Hero block gradient — conforme charte apprenant */}
+      <div
+        className="rounded-2xl p-4 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
+          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+        }}
+      >
+        {/* Decorative circles identiques dashboard apprenant */}
+        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
 
-        <div className="relative p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-white font-extrabold text-xl tracking-tight">{group.name}</h1>
-              <p className="text-indigo-200 text-sm mt-0.5">{members.length} participant{members.length !== 1 ? 's' : ''}</p>
-            </div>
-            <span className="text-3xl">{avgWeather ? WEATHER_ICONS[avgWeather] : '—'}</span>
+        <div className="relative flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-extrabold text-white tracking-tight">{group.name}</h1>
+            <p className="text-xs text-indigo-200 mt-0.5">{members.length} participant{members.length !== 1 ? 's' : ''}</p>
           </div>
-
-          {/* Stats row */}
-          <div className="grid grid-cols-3 gap-2 mt-4">
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-3 py-2 text-center border border-white/20">
-              <p className="text-white font-bold text-lg">{members.length}</p>
-              <p className="text-indigo-200 text-[11px]">membres</p>
-            </div>
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-3 py-2 text-center border border-white/20">
-              <p className="text-emerald-300 font-bold text-lg">+{actionsThisWeek}</p>
-              <p className="text-indigo-200 text-[11px]">cette semaine</p>
-            </div>
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-3 py-2 text-center border border-white/20">
-              <p className="text-amber-300 font-bold text-lg">{pendingCheckins.length}</p>
-              <p className="text-indigo-200 text-[11px]">en attente</p>
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex gap-2 mt-4">
+          <div className="flex items-center gap-2">
+            {avgWeather && <span className="text-3xl drop-shadow-lg">{WEATHER_ICONS[avgWeather]}</span>}
             <button
               onClick={handleDownloadReport}
               disabled={isDownloading}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-xl transition-all border border-white/20 disabled:opacity-50"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-white/90 hover:bg-white transition-colors disabled:opacity-50"
             >
               {isDownloading
-                ? <><Loader2 size={14} className="animate-spin" /> {downloadStatus}</>
-                : <><Download size={14} /> Rapport</>
+                ? <><Loader2 size={13} className="animate-spin" /> {downloadStatus}</>
+                : <><Download size={13} /> Rapport</>
               }
             </button>
-            <button
-              onClick={() => {
-                const el = document.getElementById('tips-section')
-                if (el) el.scrollIntoView({ behavior: 'smooth' })
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-xl transition-all border border-white/20"
-            >
-              🥷 Tips
-            </button>
+          </div>
+        </div>
+
+        {/* 3 stats glass — taille text-2xl font-black comme dashboard apprenant */}
+        <div className="relative grid grid-cols-3 gap-2">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className="text-2xl font-black text-white">{groupRegularity}%</div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">régularité</p>
+          </div>
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className={`text-2xl font-black ${actionsThisWeek > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
+              {actionsThisWeek > 0 ? `+${actionsThisWeek}` : '0'}
+            </div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
+          </div>
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            {isCheckinOpen ? (
+              <>
+                <div className={`text-2xl font-black ${pendingCheckins.length > 0 ? 'text-amber-300' : 'text-emerald-300'}`}>
+                  {pendingCheckins.length}
+                </div>
+                <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">en attente</p>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-black text-white">{checkinPct}%</div>
+                <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* Pending check-ins banner */}
-      {pendingCheckins.length > 0 && (
+      {isCheckinOpen && pendingCheckins.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
           <span className="font-semibold text-amber-800">Check-ins en attente : </span>
           <span className="text-amber-700">{pendingCheckins.join(', ')}</span>
@@ -253,39 +251,64 @@ export default function GroupDetailClient({
           {recentActions.length > 2 && (
             <div className="flex justify-center gap-1.5 mt-2">
               {Array.from({ length: maxCarouselPage + 1 }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCarouselPage(i)}
-                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                    i === carouselPage ? 'bg-indigo-500 w-4' : 'bg-gray-300'
-                  }`}
-                />
+                <button key={i} onClick={() => setCarouselPage(i)}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${i === carouselPage ? 'bg-indigo-500 w-4' : 'bg-gray-300'}`} />
               ))}
             </div>
           )}
         </div>
       )}
 
-      {/* Ranking */}
+      {/* Ranking — badges identiques au TeamClient apprenant */}
       {members.length > 0 && (
         <div>
           <h2 className="font-bold text-gray-800 text-base mb-3">Classement</h2>
           <div className="space-y-2">
             {members.map((member, idx) => {
               const rank = idx + 1
-              const rankStyle = RANK_STYLES[rank] ?? 'bg-white border-gray-100'
-              const circleStyle = RANK_CIRCLE[rank] ?? 'bg-gray-200 text-gray-600'
-              const axeBadges = member.axeActionCounts.map((count) => getDynamique(count))
+              // Styles podium identiques TeamClient
+              const rankColors: Record<number, { bg: string; border: string; badge: string }> = {
+                1: { bg: 'linear-gradient(135deg, #fef9c3 0%, #fde68a 100%)', border: '#fbbf24', badge: '#f59e0b' },
+                2: { bg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', border: '#cbd5e1', badge: '#94a3b8' },
+                3: { bg: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', border: '#fdba74', badge: '#f97316' },
+              }
+              const rc = rankColors[rank]
+
+              // Badges niveaux identiques TeamClient : w-7 h-7 rounded-lg text-sm
+              const axeBadges = member.axeActionCounts.map((count) => ({
+                level: getCurrentLevelIndex(count),
+                icon: getDynamique(count).icon,
+              }))
 
               return (
                 <Link
                   key={member.learner_id}
                   href={`/trainer/learner/${member.learner_id}?group=${group.id}`}
-                  className={`flex items-center gap-3 px-3.5 py-3 rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${rankStyle}`}
+                  className="flex items-center gap-3 rounded-2xl p-3.5 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                  style={rc ? {
+                    background: rc.bg,
+                    border: `1px solid ${rc.border}`,
+                  } : {
+                    background: 'white',
+                    border: '1px solid #e5e7eb',
+                  }}
                 >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${circleStyle}`}>
+                  {/* Rank badge identique TeamClient */}
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0"
+                    style={rc ? {
+                      background: rc.badge,
+                      color: 'white',
+                      boxShadow: `0 2px 8px ${rc.badge}66`,
+                    } : {
+                      background: '#e5e7eb',
+                      color: '#6b7280',
+                    }}
+                  >
                     {rank}
                   </div>
+
+                  {/* Name + weather */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-800 truncate">
                       {member.first_name} {member.last_name}
@@ -298,10 +321,15 @@ export default function GroupDetailClient({
                       )}
                     </p>
                   </div>
-                  <div className="flex gap-1 shrink-0">
-                    {axeBadges.map((dyn, i) => (
-                      <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${LEVEL_COLORS[dyn.label] ?? 'bg-gray-100 text-gray-500'}`}>
-                        {dyn.icon}
+
+                  {/* Level badges identiques TeamClient : w-7 h-7 rounded-lg text-sm */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {axeBadges.map((m, i) => (
+                      <span
+                        key={i}
+                        className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-sm ${LEVEL_AVATAR_COLORS[m.level] ?? LEVEL_AVATAR_COLORS[0]}`}
+                      >
+                        {m.icon}
                       </span>
                     ))}
                   </div>
@@ -309,16 +337,6 @@ export default function GroupDetailClient({
               )
             })}
           </div>
-        </div>
-      )}
-
-      {/* Tips section */}
-      {members.length > 0 && (
-        <div id="tips-section">
-          <TrainerTipsManager
-            groupId={group.id}
-            groupTheme={group.theme || group.name}
-          />
         </div>
       )}
 

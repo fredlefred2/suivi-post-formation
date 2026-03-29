@@ -71,6 +71,9 @@ export default async function GroupDetailPage({
         pendingCheckins={[]}
         avgWeather={null}
         actionsThisWeek={0}
+        groupRegularity={0}
+        checkinPct={0}
+        isCheckinOpen={checkinCtx.isOpen}
         currentUserId={user!.id}
       />
     )
@@ -202,6 +205,35 @@ export default async function GroupDetailPage({
   // Trier par total actions desc
   members.sort((a, b) => b.totalActions - a.totalActions)
 
+  // ── 8. Régularité du groupe ─────────────────────────────────────
+  // % de semaines avec au moins 1 action, moyenné sur tous les membres
+  const { data: profilesWithDate } = await admin
+    .from('profiles')
+    .select('id, created_at')
+    .in('id', learnerIds)
+
+  let totalRegularity = 0
+  let regCount = 0
+  ;(profilesWithDate ?? []).forEach((p) => {
+    const joinDate = new Date(p.created_at)
+    const weeksSinceJoin = Math.max(1, Math.ceil((now.getTime() - joinDate.getTime()) / (7 * 24 * 60 * 60 * 1000)))
+    const learnerActions = (actionsRaw ?? []).filter((a) => a.learner_id === p.id)
+    const actionWeeks = new Set(learnerActions.map((a) => {
+      const d = new Date(a.created_at)
+      const yr = d.getFullYear()
+      const wk = Math.ceil(((d.getTime() - new Date(yr, 0, 1).getTime()) / 86400000 + new Date(yr, 0, 1).getDay() + 1) / 7)
+      return `${yr}-${wk}`
+    }))
+    totalRegularity += Math.min(100, Math.round((actionWeeks.size / weeksSinceJoin) * 100))
+    regCount++
+  })
+  const groupRegularity = regCount > 0 ? Math.round(totalRegularity / regCount) : 0
+
+  // % check-ins réalisés sur la dernière période
+  const totalExpectedCheckins = learnerIds.length
+  const totalDoneCheckins = totalExpectedCheckins - pendingCheckins.length
+  const checkinPct = totalExpectedCheckins > 0 ? Math.round((totalDoneCheckins / totalExpectedCheckins) * 100) : 0
+
   return (
     <GroupDetailClient
       group={group}
@@ -210,6 +242,9 @@ export default async function GroupDetailPage({
       pendingCheckins={pendingCheckins}
       avgWeather={avgWeather}
       actionsThisWeek={actionsThisWeek}
+      groupRegularity={groupRegularity}
+      checkinPct={checkinPct}
+      isCheckinOpen={checkinCtx.isOpen}
       currentUserId={user!.id}
     />
   )
