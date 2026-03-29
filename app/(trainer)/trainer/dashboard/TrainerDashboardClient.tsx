@@ -301,13 +301,15 @@ export default function TrainerDashboardClient({
     if (isDownloading || selectedOption === 'all') return
     setIsDownloading(true)
     try {
-      // Étape 1 : Récupérer les données du groupe
+      // Étape 1 : Récupérer les données du groupe (avec auth cookie)
       setDownloadStatus('Collecte des donnees...')
-      const dataRes = await fetch(`/api/group-report?groupId=${selectedOption}&mode=data`)
-      if (!dataRes.ok) throw new Error('Erreur récupération données')
+      const dataRes = await fetch(`/api/group-report?groupId=${selectedOption}&mode=data`, {
+        credentials: 'include',
+      })
+      if (!dataRes.ok) throw new Error(`Erreur récupération données (${dataRes.status})`)
       const reportData = await dataRes.json()
 
-      // Étape 2 : Analyse IA (route Edge, 30s de timeout)
+      // Étape 2 : Analyse IA (route Edge, 30s de timeout, pas besoin d'auth)
       setDownloadStatus('Analyse en cours...')
       let aiAnalysis = null
       try {
@@ -327,7 +329,7 @@ export default function TrainerDashboardClient({
         console.error('[PDF] Exception analyse IA:', aiErr)
       }
 
-      // Étape 3 : Générer le PDF avec les données + analyse IA
+      // Étape 3 : Générer le PDF (pas besoin d'auth, données dans le body)
       setDownloadStatus('Generation du PDF...')
       console.log('[PDF] Envoi POST avec aiAnalysis:', aiAnalysis ? `OK (${aiAnalysis.learnerAnalyses?.length} analyses)` : 'null')
       const pdfRes = await fetch('/api/group-report', {
@@ -335,7 +337,7 @@ export default function TrainerDashboardClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reportData, aiAnalysis }),
       })
-      if (!pdfRes.ok) throw new Error('Erreur génération PDF')
+      if (!pdfRes.ok) throw new Error(`Erreur génération PDF (${pdfRes.status})`)
 
       const blob = await pdfRes.blob()
       const url = URL.createObjectURL(blob)
