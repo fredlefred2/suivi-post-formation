@@ -4,12 +4,10 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { formatWeek, expectedCheckins } from '@/lib/utils'
-import {
-  WEATHER_COLORS,
-} from '@/lib/types'
+import { WEATHER_COLORS } from '@/lib/types'
 import type { ActionFeedbackData } from '@/lib/types'
 import Link from 'next/link'
-import { MessageCircle } from 'lucide-react'
+import { ChevronLeft, MessageCircle } from 'lucide-react'
 import LearnerNav from './LearnerNav'
 import LearnerAxesSection from './LearnerAxesSection'
 
@@ -54,39 +52,27 @@ export default async function LearnerDetailPage({
 
   if (!profile) notFound()
 
-  // ── Groupes du formateur (pour le sélecteur) ───────────────────────────────
-  const { data: allGroupsRaw } = await supabase
-    .from('groups')
-    .select('id, name')
-    .eq('trainer_id', user!.id)
-    .order('name')
-
-  const allGroupIds = (allGroupsRaw ?? []).map((g) => g.id)
-
-  // Membres de tous les groupes (pour comptage + carousel)
-  const { data: allGroupMembers } = allGroupIds.length > 0
-    ? await supabase
-        .from('group_members')
-        .select('learner_id, group_id, profiles!inner(first_name, last_name)')
-        .in('group_id', allGroupIds)
-    : { data: [] as Array<{ learner_id: string; group_id: string; profiles: { first_name: string; last_name: string } }> }
-
-  // Groupes avec comptage pour le sélecteur
-  const groupsForSelector = (allGroupsRaw ?? []).map((g) => ({
-    id: g.id,
-    name: g.name,
-    count: (allGroupMembers ?? []).filter((m) => m.group_id === g.id).length,
-  }))
-
-  // ── Carousel : groupe courant ──────────────────────────────────────────────
+  // ── Groupe courant ────────────────────────────────────────────────
   const groupId = searchParams.group && searchParams.group !== 'all' && searchParams.group !== 'unassigned'
     ? searchParams.group
     : (membership.group_id as string)
 
-  // Apprenants du groupe courant, triés alphabétiquement
+  // Nom du groupe
+  const { data: groupData } = await supabase
+    .from('groups')
+    .select('name')
+    .eq('id', groupId)
+    .single()
+  const groupName = groupData?.name ?? 'Groupe'
+
+  // ── Carousel : apprenants du groupe courant ───────────────────────
+  const { data: allGroupMembers } = await supabase
+    .from('group_members')
+    .select('learner_id, group_id, profiles!inner(first_name, last_name)')
+    .eq('group_id', groupId)
+
   type LearnerEntry = { id: string; name: string }
   const learnersInGroup: LearnerEntry[] = (allGroupMembers ?? [])
-    .filter((m) => m.group_id === groupId)
     .map((m) => {
       const p = m.profiles as unknown as { first_name: string; last_name: string }
       return { id: m.learner_id, name: `${p.first_name} ${p.last_name}` }
@@ -101,17 +87,14 @@ export default async function LearnerDetailPage({
     : null
 
   function buildLearnerUrl(learnerId: string) {
-    const qs = new URLSearchParams()
-    qs.set('group', groupId)
-    if (searchParams.from) qs.set('from', searchParams.from)
-    return `/trainer/learner/${learnerId}?${qs.toString()}`
+    return `/trainer/learner/${learnerId}?group=${groupId}`
   }
 
   const prevUrl = prevLearner ? buildLearnerUrl(prevLearner.id) : null
   const nextUrl = nextLearner ? buildLearnerUrl(nextLearner.id) : null
   const allUrls = learnersInGroup.map((l) => buildLearnerUrl(l.id))
 
-  // ── Stats ──────────────────────────────────────────────────────────────────
+  // ── Stats ──────────────────────────────────────────────────────────
   const now = new Date()
   const dayOfWeek = now.getDay()
   const monday = new Date(now)
@@ -129,11 +112,58 @@ export default async function LearnerDetailPage({
   }).length
 
   const totalCheckins = (checkins ?? []).length
-  const expected = profile.created_at ? expectedCheckins(profile.created_at) : 0
   const lastWeather = totalCheckins > 0 ? (checkins![totalCheckins - 1].weather as string) : null
   const weatherEmoji = lastWeather ? WEATHER_ICONS[lastWeather] ?? '❓' : null
 
-  // ── Feedback (likes + commentaires) sur les actions ───────────────────────
+  // ── Régularité (% de semaines avec au moins 1 action) ──────────
+  const joinDate = new Date(profile.created_at)
+  const weeksSinceJoin = Math.max(1, Math.ceil((now.getTime() - joinDate.getTime()) / (7 * 24 * 60 * 60 * 1000)))
+  const actionWeeks = new Set(allLearnerActions.map((a) => {
+    const d = new Date(a.created_at)
+    const yr = d.getFullYear()
+    const wk = Math.ceil(((d.getTime() - new Date(yr, 0, 1).getTime()) / 86400000 + new Date(yr, 0, 1).getDay() + 1) / 7)
+    return `${yr}-${wk}`
+  }))
+  const regularityPct = Math.min(100, Math.round((actionWeeks.size / weeksSinceJoin) * 100))
+
+  // ── Streak check-ins ────────────────────────────────────────────
+  let checkinStreak = 0
+  if (checkins && checkins.length > 0) {
+    const sorted = [...checkins].sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year
+      return b.week_number - a.week_number
+    })
+    let prevWeek = sorted[0].week_number
+    let prevYear = sorted[0].year
+    checkinStreak = 1
+    for (let i = 1; i < sorted.length; i++) {
+      const expectedPrev = prevWeek - 1
+      if (sorted[i].week_number === expectedPrev && sorted[i].year === prevYear) {
+        checkinStreak++
+        prevWeek = sorted[i].week_number
+      } else if (prevWeek === 1) {
+        // Changement d'année, check semaine ~52
+        if (sorted[i].year === prevYear - 1 && sorted[i].week_number >= 51) {
+          checkinStreak++
+          prevWeek = sorted[i].week_number
+          prevYear = sorted[i].year
+        } else break
+      } else break
+    }
+  }
+
+  // ── Derniers check-ins (what_worked, difficulties) ──────────────
+  const lastCheckins = checkins && checkins.length > 0
+    ? [...checkins].reverse().slice(0, 2).map((c) => ({
+        week: c.week_number,
+        year: c.year,
+        weather: c.weather as string,
+        what_worked: (c as Record<string, unknown>).what_worked as string | null,
+        difficulties: (c as Record<string, unknown>).difficulties as string | null,
+      }))
+    : []
+
+  // ── Feedback (likes + commentaires) ─────────────────────────────
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -176,7 +206,7 @@ export default async function LearnerDetailPage({
     }
   })
 
-  // ── Météo count pour résumé ───────────────────────────────────────────────
+  // ── Météo count ─────────────────────────────────────────────────
   const weatherCount = {
     sunny:  (checkins ?? []).filter((c) => c.weather === 'sunny').length,
     cloudy: (checkins ?? []).filter((c) => c.weather === 'cloudy').length,
@@ -184,21 +214,32 @@ export default async function LearnerDetailPage({
   }
 
   return (
-    <div className="space-y-6 pb-4">
+    <div className="space-y-4 pb-20">
 
-      {/* ── Carousel + contenu ──────────────────────────────────────────────── */}
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm">
+        <Link
+          href={`/trainer/groups/${groupId}`}
+          className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+        >
+          <ChevronLeft size={16} />
+          <span className="truncate max-w-[120px]">{groupName}</span>
+        </Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-700 font-semibold truncate">{profile.first_name} {profile.last_name}</span>
+      </div>
+
+      {/* Carousel navigation */}
       <LearnerNav
         prevUrl={prevUrl}
         nextUrl={nextUrl}
         currentIndex={currentIndex >= 0 ? currentIndex : 0}
         total={learnersInGroup.length}
         allUrls={allUrls}
-        groups={groupsForSelector}
-        currentGroupId={groupId}
       >
-      <div className="space-y-6">
+      <div className="space-y-4">
 
-      {/* ── Header gradient : nom + météo + stats ─────────────────────────── */}
+      {/* ── Header gradient ──────────────────────────────────────────── */}
       <div
         className="rounded-2xl p-4 relative overflow-hidden"
         style={{
@@ -209,30 +250,25 @@ export default async function LearnerDetailPage({
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
         <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
 
-        {/* Ligne 1 : Nom + météo + bouton message */}
         <div className="relative flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-extrabold text-white">{profile.first_name} {profile.last_name}</h1>
-            <p className="text-xs text-indigo-200 mt-0.5">{(axes ?? []).length} axe{(axes ?? []).length !== 1 ? 's' : ''} de progrès</p>
+          <div className="flex items-center gap-3">
+            {/* Avatar large */}
+            <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-bold shrink-0"
+              style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1))', border: '2px solid rgba(255,255,255,0.3)' }}>
+              {profile.first_name[0]}{profile.last_name[0]}
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold text-white">{profile.first_name} {profile.last_name}</h1>
+              <p className="text-xs text-indigo-200 mt-0.5">
+                Inscrit le {new Date(profile.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {weatherEmoji && <span className="text-3xl drop-shadow-lg">{weatherEmoji}</span>}
-            <Link
-              href={`/trainer/messages?with=${params.id}`}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-white/90 hover:bg-white transition-colors"
-            >
-              <MessageCircle size={13} />
-              Message
-            </Link>
-          </div>
+          {weatherEmoji && <span className="text-3xl drop-shadow-lg">{weatherEmoji}</span>}
         </div>
 
-        {/* Stats en 3 colonnes glass */}
+        {/* 3 KPIs: actions semaine / régularité / streak */}
         <div className="relative grid grid-cols-3 gap-2">
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
-            <div className="text-2xl font-black text-white">{totalActions}</div>
-            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
-          </div>
           <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
             <div className={`text-2xl font-black ${actionsThisWeek > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
               {actionsThisWeek > 0 ? `+${actionsThisWeek}` : '0'}
@@ -240,16 +276,19 @@ export default async function LearnerDetailPage({
             <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
           </div>
           <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
-            <div className="text-2xl font-black text-white">
-              {totalCheckins}
-              {expected > 0 && <span className="text-sm font-normal text-indigo-300">/{expected}</span>}
+            <div className="text-2xl font-black text-white">{regularityPct}%</div>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">régularité</p>
+          </div>
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <div className={`text-2xl font-black ${checkinStreak >= 3 ? 'text-amber-300' : 'text-white'}`}>
+              {checkinStreak > 0 ? `${checkinStreak}🔥` : '0'}
             </div>
-            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
+            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins d&apos;affilée</p>
           </div>
         </div>
       </div>
 
-      {/* ── Axes de progrès ────────────────────────────────────────────────── */}
+      {/* ── Axes de progrès ──────────────────────────────────────────── */}
       {axes && axes.length > 0 && (
         <LearnerAxesSection
           axes={(axes ?? []).map((axe, i) => ({
@@ -264,21 +303,19 @@ export default async function LearnerDetailPage({
         />
       )}
 
-      {/* ── Historique météo ───────────────────────────────────────────────── */}
+      {/* ── Historique météo ─────────────────────────────────────────── */}
       {checkins && checkins.length > 0 && (
-        <div className="card">
-          <h2 className="section-title mb-4">🌤 Historique météo</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <h2 className="font-bold text-gray-800 text-base mb-3">🌤 Historique météo</h2>
 
-          {/* Résumé en 3 blocs */}
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          {/* Résumé 3 blocs */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
             {(['sunny', 'cloudy', 'stormy'] as const).map((w) => (
               <div key={w} className={`rounded-lg p-3 text-center ${WEATHER_COLORS[w]}`}>
-                <p className="text-2xl">{w === 'sunny' ? '☀️' : w === 'cloudy' ? '⛅' : '⛈️'}</p>
+                <p className="text-2xl">{WEATHER_ICONS[w]}</p>
                 <p className="font-bold text-lg mt-0.5">{weatherCount[w]}</p>
                 <p className="text-xs mt-0.5">
-                  {checkins.length > 0
-                    ? `${Math.round((weatherCount[w] / checkins.length) * 100)}%`
-                    : '0%'}
+                  {checkins.length > 0 ? `${Math.round((weatherCount[w] / checkins.length) * 100)}%` : '0%'}
                 </p>
               </div>
             ))}
@@ -294,24 +331,59 @@ export default async function LearnerDetailPage({
                   WEATHER_COLORS[ci.weather as keyof typeof WEATHER_COLORS]
                 }`}
               >
-                {ci.weather === 'sunny' ? '☀️' : ci.weather === 'cloudy' ? '⛅' : '⛈️'} S{ci.week_number}
+                {WEATHER_ICONS[ci.weather as string]} S{ci.week_number}
               </span>
             ))}
           </div>
         </div>
       )}
 
-      {/* État vide */}
-      {(!checkins || checkins.length === 0) && (!axes || axes.length === 0) && (
-        <div className="card text-center py-10">
-          <p className="text-4xl mb-3">🌱</p>
-          <p className="text-gray-500 font-medium">Ce participant n&apos;a pas encore commencé.</p>
-          <p className="text-gray-500 text-sm mt-1">Aucun axe ni check-in enregistré pour le moment.</p>
+      {/* ── Derniers check-ins ───────────────────────────────────────── */}
+      {lastCheckins.length > 0 && (lastCheckins[0].what_worked || lastCheckins[0].difficulties) && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <h2 className="font-bold text-gray-800 text-base mb-3">📋 Derniers check-ins</h2>
+          <div className="space-y-3">
+            {lastCheckins[0].what_worked && (
+              <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                <p className="text-xs font-semibold text-emerald-700 mb-1">✓ Ce qui a marché</p>
+                <p className="text-sm text-emerald-900 leading-relaxed">{lastCheckins[0].what_worked}</p>
+              </div>
+            )}
+            {lastCheckins[0].difficulties && (
+              <div className="bg-red-50 rounded-xl p-3 border border-red-100">
+                <p className="text-xs font-semibold text-red-700 mb-1">△ Difficultés</p>
+                <p className="text-sm text-red-900 leading-relaxed">{lastCheckins[0].difficulties}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      </div>{/* end space-y-6 inner */}
+      {/* État vide */}
+      {(!checkins || checkins.length === 0) && (!axes || axes.length === 0) && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-10">
+          <p className="text-4xl mb-3">🌱</p>
+          <p className="text-gray-500 font-medium">Ce participant n&apos;a pas encore commencé.</p>
+          <p className="text-gray-500 text-sm mt-1">Aucun axe ni check-in enregistré.</p>
+        </div>
+      )}
+
+      </div>{/* end space-y-4 inner */}
       </LearnerNav>
+
+      {/* FAB message */}
+      <div className="fixed bottom-4 left-0 right-0 z-10 px-4">
+        <div className="max-w-lg mx-auto">
+          <Link
+            href={`/trainer/messages?with=${params.id}`}
+            className="flex items-center justify-center gap-2 w-full py-3 text-white text-sm font-semibold rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97]"
+            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)', boxShadow: '0 4px 20px rgba(79,70,229,0.4)' }}
+          >
+            <MessageCircle size={16} />
+            Envoyer un message à {profile.first_name}
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
