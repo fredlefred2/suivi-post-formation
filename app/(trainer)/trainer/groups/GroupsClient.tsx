@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Plus, X, ChevronDown, MoreVertical } from 'lucide-react'
+import { Plus, X, ChevronDown, MoreVertical, Sparkles, Loader2 } from 'lucide-react'
 import { createGroup, deleteGroup, removeLearnerFromGroup } from './actions'
 import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
 
@@ -38,6 +38,25 @@ export default function GroupsClient({
   const [deletingLearnerId, setDeletingLearnerId] = useState<string | null>(null)
   const [deletingLearnerGroupId, setDeletingLearnerGroupId] = useState<string | null>(null)
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
+  const [rewritingTheme, setRewritingTheme] = useState(false)
+  const [createThemeValue, setCreateThemeValue] = useState('')
+
+  async function handleRewriteTheme(currentValue: string, setter: (v: string) => void) {
+    if (!currentValue.trim() || currentValue.trim().length < 5) return
+    setRewritingTheme(true)
+    try {
+      const res = await fetch('/api/theme/rewrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: currentValue }),
+      })
+      const data = await res.json()
+      if (data.rewritten) setter(data.rewritten)
+    } catch {
+      // silently fail
+    }
+    setRewritingTheme(false)
+  }
 
   // Fermer les menus quand on clique ailleurs
   const handleOutsideClick = useCallback((e: MouseEvent) => {
@@ -142,9 +161,28 @@ export default function GroupsClient({
               <input name="name" required className="input text-sm py-2.5" placeholder="Ex: Management — Oct. 2024" />
             </div>
             <div>
-              <label className="label text-xs">Thème de la formation</label>
-              <textarea name="theme" className="input text-sm py-2.5 min-h-[100px] resize-y" placeholder="Ex: Communication assertive, gestion des conflits, leadership situationnel..." />
-              <p className="text-xs text-gray-400 mt-1">Utilisé pour générer des défis personnalisés</p>
+              <div className="flex items-center justify-between mb-1">
+                <label className="label text-xs mb-0">Thème de la formation</label>
+                {createThemeValue.trim().length >= 5 && (
+                  <button
+                    type="button"
+                    disabled={rewritingTheme}
+                    onClick={() => handleRewriteTheme(createThemeValue, setCreateThemeValue)}
+                    className="flex items-center gap-1 text-xs text-violet-600 hover:text-violet-700 font-medium transition-colors disabled:opacity-50"
+                  >
+                    {rewritingTheme ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    {rewritingTheme ? 'Réécriture...' : 'Reformuler'}
+                  </button>
+                )}
+              </div>
+              <textarea
+                name="theme"
+                value={createThemeValue}
+                onChange={e => setCreateThemeValue(e.target.value)}
+                className="input text-sm py-2.5 min-h-[100px] resize-y"
+                placeholder="Ex: Communication assertive, gestion des conflits, leadership situationnel..."
+              />
+              <p className="text-xs text-gray-400 mt-1">Saisissez vos mots-clés puis cliquez sur Reformuler pour obtenir un thème structuré</p>
             </div>
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
             <div className="flex gap-2">

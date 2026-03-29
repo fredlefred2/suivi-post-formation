@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { weeksSince } from '@/lib/utils'
-import { generateGroupReport } from '@/lib/pdf/group-report'
+import { renderToBuffer } from '@react-pdf/renderer'
+import { GroupReportDocument } from '@/lib/pdf/react-pdf-report'
 import type { GroupReportData, LearnerReportData, WeekWeather } from '@/lib/pdf/group-report'
+import type { AIReportAnalysis } from '@/lib/pdf/ai-analysis'
 
 export async function GET(request: NextRequest) {
   try {
@@ -140,7 +142,7 @@ export async function GET(request: NextRequest) {
       if (!p) {
         return {
           id: lid, firstName: 'Inconnu', lastName: '', createdAt: new Date().toISOString(),
-          axes: [], axeActionCounts: [], axeActions: [], totalActions: 0, weeksSinceJoin: 0, avgActionsPerWeek: 0,
+          axes: [], axeActionCounts: [], axeActions: [], totalActions: 0, weeksSinceJoin: 0, avgActionsPerWeek: 0, regularityPct: 0,
           weatherHistory: [], weatherSummary: { sunny: 0, cloudy: 0, stormy: 0 },
           whatWorked: [], difficulties: [],
         }
@@ -173,6 +175,15 @@ export async function GET(request: NextRequest) {
         .filter((c) => c.difficulties && c.difficulties.trim().length > 0)
         .map((c) => c.difficulties!.trim())
 
+      // Régularité : % de semaines avec au moins 1 action
+      const actionsByWeek = new Set<string>()
+      learnerActions.forEach((a) => {
+        const d = new Date(a.created_at)
+        const weekKey = `${d.getFullYear()}-${Math.ceil((d.getTime() - new Date(d.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}`
+        actionsByWeek.add(weekKey)
+      })
+      const regularityPct = ws > 0 ? Math.min(100, Math.round((actionsByWeek.size / ws) * 100)) : 0
+
       return {
         id: lid,
         firstName: p.firstName,
@@ -184,6 +195,7 @@ export async function GET(request: NextRequest) {
         totalActions: learnerActions.length,
         weeksSinceJoin: ws,
         avgActionsPerWeek: avgPerWeek,
+        regularityPct,
         weatherHistory: learnerWeatherHistory,
         weatherSummary: learnerWeatherSummary,
         whatWorked,
@@ -206,6 +218,24 @@ export async function GET(request: NextRequest) {
 
     const avgActionsPerAxe = totalAxes > 0 ? totalActions / totalAxes : 0
 
+    // ── Calculs supplémentaires pour le rapport ──
+    const activeLearnersCount = learners.filter((l) => l.totalActions > 0).length
+    const groupRegularityPct = learners.length > 0
+      ? Math.round(learners.reduce((acc, l) => acc + l.regularityPct, 0) / learners.length)
+      : 0
+
+    // Climat groupe : moyenne des moyennes individuelles (sunny=5, cloudy=3, stormy=1)
+    const learnerClimatScores = learners
+      .map((l) => {
+        const total = l.weatherSummary.sunny + l.weatherSummary.cloudy + l.weatherSummary.stormy
+        if (total === 0) return null
+        return (l.weatherSummary.sunny * 5 + l.weatherSummary.cloudy * 3 + l.weatherSummary.stormy * 1) / total
+      })
+      .filter((s): s is number => s !== null)
+    const groupClimatScore = learnerClimatScores.length > 0
+      ? learnerClimatScores.reduce((a, b) => a + b, 0) / learnerClimatScores.length
+      : undefined
+
     // ── Construction des données du rapport ──
     const reportData: GroupReportData = {
       groupName: group.name,
@@ -216,16 +246,27 @@ export async function GET(request: NextRequest) {
       totalActions,
       avgActionsPerWeek,
       avgActionsPerAxe,
+      activeLearnersCount,
+      groupRegularityPct,
+      groupClimatScore,
       weatherHistory,
       weatherSummary: groupWeatherSummary,
       learners,
     }
 
-    // ── Génération du PDF ──
-    const doc = generateGroupReport(reportData)
-    const pdfBuffer = Buffer.from(doc.output('arraybuffer'))
+    // ── Mode : JSON (pour le client) ou PDF direct ──
+    const mode = request.nextUrl.searchParams.get('mode')
 
-    // ── Nom du fichier ──
+    if (mode === 'data') {
+      // Retourne les données en JSON (le client appellera l'IA séparément)
+      return NextResponse.json(reportData)
+    }
+
+    // ── Génération du PDF sans IA (GET classique) ──
+    const pdfBuffer = await renderToBuffer(
+      GroupReportDocument({ data: reportData })
+    )
+
     const safeGroupName = group.name
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -235,7 +276,7 @@ export async function GET(request: NextRequest) {
     const dateFile = new Date().toISOString().slice(0, 10)
     const filename = `rapport-${safeGroupName}-${dateFile}.pdf`
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
@@ -245,6 +286,50 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     console.error('Erreur génération rapport PDF:', err)
+    return NextResponse.json(
+      { error: 'Erreur lors de la génération du rapport' },
+      { status: 500 },
+    )
+  }
+}
+
+// ── POST : Génération PDF avec analyse IA (passée dans le body) ──
+export async function POST(request: NextRequest) {
+  try {
+    const { reportData, aiAnalysis } = await request.json() as {
+      reportData: GroupReportData
+      aiAnalysis: AIReportAnalysis | null
+    }
+
+    if (!reportData) {
+      return NextResponse.json({ error: 'reportData manquant' }, { status: 400 })
+    }
+
+    console.log('[PDF POST] reportData.learners:', reportData.learners?.length, 'aiAnalysis:', aiAnalysis ? `OK (${aiAnalysis.learnerAnalyses?.length} analyses, ${aiAnalysis.alerts?.length} alertes)` : 'null')
+
+    const pdfBuffer = await renderToBuffer(
+      GroupReportDocument({ data: reportData, aiAnalysis: aiAnalysis ?? undefined })
+    )
+
+    const safeGroupName = reportData.groupName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .toLowerCase()
+    const dateFile = new Date().toISOString().slice(0, 10)
+    const filename = `rapport-${safeGroupName}-${dateFile}.pdf`
+
+    return new NextResponse(new Uint8Array(pdfBuffer), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': String(pdfBuffer.length),
+      },
+    })
+  } catch (err) {
+    console.error('Erreur génération rapport PDF (POST):', err)
     return NextResponse.json(
       { error: 'Erreur lors de la génération du rapport' },
       { status: 500 },

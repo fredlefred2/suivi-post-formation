@@ -23,44 +23,9 @@ import {
   drawIconWarning,
 } from './pdf-utils'
 
-// ── Types pour les données du rapport ──
-
-export type WeekWeather = {
-  week: number
-  year: number
-  weather: 'sunny' | 'cloudy' | 'stormy'
-}
-
-export type LearnerReportData = {
-  id: string
-  firstName: string
-  lastName: string
-  createdAt: string
-  axes: string[]
-  axeActionCounts: number[]
-  axeActions: string[][]      // descriptions des actions par axe
-  totalActions: number
-  weeksSinceJoin: number
-  avgActionsPerWeek: number
-  weatherHistory: WeekWeather[]
-  weatherSummary: { sunny: number; cloudy: number; stormy: number }
-  whatWorked: string[]
-  difficulties: string[]
-}
-
-export type GroupReportData = {
-  groupName: string
-  trainerName: string
-  generatedAt: string
-  participantCount: number
-  totalAxes: number
-  totalActions: number
-  avgActionsPerWeek: number
-  avgActionsPerAxe: number
-  weatherHistory: Array<{ week: number; year: number; weather: string }>
-  weatherSummary: { sunny: number; cloudy: number; stormy: number }
-  learners: LearnerReportData[]
-}
+// ── Types importés depuis report-types.ts (compatible Edge runtime) ──
+export type { WeekWeather, LearnerReportData, GroupReportData } from './report-types'
+import type { GroupReportData } from './report-types'
 
 // ── Génération du rapport PDF ──
 
