@@ -257,59 +257,66 @@ export default function TrainerGroupsListClient({
               >
                 {/* Header du groupe */}
                 <div className="flex items-center gap-3 px-4 py-3.5">
-                  {/* Icone + nom cliquable vers page groupe */}
-                  <Link href={`/trainer/groups/${group.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${
-                      isSalleAttente ? 'bg-amber-100' : 'bg-indigo-50'
-                    }`}>
-                      {isSalleAttente ? '⏳' : '👥'}
+                  {/* Icone + nom */}
+                  {isSalleAttente ? (
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-lg shrink-0">⏳</div>
+                      <p className="font-bold text-amber-800 text-[15px] truncate">{group.name}</p>
                     </div>
-                    <p className={`font-bold text-[15px] truncate ${
-                      isSalleAttente ? 'text-amber-800' : 'text-gray-900'
-                    }`}>{group.name}</p>
-                  </Link>
+                  ) : (
+                    <Link href={`/trainer/groups/${group.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-lg shrink-0">👥</div>
+                      <p className="font-bold text-gray-900 text-[15px] truncate">{group.name}</p>
+                    </Link>
+                  )}
 
                   {/* Actions a droite : nb membres (depliable) + crayon + corbeille */}
                   <div className="flex items-center gap-1.5 shrink-0">
                     {/* Badge nb membres = bouton deplier */}
                     <button
                       onClick={() => toggleGroup(group.id)}
-                      className="flex items-center gap-1 text-[11px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full font-medium hover:bg-indigo-100 transition-colors"
+                      className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-full font-medium transition-colors ${
+                        isSalleAttente
+                          ? 'bg-amber-200 text-amber-800 hover:bg-amber-300'
+                          : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                      }`}
                     >
                       {group.memberCount}
                       <ChevronDown size={12} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                     </button>
 
-                    {/* Crayon = modifier */}
-                    <button
-                      onClick={() => openEditGroup(group)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors"
-                      title="Modifier le groupe"
-                    >
-                      <Pencil size={15} />
-                    </button>
+                    {/* Crayon, corbeille, download : pas pour la salle d'attente */}
+                    {!isSalleAttente && (
+                      <>
+                        <button
+                          onClick={() => openEditGroup(group)}
+                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors"
+                          title="Modifier le groupe"
+                        >
+                          <Pencil size={15} />
+                        </button>
 
-                    {/* Corbeille = supprimer */}
-                    <button
-                      onClick={() => setDeletingGroupId(group.id)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                      title="Supprimer le groupe"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                        <button
+                          onClick={() => setDeletingGroupId(group.id)}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                          title="Supprimer le groupe"
+                        >
+                          <Trash2 size={15} />
+                        </button>
 
-                    {/* Download rapport */}
-                    <button
-                      onClick={() => handleDownloadReport(group.id)}
-                      disabled={downloadingGroupId === group.id}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors disabled:opacity-50"
-                      title="Telecharger rapport"
-                    >
-                      {downloadingGroupId === group.id
-                        ? <Loader2 size={15} className="animate-spin" />
-                        : <Download size={15} />
-                      }
-                    </button>
+                        <button
+                          onClick={() => handleDownloadReport(group.id)}
+                          disabled={downloadingGroupId === group.id}
+                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors disabled:opacity-50"
+                          title="Telecharger rapport"
+                        >
+                          {downloadingGroupId === group.id
+                            ? <Loader2 size={15} className="animate-spin" />
+                            : <Download size={15} />
+                          }
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -345,30 +352,34 @@ export default function TrainerGroupsListClient({
                                   <div className={`absolute right-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 ${
                                     isLastTwo ? 'bottom-full mb-1' : 'top-full mt-1'
                                   }`}>
-                                    {groups.filter(g => g.id !== group.id).length > 0 && (
+                                    {groups.filter(g => g.id !== group.id && g.name !== 'Salle d\'attente').length > 0 && (
                                       <>
-                                        <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">Reaffecter a</p>
-                                        {groups.filter(g => g.id !== group.id).map(g => (
+                                        <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">
+                                          {isSalleAttente ? 'Affecter a' : 'Reaffecter a'}
+                                        </p>
+                                        {groups.filter(g => g.id !== group.id && g.name !== 'Salle d\'attente').map(g => (
                                           <button key={g.id} disabled={isPending}
                                             onClick={() => handleReassign(m.learner_id, group.id, g.id)}
                                             className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2">
                                             <span>🔄</span> {g.name}
                                           </button>
                                         ))}
-                                        <div className="border-t border-gray-100 my-1" />
+                                        {!isSalleAttente && <div className="border-t border-gray-100 my-1" />}
                                       </>
                                     )}
-                                    <button
-                                      onClick={() => {
-                                        setMemberMenuOpen(null)
-                                        setTimeout(() => {
-                                          setDeletingLearnerId(m.learner_id)
-                                          setDeletingLearnerGroupId(group.id)
-                                        }, 50)
-                                      }}
-                                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                      <span>🗑️</span> Supprimer
-                                    </button>
+                                    {!isSalleAttente && (
+                                      <button
+                                        onClick={() => {
+                                          setMemberMenuOpen(null)
+                                          setTimeout(() => {
+                                            setDeletingLearnerId(m.learner_id)
+                                            setDeletingLearnerGroupId(group.id)
+                                          }, 50)
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                        <span>🗑️</span> Supprimer
+                                      </button>
+                                    )}
                                   </div>
                                 )}
                               </div>
