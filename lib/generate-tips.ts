@@ -203,8 +203,8 @@ FORMATION : "${ctx.groupTheme}"
 AXE TRAVAILLE : "${ctx.axeSubject}" (${ctx.axeDescription})
 
 APPRENANT : ${ctx.firstName}, semaine ${ctx.weekInProgram}
-- ${ctx.totalActions} actions au total, regularite ${ctx.regularityPct}%
-- ${ctx.checkinStreak} check-in(s) consecutif(s)
+${ctx.totalActions > 0 ? `- ${ctx.totalActions} actions au total, regularite ${ctx.regularityPct}%` : '- En phase de demarrage'}
+${ctx.checkinStreak > 0 ? `- ${ctx.checkinStreak} check-in(s) consecutif(s)` : ''}
 ${ctx.likesReceived > 0 ? `- ${ctx.likesReceived} like(s) recu(s) sur ses actions` : ''}
 
 ${actionBlock}
@@ -222,6 +222,8 @@ CONSEIL (max 500 car., tutoiement) : UNE action precise faisable aujourd'hui. An
 
 REGLES :
 - Tutoiement partout (rappel ET conseil)
+- NE PAS utiliser le prenom de l'apprenant dans le rappel ni le conseil
+- NE JAMAIS citer de chiffres negatifs (0 actions, 0%, semaine X sans rien)
 - NE JAMAIS citer de theoriciens/frameworks sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne
 - Sujet different des tips precedents
 - Ton chaleureux et encourageant, jamais culpabilisant
