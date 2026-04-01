@@ -175,35 +175,56 @@ export async function generatePersonalizedTip(
     ? 'Bien integre socialement (likes/commentaires recus).'
     : 'Peu d\'interactions sociales sur ses actions.'
 
-  const prompt = `Tu es un coach en formation professionnelle. Approche pragmatique, operationnelle, concrete et encourageante — sans etre exagerement enthousiaste. Tutoiement, ton oral mais bien ecrit.
+  // Construire les blocs contextuels conditionnels
+  const actionBlock = ctx.recentActions.length > 0
+    ? `ACTIONS RECENTES sur cet axe (${ctx.actionCount} au total) :
+${ctx.recentActions.slice(0, 5).map((a, i) => `  ${i + 1}. "${a}"`).join('\n')}
+→ Fais reference a au moins une de ces actions dans ton conseil (cite-la naturellement).`
+    : `Pas encore d'action sur cet axe. Propose un premier pas tres simple et encourageant.`
 
-CONTEXTE FORMATION :
-- Theme de la formation : "${ctx.groupTheme}"
-- Axe de progres travaille : "${ctx.axeSubject}"
-- Description de l'axe : "${ctx.axeDescription}"
+  const weatherBlock = ctx.lastWeather
+    ? `METEO DECLAREE : ${WEATHER_LABELS[ctx.lastWeather] || ctx.lastWeather} (tendance ${ctx.weatherTrend})
+${ctx.whatWorked ? `  - Ce qui a marche : "${ctx.whatWorked}"` : ''}
+${ctx.difficulties ? `  - Difficulte exprimee : "${ctx.difficulties}"` : ''}
+→ Adapte ton ton a cette meteo. Si stormy : empathie + petit pas. Si cloudy : encourager. Si sunny : challenger doucement.
+${ctx.difficulties ? `→ Fais reference a la difficulte exprimee dans ton conseil, avec bienveillance.` : ''}`
+    : ''
 
-CONTEXTE APPRENANT (${ctx.firstName}) :
-- Semaine ${ctx.weekInProgram} dans le programme
-- ${ctx.actionCount} action(s) sur cet axe, ${ctx.totalActions} au total
-${ctx.recentActions.length > 0 ? `- Dernieres actions : ${ctx.recentActions.slice(0, 5).join(' | ')}` : '- Aucune action enregistree sur cet axe'}
-- Regularite : ${ctx.regularityPct}% → ${regularityComment}
-- ${engagementComment}
-- ${socialComment}
-${ctx.lastWeather ? `- Derniere meteo declaree : ${WEATHER_LABELS[ctx.lastWeather] || ctx.lastWeather} (tendance ${ctx.weatherTrend})` : '- Pas de meteo declaree'}
-${ctx.whatWorked ? `- Ce qui a marche recemment : "${ctx.whatWorked}"` : ''}
-${ctx.difficulties ? `- Difficultes exprimees : "${ctx.difficulties}"` : ''}
+  const prompt = `Tu es un coach bienveillant et pragmatique en formation professionnelle. Tu tutoies l'apprenant dans le RAPPEL et dans le CONSEIL. Ton oral, naturel, bien ecrit. Tu encourages sans etre mielleux. Tu ne juges JAMAIS — meme si l'apprenant n'a pas fait grand-chose, tu restes positif et tu proposes un petit pas accessible.
 
-${ctx.previousTips.length > 0 ? `TIPS PRECEDENTS (NE PAS reprendre les memes sujets) :
-${ctx.previousTips.map((t, i) => `${i + 1}. [S.${t.week}${t.acted ? ' ✅' : ''}] ${t.content}`).join('\n')}` : 'Aucun tip precedent.'}
+IMPORTANT SUR LE TON :
+- JAMAIS de formulations qui pointent un manque ("tu n'as rien fait", "sans check-in, sans premier pas", "tu decroches", "desengagement"). C'est culpabilisant.
+- JAMAIS de "mais" qui annule ce qui precede ("c'est bien, MAIS...")
+- Si l'apprenant a peu agi : propose simplement un premier geste, sans souligner ce qui n'a pas ete fait
+- Si la meteo est mauvaise : empathie d'abord, puis une suggestion douce
+- Ton de grand frere/grande soeur qui a de l'experience, pas de prof qui corrige
 
-GENERE UN TIP compose de :
-1. RAPPEL : une idee cle liee a la formation, reformulee avec tes mots. Pas de citation inventee ni de punchline artificielle. C'est un rappel qui fait mouche parce qu'il est pertinent par rapport a ce que vit l'apprenant.
-2. CONSEIL : Max 500 caracteres. Actionnable en 1 journee de travail. Tiens compte de ce que l'apprenant a deja fait (ou pas fait), de sa meteo, de ses difficultes.
+FORMATION : "${ctx.groupTheme}"
+AXE TRAVAILLE : "${ctx.axeSubject}" (${ctx.axeDescription})
+
+APPRENANT : ${ctx.firstName}, semaine ${ctx.weekInProgram}
+- ${ctx.totalActions} actions au total, regularite ${ctx.regularityPct}%
+- ${ctx.checkinStreak} check-in(s) consecutif(s)
+${ctx.likesReceived > 0 ? `- ${ctx.likesReceived} like(s) recu(s) sur ses actions` : ''}
+
+${actionBlock}
+
+${weatherBlock}
+
+${ctx.previousTips.length > 0 ? `TIPS DEJA ENVOYES (ne PAS reprendre ces sujets) :
+${ctx.previousTips.map((t, i) => `${i + 1}. [S.${t.week}${t.acted ? ' ✅' : ''}] ${t.content}`).join('\n')}` : ''}
+
+GENERE UN TIP :
+
+RAPPEL (2-3 phrases, tutoiement) : Un principe ou une idee cle de la formation, en lien avec ce que vit ${ctx.firstName}. Reformule avec tes mots, pas de citation inventee. Le rappel doit resonner avec la situation de l'apprenant (ses actions, sa meteo, ses difficultes) sans pointer ce qui manque.
+
+CONSEIL (max 500 car., tutoiement) : UNE action precise faisable aujourd'hui. Ancre ton conseil dans un element concret du contexte de ${ctx.firstName} — une action qu'il a faite, ce qui a marche pour lui, ou sa situation actuelle. Propose quelque chose de DIFFERENT de ce qu'il a deja fait.
 
 REGLES :
-- NE JAMAIS citer de noms de modeles, frameworks, auteurs ou theoriciens sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne
-- Chaque tip doit aborder un sujet different des precedents
-- Le conseil doit etre specifique et contextuali, pas generique
+- Tutoiement partout (rappel ET conseil)
+- NE JAMAIS citer de theoriciens/frameworks sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne
+- Sujet different des tips precedents
+- Ton chaleureux et encourageant, jamais culpabilisant
 
 Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
 
@@ -252,6 +273,15 @@ Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
       .update({ next_scheduled: false })
       .eq('learner_id', ctx.learnerId)
       .eq('next_scheduled', true)
+
+    // Supprimer un eventuel tip non envoye sur le meme axe+semaine
+    // (contrainte unique axe_id+week_number, tips batch pourraient occuper le slot)
+    await supabaseAdmin
+      .from('tips')
+      .delete()
+      .eq('axe_id', ctx.axeId)
+      .eq('week_number', weekNumber)
+      .eq('sent', false)
 
     // Inserer le tip
     const { data: inserted, error } = await supabaseAdmin
