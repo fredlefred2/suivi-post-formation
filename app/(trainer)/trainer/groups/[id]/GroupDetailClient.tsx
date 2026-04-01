@@ -349,9 +349,9 @@ export default function GroupDetailClient({
         </div>
       )}
 
-      {/* Team messages */}
-      <div className="fixed bottom-0 left-0 right-0 z-10">
-        <div className="max-w-lg mx-auto">
+      {/* Team messages — au-dessus du bottom nav */}
+      <div className="fixed bottom-16 left-0 right-0 z-10 sm:bottom-0">
+        <div className="max-w-lg mx-auto px-4">
           <TrainerTeamMessages groupId={group.id} currentUserId={currentUserId} />
         </div>
       </div>
