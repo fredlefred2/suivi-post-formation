@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -23,12 +23,29 @@ export default function LearnerNav({
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   const touchStartTime = useRef(0)
+  const [slideClass, setSlideClass] = useState('')
 
-  // Prefetch adjacent pages for instant navigation
+  // Prefetch adjacent pages
   useEffect(() => {
     if (prevUrl) router.prefetch(prevUrl)
     if (nextUrl) router.prefetch(nextUrl)
   }, [prevUrl, nextUrl, router])
+
+  // Slide-in animation on mount
+  useEffect(() => {
+    const dir = sessionStorage.getItem('swipe-direction')
+    if (dir === 'next') {
+      setSlideClass('animate-slide-from-right')
+    } else if (dir === 'prev') {
+      setSlideClass('animate-slide-from-left')
+    }
+    sessionStorage.removeItem('swipe-direction')
+  }, [])
+
+  function navigate(url: string, direction: 'prev' | 'next') {
+    sessionStorage.setItem('swipe-direction', direction)
+    router.push(url)
+  }
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
@@ -44,14 +61,14 @@ export default function LearnerNav({
     // Ignore vertical scrolls
     if (Math.abs(dy) > Math.abs(dx)) return
 
-    // Two modes: quick flick (fast + short) or long drag (slow + far)
-    const isFlick = elapsed < 250 && Math.abs(dx) > 30
+    // Quick flick or long drag
+    const isFlick = elapsed < 300 && Math.abs(dx) > 30
     const isDrag = Math.abs(dx) > 80
 
     if (!isFlick && !isDrag) return
 
-    if (dx > 0 && nextUrl) router.push(nextUrl)
-    if (dx < 0 && prevUrl) router.push(prevUrl)
+    if (dx > 0 && nextUrl) navigate(nextUrl, 'next')
+    if (dx < 0 && prevUrl) navigate(prevUrl, 'prev')
   }
 
   // Pas de carousel si un seul apprenant
@@ -61,13 +78,13 @@ export default function LearnerNav({
     <div
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      style={{ touchAction: 'pan-y' }}
+      style={{ touchAction: 'pan-y', overflowX: 'hidden' }}
     >
 
       {/* Barre de navigation : ← dots → */}
       <div className="flex items-center justify-center gap-4 mb-4">
         <button
-          onClick={() => prevUrl && router.push(prevUrl)}
+          onClick={() => prevUrl && navigate(prevUrl, 'prev')}
           disabled={!prevUrl}
           className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
         >
@@ -80,7 +97,9 @@ export default function LearnerNav({
                 <button
                   key={i}
                   onClick={() => {
-                    if (allUrls[i] && i !== currentIndex) router.push(allUrls[i])
+                    if (allUrls[i] && i !== currentIndex) {
+                      navigate(allUrls[i], i > currentIndex ? 'next' : 'prev')
+                    }
                   }}
                   className={`h-2 rounded-full transition-all duration-200 ${
                     i === currentIndex
@@ -98,7 +117,7 @@ export default function LearnerNav({
         </div>
 
         <button
-          onClick={() => nextUrl && router.push(nextUrl)}
+          onClick={() => nextUrl && navigate(nextUrl, 'next')}
           disabled={!nextUrl}
           className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
         >
@@ -106,7 +125,9 @@ export default function LearnerNav({
         </button>
       </div>
 
-      {children}
+      <div className={slideClass} onAnimationEnd={() => setSlideClass('')}>
+        {children}
+      </div>
     </div>
   )
 }

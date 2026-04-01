@@ -264,7 +264,7 @@ export default function TrainerGroupsListClient({
             const isExpanded = expandedGroups.has(group.id)
             return (
               <div key={group.id}
-                className="rounded-2xl overflow-visible transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                className="rounded-2xl relative"
                 style={{
                   background: 'linear-gradient(135deg, #ede9fe 0%, #e0e7ff 50%, #ddd6fe 100%)',
                   boxShadow: '0 2px 8px rgba(99,102,241,0.12), 0 0 0 1px rgba(99,102,241,0.08)',
@@ -321,7 +321,7 @@ export default function TrainerGroupsListClient({
 
                 {/* Volet depliable : liste des membres */}
                 {isExpanded && (
-                  <div className="border-t border-indigo-200/40 bg-white/40 rounded-b-2xl">
+                  <div className="border-t border-indigo-200/40 bg-white/40 rounded-b-2xl overflow-visible relative z-10">
                     {group.members.length === 0 ? (
                       <p className="text-sm text-gray-400 text-center py-6">Aucun participant</p>
                     ) : (

@@ -219,6 +219,22 @@
     animation: fade-in-up 0.3s ease-out both;
   }
 
+  /* ──────── Swipe navigation slide animations ──────── */
+  @keyframes slide-from-right {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes slide-from-left {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  .animate-slide-from-right {
+    animation: slide-from-right 0.22s ease-out both;
+  }
+  .animate-slide-from-left {
+    animation: slide-from-left 0.22s ease-out both;
+  }
+
   /* ──────── iOS Safari: prevent auto-zoom on input focus ──────── */
   @supports (-webkit-touch-callout: none) {
     input, select, textarea {
