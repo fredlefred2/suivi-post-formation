@@ -125,7 +125,7 @@ export default function GroupDetailClient({
   }
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="space-y-4 pb-36">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
         <Link href="/trainer/dashboard" className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
@@ -284,7 +284,7 @@ export default function GroupDetailClient({
                 <Link
                   key={member.learner_id}
                   href={`/trainer/learner/${member.learner_id}?group=${group.id}`}
-                  className="flex items-center gap-3 rounded-2xl p-3.5 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                  className="flex items-center gap-3 rounded-2xl p-3.5 active:opacity-80 transition-opacity"
                   style={rc ? {
                     background: rc.bg,
                     border: `1px solid ${rc.border}`,

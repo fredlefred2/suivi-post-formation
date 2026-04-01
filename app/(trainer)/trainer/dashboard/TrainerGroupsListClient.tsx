@@ -264,64 +264,65 @@ export default function TrainerGroupsListClient({
             const isExpanded = expandedGroups.has(group.id)
             return (
               <div key={group.id}
-                className="rounded-2xl relative"
+                className="rounded-2xl"
                 style={{
                   background: 'linear-gradient(135deg, #ede9fe 0%, #e0e7ff 50%, #ddd6fe 100%)',
                   boxShadow: '0 2px 8px rgba(99,102,241,0.12), 0 0 0 1px rgba(99,102,241,0.08)',
                 }}
               >
-                {/* Ligne principale : nom + sous-titre */}
-                <div className="px-4 pt-4 pb-3">
-                  <Link href={`/trainer/groups/${group.id}`} className="block">
-                    <h3 className="font-bold text-gray-900 text-base leading-snug">{group.name}</h3>
-                    <p className="text-xs text-indigo-500 mt-1 font-medium">
-                      {group.memberCount} participant{group.memberCount !== 1 ? 's' : ''}
-                    </p>
-                  </Link>
+                {/* Zone cliquable : tout le haut de la carte */}
+                <div
+                  className="px-4 pt-4 pb-3 cursor-pointer active:bg-indigo-100/30 rounded-t-2xl"
+                  onClick={() => router.push(`/trainer/groups/${group.id}`)}
+                >
+                  <h3 className="font-bold text-gray-900 text-base leading-snug">{group.name}</h3>
+                  <p className="text-xs text-indigo-500 mt-1 font-medium">
+                    {group.memberCount} participant{group.memberCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
 
-                  {/* Barre d'actions */}
-                  <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-indigo-200/40">
-                    <button
-                      onClick={() => toggleGroup(group.id)}
-                      className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-                    >
-                      <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                      Membres
-                    </button>
+                {/* Barre d'actions — séparée, ne déclenche PAS la navigation */}
+                <div className="flex items-center gap-2 px-4 pb-3 pt-0">
+                  <button
+                    onClick={() => toggleGroup(group.id)}
+                    className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+                  >
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    Membres
+                  </button>
 
-                    <div className="flex-1" />
+                  <div className="flex-1" />
 
-                    <button
-                      onClick={() => openEditGroup(group)}
-                      className="p-1.5 rounded-lg hover:bg-white/60 text-indigo-400 hover:text-indigo-700 transition-colors"
-                      title="Modifier"
-                    >
-                      <Pencil size={15} />
-                    </button>
-                    <button
-                      onClick={() => handleDownloadReport(group.id)}
-                      disabled={downloadingGroupId === group.id}
-                      className="p-1.5 rounded-lg hover:bg-white/60 text-indigo-400 hover:text-indigo-700 transition-colors disabled:opacity-50"
-                      title="Rapport PDF"
-                    >
-                      {downloadingGroupId === group.id
-                        ? <Loader2 size={15} className="animate-spin" />
-                        : <Download size={15} />
-                      }
-                    </button>
-                    <button
-                      onClick={() => setDeletingGroupId(group.id)}
-                      className="p-1.5 rounded-lg hover:bg-red-100/60 text-indigo-400 hover:text-red-500 transition-colors"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => openEditGroup(group)}
+                    className="p-1.5 rounded-lg hover:bg-white/60 text-indigo-400 hover:text-indigo-700 transition-colors"
+                    title="Modifier"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <button
+                    onClick={() => handleDownloadReport(group.id)}
+                    disabled={downloadingGroupId === group.id}
+                    className="p-1.5 rounded-lg hover:bg-white/60 text-indigo-400 hover:text-indigo-700 transition-colors disabled:opacity-50"
+                    title="Rapport PDF"
+                  >
+                    {downloadingGroupId === group.id
+                      ? <Loader2 size={15} className="animate-spin" />
+                      : <Download size={15} />
+                    }
+                  </button>
+                  <button
+                    onClick={() => setDeletingGroupId(group.id)}
+                    className="p-1.5 rounded-lg hover:bg-red-100/60 text-indigo-400 hover:text-red-500 transition-colors"
+                    title="Supprimer"
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
 
                 {/* Volet depliable : liste des membres */}
                 {isExpanded && (
-                  <div className="border-t border-indigo-200/40 bg-white/40 rounded-b-2xl overflow-visible relative z-10">
+                  <div className="border-t border-indigo-200/40 bg-white/40 rounded-b-2xl">
                     {group.members.length === 0 ? (
                       <p className="text-sm text-gray-400 text-center py-6">Aucun participant</p>
                     ) : (
