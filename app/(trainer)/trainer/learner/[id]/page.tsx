@@ -361,8 +361,8 @@ export default async function LearnerDetailPage({
       </div>{/* end space-y-4 inner */}
       </LearnerNav>
 
-      {/* FAB message */}
-      <div className="fixed bottom-4 left-0 right-0 z-10 px-4">
+      {/* FAB message — au-dessus du bottom nav */}
+      <div className="fixed bottom-20 left-0 right-0 z-10 px-4 sm:bottom-4">
         <div className="max-w-lg mx-auto">
           <Link
             href={`/trainer/messages?with=${params.id}`}
@@ -370,7 +370,7 @@ export default async function LearnerDetailPage({
             style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)', boxShadow: '0 4px 20px rgba(79,70,229,0.4)' }}
           >
             <MessageCircle size={16} />
-            Envoyer un message à {profile.first_name}
+            💬 Envoyer un message à {profile.first_name}
           </Link>
         </div>
       </div>

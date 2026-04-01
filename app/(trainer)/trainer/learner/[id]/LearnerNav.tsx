@@ -31,8 +31,10 @@ export default function LearnerNav({
   function handleTouchEnd(e: React.TouchEvent) {
     const dx = touchStartX.current - e.changedTouches[0].clientX
     const dy = touchStartY.current - e.changedTouches[0].clientY
+    // Ignorer si le mouvement est plus vertical que horizontal
     if (Math.abs(dy) > Math.abs(dx)) return
-    if (Math.abs(dx) < 50) return
+    // Seuil réduit pour meilleure réactivité
+    if (Math.abs(dx) < 30) return
     if (dx > 0 && nextUrl) router.push(nextUrl)
     if (dx < 0 && prevUrl) router.push(prevUrl)
   }
@@ -41,7 +43,7 @@ export default function LearnerNav({
   if (total <= 1) return <>{children}</>
 
   return (
-    <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ touchAction: 'pan-y' }}>
 
       {/* Barre de navigation : ← dots → */}
       <div className="flex items-center justify-center gap-4 mb-4">
