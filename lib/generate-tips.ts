@@ -131,3 +131,151 @@ Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
     console.error('[Tips] Erreur génération:', err)
   }
 }
+
+// ──────────────────────────────────────────────────────────────────
+// Generation personnalisee : 1 tip a la fois, contexte complet
+// ──────────────────────────────────────────────────────────────────
+
+import type { LearnerTipContext } from './gather-learner-context'
+
+const WEATHER_LABELS: Record<string, string> = {
+  sunny: 'au beau fixe (sunny)',
+  cloudy: 'mitigee (cloudy)',
+  stormy: 'difficile (stormy)',
+}
+
+/**
+ * Genere UN tip personnalise a partir du contexte complet de l'apprenant.
+ * Retourne le tip insere ou null en cas d'erreur.
+ */
+export async function generatePersonalizedTip(
+  ctx: LearnerTipContext,
+  weekNumber: number
+): Promise<{ id: string; content: string; advice: string | null } | null> {
+  const apiKey = process.env.CLAUDE_API_KEY
+  if (!apiKey) {
+    console.error('[Tips] CLAUDE_API_KEY manquante')
+    return null
+  }
+
+  // Interpretations calculees
+  const regularityComment = ctx.regularityPct >= 75
+    ? 'Tres regulier, il maintient le rythme.'
+    : ctx.regularityPct >= 40
+    ? 'Regularite moyenne, il a besoin d\'etre relance.'
+    : 'Peu regulier, il decroche ou demarre a peine.'
+
+  const engagementComment = ctx.checkinStreak >= 3
+    ? `Bonne dynamique : ${ctx.checkinStreak} check-ins consecutifs.`
+    : ctx.checkinStreak === 0
+    ? 'Aucun check-in recent, desengagement possible.'
+    : `Engagement fragile : seulement ${ctx.checkinStreak} check-in(s) recent(s).`
+
+  const socialComment = (ctx.likesReceived + ctx.commentsReceived) > 3
+    ? 'Bien integre socialement (likes/commentaires recus).'
+    : 'Peu d\'interactions sociales sur ses actions.'
+
+  const prompt = `Tu es un coach en formation professionnelle. Approche pragmatique, operationnelle, concrete et encourageante — sans etre exagerement enthousiaste. Tutoiement, ton oral mais bien ecrit.
+
+CONTEXTE FORMATION :
+- Theme de la formation : "${ctx.groupTheme}"
+- Axe de progres travaille : "${ctx.axeSubject}"
+- Description de l'axe : "${ctx.axeDescription}"
+
+CONTEXTE APPRENANT (${ctx.firstName}) :
+- Semaine ${ctx.weekInProgram} dans le programme
+- ${ctx.actionCount} action(s) sur cet axe, ${ctx.totalActions} au total
+${ctx.recentActions.length > 0 ? `- Dernieres actions : ${ctx.recentActions.slice(0, 5).join(' | ')}` : '- Aucune action enregistree sur cet axe'}
+- Regularite : ${ctx.regularityPct}% → ${regularityComment}
+- ${engagementComment}
+- ${socialComment}
+${ctx.lastWeather ? `- Derniere meteo declaree : ${WEATHER_LABELS[ctx.lastWeather] || ctx.lastWeather} (tendance ${ctx.weatherTrend})` : '- Pas de meteo declaree'}
+${ctx.whatWorked ? `- Ce qui a marche recemment : "${ctx.whatWorked}"` : ''}
+${ctx.difficulties ? `- Difficultes exprimees : "${ctx.difficulties}"` : ''}
+
+${ctx.previousTips.length > 0 ? `TIPS PRECEDENTS (NE PAS reprendre les memes sujets) :
+${ctx.previousTips.map((t, i) => `${i + 1}. [S.${t.week}${t.acted ? ' ✅' : ''}] ${t.content}`).join('\n')}` : 'Aucun tip precedent.'}
+
+GENERE UN TIP compose de :
+1. RAPPEL : une idee cle liee a la formation, reformulee avec tes mots. Pas de citation inventee ni de punchline artificielle. C'est un rappel qui fait mouche parce qu'il est pertinent par rapport a ce que vit l'apprenant.
+2. CONSEIL : Max 500 caracteres. Actionnable en 1 journee de travail. Tiens compte de ce que l'apprenant a deja fait (ou pas fait), de sa meteo, de ses difficultes.
+
+REGLES :
+- NE JAMAIS citer de noms de modeles, frameworks, auteurs ou theoriciens sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne
+- Chaque tip doit aborder un sujet different des precedents
+- Le conseil doit etre specifique et contextuali, pas generique
+
+Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'content-type': 'application/json',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    })
+
+    if (!response.ok) {
+      const errText = await response.text()
+      console.error('[Tips] Claude API error:', response.status, errText)
+      return null
+    }
+
+    const data = await response.json()
+    const text = data.content?.[0]?.text?.trim() || ''
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      console.error('[Tips] Impossible de parser le tip:', text)
+      return null
+    }
+
+    const parsed = JSON.parse(jsonMatch[0])
+    const content = (parsed.rappel || '').trim()
+    const advice = (parsed.conseil || '').trim() || null
+
+    if (!content) {
+      console.error('[Tips] Contenu vide')
+      return null
+    }
+
+    // Annuler tout autre next_scheduled pour cet apprenant
+    await supabaseAdmin
+      .from('tips')
+      .update({ next_scheduled: false })
+      .eq('learner_id', ctx.learnerId)
+      .eq('next_scheduled', true)
+
+    // Inserer le tip
+    const { data: inserted, error } = await supabaseAdmin
+      .from('tips')
+      .insert({
+        axe_id: ctx.axeId,
+        learner_id: ctx.learnerId,
+        week_number: weekNumber,
+        content,
+        advice,
+        next_scheduled: true,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('[Tips] Erreur insertion:', error.message)
+      return null
+    }
+
+    console.log(`[Tips] Tip personnalise genere pour ${ctx.firstName} / axe ${ctx.axeSubject} (S.${weekNumber})`)
+    return { id: inserted.id, content, advice }
+  } catch (err) {
+    console.error('[Tips] Erreur generation personnalisee:', err)
+    return null
+  }
+}

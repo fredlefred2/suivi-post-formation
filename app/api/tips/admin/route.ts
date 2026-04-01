@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
   // Récupérer tous les tips avec infos axe
   const { data: tips } = await supabaseAdmin
     .from('tips')
-    .select('id, axe_id, learner_id, week_number, content, advice, sent, acted, axe:axes(subject)')
+    .select('id, axe_id, learner_id, week_number, content, advice, sent, acted, read_at, next_scheduled, axe:axes(subject)')
     .in('learner_id', learnerIds)
     .order('learner_id')
     .order('axe_id')
@@ -80,95 +80,54 @@ export async function PUT(request: NextRequest) {
   return NextResponse.json({ success: true })
 }
 
-// POST : ajouter un tip ou régénérer un tip via Claude
+// POST : generer ou regenerer un tip personnalise
 export async function POST(request: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 })
 
-  const { action, tipId, axeId, learnerId, weekNumber, content, advice, groupTheme, axeSubject } = await request.json()
+  const { generatePersonalizedTip } = await import('@/lib/generate-tips')
+  const { gatherLearnerContext } = await import('@/lib/gather-learner-context')
 
-  if (action === 'add' && axeId && learnerId && weekNumber && content) {
-    const { error } = await supabaseAdmin.from('tips').insert({
-      axe_id: axeId,
-      learner_id: learnerId,
-      week_number: weekNumber,
-      content: content.trim(),
-      advice: advice?.trim() || null,
-    })
-    if (error) return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
-    return NextResponse.json({ success: true })
+  const { action, tipId, axeId, learnerId } = await request.json()
+
+  // ── generate-next : generer le prochain tip pour un axe ───────
+  if (action === 'generate-next' && axeId && learnerId) {
+    const ctx = await gatherLearnerContext(learnerId, axeId)
+    if (!ctx) return NextResponse.json({ error: 'Contexte introuvable' }, { status: 404 })
+
+    // Calculer le numero de semaine
+    const now = new Date()
+    const weekNumber = Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + new Date(now.getFullYear(), 0, 1).getDay() + 1) / 7)
+
+    const result = await generatePersonalizedTip(ctx, weekNumber)
+    if (!result) return NextResponse.json({ error: 'Erreur generation IA' }, { status: 500 })
+
+    return NextResponse.json({ success: true, tip: result })
   }
 
-  if (action === 'regenerate' && tipId && groupTheme && axeSubject) {
-    const apiKey = process.env.CLAUDE_API_KEY
-    if (!apiKey) return NextResponse.json({ error: 'CLAUDE_API_KEY manquante' }, { status: 500 })
-
-    // Récupérer le tip à régénérer pour connaître son axe_id
-    const { data: currentTip } = await supabaseAdmin.from('tips').select('axe_id').eq('id', tipId).single()
-
-    // Récupérer tous les tips existants du même axe pour les exclure
-    let existingList = ''
-    if (currentTip) {
-      const { data: siblings } = await supabaseAdmin
-        .from('tips')
-        .select('content')
-        .eq('axe_id', currentTip.axe_id)
-        .neq('id', tipId)
-      if (siblings && siblings.length > 0) {
-        existingList = '\n\nVoici les rappels déjà utilisés pour cet axe (NE PAS les reprendre, propose quelque chose de TOTALEMENT DIFFÉRENT) :\n' +
-          siblings.map((s, i) => `${i + 1}. ${s.content}`).join('\n')
-      }
-    }
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'content-type': 'application/json',
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: `Tu es un coach en formation professionnelle. Approche pragmatique, opérationnelle, concrète et encourageante, sans être exagérément enthousiaste. Le thème et le contenu de la formation portait sur "${groupTheme}". Axe de progrès : "${axeSubject}".
-Génère UN rappel + UN conseil NOUVEAU et ORIGINAL :
-1. RAPPEL ("Le tip") : un principe ou bonne pratique vue en formation, décrit en un proverbe imaginaire / citation imaginaire / punchline. Ton provocant ou amusant, pour déclencher l'attention par la surprise.
-2. CONSEIL : une mise en pratique concrète pour la semaine (1-2 phrases, max 300 car., tutoiement, ton oral mais bien écrit, SMART sans le décomposer comme tel). L'apprenant connaît déjà le contenu de la formation, donc pas d'évidences — un petit truc en plus.
-IMPORTANT : NE JAMAIS citer de noms de modèles, frameworks, auteurs ou théoriciens sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne. Ton léger, un peu provocant mais jamais agressif.
-${existingList}
-Réponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`,
-        }],
-      }),
-    })
-
-    if (!response.ok) return NextResponse.json({ error: 'Erreur Claude API' }, { status: 500 })
-
-    const data = await response.json()
-    const text = data.content?.[0]?.text?.trim() || ''
-    let newContent = text
-    let newAdvice: string | null = null
-
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0])
-        newContent = parsed.rappel || text
-        newAdvice = parsed.conseil || null
-      }
-    } catch { /* fallback to raw text */ }
-
-    if (!newContent) return NextResponse.json({ error: 'Réponse vide' }, { status: 500 })
-
-    const { error } = await supabaseAdmin
+  // ── regenerate : regenerer un tip existant ────────────────────
+  if (action === 'regenerate' && tipId) {
+    // Recuperer le tip pour connaitre l'axe et l'apprenant
+    const { data: currentTip } = await supabaseAdmin
       .from('tips')
-      .update({ content: newContent, advice: newAdvice })
+      .select('axe_id, learner_id, week_number')
       .eq('id', tipId)
+      .single()
 
-    if (error) return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
-    return NextResponse.json({ success: true, content: newContent })
+    if (!currentTip) return NextResponse.json({ error: 'Tip introuvable' }, { status: 404 })
+
+    const ctx = await gatherLearnerContext(currentTip.learner_id, currentTip.axe_id)
+    if (!ctx) return NextResponse.json({ error: 'Contexte introuvable' }, { status: 404 })
+
+    // Supprimer l'ancien tip
+    await supabaseAdmin.from('tips').delete().eq('id', tipId)
+
+    // Generer un nouveau
+    const result = await generatePersonalizedTip(ctx, currentTip.week_number)
+    if (!result) return NextResponse.json({ error: 'Erreur regeneration IA' }, { status: 500 })
+
+    return NextResponse.json({ success: true, tip: result })
   }
 
   return NextResponse.json({ error: 'Action invalide' }, { status: 400 })

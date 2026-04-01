@@ -1,0 +1,1522 @@
+{
+  "group": {
+    "id": "8ffb713f-224d-4116-98cc-065fa20cd260",
+    "name": "Groupe h3O - Vente",
+    "theme": "Technique de vente pour des Chefs de Secteurs dans l'ultra frais (marque LE GAULOIS, et REGALAL pour la halal). Ils interviennent auprès de chef de rayon ou directeur d'Hypermarchés et supermarchés (Leclerc, Hyper U, Super U, Intermarché, Carrefour) pour référencer leur produits, améliorer leur visibilité, négocier des opérations promotionnelles.Les concurrents sont PERE DODU (pour le gaulois) et Isla délice (pour le Halal). Les sujets sont : le DISC appliqué à la vente, le cadrage (objectif, déroulé, timing), la découverte (Questionnement, questions ouvertes, questions d'approfondissement, reformulation, écoute active), les domaines de découverte (Situation, perception des marques et du marché, projets, motivations, insatisfactions, freins, process et cycle de décision), l'argumentation (caractéristiques, avantage, bénéfices, preuves), le traitement des objections (accepter, isoler, creuser, reformuler, argumenter, controler), la négo (défendre la valeur, concessions et contreparties), le closing (savoir proposer la vente). ",
+    "created_at": "2026-03-22T19:29:53.965585+00:00",
+    "trainer_id": "1d18decd-468b-4740-9049-37f9f6372311"
+  },
+  "learners": [
+    {
+      "profile": {
+        "id": "ce480104-524f-4fa6-9ace-2ca6789e2330",
+        "first_name": "Laurent ",
+        "last_name": "Ouvrard",
+        "created_at": "2026-03-22T19:16:41.733897+00:00",
+        "joined_group_at": "2026-03-22T19:30:11.109622+00:00",
+        "weeks_in_program": 1
+      },
+      "axes": [
+        {
+          "id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+          "subject": "Améliorer ma découverte ",
+          "description": "Poser plus de questions ouvertes et aller poser des questions plus profondes. ",
+          "initial_score": 1,
+          "created_at": "2026-03-22T19:17:40.906942+00:00",
+          "actions": [
+            {
+              "id": "9d86781c-5d0b-46cd-9ef2-9afff85b2c37",
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "description": "J'ai posé 5 questions ouvertes",
+              "completed": true,
+              "created_at": "2026-03-31T05:18:49.063857+00:00"
+            },
+            {
+              "id": "2d4e8122-8fcf-4967-9b68-4e26e6e46a48",
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "description": "J'ai laissé des silences",
+              "completed": true,
+              "created_at": "2026-04-01T12:17:04.872978+00:00"
+            }
+          ],
+          "tips": [
+            {
+              "id": "baa776ec-9774-4743-843b-c6c3f73406c2",
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "week_number": 1,
+              "content": "Une question ouverte laisse le chef de rayon s'exprimer librement. Elle commence par 'Comment', 'Qu'est-ce que', 'Pourquoi'. Elle t'apporte bien plus qu'un simple oui ou non.",
+              "advice": "Dans ta prochaine visite, prépare 3 questions ouvertes sur la situation du rayon avant d'entrer en magasin. Note les réponses pour t'en servir ensuite.",
+              "sent": true,
+              "acted": true,
+              "created_at": "2026-03-22T19:30:42.895561+00:00"
+            },
+            {
+              "id": "dceae972-4739-4ccc-b0e2-bd11729f38b7",
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "week_number": 2,
+              "content": "La découverte a plusieurs niveaux : la situation visible, mais aussi les perceptions, les insatisfactions et les motivations cachées. Ce sont ces niveaux profonds qui font la différence.",
+              "advice": "Après une réponse du chef de rayon, teste cette formule : 'Et concrètement, qu'est-ce que ça change pour toi ?' Une seule fois par entretien, c'est déjà un vrai pas en avant.",
+              "sent": true,
+              "acted": true,
+              "created_at": "2026-03-22T19:30:42.895561+00:00"
+            },
+            {
+              "id": "032b6b03-b0b6-4fc2-8c93-146ef551f464",
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "week_number": 3,
+              "content": "La reformulation n'est pas un simple résumé : c'est un outil de confirmation. Elle montre que tu as bien compris, rassure ton interlocuteur et l'invite à compléter ou corriger. C'est là que la vraie info remonte.",
+              "advice": "Cette semaine, lors d'un entretien, teste une reformulation synthèse avant de passer à l'argumentation : 'Si je comprends bien, votre priorité c'est…'. Mesure si le chef de rayon valide, complète ou corrige — c'est le signe que tu as vraiment cerné son besoin.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:30:42.895561+00:00"
+            },
+            {
+              "id": "2e86db22-2ee6-4278-af60-6b140de052dc",
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "week_number": 4,
+              "content": "Explorer les insatisfactions et les freins, c'est creuser là où ça fait mal. Ce n'est pas agressif : c'est utile. Un client qui exprime un problème est un client qui t'ouvre une opportunité.",
+              "advice": "Prépare une question sur les insatisfactions liées au rayon ultra-frais volaille ou halal : 'Qu'est-ce qui t'a posé problème sur ce rayon ces dernières semaines ?' et laisse le silence travailler.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:30:42.895561+00:00"
+            },
+            {
+              "id": "4fb4c00d-9c1f-4b10-9328-b08f2d3ed49c",
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "week_number": 5,
+              "content": "Une bonne découverte suit un fil : situation, perception, projets, motivations, insatisfactions, freins. Alterner questions ouvertes et approfondissement sur ce fil donne un entretien structuré et naturel.",
+              "advice": "Sur une visite clé cette semaine, cartographie en amont les 6 domaines et prépare une question par domaine. En sortie de visite, évalue lesquels tu as vraiment couverts. Sois honnête avec toi-même.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:30:42.895561+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "score": 1,
+              "week_number": 12,
+              "year": 2026
+            },
+            {
+              "axe_id": "d9ae426c-b212-4f07-be2f-6f4169b86b2c",
+              "score": 1,
+              "week_number": 13,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 1,
+          "comments_received": [
+            {
+              "id": "8db1987f-f841-48e2-b4f0-eb433d33b550",
+              "action_id": "9d86781c-5d0b-46cd-9ef2-9afff85b2c37",
+              "content": "C'est top",
+              "created_at": "2026-04-01T12:14:10.390061+00:00"
+            }
+          ]
+        },
+        {
+          "id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+          "subject": "Structurer mon argu en cabp",
+          "description": "Penser aux bénéfices et preuves ",
+          "initial_score": 1,
+          "created_at": "2026-03-22T19:18:19.548529+00:00",
+          "actions": [
+            {
+              "id": "07be995c-2697-45ca-9d9b-2265c7134202",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Action · J'ai mieux avancé les bénéfices chiffres avec les stats",
+              "completed": true,
+              "created_at": "2026-03-22T19:20:40.311609+00:00"
+            },
+            {
+              "id": "09e1a156-f332-4fd5-8686-2935a1484622",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Outil · Desc nego",
+              "completed": true,
+              "created_at": "2026-03-27T06:32:09.547596+00:00"
+            },
+            {
+              "id": "23481503-a73e-4aa9-8da9-f258b8e56a63",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Outil",
+              "completed": true,
+              "created_at": "2026-03-27T22:19:15.667263+00:00"
+            },
+            {
+              "id": "b96dbd72-6636-4f48-9c3b-18ceadf6a43b",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Outil",
+              "completed": true,
+              "created_at": "2026-03-27T22:19:42.327501+00:00"
+            },
+            {
+              "id": "56ad8185-d7f1-45f6-9a5f-95a987481cbc",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Outil",
+              "completed": true,
+              "created_at": "2026-03-27T22:19:52.880529+00:00"
+            },
+            {
+              "id": "ecdd0828-d530-47a8-bdd9-d9e0def12a6e",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Outil",
+              "completed": true,
+              "created_at": "2026-03-27T22:20:01.236398+00:00"
+            },
+            {
+              "id": "33a0f76b-7a2d-4207-aa1f-a6b905a5be05",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Outil",
+              "completed": true,
+              "created_at": "2026-03-27T22:23:15.308735+00:00"
+            },
+            {
+              "id": "3ad70591-7101-4418-93e1-223f597db9cc",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Recul",
+              "completed": true,
+              "created_at": "2026-03-27T22:23:24.553423+00:00"
+            },
+            {
+              "id": "3486a906-b7ea-4e09-ab55-e50d4bcbf396",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "description": "Outil",
+              "completed": true,
+              "created_at": "2026-03-27T22:23:31.271982+00:00"
+            }
+          ],
+          "tips": [
+            {
+              "id": "c045b650-e2e9-436e-8ca0-ee743e178c71",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "week_number": 1,
+              "content": "Une argumentation solide ne s'arrête pas à ce que le produit fait. Elle explique ce que ça change concrètement pour le chef de rayon : gain de temps, moins de ruptures, meilleure rotation.",
+              "advice": "Prends un produit LE GAULOIS que tu présentes souvent. Écris en 2 lignes le bénéfice concret pour le chef de rayon, pas la caractéristique du produit.",
+              "sent": true,
+              "acted": true,
+              "created_at": "2026-03-22T19:31:07.215457+00:00"
+            },
+            {
+              "id": "e8ca519b-ff16-448c-81e2-27b717c48360",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "week_number": 2,
+              "content": "La preuve, c'est ce qui rend ton argument crédible. Sans elle, ton bénéfice reste une promesse. Chiffres de vente, part de marché, retour d'un autre magasin : ça transforme un discours en fait.",
+              "advice": "Identifie une preuve chiffrée (IRI, sell-out, taux de rotation) que tu peux utiliser dès cette semaine pour appuyer un argument sur REGALAL face à Isla Délice.",
+              "sent": true,
+              "acted": true,
+              "created_at": "2026-03-22T19:31:07.215457+00:00"
+            },
+            {
+              "id": "97c5360f-e0f4-4633-b32b-9fceb9e1adb5",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "week_number": 3,
+              "content": "L'ordre dans lequel tu présentes ton argument compte. Partir de la caractéristique sans avoir annoncé l'avantage, c'est perdre l'attention avant d'avoir eu le temps de convaincre. Va du général au concret.",
+              "advice": "Cette semaine, avant chaque rendez-vous, rédige en 3 lignes ton argument clé dans l'ordre : ce que le produit fait, ce que ça apporte au rayon, ce que le chef de rayon y gagne personnellement. Teste-le à voix haute avant d'entrer.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:31:07.215457+00:00"
+            },
+            {
+              "id": "0b175ef7-9e5b-4ac7-8c9f-18483441b353",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "week_number": 4,
+              "content": "Le bénéfice doit répondre à ce que tu as découvert en phase de questionnement. Si tu n'as pas creusé les insatisfactions ou les projets du chef de rayon, ton bénéfice risque de tomber à côté.",
+              "advice": "Sur ton prochain RDV, note une insatisfaction exprimée par le client, puis adapte en temps réel ton argument pour que le bénéfice y réponde directement.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:31:07.215457+00:00"
+            },
+            {
+              "id": "9f315199-5381-470b-a4fc-69c3825e1d78",
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "week_number": 5,
+              "content": "Un argument complet et personnalisé, c'est une vraie arme en négo. Quand le chef de rayon comprend ce qu'il gagne concrètement et que tu le prouves, il est bien moins tenté de négocier à la baisse.",
+              "advice": "Prépare une argumentation complète pour défendre un facing ou une opération promo sur LE GAULOIS face à PERE DODU, avec bénéfice rayon et au moins deux preuves concrètes. Teste-la en vrai cette semaine.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:31:07.215457+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "score": 1,
+              "week_number": 12,
+              "year": 2026
+            },
+            {
+              "axe_id": "e012ca11-e8bc-442a-bb5f-40cb5cec4787",
+              "score": 1,
+              "week_number": 13,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 1,
+          "comments_received": [
+            {
+              "id": "2222459c-da39-459a-911e-ea8aa073ae0d",
+              "action_id": "07be995c-2697-45ca-9d9b-2265c7134202",
+              "content": "super",
+              "created_at": "2026-03-22T21:48:06.135858+00:00"
+            },
+            {
+              "id": "77c7dd8b-6609-4c93-8881-0fa55909906c",
+              "action_id": "07be995c-2697-45ca-9d9b-2265c7134202",
+              "content": "top",
+              "created_at": "2026-03-22T21:58:29.377634+00:00"
+            },
+            {
+              "id": "a04f825a-dff6-4318-ba16-1c3509e15c56",
+              "action_id": "07be995c-2697-45ca-9d9b-2265c7134202",
+              "content": "top top",
+              "created_at": "2026-03-22T21:58:45.900715+00:00"
+            },
+            {
+              "id": "2685269a-d1d4-4871-ab4d-acdf8013925f",
+              "action_id": "07be995c-2697-45ca-9d9b-2265c7134202",
+              "content": "top top",
+              "created_at": "2026-03-22T21:59:15.781636+00:00"
+            }
+          ]
+        },
+        {
+          "id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+          "subject": "Préparer mes negos ",
+          "description": "Connaître mon escalade de Concessions et contreparties et mon seuil de retrait ",
+          "initial_score": 1,
+          "created_at": "2026-03-22T19:18:56.616356+00:00",
+          "actions": [
+            {
+              "id": "c7006e73-5e3c-400d-ae1e-6e330304c09d",
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "description": "Recul · J'ai reagi moins vivement car j'étais préparé",
+              "completed": true,
+              "created_at": "2026-03-22T19:21:09.620755+00:00"
+            },
+            {
+              "id": "ac35699d-ba15-4f65-b0fe-68fc0fc5889a",
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "description": "Préparation d'un tableau concession contrepartie pour un client",
+              "completed": true,
+              "created_at": "2026-03-28T08:55:58.075046+00:00"
+            }
+          ],
+          "tips": [
+            {
+              "id": "443d8535-4966-453d-a167-c517f66846e8",
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "week_number": 1,
+              "content": "Avant la négo, anticipe les demandes probables du chef de rayon : remise, PLV, têtes de gondole, DN élargie. Pour chaque demande, prépare ta réponse et la contrepartie associée. Tu entres en séance avec un plan, pas des intentions.",
+              "advice": "Avant ton prochain RDV négo, liste par écrit 3 demandes que ton interlocuteur va probablement formuler et prépare pour chacune une réponse avec sa contrepartie concrète : tu ressortiras avec un accord construit, pas subi.",
+              "sent": true,
+              "acted": true,
+              "created_at": "2026-03-22T19:31:38.050712+00:00"
+            },
+            {
+              "id": "01dba802-9b95-4c17-ab3e-e4ce040f63ef",
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "week_number": 2,
+              "content": "Chaque concession doit avoir sa contrepartie. Donner sans recevoir, c'est dévaloriser ton offre et ouvrir la porte à de nouvelles demandes. L'échange doit être visible et nommé.",
+              "advice": "Cette semaine, entraîne-toi à formuler à voix haute : 'Je peux faire ça, mais en contrepartie j'ai besoin de…' sur 2 situations concrètes liées à LE GAULOIS ou REGALAL.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:31:38.050712+00:00"
+            },
+            {
+              "id": "571819c8-93f9-49d9-a24b-60a678d8302b",
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "week_number": 3,
+              "content": "Ton seuil de retrait, c'est la limite en dessous de laquelle l'accord ne vaut plus rien pour toi. Le définir avant la négo t'évite de dire oui à un deal perdant sous l'effet du stress.",
+              "advice": "Pour un compte sur lequel tu négocies en ce moment, définis par écrit ton seuil de retrait : à partir de quel niveau de conditions tu préfères ne pas conclure l'accord.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:31:38.050712+00:00"
+            },
+            {
+              "id": "740105cb-d215-436a-b373-48213f971ec6",
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "week_number": 4,
+              "content": "Une escalade de concessions bien préparée, c'est une liste ordonnée : tu pars de ce qui te coûte peu, et tu gardes tes concessions à plus forte valeur pour les vraies impasses. L'ordre compte autant que le contenu.",
+              "advice": "Prépare une escalade de 3 niveaux pour une négociation à venir : concession facile, concession moyenne, concession difficile. Vérifie que chaque niveau a bien sa contrepartie associée.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:31:38.050712+00:00"
+            },
+            {
+              "id": "33095bf2-5bc6-4602-b85c-fb6fceb5f5ab",
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "week_number": 5,
+              "content": "Un bon fichier de préparation négo, c'est ton outil de pilotage en séance. Il te permet de rester ancré sur tes positions, de ne pas improviser, et de sortir du RDV avec un accord que tu as vraiment voulu.",
+              "advice": "Crée ou finalise un modèle de fiche prépa négo réutilisable (objectif, concessions/contreparties, seuil de retrait) et teste-le sur un vrai RDV cette semaine. Ajuste après la séance.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T19:31:38.050712+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "score": 1,
+              "week_number": 12,
+              "year": 2026
+            },
+            {
+              "axe_id": "3c31dc0e-8f99-4de3-853c-faebc0640b9a",
+              "score": 1,
+              "week_number": 13,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 2,
+          "comments_received": [
+            {
+              "id": "829c124a-f6cd-4ab1-8041-e93ffd412725",
+              "action_id": "c7006e73-5e3c-400d-ae1e-6e330304c09d",
+              "content": "franchement, bravo",
+              "created_at": "2026-03-22T21:41:27.263787+00:00"
+            },
+            {
+              "id": "ab778281-db2f-459f-aefd-b520e9158342",
+              "action_id": "c7006e73-5e3c-400d-ae1e-6e330304c09d",
+              "content": "bravo",
+              "created_at": "2026-03-22T21:53:04.749891+00:00"
+            },
+            {
+              "id": "547dd860-9700-49dc-8d01-6d81a011f1d0",
+              "action_id": "c7006e73-5e3c-400d-ae1e-6e330304c09d",
+              "content": "top",
+              "created_at": "2026-03-22T21:58:24.562042+00:00"
+            }
+          ]
+        }
+      ],
+      "checkins": [
+        {
+          "id": "f8e3f2c2-9888-4af5-a331-dbbaabd755f1",
+          "week_number": 12,
+          "year": 2026,
+          "weather": "cloudy",
+          "what_worked": "💬 Un échange plus fluide",
+          "difficulties": "😬 Sorti de ma zone de confort",
+          "created_at": "2026-03-22T19:20:12.888142+00:00"
+        },
+        {
+          "id": "f2274833-20de-4008-a304-45a89deef449",
+          "week_number": 13,
+          "year": 2026,
+          "weather": "cloudy",
+          "what_worked": "👀 Une réaction positive",
+          "difficulties": "🔁 Retombé(e) dans mes habitudes",
+          "created_at": "2026-03-27T22:34:48.16683+00:00"
+        }
+      ],
+      "total_actions": 13,
+      "total_likes_received": 4,
+      "total_comments_received": 8
+    },
+    {
+      "profile": {
+        "id": "37a938fb-5232-4a63-8f8a-00dd664d104a",
+        "first_name": "Julie",
+        "last_name": "Fonteneau",
+        "created_at": "2026-03-24T19:50:07.577713+00:00",
+        "joined_group_at": "2026-03-24T20:53:03.948543+00:00",
+        "weeks_in_program": 1
+      },
+      "axes": [
+        {
+          "id": "2654b711-9b45-41c4-9d71-5356b990d1b0",
+          "subject": "Être moins hésitante dans mes proposition ",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T19:50:53.938344+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "95362ad3-cc02-4946-b326-a522ca5d66e9",
+              "axe_id": "2654b711-9b45-41c4-9d71-5356b990d1b0",
+              "week_number": 1,
+              "content": "Une proposition qui se termine par '... enfin, si vous voulez hein' vient de se suicider devant le client.",
+              "advice": "Cette semaine, fixe-toi une règle : chaque fois que tu formules une proposition (référencement, promo, emplacement), prononce la phrase entière sans la modifier en cours de route. Si tu veux te corriger, c'est trop tard — laisse-la vivre et observe la réaction du chef de rayon.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:20.650598+00:00"
+            },
+            {
+              "id": "5e4c9f0f-be3d-480a-bd03-bebc33ded4b8",
+              "axe_id": "2654b711-9b45-41c4-9d71-5356b990d1b0",
+              "week_number": 2,
+              "content": "« Une bonne découverte, c'est le permis de conduire de ta proposition. Sans ça, t'as pas le droit de prendre le volant. »",
+              "advice": "Avant de proposer quoi que ce soit, pose au moins deux questions d'approfondissement sur les insatisfactions ou les projets du chef de rayon. Ce que tu as découvert, tu as le droit de l'utiliser pour asseoir ta proposition avec conviction.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:20.650598+00:00"
+            },
+            {
+              "id": "0f1db323-c2c8-418c-8ca7-e60ddc14bdf6",
+              "axe_id": "2654b711-9b45-41c4-9d71-5356b990d1b0",
+              "week_number": 3,
+              "content": "« L'hésitation n'est pas de la modestie. C'est juste du bruit qui brouille ton message. »",
+              "advice": "Sur ta prochaine visite, remplace 'je pensais que peut-être on pourrait...' par une formule d'ancrage direct : 'Je vous propose de...' ou 'Ce que je recommande, c'est...'. Teste ça sur un seul rendez-vous et note l'effet.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:20.650598+00:00"
+            },
+            {
+              "id": "427572fa-9f41-455e-807d-10978285b39c",
+              "axe_id": "2654b711-9b45-41c4-9d71-5356b990d1b0",
+              "week_number": 4,
+              "content": "« Un chef de rayon Leclerc ne fait pas ses linéaires avec des 'bah, pourquoi pas'. »",
+              "advice": "Cette semaine, prépare une argumentation CAB complète pour ta proposition phare (LE GAULOIS ou REGALAL selon ton secteur). Entraîne-toi à la livrer en moins de 45 secondes, ferme, sans fioritures — comme si tu avais 30 secondes de plus que Père Dodu ou Isla Délice.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:20.650598+00:00"
+            },
+            {
+              "id": "03bd3726-291d-45cc-9628-8ac00590fbb3",
+              "axe_id": "2654b711-9b45-41c4-9d71-5356b990d1b0",
+              "week_number": 5,
+              "content": "« Proposer la vente sans oser la clore, c'est cuire un poulet et le laisser dans le four jusqu'à ce qu'il disparaisse. »",
+              "advice": "Sur au moins deux rendez-vous cette semaine, teste un closing direct après ton argumentation : 'On part sur cette implantation pour la semaine prochaine ?' ou 'Je note ça pour la commande de jeudi ?'. L'objectif : ne pas repartir sans avoir demandé explicitement.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:20.650598+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "d212a452-916f-4830-8735-4924e344f697",
+          "subject": "Ne pas craindre la nego et mieux la préparer ",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T19:51:17.98391+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "61e33916-655c-4cbf-9c1a-7aff4a1e659a",
+              "axe_id": "d212a452-916f-4830-8735-4924e344f697",
+              "week_number": 1,
+              "content": "« Celui qui entre en négo sans avoir préparé ses concessions a déjà perdu la moitié de ce qu'il possède. » — Proverbe du marchand de tapis qui finit nu",
+              "advice": "Avant ta prochaine visite, liste 3 concessions que tu pourrais faire et, pour chacune, la contrepartie que tu demanderas en échange. Pose ça noir sur blanc, même en 10 minutes.",
+              "sent": true,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:39.128656+00:00"
+            },
+            {
+              "id": "96851db8-e7d0-441a-bf17-b478d5a112c1",
+              "axe_id": "d212a452-916f-4830-8735-4924e344f697",
+              "week_number": 2,
+              "content": "« La négo ne commence pas quand le chef de rayon dit non. Elle commence quand toi, tu décides ce que tu ne céderas pas. » — Anonyme, mais il a gardé sa marge",
+              "advice": "Fixe-toi un plancher non négociable sur ta prochaine opération promo : volume mini, emplacement, durée. Rentre en rendez-vous avec cette ligne rouge déjà tracée dans la tête.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:39.128656+00:00"
+            },
+            {
+              "id": "95408ccc-9319-4c00-8060-207c0dd70e6c",
+              "axe_id": "d212a452-916f-4830-8735-4924e344f697",
+              "week_number": 3,
+              "content": "« Avoir peur de négocier, c'est comme refuser de servir au tennis parce qu'on pourrait faire une double faute. Spoiler : tu perds quand même. » — Coach anonyme un peu énervé",
+              "advice": "Sur ton prochain rendez-vous Leclerc ou Intermarché, prépare une phrase d'ouverture de négo directe du style : 'Sur cette opération, voilà ce que je peux proposer… et ce que j'attends en retour.' Entraîne-la à voix haute avant d'y aller.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:39.128656+00:00"
+            },
+            {
+              "id": "4e692a7b-3cdf-48d4-ae2c-12d7c8a65a29",
+              "axe_id": "d212a452-916f-4830-8735-4924e344f697",
+              "week_number": 4,
+              "content": "« Le chef de rayon qui te voit hésiter sur le prix sent le sang. Celui qui te voit serein pense que t'as un argument qu'il ne connaît pas encore. » — Vieux loup de la grande surface",
+              "advice": "Travaille la posture : reformule systématiquement toute demande de remise par une question — 'Qu'est-ce que vous me donnez en échange ?' Exerce-toi sur une situation réelle cette semaine, même une petite.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:39.128656+00:00"
+            },
+            {
+              "id": "9052aea6-60f8-4f6e-a152-128cca4c11ef",
+              "axe_id": "d212a452-916f-4830-8735-4924e344f697",
+              "week_number": 5,
+              "content": "« Un bon négociateur ne cède pas moins. Il cède mieux, plus tard, et avec une contrepartie qu'il avait déjà choisie. » — Quelqu'un qui dort bien le soir",
+              "advice": "Prépare un scénario de négo complet pour un compte stratégique : ton objectif idéal, ton objectif de repli, tes concessions échelonnées et leurs contreparties. Simule ensuite l'entretien à voix haute en jouant les deux rôles — chef de rayon compris.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:39.128656+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "fd960a18-b423-487e-98a2-641b825cb23c",
+          "subject": "Cadrer mes rendez vous et garder le lead",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T19:51:48.644929+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "7232b6c0-b6e6-4657-98ad-9fd2570a7885",
+              "axe_id": "fd960a18-b423-487e-98a2-641b825cb23c",
+              "week_number": 1,
+              "content": "« Un rendez-vous sans cadrage, c'est une réunion sans pilote. Et l'avion, il va quelque part. »",
+              "advice": "Avant ton prochain RDV avec un chef de rayon, prépare en 3 lignes ton cadrage : objectif du RDV, les grandes étapes que tu annonces, et le temps prévu. Dis-le à voix haute en ouvrant le RDV. Juste ça.",
+              "sent": true,
+              "acted": true,
+              "created_at": "2026-03-24T20:53:56.30227+00:00"
+            },
+            {
+              "id": "2a4e3435-f677-4a61-a3bc-e3e35a458936",
+              "axe_id": "fd960a18-b423-487e-98a2-641b825cb23c",
+              "week_number": 2,
+              "content": "« Celui qui pose la première question tient le volant. Celui qui répond, il est passager. »",
+              "advice": "Dans ton prochain RDV, identifie le moment où tu te laisses embarquer par les questions du chef de rayon. Reprends la main avec une question de découverte ouverte, du type 'Et de votre côté, comment vous voyez l'évolution de ce rayon ?' Entraîne-toi à la formuler avant d'y aller.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:56.30227+00:00"
+            },
+            {
+              "id": "1c0a64a9-c7c6-4e7a-8e4d-9987ff98bbac",
+              "axe_id": "fd960a18-b423-487e-98a2-641b825cb23c",
+              "week_number": 3,
+              "content": "« Un RDV c'est comme un frigo bien organisé : si tu laisses les autres ranger, tu retrouves jamais tes yaourts. »",
+              "advice": "Teste cette semaine la mini-reformulation de cadrage à mi-RDV : 'On a bien avancé sur X, il me reste à vous parler de Y avant qu'on conclue.' Ça repose le cadre sans avoir l'air de forcer. Deux RDV, deux essais.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:56.30227+00:00"
+            },
+            {
+              "id": "fea5e88a-783f-48c8-af0b-4caf0323a290",
+              "axe_id": "fd960a18-b423-487e-98a2-641b825cb23c",
+              "week_number": 4,
+              "content": "« Le chef de rayon qui parle de la concurrence pendant 10 minutes, c'est toi qui l'as laissé prendre le micro. »",
+              "advice": "Prépare une phrase de recentrage fluide pour les moments où le RDV dérive sur Père Dodu ou Isla Délice. Genre : 'C'est utile ce que vous me dites, et justement ça m'amène à vous montrer comment on se positionne sur ce point.' Utilise-la lors de ton prochain RDV dès que ça dérive.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:56.30227+00:00"
+            },
+            {
+              "id": "63df45b7-b303-4162-af3a-8f5b454ce64a",
+              "axe_id": "fd960a18-b423-487e-98a2-641b825cb23c",
+              "week_number": 5,
+              "content": "« Un bon cadrage en début de RDV, c'est un contrat oral. Celui qui le signe en premier, c'est lui le patron de la réunion. »",
+              "advice": "Sur tes deux prochains RDV de la semaine, propose dès l'ouverture un ordre du jour en 3 temps avec validation explicite du client : 'Je vous propose qu'on fasse X, puis Y, puis Z — ça vous convient ?' Évalue si ça change la dynamique du RDV par rapport à d'habitude.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:53:56.30227+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        }
+      ],
+      "checkins": [],
+      "total_actions": 0,
+      "total_likes_received": 0,
+      "total_comments_received": 0
+    },
+    {
+      "profile": {
+        "id": "f6fab4a8-a6a0-4fe1-bdce-bc1054f62963",
+        "first_name": "Enora",
+        "last_name": "Lescout",
+        "created_at": "2026-03-24T20:00:52.016107+00:00",
+        "joined_group_at": "2026-03-24T20:53:47.509104+00:00",
+        "weeks_in_program": 1
+      },
+      "axes": [
+        {
+          "id": "a6826501-d004-46d5-9731-d886fd5da550",
+          "subject": "Moins parler et mieux écouter ",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:01:48.380815+00:00",
+          "actions": [
+            {
+              "id": "15563997-3693-4810-9b2b-2e93e94f3c16",
+              "axe_id": "a6826501-d004-46d5-9731-d886fd5da550",
+              "description": "Action · Écouter activement",
+              "completed": true,
+              "created_at": "2026-03-27T12:22:15.444583+00:00"
+            }
+          ],
+          "tips": [
+            {
+              "id": "4140613d-98e0-4f65-8397-0768e5fc845d",
+              "axe_id": "a6826501-d004-46d5-9731-d886fd5da550",
+              "week_number": 1,
+              "content": "« La bouche qui parle trop couvre la mine d'or que les oreilles auraient trouvée. »",
+              "advice": "Cette semaine, lors d'une visite, pose ta question de découverte et compte mentalement jusqu'à 5 avant de reprendre la parole. Laisse le silence travailler pour toi.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:01.398051+00:00"
+            },
+            {
+              "id": "ccc393d7-63dc-4c17-b88c-f43029dad151",
+              "axe_id": "a6826501-d004-46d5-9731-d886fd5da550",
+              "week_number": 2,
+              "content": "« Le vendeur qui prépare ses questions rentre avec des infos. Celui qui prépare ses arguments rentre avec ses arguments. »",
+              "advice": "Avant chaque rendez-vous, note 3 questions ouvertes sur les insatisfactions ou projets du chef de rayon. Ton objectif : ne parler que pour relancer, pas pour placer tes arguments.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:01.398051+00:00"
+            },
+            {
+              "id": "d7771216-ad6c-4406-b639-10e28ffe6c08",
+              "axe_id": "a6826501-d004-46d5-9731-d886fd5da550",
+              "week_number": 3,
+              "content": "« Le silence est la question la plus puissante qu'un commercial n'osera jamais poser. »",
+              "advice": "Cette semaine, après chaque réponse de ton chef de rayon, compte mentalement jusqu'à 3 avant de reprendre la parole — tu vas voir : il comble lui-même le vide avec ce qui le préoccupe vraiment, et c'est là que tu trouves ton angle.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:01.398051+00:00"
+            },
+            {
+              "id": "63d078bf-97bf-4507-8e51-347bb45d8ce1",
+              "axe_id": "a6826501-d004-46d5-9731-d886fd5da550",
+              "week_number": 4,
+              "content": "« Le meilleur argument du monde ne vaut pas la question que tu n'as pas encore posée. »",
+              "advice": "Après une réponse du chef de rayon, pose une question d'approfondissement avant tout argument. Exemple : « C'est-à-dire ? » ou « Qu'est-ce qui vous a conduit à ça ? ». Note ce que ça change dans ta récolte d'infos.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:01.398051+00:00"
+            },
+            {
+              "id": "aaef0801-e2e4-4942-92f3-b7849c5dbe3a",
+              "axe_id": "a6826501-d004-46d5-9731-d886fd5da550",
+              "week_number": 5,
+              "content": "« Le chef de rayon qui parle 70% du temps signe plus vite. Pas parce qu'il aime ça — parce que toi, tu as enfin compris ce qu'il voulait vraiment. »",
+              "advice": "Sur une visite clé cette semaine, mesure approximativement le ratio temps de parole : ton objectif est que le chef de rayon parle au moins deux fois plus que toi en phase de découverte. Adapte ensuite ton argumentation uniquement à ce qu'il a exprimé.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:01.398051+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "a6826501-d004-46d5-9731-d886fd5da550",
+              "score": 1,
+              "week_number": 13,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 1,
+          "comments_received": []
+        },
+        {
+          "id": "2a0969fa-df31-4122-b07f-faf1b033b5e9",
+          "subject": "Cadrer les rv et garder le lead de l'échange ",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:02:16.182804+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "c63e66e5-43c2-4ab6-8c62-39257e211ccf",
+              "axe_id": "2a0969fa-df31-4122-b07f-faf1b033b5e9",
+              "week_number": 1,
+              "content": "\"Un rendez-vous sans cadre, c'est une réunion de famille : tout le monde parle, personne ne décide, et on repart avec les restes.\"",
+              "advice": "Dès ton prochain RV, énonce dès les 30 premières secondes l'objectif, le déroulé et le temps dispo. Une phrase suffit. Prépare-la à l'écrit la veille, mot pour mot.",
+              "sent": true,
+              "acted": true,
+              "created_at": "2026-03-24T20:54:34.10896+00:00"
+            },
+            {
+              "id": "809298e6-d3c6-41f2-8efb-bdb2ef9083a7",
+              "axe_id": "2a0969fa-df31-4122-b07f-faf1b033b5e9",
+              "week_number": 2,
+              "content": "\"Celui qui pose les questions tient le volant. Celui qui répond est passager — et parfois il ne sait même pas qu'il est en voiture.\"",
+              "advice": "Cette semaine, si le chef de rayon part dans tous les sens, prépare une question de recentrage type : \"C'est intéressant, et par rapport à notre objectif du jour, qu'est-ce que ça change pour toi sur le linéaire ?\" Teste-la sur au moins deux RV.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:34.10896+00:00"
+            },
+            {
+              "id": "29c9563c-91da-4ca4-bebf-4fd53e0383be",
+              "axe_id": "2a0969fa-df31-4122-b07f-faf1b033b5e9",
+              "week_number": 3,
+              "content": "Le chef de rayon qui mène ton RV à ta place, c'est comme un client qui passe derrière ta caisse et commence à scanner lui-même ses articles — souriant, t'es déjà dehors.",
+              "advice": "Cette semaine, teste la 'reprise de main' : quand l'échange part en freestyle, glisse une phrase du type 'C'est exactement ce dont je voulais qu'on parle — je reviens dessus dans deux minutes, avant ça j'ai besoin de te poser une question.' Tu reprends le fil sans froisser, et tu restes aux commandes.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:34.10896+00:00"
+            },
+            {
+              "id": "9d2952f5-4ebe-4afd-94fa-d0ede4edbbc8",
+              "axe_id": "2a0969fa-df31-4122-b07f-faf1b033b5e9",
+              "week_number": 4,
+              "content": "\"Annoncer le timing en début de RV, c'est pas de la politesse. C'est mettre une clôture électrique autour de ta réunion avant que les moutons s'échappent.\"",
+              "advice": "Sur tes deux prochains RV en hypermarché, teste la formule : annonce le temps dispo, demande validation, et utilise ce timing comme levier si l'échange dérive — \"On a encore X minutes, je voudrais qu'on aborde...\" Note ce que ça change dans l'attitude du client.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:34.10896+00:00"
+            },
+            {
+              "id": "3020efb9-905b-4451-a642-2414e65a0bb3",
+              "axe_id": "2a0969fa-df31-4122-b07f-faf1b033b5e9",
+              "week_number": 5,
+              "content": "\"Un bon cadrage de RV, c'est comme un bon facing en rayon : invisible quand c'est bien fait, catastrophique quand ça manque.\"",
+              "advice": "Construis un mini-script de cadrage différencié selon le profil DISC de ton interlocuteur : une version directe pour le D, une version orientée bénéfices pour le I, une version rassurante pour le S, une version structurée pour le C. Teste au moins deux versions cette semaine.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:34.10896+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "2a0969fa-df31-4122-b07f-faf1b033b5e9",
+              "score": 1,
+              "week_number": 13,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "23fb8f2a-33dc-4370-92f7-6072fd2bb130",
+          "subject": "Mieux contre argumenter la concurrence ",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:02:38.052093+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "9132599f-3b76-436e-9a45-88257a53d8a0",
+              "axe_id": "23fb8f2a-33dc-4370-92f7-6072fd2bb130",
+              "week_number": 1,
+              "content": "« Attaquer la concurrence sans connaître ses propres armes, c'est aller au duel avec une cuillère à soupe. »",
+              "advice": "Avant ta prochaine visite, liste 3 arguments béton de Père Dodu ou Isla Délice que tu entends souvent en rayon. Pour chacun, prépare une réponse courte et factuelle basée sur un avantage réel du Gaulois ou Régalal.",
+              "sent": true,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:17.377036+00:00"
+            },
+            {
+              "id": "b99d935b-f784-4b55-bd9a-260b88cd781f",
+              "axe_id": "23fb8f2a-33dc-4370-92f7-6072fd2bb130",
+              "week_number": 2,
+              "content": "« Un chef de rayon qui te parle de la concurrence, c'est pas un problème. C'est une invitation à danser. »",
+              "advice": "La prochaine fois qu'un acheteur cite un concurrent, ne défends pas, creuse : 'Qu'est-ce qui vous plaît précisément dans leur offre ?' Tu transformes l'objection en découverte, et tu gardes la main sur la conversation.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:17.377036+00:00"
+            },
+            {
+              "id": "03b50c78-f2db-4f75-a163-d2f2ef15e095",
+              "axe_id": "23fb8f2a-33dc-4370-92f7-6072fd2bb130",
+              "week_number": 3,
+              "content": "« Les chiffres ne mentent pas. Les chiffres du concurrent non plus — mais ils racontent rarement toute l'histoire. »",
+              "advice": "Avant une négo en Leclerc ou Intermarché, prépare une comparaison chiffrée : rotation rayon, taux de démarque, part de marché locale. Appuie ta contre-argumentation sur des données, pas sur de l'affect.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:17.377036+00:00"
+            },
+            {
+              "id": "4409394e-e092-4c3c-b4c8-9d37e04c5dc4",
+              "axe_id": "23fb8f2a-33dc-4370-92f7-6072fd2bb130",
+              "week_number": 4,
+              "content": "« Dire 'notre produit est meilleur' sans preuve, c'est du bruit. Dire 'voilà ce que ça vous rapporte en plus', c'est une décision. »",
+              "advice": "Reformule ta contre-argumentation concurrence en bénéfice direct pour le rayon : marge, volume, fidélisation client. Teste cette semaine une formulation du type 'Là où Père Dodu vous donne X, Le Gaulois vous permet d'atteindre Y, et voilà comment...'",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:17.377036+00:00"
+            },
+            {
+              "id": "ed6dcfed-f77e-46fb-9b42-6aa8f517c14e",
+              "axe_id": "23fb8f2a-33dc-4370-92f7-6072fd2bb130",
+              "week_number": 5,
+              "content": "« Le meilleur moment pour contrer la concurrence, c'est avant que le chef de rayon ait l'idée de la mentionner. »",
+              "advice": "Intègre une inoculation proactive dans ton pitch : aborde toi-même le point fort du concurrent, puis retourne-le en avantage différenciant pour Le Gaulois ou Régalal. Prépare et teste ce séquençage sur ton prochain RDV Carrefour ou Hyper U.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:17.377036+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "23fb8f2a-33dc-4370-92f7-6072fd2bb130",
+              "score": 1,
+              "week_number": 13,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 0,
+          "comments_received": []
+        }
+      ],
+      "checkins": [
+        {
+          "id": "20641ac8-56b2-4bfd-b923-cf628ea79390",
+          "week_number": 13,
+          "year": 2026,
+          "weather": "cloudy",
+          "what_worked": "👀 Une réaction positive",
+          "difficulties": "🔁 Retombé(e) dans mes habitudes",
+          "created_at": "2026-03-27T12:21:55.040851+00:00"
+        }
+      ],
+      "total_actions": 1,
+      "total_likes_received": 1,
+      "total_comments_received": 0
+    },
+    {
+      "profile": {
+        "id": "1015eda8-40ef-48e8-84e8-1c947f13d494",
+        "first_name": "Johannie",
+        "last_name": "Peignet",
+        "created_at": "2026-03-24T20:04:52.725048+00:00",
+        "joined_group_at": "2026-03-24T20:54:38.707394+00:00",
+        "weeks_in_program": 1
+      },
+      "axes": [
+        {
+          "id": "6ec74644-6382-4ea1-bc2e-ca5e5150c68b",
+          "subject": "Mieux organiser ma découverte et ne pas argumenter trop vite",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:05:35.052331+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "54fde9ee-6dca-4f34-8f88-98ac474a8703",
+              "axe_id": "6ec74644-6382-4ea1-bc2e-ca5e5150c68b",
+              "week_number": 1,
+              "content": "\"Celui qui parle en premier de son produit a déjà perdu la moitié de la vente.\"",
+              "advice": "Avant ta prochaine visite, liste 3 questions ouvertes sur la situation du rayon ultra-frais de ton client. Pose-les avant d'ouvrir ton book. Juste ça, rien d'autre pour l'instant.",
+              "sent": true,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:10.034252+00:00"
+            },
+            {
+              "id": "20934c4a-50e7-4278-8de1-627d4d774272",
+              "axe_id": "6ec74644-6382-4ea1-bc2e-ca5e5150c68b",
+              "week_number": 2,
+              "content": "\"Un chef de rayon qui parle, c'est de l'or en barre. Un chef de rayon qui t'écoute argumenter, c'est de l'argent qui dort.\"",
+              "advice": "Cette semaine, après chaque question que tu poses, compte mentalement jusqu'à 3 avant de relancer. Si le client s'arrête, creuse avec une question d'approfondissement avant de passer au sujet suivant. Entraîne-toi sur un seul rendez-vous.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:10.034252+00:00"
+            },
+            {
+              "id": "8744a11a-0f37-4b2d-b944-9720219161ee",
+              "axe_id": "6ec74644-6382-4ea1-bc2e-ca5e5150c68b",
+              "week_number": 3,
+              "content": "\"Découvrir sans ordre, c'est construire une maison en commençant par le toit.\"",
+              "advice": "Avant une visite chez un Leclerc ou Intermarché, prépare un mini-plan de découverte en 4 temps : situation du rayon → perception de LE GAULOIS ou REGALAL → insatisfactions actuelles → projets. Tiens-t'y, même si tu dois recadrer la conversation.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:10.034252+00:00"
+            },
+            {
+              "id": "c077885c-91b1-47f4-8417-7390d1c8ee01",
+              "axe_id": "6ec74644-6382-4ea1-bc2e-ca5e5150c68b",
+              "week_number": 4,
+              "content": "\"L'objection que tu n'as pas creusée en découverte reviendra te hanter en négo.\"",
+              "advice": "Sur ta prochaine visite, quand le client exprime une insatisfaction ou un frein (sur la rotation, la concurrence PERE DODU ou Isla Délice, le facing…), ne rebondis pas tout de suite : reformule, puis pose une question pour mesurer l'intensité. Tu argumenteras après, et beaucoup mieux.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:10.034252+00:00"
+            },
+            {
+              "id": "7068208e-4693-4880-9a52-b6213aa15c23",
+              "axe_id": "6ec74644-6382-4ea1-bc2e-ca5e5150c68b",
+              "week_number": 5,
+              "content": "\"Arguer trop tôt, c'est répondre à une question que personne n'a posée et rater celle qui comptait vraiment.\"",
+              "advice": "Sur une visite complexe cette semaine (négo promo ou référencement), fixe-toi une règle : tu n'argumentes qu'après avoir validé à voix haute les motivations et insatisfactions du client. Teste une reformulation du type \"Si je comprends bien, ce qui compte pour vous c'est…\" et attends son feu vert avant de sortir un seul argument.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:10.034252+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "9758a886-96c2-4433-91a3-4dca73f01501",
+          "subject": "Closer plus vite et mieux ",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:05:54.349261+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "7540df88-552d-4dd3-9983-5ac11780c312",
+              "axe_id": "9758a886-96c2-4433-91a3-4dca73f01501",
+              "week_number": 1,
+              "content": "« Un chef de rayon qui parle encore, c'est un chef de rayon qui n'a pas encore dit non. »",
+              "advice": "Cette semaine, sur chaque RDV, entraîne-toi à poser une question de closing dès que tu sens que la découverte est bouclée. Pas en fin de rendez-vous par réflexe, mais au bon moment : 'On y va ?' ça prend 3 secondes.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:53.780307+00:00"
+            },
+            {
+              "id": "87c734af-a07a-4597-953d-1678a04f7ede",
+              "axe_id": "9758a886-96c2-4433-91a3-4dca73f01501",
+              "week_number": 2,
+              "content": "« Reformuler sans conclure, c'est faire le tour du proprio sans jamais acheter la maison. »",
+              "advice": "Sur ton prochain RDV, après ta reformulation de synthèse, enchaîne immédiatement avec une alternative engageante : 'On part sur la mise en avant tête de gondole ou on commence par l'extension de linéaire ?' Reformuler ET fermer, dans la foulée.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:53.780307+00:00"
+            },
+            {
+              "id": "ce6af23b-9ed6-4ee3-8a20-f7a704832eee",
+              "axe_id": "9758a886-96c2-4433-91a3-4dca73f01501",
+              "week_number": 3,
+              "content": "« L'objection, c'est pas un stop, c'est un GPS qui recalcule. »",
+              "advice": "Cette semaine, cible une objection récurrente de tes chefs de rayon (prix, place en rayon, Père Dodu déjà bien implanté…) et prépare ta réponse clé en main jusqu'au contrôle final. Pas d'improvisation : une séquence propre, répétée.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:53.780307+00:00"
+            },
+            {
+              "id": "364ce0d2-368e-418a-9c90-fae6c323ecb4",
+              "axe_id": "9758a886-96c2-4433-91a3-4dca73f01501",
+              "week_number": 4,
+              "content": "« Un chef de secteur qui attend le 'feu vert' du directeur attend souvent un train qui ne passe pas deux fois. »",
+              "advice": "Avant ton prochain rendez-vous décisif, identifie qui valide vraiment l'opération (chef de rayon, directeur, acheteur enseigne ?) et intègre une question sur le cycle de décision dans ta phase de découverte. Puis adapte ton closing à ce circuit réel.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:53.780307+00:00"
+            },
+            {
+              "id": "356f295b-8bed-476a-9656-bd6a842b04e7",
+              "axe_id": "9758a886-96c2-4433-91a3-4dca73f01501",
+              "week_number": 5,
+              "content": "« Closer vite, c'est pas presser le client. C'est ne pas lui laisser le temps de se refroidir. »",
+              "advice": "Sur tes deux prochains RDV, construis un closing conditionnel avec une tension temporelle réelle : quota promo, date de livraison, fenêtre de mise en avant saisonnière. Pas une pression bidon — un argument béton qui crée un vrai sens de l'urgence.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:54:53.780307+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "1ff77ee7-d6f0-4ee1-a259-246900dce596",
+          "subject": "Prendre confiance ",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:06:12.435502+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "e1ee5f13-d2d5-4013-9530-8fe5a676c84c",
+              "axe_id": "1ff77ee7-d6f0-4ee1-a259-246900dce596",
+              "week_number": 1,
+              "content": "« Un chef de rayon ne te fait pas confiance parce que tu as raison. Il te fait confiance parce qu'il sent que tu le comprends. »",
+              "advice": "Cette semaine, avant ta prochaine visite, prépare une seule question ouverte sur la situation du rayon ultra frais de ce magasin. Une vraie, pas une question passe-partout. Pose-la, écoute vraiment, et ne parle de tes produits qu'après.",
+              "sent": true,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:26.31182+00:00"
+            },
+            {
+              "id": "3e8934c1-9624-4e13-8c13-1447ff7ba105",
+              "axe_id": "1ff77ee7-d6f0-4ee1-a259-246900dce596",
+              "week_number": 2,
+              "content": "« L'objection n'est pas un mur. C'est une porte. La plupart des gens s'arrêtent devant au lieu de chercher la poignée. »",
+              "advice": "La prochaine fois qu'on te sort une objection classique (prix, rotation, place en rayon), résiste à l'envie de répondre direct. Dis juste : 'Je comprends. C'est la seule chose qui te freine ?' Creuse avant d'argumenter, et observe ce qui change dans l'échange.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:26.31182+00:00"
+            },
+            {
+              "id": "b515e42a-6c4a-4c29-b3f6-6a4cc680dd45",
+              "axe_id": "1ff77ee7-d6f0-4ee1-a259-246900dce596",
+              "week_number": 3,
+              "content": "« Cadrer une visite, c'est pas être rigide. C'est montrer que ton temps et le leur valent quelque chose. »",
+              "advice": "Dès le début de ta prochaine visite, annonce en une phrase l'objectif et le temps que ça va prendre. Fais-le à voix haute, même si ça te semble formel. Note ensuite comment ça change la posture de ton interlocuteur.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:26.31182+00:00"
+            },
+            {
+              "id": "3308aa80-775c-423a-85df-2a1be7dad001",
+              "axe_id": "1ff77ee7-d6f0-4ee1-a259-246900dce596",
+              "week_number": 4,
+              "content": "« Argumenter sans avoir découvert, c'est comme mettre du sel sans avoir goûté. T'as peut-être bon, mais tu peux pas le savoir. »",
+              "advice": "Sur ta prochaine négo promo (Leclerc, Intermarché, peu importe), identifie avant la réunion ce qui motive vraiment ce chef de rayon : volume, image, simplification ? Construis ton argument CAP autour de ça uniquement, et laisse le reste dans ta poche.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:26.31182+00:00"
+            },
+            {
+              "id": "842c001b-b6c6-4c05-b688-d4120540087e",
+              "axe_id": "1ff77ee7-d6f0-4ee1-a259-246900dce596",
+              "week_number": 5,
+              "content": "« Proposer la vente, ce n'est pas forcer. C'est rendre service à quelqu'un qui attendait juste qu'on lui facilite la décision. »",
+              "advice": "Cette semaine, sur au moins un rendez-vous, formule explicitement une proposition de closing : une référence, une implantation, une promo — avec une date. Pas 'on verra', pas 'je te laisse réfléchir'. Une proposition claire, dite à voix haute, et tu observes ce qui se passe.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:55:26.31182+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        }
+      ],
+      "checkins": [],
+      "total_actions": 0,
+      "total_likes_received": 0,
+      "total_comments_received": 0
+    },
+    {
+      "profile": {
+        "id": "a0b06d5f-73cc-43e1-b7c0-8db32c1eaf1c",
+        "first_name": "Fabrice",
+        "last_name": "Pierson",
+        "created_at": "2026-03-24T20:41:59.680631+00:00",
+        "joined_group_at": "2026-03-24T20:56:06.684181+00:00",
+        "weeks_in_program": 1
+      },
+      "axes": [
+        {
+          "id": "a9e7e4d7-3afc-41c9-b1fc-3dec70f7f86a",
+          "subject": "Mieux cadrer et garder le lead",
+          "description": "\r\n\r\n",
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:42:24.337365+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "a5c89658-b46d-4161-9d1f-aea43bf027d0",
+              "axe_id": "a9e7e4d7-3afc-41c9-b1fc-3dec70f7f86a",
+              "week_number": 1,
+              "content": "« Un rendez-vous sans cadre, c'est une réunion de copains qui ne commande rien. »",
+              "advice": "Dès ton prochain RDV, annonce en 30 secondes chrono : l'objectif du meeting, ce que tu vas aborder, et le temps que ça prendra. Dis-le à voix haute, même si ça te semble évident.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:22.728336+00:00"
+            },
+            {
+              "id": "5288a2d9-a8ad-4294-86c0-5a23a3e12f81",
+              "axe_id": "a9e7e4d7-3afc-41c9-b1fc-3dec70f7f86a",
+              "week_number": 2,
+              "content": "« Celui qui pose les questions tient le volant. Celui qui répond est dans le coffre. »",
+              "advice": "Sur ton prochain RDV de découverte, prépare 3 questions ouvertes ciblées sur les insatisfactions du chef de rayon vis-à-vis de son linéaire ultra-frais. Ne passe à l'argumentation qu'après avoir obtenu une réponse exploitable sur au moins deux d'entre elles.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:22.728336+00:00"
+            },
+            {
+              "id": "8db6bf90-c940-4377-91a7-225d4554c931",
+              "axe_id": "a9e7e4d7-3afc-41c9-b1fc-3dec70f7f86a",
+              "week_number": 3,
+              "content": "« Un silence bien placé vaut mieux qu'une relance mal fagotée. »",
+              "advice": "Quand tu reformules une réponse du chef de rayon, teste de terminer ta reformulation par un silence de 3 secondes minimum avant de reprendre la parole. Tu verras ce qu'il rajoute spontanément — souvent le plus intéressant.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:22.728336+00:00"
+            },
+            {
+              "id": "ab1110ae-5060-40e7-a989-1c100b8dc1b1",
+              "axe_id": "a9e7e4d7-3afc-41c9-b1fc-3dec70f7f86a",
+              "week_number": 4,
+              "content": "« Reprendre le lead après l'avoir perdu, c'est comme récupérer un chariot en pente : possible, mais ça aurait mieux valu ne pas lâcher. »",
+              "advice": "Si tu sens qu'un RDV te file entre les doigts — trop de questions côté client, sujet qui dérive — utilise une phrase de recadrage : 'Je vais te proposer qu'on revienne à notre objectif, parce que j'ai quelque chose de concret à te montrer sur ce point.' Pratique ça cette semaine, même une fois.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:22.728336+00:00"
+            },
+            {
+              "id": "76201979-1007-45a9-a944-1051534d5b4a",
+              "axe_id": "a9e7e4d7-3afc-41c9-b1fc-3dec70f7f86a",
+              "week_number": 5,
+              "content": "« Le chef de rayon qui fixe le tempo du RDV a déjà négocié sans que tu t'en rendes compte. »",
+              "advice": "Sur un RDV complexe cette semaine — promo à négocier, référencement à défendre — prépare un mini-déroulé écrit avec 3 étapes et une conclusion attendue. Partage-le dès l'ouverture du RDV : 'Voilà ce que je te propose qu'on fasse ensemble aujourd'hui.' Observe comment ça change la dynamique.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:22.728336+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "b6085c93-9a06-4c1c-95bb-bb84e46c58e5",
+          "subject": "Contre argumenter la concurrence ",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:42:43.984891+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "7d846249-f809-4ca1-9959-458b72fd2f44",
+              "axe_id": "b6085c93-9a06-4c1c-95bb-bb84e46c58e5",
+              "week_number": 1,
+              "content": "« Celui qui parle de son concurrent lui offre une publicité gratuite… sauf s'il sait exactement quoi dire. »",
+              "advice": "Cette semaine, liste 3 arguments que les chefs de rayon utilisent pour défendre Père Dodu ou Isla Délice. Pour chacun, prépare une réponse courte et factuelle basée sur un avantage concret du Gaulois ou de Régalal.",
+              "sent": true,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:56.86189+00:00"
+            },
+            {
+              "id": "eb14b27a-0f61-453c-a633-f4858b2a8e97",
+              "axe_id": "b6085c93-9a06-4c1c-95bb-bb84e46c58e5",
+              "week_number": 2,
+              "content": "« Une objection sur la concurrence, c'est rarement une question sur la concurrence. »",
+              "advice": "La prochaine fois qu'un chef de rayon te parle d'un concurrent, creuse avant de répondre : demande-lui ce qui l'attire concrètement chez eux. Tu répondras à la vraie motivation, pas à l'argument de surface.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:56.86189+00:00"
+            },
+            {
+              "id": "ee06df37-5a9d-4e53-adae-560615563d17",
+              "axe_id": "b6085c93-9a06-4c1c-95bb-bb84e46c58e5",
+              "week_number": 3,
+              "content": "« Comparer, c'est risqué. Faire briller, c'est malin. Faire briller en faisant pâlir, c'est de l'art. »",
+              "advice": "Entraîne-toi à reformuler un argument concurrent en le retournant : ex. 'Oui, Père Dodu fait des promos agressives — et c'est justement pour ça que nos marges nettes restent plus solides sur ta surface de vente.' Teste ça sur 2 RDV cette semaine.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:56.86189+00:00"
+            },
+            {
+              "id": "75a10530-dc9d-4c80-96c4-58b4f783fd9c",
+              "axe_id": "b6085c93-9a06-4c1c-95bb-bb84e46c58e5",
+              "week_number": 4,
+              "content": "« Le chef de rayon qui te parle du concurrent te dit en réalité : convaincs-moi mieux que lui. »",
+              "advice": "Avant ton prochain RDV, identifie le profil DISC de ton interlocuteur et adapte ta contre-argumentation à son registre : chiffres et preuves pour un C ou D, vécu et réassurance pour un S ou I. Même argument, autre musique.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:56.86189+00:00"
+            },
+            {
+              "id": "b5bdece6-caf7-4483-8ec2-3a56efd04c63",
+              "axe_id": "b6085c93-9a06-4c1c-95bb-bb84e46c58e5",
+              "week_number": 5,
+              "content": "« Celui qui gagne la comparaison n'est pas celui qui attaque le plus fort, c'est celui qui fait douter le plus subtilement. »",
+              "advice": "Prépare une séquence complète : accepte l'objection concurrente, isole-la, creuse la vraie attente du rayon, puis argumente en bénéfice client-rayon avec une preuve chiffrée (sell-out, taux de rupture, rotation). Joue-la en simulation avec un collègue avant vendredi.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:56.86189+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "c0b26bf0-cdb3-44fd-b703-4bfbbb234537",
+          "subject": "Ne pas avoir peur de la nego",
+          "description": null,
+          "initial_score": 1,
+          "created_at": "2026-03-24T20:43:03.180663+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "6344ea30-6c4e-4dac-a725-85284c14010e",
+              "axe_id": "c0b26bf0-cdb3-44fd-b703-4bfbbb234537",
+              "week_number": 1,
+              "content": "« La négo ne commence pas quand ça coince. Elle commence quand tu entres dans le bureau. »",
+              "advice": "Cette semaine, avant chaque RDV, pose-toi une seule question : quelle concession suis-je prêt à faire, et quelle contrepartie je demande en échange ? Écris-le noir sur blanc avant d'y aller.",
+              "sent": true,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:37.186596+00:00"
+            },
+            {
+              "id": "9e34017b-3897-4353-b658-b1804fae772a",
+              "axe_id": "c0b26bf0-cdb3-44fd-b703-4bfbbb234537",
+              "week_number": 2,
+              "content": "« Celui qui annonce son prix en s'excusant a déjà perdu la moitié de la marge. »",
+              "advice": "Sur ton prochain RDV où tu dois défendre une condition tarifaire ou un facing, formule ta position sans la noyer dans des précautions. Une phrase, un chiffre, et silence. Observe ce qui se passe.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:37.186596+00:00"
+            },
+            {
+              "id": "64ba8875-c8c1-4045-aa9d-7361070b2118",
+              "axe_id": "c0b26bf0-cdb3-44fd-b703-4bfbbb234537",
+              "week_number": 3,
+              "content": "« Une objection n'est pas une porte qui claque. C'est une porte mal fermée — pousse-la. »",
+              "advice": "Choisis une objection que tu entends souvent en rayon (ex : 'Père Dodu performe mieux') et prépare ta séquence complète : accepter, isoler, creuser, reformuler, argumenter. Mets-la par écrit avant vendredi.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:37.186596+00:00"
+            },
+            {
+              "id": "b03332a2-f186-4391-a276-3166387ce010",
+              "axe_id": "c0b26bf0-cdb3-44fd-b703-4bfbbb234537",
+              "week_number": 4,
+              "content": "« Négocier sans avoir rien découvert, c'est jouer aux échecs les yeux bandés et se plaindre de perdre. »",
+              "advice": "Sur ta prochaine visite, utilise la phase de découverte pour identifier au moins une insatisfaction ou un frein côté chef de rayon. C'est ça qui te donnera ta vraie marge de manœuvre en négo — pas tes arguments produit.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:37.186596+00:00"
+            },
+            {
+              "id": "829a2aa0-a04a-48a9-85cd-2715886a796d",
+              "axe_id": "c0b26bf0-cdb3-44fd-b703-4bfbbb234537",
+              "week_number": 5,
+              "content": "« Le chef de rayon qui dit 'je vais voir' a déjà dit non. Et toi tu l'as laissé faire. »",
+              "advice": "Cette semaine, sur au moins un RDV, propose explicitement le closing avant la fin de l'entretien : formule une question de conclusion claire, que ce soit pour un référencement, une implantation ou une opération promo. La peur de conclure est la négo perdue d'avance.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-24T20:56:37.186596+00:00"
+            }
+          ],
+          "axis_scores": [],
+          "likes_received_count": 0,
+          "comments_received": []
+        }
+      ],
+      "checkins": [],
+      "total_actions": 0,
+      "total_likes_received": 0,
+      "total_comments_received": 0
+    },
+    {
+      "profile": {
+        "id": "98c75aa4-f838-471d-9322-f234384dc2c8",
+        "first_name": "Dominique",
+        "last_name": "Bilheu",
+        "created_at": "2026-03-19T22:30:47.689749+00:00",
+        "joined_group_at": "2026-03-25T20:22:33.274678+00:00",
+        "weeks_in_program": 0
+      },
+      "axes": [
+        {
+          "id": "09f2130b-c42e-459e-a753-3f774c5e2705",
+          "subject": "Oser poser des questions moins bateau en decouverte",
+          "description": "Poser des questions plus profondes ",
+          "initial_score": 1,
+          "created_at": "2026-03-19T22:31:05.890203+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "6fa15c59-d71c-4ee8-9c27-0a558e68a00d",
+              "axe_id": "09f2130b-c42e-459e-a753-3f774c5e2705",
+              "week_number": 1,
+              "content": "\"Demander si le rayon tourne bien, c'est comme demander à quelqu'un comment il va : t'as ta réponse avant qu'il ouvre la bouche.\"",
+              "advice": "Cette semaine, prépare 2 questions sur les insatisfactions du chef de rayon avant chaque visite. Pas 'ça se passe comment ?' mais 'Qu'est-ce qui te manque en ce moment pour défendre ta marge sur l'ultra-frais ?'",
+              "sent": true,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:33.552161+00:00"
+            },
+            {
+              "id": "76a268ba-9d21-4a8a-bea1-75aebe73c536",
+              "axe_id": "09f2130b-c42e-459e-a753-3f774c5e2705",
+              "week_number": 2,
+              "content": "\"Une question ouverte qui reste en surface, c'est une porte qu'on entrouvre juste pour regarder le paillasson.\"",
+              "advice": "Après chaque réponse du chef de rayon, entraîne-toi à rebondir avec une question d'approfondissement du type 'Et concrètement, ça te coûte quoi ?' ou 'C'est arrivé quand pour la dernière fois ?'. Une seule visite, un seul rebond testé, mais vraiment testé.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:33.552161+00:00"
+            },
+            {
+              "id": "7872fa3d-61a4-4cfc-846a-865bc159680c",
+              "axe_id": "09f2130b-c42e-459e-a753-3f774c5e2705",
+              "week_number": 3,
+              "content": "\"Les motivations d'un directeur d'hyper, ça se cherche comme une DLC courte : si tu ne regardes pas précisément, tu passes à côté et ça fout tout en l'air.\"",
+              "advice": "Sur ta prochaine visite, concentre-toi uniquement sur le domaine 'motivations' : pose une question qui vise ce que le chef de rayon veut vraiment défendre cette année (rotation, image, part de marché). Note sa réponse mot pour mot et reformule-la en fin d'échange.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:33.552161+00:00"
+            },
+            {
+              "id": "a3b9a3e6-959b-493d-8154-0305b46e61cd",
+              "axe_id": "09f2130b-c42e-459e-a753-3f774c5e2705",
+              "week_number": 4,
+              "content": "\"Reformuler sans avoir vraiment creusé avant, c'est emballer un cadeau vide : ça fait de l'effet deux secondes.\"",
+              "advice": "Avant ta prochaine négo sur une opé promo, remonte le fil : qu'est-ce que tu sais du projet de ton interlocuteur et de ses freins réels ? Si tu ne peux pas répondre en 3 phrases précises, retourne en découverte avant d'argumenter. Une question ciblée sur le 'pourquoi maintenant' peut tout changer.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:33.552161+00:00"
+            },
+            {
+              "id": "4ddcfabd-03ca-475c-84a1-1e650c1cc30e",
+              "axe_id": "09f2130b-c42e-459e-a753-3f774c5e2705",
+              "week_number": 5,
+              "content": "\"Un chef de secteur qui pose des questions clichés à un directeur Leclerc, c'est un commercial qui donne à son concurrent l'avantage sans même se battre.\"",
+              "advice": "Construis un mini-guide perso de 5 questions 'signature' que tu n'entends jamais en RDV mais qui font mouche : une sur la perception de Le Gaulois vs Père Dodu dans son magasin, une sur ce qui l'a déjà fait référencer une marque sans que le siège le pousse, etc. Teste-en au moins une cette semaine et note la réaction.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:33.552161+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "09f2130b-c42e-459e-a753-3f774c5e2705",
+              "score": 1,
+              "week_number": 12,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "16bb0a2f-4bf5-488b-88ee-f047d4a0aaf1",
+          "subject": "Être attentif à ma communication ",
+          "description": "Arrêter Mots parasites, minimisation, conjuguer au passé ou au conditionnél ",
+          "initial_score": 1,
+          "created_at": "2026-03-19T22:31:21.47505+00:00",
+          "actions": [
+            {
+              "id": "af0ca4fb-6e45-48c3-8b1d-dbf5a1919589",
+              "axe_id": "16bb0a2f-4bf5-488b-88ee-f047d4a0aaf1",
+              "description": "Action · J'ai mieux éliminé les mots parasites",
+              "completed": true,
+              "created_at": "2026-03-23T06:13:28.398812+00:00"
+            }
+          ],
+          "tips": [
+            {
+              "id": "bf475376-e97b-413d-98e6-127224b0fceb",
+              "axe_id": "16bb0a2f-4bf5-488b-88ee-f047d4a0aaf1",
+              "week_number": 1,
+              "content": "« Un chef de rayon ne t'achète pas ce que tu lui dis. Il t'achète comment tu le dis. »",
+              "advice": "Cette semaine, repère UN mot parasite que tu utilises souvent (genre 'voilà', 'en fait', 'du coup'). Note-le sur un post-it visible dans ta voiture. Chaque fois que tu le prononces en visite, tu le coches. Juste observer, c'est déjà agir.",
+              "sent": true,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:51.102779+00:00"
+            },
+            {
+              "id": "e65b0243-c71e-4513-8642-37a9696901bf",
+              "axe_id": "16bb0a2f-4bf5-488b-88ee-f047d4a0aaf1",
+              "week_number": 2,
+              "content": "« Le conditionnel, c'est le temps des gens qui n'osent pas. Le présent, c'est le temps des gens qui vendent. »",
+              "advice": "Remplace 'ça pourrait vous permettre' par 'ça vous permet' et 'on pourrait envisager' par 'on met en place'. Cette semaine, prépare ta prochaine argumentation LE GAULOIS ou REGALAL en conjuguant chaque bénéfice au présent de l'indicatif, et lis-la à voix haute avant d'entrer en rendez-vous.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:51.102779+00:00"
+            },
+            {
+              "id": "965f101d-bd51-4355-b0bf-2b518f4b8d4b",
+              "axe_id": "16bb0a2f-4bf5-488b-88ee-f047d4a0aaf1",
+              "week_number": 3,
+              "content": "« 'Je vais juste vous montrer un petit truc' : neuf mots pour perdre toute crédibilité avant d'avoir commencé. »",
+              "advice": "Traque la minimisation dans ton cadrage. Cette semaine, enregistre-toi (voice memo sur le téléphone) pendant que tu t'entraînes à poser ton déroulé de visite. Réécoute et barre chaque 'juste', 'un petit peu', 'rapidement'. Reformule sans eux.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:51.102779+00:00"
+            },
+            {
+              "id": "6a260fa1-eca5-4f4c-b945-3a3e71ffa9fe",
+              "axe_id": "16bb0a2f-4bf5-488b-88ee-f047d4a0aaf1",
+              "week_number": 4,
+              "content": "« Parler au passé d'une opportunité, c'est déjà l'enterrer devant ton interlocuteur. »",
+              "advice": "Quand tu présentes une opération promo PERE DODU qui n'a pas marché chez le client comme argument pour LE GAULOIS, formule-le au présent et vers l'avant : pas 'vous avez eu des résultats décevants' mais 'vous cherchez à faire mieux sur ce segment'. Teste ça sur deux visites cette semaine et note la réaction.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:51.102779+00:00"
+            },
+            {
+              "id": "58ce3dcb-bdc7-46c2-bd9a-6397a847ee2e",
+              "axe_id": "16bb0a2f-4bf5-488b-88ee-f047d4a0aaf1",
+              "week_number": 5,
+              "content": "« Ta voix est ton premier produit. Si elle doute, le chef de rayon doute. Si elle affirme, il écoute. »",
+              "advice": "Cette semaine, prépare un closing sur une implantation ou une mise en avant LE GAULOIS / REGALAL, en combinant les trois règles : présent de l'indicatif, zéro mot parasite, zéro minimisation. Dis-le debout, à voix haute, avant chaque rendez-vous à enjeu. Mesure si tu signes plus vite.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:49:51.102779+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "16bb0a2f-4bf5-488b-88ee-f047d4a0aaf1",
+              "score": 1,
+              "week_number": 12,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 0,
+          "comments_received": []
+        },
+        {
+          "id": "9423fbf0-a797-4b60-b593-88c7f317ea96",
+          "subject": "Être plus sharp",
+          "description": "Gagner en concision et oser conclure ",
+          "initial_score": 1,
+          "created_at": "2026-03-19T22:31:35.653029+00:00",
+          "actions": [],
+          "tips": [
+            {
+              "id": "cea22f24-2c6a-45b4-bcea-9efecadccf61",
+              "axe_id": "9423fbf0-a797-4b60-b593-88c7f317ea96",
+              "week_number": 1,
+              "content": "« Un vendeur qui parle longtemps n'est pas un vendeur qui vend, c'est un vendeur qui se rassure. »",
+              "advice": "Cette semaine, lors d'une visite, fixe-toi une règle : ton argumentation tient en 3 bénéfices max, pas un de plus. Choisis-les avant d'entrer en rayon.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:50:04.704497+00:00"
+            },
+            {
+              "id": "90053416-b77c-43b3-b47c-25671a588dcc",
+              "axe_id": "9423fbf0-a797-4b60-b593-88c7f317ea96",
+              "week_number": 2,
+              "content": "« La reformulation, c'est le couteau suisse du vendeur. Mais un couteau suisse, ça sert à couper, pas à décorer. »",
+              "advice": "Après ta phase de découverte, reformule en une seule phrase ce que veut vraiment ton chef de rayon, et utilise cette phrase comme rampe de lancement directe vers ta proposition.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:50:04.704497+00:00"
+            },
+            {
+              "id": "0c97aaff-d70b-4df2-bcfc-3a1450f5b0ac",
+              "axe_id": "9423fbf0-a797-4b60-b593-88c7f317ea96",
+              "week_number": 3,
+              "content": "« L'objection qu'on laisse traîner finit par occuper toute la pièce. »",
+              "advice": "Sur ta prochaine objection prix ou linéaire, applique la séquence jusqu'au bout : accepte, isole, creuse d'une question, reformule, argumente — et cette fois, contrôle en posant la question de validation au lieu de laisser le silence décider.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:50:04.704497+00:00"
+            },
+            {
+              "id": "b9947086-c075-4ce4-b53c-3f24aa5dd9f1",
+              "axe_id": "9423fbf0-a797-4b60-b593-88c7f317ea96",
+              "week_number": 4,
+              "content": "« Négocier sans conclure, c'est comme préparer un plat sans jamais le servir. »",
+              "advice": "Prépare une formule de closing simple et personnalisée selon le profil DISC de ton interlocuteur habituel. Écris-la, teste-la sur deux visites cette semaine, note ce qui coince.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:50:04.704497+00:00"
+            },
+            {
+              "id": "f13cba5e-b509-42d4-a182-0d58d34fbd81",
+              "axe_id": "9423fbf0-a797-4b60-b593-88c7f317ea96",
+              "week_number": 5,
+              "content": "« Le meilleur moment pour proposer la vente, c'est avant que tu penses que c'est le bon moment. »",
+              "advice": "Sur une négociation d'opération promo cette semaine, identifie le premier signal d'accord de ton interlocuteur et propose la vente dès ce moment-là, sans attendre le deuxième tour de piste.",
+              "sent": false,
+              "acted": false,
+              "created_at": "2026-03-22T22:50:04.704497+00:00"
+            }
+          ],
+          "axis_scores": [
+            {
+              "axe_id": "9423fbf0-a797-4b60-b593-88c7f317ea96",
+              "score": 1,
+              "week_number": 12,
+              "year": 2026
+            }
+          ],
+          "likes_received_count": 0,
+          "comments_received": []
+        }
+      ],
+      "checkins": [
+        {
+          "id": "d2fde4b6-d4e4-4dbb-b524-b0a0425d6245",
+          "week_number": 12,
+          "year": 2026,
+          "weather": "cloudy",
+          "what_worked": "Rien",
+          "difficulties": "🤷 Rien de particulier",
+          "created_at": "2026-03-23T06:14:14.195247+00:00"
+        }
+      ],
+      "total_actions": 1,
+      "total_likes_received": 0,
+      "total_comments_received": 0
+    }
+  ]
+}

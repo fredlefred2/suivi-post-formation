@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Maquette bouton Nouvelle Action</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Inter', system-ui, sans-serif; background: #f8fafc; }
+
+  .container { max-width: 420px; margin: 0 auto; padding: 16px; }
+
+  h2.section-title {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6366f1;
+    margin: 32px 0 12px;
+    padding: 8px 12px;
+    background: #eef2ff;
+    border-radius: 8px;
+  }
+  h2.section-title:first-child { margin-top: 8px; }
+
+  .label {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+
+  /* ── Faux dashboard context ── */
+  .fake-stats {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.05);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .fake-stats .num { font-size: 28px; font-weight: 900; color: #1f2937; }
+  .fake-stats .num.green { color: #059669; }
+  .fake-stats .sub { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+  .fake-axe {
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 8px;
+    color: #1f2937;
+  }
+  .fake-axe.blue { background: linear-gradient(135deg, #e0f2fe, #bae6fd); }
+  .fake-axe.green { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+  .fake-axe .axe-title { font-size: 14px; font-weight: 700; }
+  .fake-axe .axe-bar { height: 6px; background: rgba(255,255,255,0.6); border-radius: 99px; margin-top: 12px; overflow: hidden; }
+  .fake-axe .axe-bar-fill { height: 100%; border-radius: 99px; }
+  .fake-axe.blue .axe-bar-fill { width: 30%; background: #38bdf8; }
+  .fake-axe.green .axe-bar-fill { width: 65%; background: #34d399; }
+  .fake-axe .axe-meta { font-size: 11px; color: #6b7280; margin-top: 6px; display: flex; justify-content: space-between; }
+
+  .axes-label { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 8px; }
+
+  .spacer { height: 16px; }
+  .divider { height: 1px; background: #e5e7eb; margin: 24px 0; }
+
+  /* ══════════════════════════════
+     HYPOTHÈSE A : Bouton dans le flow (pleine largeur)
+     ══════════════════════════════ */
+  .btn-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    margin-bottom: 12px;
+  }
+  .btn-flow:active { transform: scale(0.97); }
+  .btn-flow svg { width: 20px; height: 20px; stroke-width: 2.5; }
+
+  /* ══════════════════════════════
+     HYPOTHÈSE B : Pill flottant en bas
+     ══════════════════════════════ */
+  .pill-container {
+    position: relative;
+    height: 180px;
+    background: #f1f5f9;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px dashed #cbd5e1;
+  }
+  .pill-float {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pill-float svg { width: 18px; height: 18px; stroke-width: 2.5; }
+  .pill-label { font-size: 10px; color: #94a3b8; text-align: center; margin-top: 8px; }
+
+  /* ══════════════════════════════
+     HYPOTHÈSE C : FAB actuel (référence)
+     ══════════════════════════════ */
+  .fab-container {
+    position: relative;
+    height: 180px;
+    background: #f1f5f9;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px dashed #cbd5e1;
+  }
+  .fab-round {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+    cursor: pointer;
+  }
+  .fab-round svg { width: 24px; height: 24px; stroke-width: 2.5; }
+
+  /* ══════════════════════════════
+     Bottom nav fake
+     ══════════════════════════════ */
+  .fake-nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0 4px;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    border-radius: 0 0 16px 16px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  .fake-nav span {
+    font-size: 9px;
+    color: #9ca3af;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .fake-nav .dot { width: 6px; height: 6px; background: #d1d5db; border-radius: 50%; }
+  .fake-nav .dot.active { background: #6366f1; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ═══ HYPOTHÈSE A ═══ -->
+  <h2 class="section-title">Hypothèse A — Bouton dans le flow</h2>
+  <p class="label">Pleine largeur, entre les stats et les axes. Le FAB disparaît.</p>
+
+  <div class="fake-stats">
+    <div><div class="num green">+2</div><div class="sub">cette semaine</div></div>
+    <div><div class="num">7</div><div class="sub">actions</div></div>
+    <div><div class="num">3</div><div class="sub">check-ins</div></div>
+  </div>
+
+  <button class="btn-flow">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Nouvelle action
+  </button>
+
+  <div class="axes-label">Mes axes de progrès</div>
+  <div class="fake-axe blue">
+    <div class="axe-title">① Mieux déléguer</div>
+    <div class="axe-bar"><div class="axe-bar-fill"></div></div>
+    <div class="axe-meta"><span>👣 Impulsion</span><span>2 actions</span></div>
+  </div>
+  <div class="fake-axe green">
+    <div class="axe-title">② Écoute active</div>
+    <div class="axe-bar"><div class="axe-bar-fill"></div></div>
+    <div class="axe-meta"><span>🥁 Rythme</span><span>5 actions</span></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══ HYPOTHÈSE B ═══ -->
+  <h2 class="section-title">Hypothèse B — Pill flottant en bas</h2>
+  <p class="label">Remplace le FAB rond. Toujours visible, centré, avec texte.</p>
+
+  <div class="pill-container">
+    <div style="padding: 12px; font-size: 11px; color: #94a3b8;">
+      ↕ Contenu scrollable (axes, tips...)<br><br>
+      Le pill reste fixé en bas de l'écran, par-dessus le contenu.
+    </div>
+    <button class="pill-float">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nouvelle action
+    </button>
+    <div class="fake-nav">
+      <span><span class="dot active"></span>Accueil</span>
+      <span><span class="dot"></span>Actions</span>
+      <span><span class="dot"></span>Check-in</span>
+      <span><span class="dot"></span>Team</span>
+      <span><span class="dot"></span>Coach</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══ HYPOTHÈSE C (référence) ═══ -->
+  <h2 class="section-title">Référence — FAB actuel (rond)</h2>
+  <p class="label">Le bouton actuel : rond, coin bas-droit, juste un "+".</p>
+
+  <div class="fab-container">
+    <div style="padding: 12px; font-size: 11px; color: #94a3b8;">
+      ↕ Contenu scrollable<br><br>
+      Le rond "+" est discret mais pas explicite.
+    </div>
+    <button class="fab-round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <div class="fake-nav">
+      <span><span class="dot active"></span>Accueil</span>
+      <span><span class="dot"></span>Actions</span>
+      <span><span class="dot"></span>Check-in</span>
+      <span><span class="dot"></span>Team</span>
+      <span><span class="dot"></span>Coach</span>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="spacer"></div>
+
+</div>
+</body>
+</html>
