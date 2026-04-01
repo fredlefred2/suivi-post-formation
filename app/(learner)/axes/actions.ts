@@ -4,97 +4,18 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendNotificationToMany } from '@/lib/send-notification'
-import { generateTips } from '@/lib/generate-tips'
 
-// Helper : déclenche la génération de tips pour un axe (fire-and-forget)
-async function triggerTipsGeneration(userId: string, subject: string, description: string | null) {
+// Helper : supprime les tips non envoyés quand un axe est modifié
+// (les tips personnalisés seront regénérés par le cron lundi 17h)
+async function clearUnsentTips(axeId: string) {
   try {
-    // Récupérer l'axe qui vient d'être créé
-    const { data: axe } = await supabaseAdmin
-      .from('axes')
-      .select('id')
-      .eq('learner_id', userId)
-      .eq('subject', subject)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (!axe) return
-
-    // Récupérer le thème du groupe
-    const { data: membership } = await supabaseAdmin
-      .from('group_members')
-      .select('group:groups(name, theme)')
-      .eq('learner_id', userId)
-      .limit(1)
-      .single()
-
-    const groupName = (membership as any)?.group?.name || ''
-    const groupTheme = (membership as any)?.group?.theme
-
-    // Ne pas générer si en salle d'attente ou si pas de thème
-    if (!groupTheme || groupName.toLowerCase().includes('salle d\'attente')) {
-      console.log('[Tips] Pas de génération : apprenant en salle d\'attente ou pas de thème')
-      return
-    }
-
-    await generateTips({
-      axeId: axe.id,
-      learnerId: userId,
-      axeSubject: subject,
-      axeDescription: description || subject,
-      groupTheme,
-    })
-  } catch (err) {
-    console.error('[Tips] Erreur trigger:', err)
-  }
-}
-
-// Helper : régénère les tips non envoyés quand un axe est modifié
-async function regenerateUnsentTips(axeId: string, userId: string, subject: string, description: string | null) {
-  try {
-    // Supprimer les tips non envoyés de cet axe
     await supabaseAdmin
       .from('tips')
       .delete()
       .eq('axe_id', axeId)
       .eq('sent', false)
-
-    // Compter les tips envoyés restants
-    const { count: sentCount } = await supabaseAdmin
-      .from('tips')
-      .select('*', { count: 'exact', head: true })
-      .eq('axe_id', axeId)
-      .eq('sent', true)
-
-    const remaining = sentCount ?? 0
-    const needed = 5 - remaining
-
-    if (needed <= 0) return
-
-    // Récupérer le thème du groupe
-    const { data: membership } = await supabaseAdmin
-      .from('group_members')
-      .select('group:groups(theme)')
-      .eq('learner_id', userId)
-      .limit(1)
-      .single()
-
-    const groupTheme = (membership as any)?.group?.theme || 'Développement professionnel'
-
-    // Générer les tips manquants avec force=true et startWeek adapté
-    await generateTips({
-      axeId,
-      learnerId: userId,
-      axeSubject: subject,
-      axeDescription: description || subject,
-      groupTheme,
-      count: needed,
-      startWeek: remaining + 1,
-      force: true,
-    })
   } catch (err) {
-    console.error('[Tips] Erreur régénération tips après modification axe:', err)
+    console.error('[Tips] Erreur suppression tips non envoyés:', err)
   }
 }
 
@@ -124,9 +45,7 @@ export async function createAxe(formData: FormData) {
 
   if (error) return { error: error.message }
 
-  // Générer les tips en arrière-plan (ne bloque pas la réponse)
-  triggerTipsGeneration(user.id, subject, description)
-
+  // Tips personnalisés générés par le cron lundi 17h (plus de batch)
   revalidatePath('/axes')
   revalidatePath('/dashboard')
 }
@@ -156,9 +75,7 @@ export async function createAxeFast(formData: FormData) {
 
   if (error) return { error: error.message }
 
-  // Générer les tips en arrière-plan
-  triggerTipsGeneration(user.id, subject, description)
-
+  // Tips personnalisés générés par le cron lundi 17h (plus de batch)
   revalidatePath('/dashboard')
 }
 
@@ -298,8 +215,9 @@ export async function updateAxe(axeId: string, subject: string, description: str
 
   if (error) return { error: error.message }
 
-  // Régénérer les tips non envoyés pour refléter le nouvel axe
-  regenerateUnsentTips(axeId, user.id, subject, description)
+  // Supprimer les tips non envoyés (obsolètes après modification)
+  // Les tips personnalisés seront regénérés par le cron lundi 17h
+  clearUnsentTips(axeId)
 
   revalidatePath('/axes')
   revalidatePath('/dashboard')

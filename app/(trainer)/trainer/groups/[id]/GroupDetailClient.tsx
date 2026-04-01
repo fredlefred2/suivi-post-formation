@@ -22,14 +22,6 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
       } else {
         setSuccess(`${result.name} ajouté(e) avec succès !`)
         setEmail('')
-        // Tips generation en arrière-plan (fire-and-forget)
-        if (result.learnerId) {
-          fetch('/api/tips/generate-for-member', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ learnerId: result.learnerId, groupId }),
-          }).catch(() => {})
-        }
       }
     })
   }

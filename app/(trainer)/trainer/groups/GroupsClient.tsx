@@ -95,12 +95,6 @@ export default function GroupsClient({
     startTransition(async () => {
       await removeLearnerFromGroup(fromGroupId, learnerId)
       await assignToGroup(learnerId, toGroupId)
-      // Tips generation en arrière-plan
-      fetch('/api/tips/generate-for-member', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ learnerId, groupId: toGroupId }),
-      }).catch(() => {})
     })
   }
 
