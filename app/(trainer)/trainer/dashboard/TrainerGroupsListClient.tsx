@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, X, ChevronDown, Pencil, Trash2, Sparkles, Loader2, Download } from 'lucide-react'
+import { Plus, X, ChevronDown, Pencil, Trash2, Sparkles, Loader2, Download, ArrowRightLeft } from 'lucide-react'
 import { createGroup, deleteGroup, removeLearnerFromGroup, updateGroupTheme } from '@/app/(trainer)/trainer/groups/actions'
 import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
 import type { GroupListItem } from './page'
@@ -340,47 +340,47 @@ export default function TrainerGroupsListClient({
                                 </p>
                               </Link>
 
-                              {/* Menu membre */}
-                              <div className="relative" data-menu>
-                                <button
-                                  onClick={() => setMemberMenuOpen(memberMenuOpen === m.learner_id ? null : m.learner_id)}
-                                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
-                                >
-                                  <span className="text-xs">⋯</span>
-                                </button>
-                                {memberMenuOpen === m.learner_id && (
-                                  <div className={`absolute right-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 ${
-                                    isLastTwo ? 'bottom-full mb-1' : 'top-full mt-1'
-                                  }`}>
-                                    {groups.filter(g => g.id !== group.id && g.name !== 'Salle d\'attente').length > 0 && (
-                                      <>
-                                        <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">
-                                          {isSalleAttente ? 'Affecter a' : 'Reaffecter a'}
-                                        </p>
-                                        {groups.filter(g => g.id !== group.id && g.name !== 'Salle d\'attente').map(g => (
-                                          <button key={g.id} disabled={isPending}
-                                            onClick={() => handleReassign(m.learner_id, group.id, g.id)}
-                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2">
-                                            <span>🔄</span> {g.name}
-                                          </button>
-                                        ))}
-                                        {!isSalleAttente && <div className="border-t border-gray-100 my-1" />}
-                                      </>
-                                    )}
-                                    {!isSalleAttente && (
-                                      <button
-                                        onClick={() => {
-                                          setMemberMenuOpen(null)
-                                          setTimeout(() => {
-                                            setDeletingLearnerId(m.learner_id)
-                                            setDeletingLearnerGroupId(group.id)
-                                          }, 50)
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                        <span>🗑️</span> Supprimer
-                                      </button>
-                                    )}
-                                  </div>
+                              {/* Actions membre : réaffecter + supprimer */}
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                {/* Réaffecter */}
+                                <div className="relative" data-menu>
+                                  <button
+                                    onClick={() => setMemberMenuOpen(memberMenuOpen === m.learner_id ? null : m.learner_id)}
+                                    className="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-colors"
+                                    title={isSalleAttente ? 'Affecter à un groupe' : 'Réaffecter'}
+                                  >
+                                    <ArrowRightLeft size={14} />
+                                  </button>
+                                  {memberMenuOpen === m.learner_id && (
+                                    <div className={`absolute right-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 ${
+                                      isLastTwo ? 'bottom-full mb-1' : 'top-full mt-1'
+                                    }`}>
+                                      <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">
+                                        {isSalleAttente ? 'Affecter a' : 'Reaffecter a'}
+                                      </p>
+                                      {groups.filter(g => g.id !== group.id && g.name !== 'Salle d\'attente').map(g => (
+                                        <button key={g.id} disabled={isPending}
+                                          onClick={() => handleReassign(m.learner_id, group.id, g.id)}
+                                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-50">
+                                          {g.name}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Supprimer (pas pour la salle d'attente) */}
+                                {!isSalleAttente && (
+                                  <button
+                                    onClick={() => {
+                                      setDeletingLearnerId(m.learner_id)
+                                      setDeletingLearnerGroupId(group.id)
+                                    }}
+                                    className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                                    title="Supprimer"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
                                 )}
                               </div>
                             </div>
