@@ -8,22 +8,18 @@ import { createGroup, deleteGroup, removeLearnerFromGroup, updateGroupTheme } fr
 import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
 import type { GroupListItem } from './page'
 
-type UnassignedLearner = { id: string; first_name: string; last_name: string }
 type MemberInfo = { learner_id: string; first_name: string; last_name: string }
 
 export default function TrainerGroupsListClient({
   groups,
-  unassignedLearners,
 }: {
   groups: GroupListItem[]
-  unassignedLearners: UnassignedLearner[]
 }) {
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
-  const [showWaitingRoom, setShowWaitingRoom] = useState(false)
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
   const [deletingLearnerId, setDeletingLearnerId] = useState<string | null>(null)
   const [deletingLearnerGroupId, setDeletingLearnerGroupId] = useState<string | null>(null)
@@ -32,7 +28,6 @@ export default function TrainerGroupsListClient({
   const [editTheme, setEditTheme] = useState('')
   const [rewritingTheme, setRewritingTheme] = useState(false)
   const [createThemeValue, setCreateThemeValue] = useState('')
-  const [assigningTo, setAssigningTo] = useState<string | null>(null)
   const [memberMenuOpen, setMemberMenuOpen] = useState<string | null>(null)
   const [downloadingGroupId, setDownloadingGroupId] = useState<string | null>(null)
   const [downloadStatus, setDownloadStatus] = useState('')
@@ -42,14 +37,13 @@ export default function TrainerGroupsListClient({
     const target = e.target as HTMLElement
     if (!target.closest('[data-menu]')) {
       setMemberMenuOpen(null)
-      setAssigningTo(null)
     }
   }, [])
 
   useEffect(() => {
-    if (memberMenuOpen || assigningTo) document.addEventListener('mousedown', handleOutsideClick)
+    if (memberMenuOpen) document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
-  }, [memberMenuOpen, assigningTo, handleOutsideClick])
+  }, [memberMenuOpen, handleOutsideClick])
 
   function toggleGroup(id: string) {
     setExpandedGroups((prev) => {
@@ -112,18 +106,6 @@ export default function TrainerGroupsListClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ learnerId, groupId: toGroupId }),
       }).catch(() => {})
-    })
-  }
-
-  async function handleAssignUnassigned(learnerId: string, groupId: string) {
-    startTransition(async () => {
-      await assignToGroup(learnerId, groupId)
-      fetch('/api/tips/generate-for-member', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ learnerId, groupId }),
-      }).catch(() => {})
-      setAssigningTo(null)
     })
   }
 
@@ -253,7 +235,7 @@ export default function TrainerGroupsListClient({
       )}
 
       {/* Liste des groupes */}
-      {groups.length === 0 && unassignedLearners.length === 0 ? (
+      {groups.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-12">
           <p className="text-4xl mb-3">👥</p>
           <p className="text-gray-500">Vous n&apos;avez pas encore cree de groupe.</p>
@@ -262,19 +244,29 @@ export default function TrainerGroupsListClient({
         <div className="space-y-2.5">
           {groups.map((group) => {
             const isExpanded = expandedGroups.has(group.id)
+            const isSalleAttente = group.name === 'Salle d\'attente'
             return (
               <div key={group.id}
-                className="bg-white rounded-2xl shadow-sm border border-violet-200/30 overflow-visible"
-                style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 4px 16px rgba(99,102,241,0.12)' }}
+                className={`rounded-2xl shadow-sm border overflow-visible ${
+                  isSalleAttente ? 'border-amber-200/50' : 'border-violet-200/30'
+                }`}
+                style={isSalleAttente
+                  ? { background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)', boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 4px 16px rgba(245,158,11,0.12)' }
+                  : { background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 4px 16px rgba(99,102,241,0.12)' }
+                }
               >
                 {/* Header du groupe */}
                 <div className="flex items-center gap-3 px-4 py-3.5">
                   {/* Icone + nom cliquable vers page groupe */}
                   <Link href={`/trainer/groups/${group.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-lg shrink-0">
-                      👥
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${
+                      isSalleAttente ? 'bg-amber-100' : 'bg-indigo-50'
+                    }`}>
+                      {isSalleAttente ? '⏳' : '👥'}
                     </div>
-                    <p className="font-bold text-gray-900 text-[15px] truncate">{group.name}</p>
+                    <p className={`font-bold text-[15px] truncate ${
+                      isSalleAttente ? 'text-amber-800' : 'text-gray-900'
+                    }`}>{group.name}</p>
                   </Link>
 
                   {/* Actions a droite : nb membres (depliable) + crayon + corbeille */}
@@ -391,56 +383,6 @@ export default function TrainerGroupsListClient({
             )
           })}
 
-          {/* Salle d'attente */}
-          {unassignedLearners.length > 0 && (
-            <div className="rounded-2xl shadow-sm border overflow-visible"
-              style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)', borderColor: 'rgba(245,158,11,0.3)' }}>
-              <button onClick={() => setShowWaitingRoom(!showWaitingRoom)}
-                className="flex items-center gap-3 px-4 py-3.5 w-full text-left">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-lg shrink-0">⏳</div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-amber-800 text-[15px]">Salle d&apos;attente</p>
-                  <p className="text-xs text-amber-600 mt-0.5">Apprenants non affectes</p>
-                </div>
-                <span className="text-[11px] bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-medium">{unassignedLearners.length}</span>
-                <ChevronDown size={16} className={`text-amber-400 transition-transform duration-200 ${showWaitingRoom ? 'rotate-180' : ''}`} />
-              </button>
-
-              {showWaitingRoom && (
-                <div className="border-t border-amber-200/50 px-4 py-3 space-y-2">
-                  {unassignedLearners.map((learner) => (
-                    <div key={learner.id} className="flex items-center gap-3 py-1.5">
-                      <div className="w-8 h-8 rounded-full bg-amber-200 text-amber-800 font-semibold flex items-center justify-center text-xs shrink-0">
-                        {learner.first_name[0]}{learner.last_name[0]}
-                      </div>
-                      <span className="flex-1 text-sm font-medium text-amber-900 truncate">
-                        {learner.first_name} {learner.last_name}
-                      </span>
-                      {groups.length > 0 && (
-                        <div className="relative" data-menu>
-                          <button onClick={() => setAssigningTo(assigningTo === learner.id ? null : learner.id)}
-                            className="text-xs text-amber-700 hover:text-amber-900 font-medium bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded-lg transition-colors">
-                            Affecter →
-                          </button>
-                          {assigningTo === learner.id && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1">
-                              {groups.map((g) => (
-                                <button key={g.id} disabled={isPending}
-                                  onClick={() => handleAssignUnassigned(learner.id, g.id)}
-                                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-50">
-                                  {g.name}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
 

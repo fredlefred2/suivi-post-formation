@@ -68,29 +68,9 @@ export default async function TrainerDashboardPage() {
     }
   })
 
-  // ── 5. Apprenants non affectés (salle d'attente) ────────────────
-  // Récupérer TOUS les membres de tous les groupes (pas seulement ceux de ce formateur)
-  const { data: allGroupMembers } = await admin
-    .from('group_members')
-    .select('learner_id')
-
-  const allAssignedIds = new Set(allGroupMembers?.map((m) => m.learner_id) ?? [])
-
-  // Apprenants avec role='learner' qui ne sont dans AUCUN groupe
-  const { data: allLearnerProfiles } = await admin
-    .from('profiles')
-    .select('id, first_name, last_name')
-    .eq('role', 'learner')
-    .order('last_name')
-
-  const unassignedLearners = (allLearnerProfiles ?? [])
-    .filter((p) => !allAssignedIds.has(p.id))
-    .filter((p) => p.first_name?.trim() && p.last_name?.trim())
-
   return (
     <TrainerGroupsListClient
       groups={groups}
-      unassignedLearners={unassignedLearners}
     />
   )
 }
