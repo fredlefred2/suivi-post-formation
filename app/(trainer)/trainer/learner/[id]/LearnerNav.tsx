@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -22,100 +22,37 @@ export default function LearnerNav({
   const router = useRouter()
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
-  const isDragging = useRef(false)
-  const isVerticalScroll = useRef(false)
-  const [offsetX, setOffsetX] = useState(0)
-  const [animate, setAnimate] = useState(false)
-  const navigatingRef = useRef(false)
+  const touchStartTime = useRef(0)
 
-  // Slide-in on mount: check if we arrived via swipe
+  // Prefetch adjacent pages for instant navigation
   useEffect(() => {
-    const dir = sessionStorage.getItem('swipe-direction')
-    if (dir === 'left' || dir === 'right') {
-      sessionStorage.removeItem('swipe-direction')
-      // Start off-screen, then animate to 0
-      const startOffset = dir === 'left' ? window.innerWidth : -window.innerWidth
-      setOffsetX(startOffset)
-      setAnimate(false)
-      // Next frame: enable animation and slide to 0
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setAnimate(true)
-          setOffsetX(0)
-        })
-      })
-    }
-  }, [])
+    if (prevUrl) router.prefetch(prevUrl)
+    if (nextUrl) router.prefetch(nextUrl)
+  }, [prevUrl, nextUrl, router])
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (navigatingRef.current) return
+  function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
-    isDragging.current = true
-    isVerticalScroll.current = false
-    setAnimate(false)
-  }, [])
+    touchStartTime.current = Date.now()
+  }
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging.current || navigatingRef.current) return
-    const dx = e.touches[0].clientX - touchStartX.current
-    const dy = e.touches[0].clientY - touchStartY.current
+  function handleTouchEnd(e: React.TouchEvent) {
+    const dx = touchStartX.current - e.changedTouches[0].clientX
+    const dy = touchStartY.current - e.changedTouches[0].clientY
+    const elapsed = Date.now() - touchStartTime.current
 
-    // Lock to vertical scroll on first significant vertical move
-    if (!isVerticalScroll.current && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
-      isVerticalScroll.current = true
-      return
-    }
-    if (isVerticalScroll.current) return
+    // Ignore vertical scrolls
+    if (Math.abs(dy) > Math.abs(dx)) return
 
-    // Rubber band effect at edges
-    let clampedDx = dx
-    if (dx > 0 && !prevUrl) clampedDx = dx * 0.2
-    if (dx < 0 && !nextUrl) clampedDx = dx * 0.2
+    // Two modes: quick flick (fast + short) or long drag (slow + far)
+    const isFlick = elapsed < 250 && Math.abs(dx) > 30
+    const isDrag = Math.abs(dx) > 80
 
-    setOffsetX(clampedDx)
-  }, [prevUrl, nextUrl])
+    if (!isFlick && !isDrag) return
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!isDragging.current || navigatingRef.current) return
-    isDragging.current = false
-
-    if (isVerticalScroll.current) {
-      setOffsetX(0)
-      return
-    }
-
-    const dx = e.changedTouches[0].clientX - touchStartX.current
-    const dy = e.changedTouches[0].clientY - touchStartY.current
-
-    if (Math.abs(dy) > Math.abs(dx)) {
-      setAnimate(true)
-      setOffsetX(0)
-      return
-    }
-
-    const threshold = 60
-
-    if (dx < -threshold && nextUrl) {
-      // Swipe left → slide out left → next
-      navigatingRef.current = true
-      setAnimate(true)
-      setOffsetX(-window.innerWidth)
-      sessionStorage.setItem('swipe-direction', 'left')
-      setTimeout(() => router.push(nextUrl), 280)
-    } else if (dx > threshold && prevUrl) {
-      // Swipe right → slide out right → prev
-      navigatingRef.current = true
-      setAnimate(true)
-      setOffsetX(window.innerWidth)
-      sessionStorage.setItem('swipe-direction', 'right')
-      setTimeout(() => router.push(prevUrl), 280)
-    } else {
-      // Spring back
-      setAnimate(true)
-      setOffsetX(0)
-    }
-  }, [nextUrl, prevUrl, router])
+    if (dx > 0 && nextUrl) router.push(nextUrl)
+    if (dx < 0 && prevUrl) router.push(prevUrl)
+  }
 
   // Pas de carousel si un seul apprenant
   if (total <= 1) return <>{children}</>
@@ -123,19 +60,14 @@ export default function LearnerNav({
   return (
     <div
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{ touchAction: 'pan-y', overflowX: 'hidden' }}
+      style={{ touchAction: 'pan-y' }}
     >
 
       {/* Barre de navigation : ← dots → */}
       <div className="flex items-center justify-center gap-4 mb-4">
         <button
-          onClick={() => {
-            if (!prevUrl) return
-            sessionStorage.setItem('swipe-direction', 'right')
-            router.push(prevUrl)
-          }}
+          onClick={() => prevUrl && router.push(prevUrl)}
           disabled={!prevUrl}
           className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
         >
@@ -148,10 +80,7 @@ export default function LearnerNav({
                 <button
                   key={i}
                   onClick={() => {
-                    if (allUrls[i] && i !== currentIndex) {
-                      sessionStorage.setItem('swipe-direction', i > currentIndex ? 'left' : 'right')
-                      router.push(allUrls[i])
-                    }
+                    if (allUrls[i] && i !== currentIndex) router.push(allUrls[i])
                   }}
                   className={`h-2 rounded-full transition-all duration-200 ${
                     i === currentIndex
@@ -169,11 +98,7 @@ export default function LearnerNav({
         </div>
 
         <button
-          onClick={() => {
-            if (!nextUrl) return
-            sessionStorage.setItem('swipe-direction', 'left')
-            router.push(nextUrl)
-          }}
+          onClick={() => nextUrl && router.push(nextUrl)}
           disabled={!nextUrl}
           className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
         >
@@ -181,15 +106,7 @@ export default function LearnerNav({
         </button>
       </div>
 
-      <div
-        style={{
-          transform: `translateX(${offsetX}px)`,
-          transition: animate ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-          willChange: 'transform',
-        }}
-      >
-        {children}
-      </div>
+      {children}
     </div>
   )
 }
