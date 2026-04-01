@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import type { ActionFeedbackData } from '@/lib/types'
 import LearnerAxesSection from '../learner/[id]/LearnerAxesSection'
+import LearnerTipsSection from '../learner/[id]/LearnerTipsSection'
 
 const WEATHER_ICONS: Record<string, string> = {
   sunny: '☀️',
@@ -298,6 +299,14 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                     </div>
                   </div>
                 </div>
+
+                {/* ── Tips IA ───────────────────────────────────────────── */}
+                {learner.axes.length > 0 && (
+                  <LearnerTipsSection
+                    learnerId={learner.id}
+                    axes={learner.axes.map(a => ({ id: a.id, subject: a.subject }))}
+                  />
+                )}
 
                 {/* ── Axes de progrès ───────────────────────────────────── */}
                 {learner.axes.length > 0 && (
