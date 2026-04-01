@@ -149,10 +149,18 @@ export default function LearnerTipsSection({ learnerId, axes }: Props) {
     }
   }
 
-  if (!loaded || axes.length === 0) return null
+  if (axes.length === 0) return null
+
+  if (!loaded) return (
+    <div className="rounded-2xl border-2 border-amber-200 p-4 text-center" style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%)' }}>
+      <div className="flex items-center justify-center gap-2 text-amber-700 text-sm">
+        <Loader2 size={16} className="animate-spin" /> Chargement tips...
+      </div>
+    </div>
+  )
 
   return (
-    <>
+    <div className="space-y-4">
       {/* ── Erreur ─────────────────────────────────────────────── */}
       {error && (
         <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
@@ -371,6 +379,6 @@ export default function LearnerTipsSection({ learnerId, axes }: Props) {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
