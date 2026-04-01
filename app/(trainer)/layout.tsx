@@ -6,6 +6,7 @@ import LogoutButton from '@/app/components/LogoutButton'
 import MessageIcon from '@/app/components/MessageIcon'
 import NotificationBell from '@/app/components/NotificationBell'
 import PushRegistration from '@/app/components/PushRegistration'
+import TrainerBottomNav from '@/app/components/TrainerBottomNav'
 
 export default async function TrainerLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
@@ -60,9 +61,11 @@ export default async function TrainerLayout({ children }: { children: React.Reac
         boxShadow: '0 4px 20px rgba(49, 46, 129, 0.3)',
       }}>
         <div className="px-4 h-14 flex items-center justify-between">
-          <Link href="/trainer/dashboard" className="flex items-center gap-2.5">
-            <span className="font-extrabold text-base tracking-tight">YAPLUKA</span>
-            <span className="text-[10px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full font-medium border border-white/20">
+          <Link href="/trainer/dashboard" className="flex items-center gap-1">
+            <span className="font-semibold text-sm tracking-tight">
+              {profile.first_name} {profile.last_name}
+            </span>
+            <span className="ml-1 text-xs bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full font-medium border border-white/20">
               Formateur
             </span>
           </Link>
@@ -81,6 +84,8 @@ export default async function TrainerLayout({ children }: { children: React.Reac
         </div>
       </main>
 
+      <TrainerBottomNav />
+      <div className="h-16 sm:hidden" />
       <PushRegistration />
     </div>
   )

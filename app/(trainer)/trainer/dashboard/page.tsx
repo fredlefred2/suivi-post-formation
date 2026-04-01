@@ -69,12 +69,17 @@ export default async function TrainerDashboardPage() {
   })
 
   // ── 5. Apprenants non affectés (salle d'attente) ────────────────
+  // On ne prend que les apprenants déjà membres d'un groupe de CE formateur
+  // qui auraient été retirés, ou les apprenants non affectés à aucun groupe
+  const assignedToThisTrainer = new Set(allLearnerIds)
+
   const { data: allGroupMembers } = await admin
     .from('group_members')
     .select('learner_id')
 
   const allAssignedIds = new Set(allGroupMembers?.map((m) => m.learner_id) ?? [])
 
+  // Apprenants inscrits mais dans aucun groupe
   const { data: allLearnerProfiles } = await admin
     .from('profiles')
     .select('id, first_name, last_name')
@@ -83,6 +88,8 @@ export default async function TrainerDashboardPage() {
 
   const unassignedLearners = (allLearnerProfiles ?? [])
     .filter((p) => !allAssignedIds.has(p.id))
+    // Exclure les profils sans nom (comptes fantômes/incomplets)
+    .filter((p) => p.first_name && p.last_name)
 
   return (
     <TrainerGroupsListClient
