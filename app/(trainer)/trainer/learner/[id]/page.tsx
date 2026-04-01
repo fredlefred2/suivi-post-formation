@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { MessageCircle } from 'lucide-react'
 import LearnerNav from './LearnerNav'
 import LearnerAxesSection from './LearnerAxesSection'
+import LearnerTipsSection from './LearnerTipsSection'
 
 const WEATHER_ICONS: Record<string, string> = {
   sunny: '☀️',
@@ -248,6 +249,14 @@ export default async function LearnerDetailPage({
           </div>
         </div>
       </div>
+
+      {/* ── Tips IA ─────────────────────────────────────────────────────────── */}
+      {axes && axes.length > 0 && (
+        <LearnerTipsSection
+          learnerId={params.id}
+          axes={(axes ?? []).map(axe => ({ id: axe.id, subject: axe.subject }))}
+        />
+      )}
 
       {/* ── Axes de progrès ────────────────────────────────────────────────── */}
       {axes && axes.length > 0 && (
