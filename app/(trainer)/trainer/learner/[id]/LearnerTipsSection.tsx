@@ -45,9 +45,10 @@ export default function LearnerTipsSection({ learnerId, axes }: Props) {
   const fetchTips = useCallback(async () => {
     try {
       const res = await fetch(`/api/tips/admin/learner?learnerId=${learnerId}`)
-      if (!res.ok) return
-      const data = await res.json()
-      setAxeTips(data.axeTips || [])
+      if (res.ok) {
+        const data = await res.json()
+        setAxeTips(data.axeTips || [])
+      }
     } catch {
       // silently fail
     }
