@@ -149,179 +149,192 @@ export default function LearnerTipsSection({ learnerId, axes }: Props) {
     }
   }
 
+  const [tipOpen, setTipOpen] = useState(false)
+
   if (axes.length === 0) return null
 
   if (!loaded) return (
-    <div className="rounded-2xl border-2 border-amber-200 p-4 text-center" style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%)' }}>
-      <div className="flex items-center justify-center gap-2 text-amber-700 text-sm">
-        <Loader2 size={16} className="animate-spin" /> Chargement tips...
+    <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
+      <div className="flex items-center justify-center gap-2 text-amber-700 text-xs">
+        <Loader2 size={14} className="animate-spin" /> Tips...
       </div>
     </div>
   )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* ── Erreur ─────────────────────────────────────────────── */}
       {error && (
-        <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+        <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
           ⚠️ {error}
           <button onClick={() => setError(null)} className="ml-2 text-red-400 hover:text-red-600">✕</button>
         </div>
       )}
 
-      {/* ── Prochain tip OU état vide ──────────────────────────── */}
+      {/* ── Prochain tip : bandeau compact repliable ──────────── */}
       {scheduled && !editing ? (
-        <div className="rounded-2xl border-2 border-amber-200 p-4" style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%)' }}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🤖</span>
-              <h2 className="font-bold text-sm text-amber-900">Prochain tip</h2>
+        <div className="rounded-xl border border-amber-200 overflow-hidden" style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%)' }}>
+          {/* Bandeau cliquable */}
+          <button
+            onClick={() => setTipOpen(!tipOpen)}
+            className="w-full flex items-center justify-between px-3 py-2.5"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-base shrink-0">🤖</span>
+              <span className="font-bold text-xs text-amber-900 truncate">Prochain tip</span>
+              <span className="text-[10px] text-amber-600 truncate hidden min-[340px]:inline">— {scheduled.axeSubject}</span>
             </div>
-            <span className="text-[10px] font-medium text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
-              Envoi mardi 8h
-            </span>
-          </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[10px] font-medium text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                Mardi 8h
+              </span>
+              <ChevronDown
+                size={14}
+                className={`text-amber-400 transition-transform duration-200 ${tipOpen ? 'rotate-180' : ''}`}
+              />
+            </div>
+          </button>
 
-          <div className="text-xs text-amber-700 font-medium mb-2">
-            🎯 {scheduled.axeSubject}
-          </div>
+          {/* Contenu déplié */}
+          {tipOpen && (
+            <div className="px-3 pb-3 space-y-2">
+              <div className="bg-white/70 rounded-lg p-2.5">
+                <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-0.5">Rappel</p>
+                <p className="text-xs text-gray-700 leading-relaxed">{scheduled.content}</p>
+              </div>
 
-          <div className="bg-white/70 rounded-xl p-3 mb-2">
-            <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-1">Rappel</p>
-            <p className="text-sm text-gray-700 leading-relaxed">{scheduled.content}</p>
-          </div>
+              {scheduled.advice && (
+                <div className="bg-white/70 rounded-lg p-2.5">
+                  <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-0.5">Conseil</p>
+                  <p className="text-xs text-gray-700 leading-relaxed">{scheduled.advice}</p>
+                </div>
+              )}
 
-          {scheduled.advice && (
-            <div className="bg-white/70 rounded-xl p-3 mb-3">
-              <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-1">Conseil</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{scheduled.advice}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={startEdit}
+                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-white rounded-lg text-[11px] font-semibold text-amber-700 border border-amber-200 hover:bg-amber-50 transition-colors"
+                >
+                  ✏️ Modifier
+                </button>
+                <button
+                  onClick={openRegen}
+                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-white rounded-lg text-[11px] font-semibold text-amber-700 border border-amber-200 hover:bg-amber-50 transition-colors"
+                >
+                  🔄 Régénérer
+                </button>
+              </div>
             </div>
           )}
-
-          <div className="flex gap-2">
-            <button
-              onClick={startEdit}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white rounded-xl text-xs font-semibold text-amber-700 border border-amber-200 hover:bg-amber-50 transition-colors"
-            >
-              ✏️ Modifier
-            </button>
-            <button
-              onClick={openRegen}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white rounded-xl text-xs font-semibold text-amber-700 border border-amber-200 hover:bg-amber-50 transition-colors"
-            >
-              🔄 Régénérer
-            </button>
-          </div>
         </div>
       ) : scheduled && editing ? (
         /* ── Mode édition ──────────────────────────────────────── */
-        <div className="rounded-2xl border-2 border-amber-200 p-4" style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%)' }}>
-          <div className="flex items-center justify-between mb-3">
+        <div className="rounded-xl border border-amber-200 p-3" style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%)' }}>
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-lg">✏️</span>
-              <h2 className="font-bold text-sm text-amber-900">Modifier le tip</h2>
+              <span>✏️</span>
+              <h2 className="font-bold text-xs text-amber-900">Modifier le tip</h2>
             </div>
             <button onClick={() => setEditing(false)} className="text-xs text-gray-500 hover:text-gray-700">
-              ✕ Annuler
+              ✕
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
-              <label className="text-[10px] font-bold text-amber-800 uppercase tracking-wide block mb-1">Rappel</label>
+              <label className="text-[10px] font-bold text-amber-800 uppercase tracking-wide block mb-0.5">Rappel</label>
               <textarea
-                rows={3}
+                rows={2}
                 value={editContent}
                 onChange={e => setEditContent(e.target.value)}
-                className="w-full text-sm border border-amber-200 rounded-xl p-2.5 focus:ring-2 focus:ring-amber-300 focus:border-amber-300 outline-none resize-none bg-white/80"
+                className="w-full text-xs border border-amber-200 rounded-lg p-2 focus:ring-2 focus:ring-amber-300 focus:border-amber-300 outline-none resize-none bg-white/80"
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-amber-800 uppercase tracking-wide block mb-1">Conseil</label>
+              <label className="text-[10px] font-bold text-amber-800 uppercase tracking-wide block mb-0.5">Conseil</label>
               <textarea
-                rows={4}
+                rows={3}
                 value={editAdvice}
                 onChange={e => setEditAdvice(e.target.value)}
-                className="w-full text-sm border border-amber-200 rounded-xl p-2.5 focus:ring-2 focus:ring-amber-300 focus:border-amber-300 outline-none resize-none bg-white/80"
+                className="w-full text-xs border border-amber-200 rounded-lg p-2 focus:ring-2 focus:ring-amber-300 focus:border-amber-300 outline-none resize-none bg-white/80"
               />
             </div>
             <button
               onClick={saveEdit}
               disabled={saving}
-              className="w-full py-2.5 bg-amber-500 text-white rounded-xl text-sm font-bold hover:bg-amber-600 transition-colors disabled:opacity-50"
+              className="w-full py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 transition-colors disabled:opacity-50"
             >
-              {saving ? '⏳ Enregistrement...' : '💾 Enregistrer'}
+              {saving ? '⏳ ...' : '💾 Enregistrer'}
             </button>
           </div>
         </div>
       ) : (
-        /* ── Aucun tip programmé ───────────────────────────────── */
-        <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/50 p-5 text-center">
-          <span className="text-3xl">🤖</span>
-          <p className="font-bold text-sm text-amber-900 mt-2">Aucun tip programmé</p>
-          <p className="text-xs text-amber-700 mt-1">Le prochain sera généré automatiquement lundi 17h</p>
-
-          <div className="mt-3">
+        /* ── Aucun tip programmé : bandeau compact ────────────── */
+        <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50/50 px-3 py-2.5 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span>🤖</span>
+            <span className="text-xs font-semibold text-amber-900">Aucun tip programmé</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             <select
               value={genAxeId}
               onChange={e => setGenAxeId(e.target.value)}
-              className="text-xs border border-amber-200 rounded-lg px-2 py-1.5 bg-white text-amber-800 mb-2"
+              className="text-[11px] border border-amber-200 rounded-lg px-1.5 py-1 bg-white text-amber-800 max-w-[120px]"
             >
               {axes.map(a => (
-                <option key={a.id} value={a.id}>🎯 {a.subject}</option>
+                <option key={a.id} value={a.id}>{a.subject}</option>
               ))}
             </select>
+            <button
+              onClick={doGenerate}
+              disabled={generating}
+              className="px-2.5 py-1 bg-amber-500 text-white rounded-lg text-[11px] font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 whitespace-nowrap"
+            >
+              {generating ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                '⚡ Générer'
+              )}
+            </button>
           </div>
-
-          <button
-            onClick={doGenerate}
-            disabled={generating}
-            className="px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-600 transition-colors disabled:opacity-50"
-          >
-            {generating ? (
-              <span className="flex items-center gap-1.5"><Loader2 size={14} className="animate-spin" /> Génération...</span>
-            ) : (
-              '⚡ Générer maintenant'
-            )}
-          </button>
         </div>
       )}
 
-      {/* ── Historique tips envoyés ────────────────────────────── */}
+      {/* ── Historique tips envoyés (compact) ─────────────────── */}
       {sentTips.length > 0 && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
           <button
             onClick={() => setHistoryOpen(!historyOpen)}
-            className="w-full flex items-center justify-between"
+            className="w-full flex items-center justify-between px-3 py-2"
           >
             <div className="flex items-center gap-2">
-              <span className="text-lg">📜</span>
-              <h2 className="font-bold text-sm text-gray-700">Tips envoyés</h2>
-              <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{sentTips.length}</span>
+              <span>📜</span>
+              <span className="font-semibold text-xs text-gray-600">Tips envoyés</span>
+              <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{sentTips.length}</span>
             </div>
             <ChevronDown
-              size={16}
+              size={14}
               className={`text-gray-400 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`}
             />
           </button>
 
           {historyOpen && (
-            <div className="mt-3 space-y-3">
+            <div className="px-3 pb-3 space-y-2">
               {sentTips.map(tip => (
-                <div key={tip.id} className="border border-gray-100 rounded-xl p-3 bg-gray-50/50">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-gray-500">S.{tip.week_number} — {tip.axeSubject}</span>
+                <div key={tip.id} className="border border-gray-100 rounded-lg p-2.5 bg-gray-50/50">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-semibold text-gray-500">S.{tip.week_number} — {tip.axeSubject}</span>
                     {tip.read_at ? (
                       <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">✓ Lu</span>
                     ) : (
                       <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">Non lu</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-600 leading-relaxed">
+                  <p className="text-[11px] text-gray-600 leading-relaxed">
                     <strong className="text-gray-700">Rappel : </strong>{tip.content}
                   </p>
                   {tip.advice && (
-                    <p className="text-xs text-gray-600 leading-relaxed mt-1">
+                    <p className="text-[11px] text-gray-600 leading-relaxed mt-0.5">
                       <strong className="text-gray-700">Conseil : </strong>{tip.advice}
                     </p>
                   )}
