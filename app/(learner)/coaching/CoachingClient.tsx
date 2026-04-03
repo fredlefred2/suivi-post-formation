@@ -29,13 +29,7 @@ export default function CoachingClient({ userId }: { userId: string }) {
     fetch('/api/tips/learner')
       .then(r => r.json())
       .then(data => {
-        const fetched = data.tips || []
-        setTips(fetched)
-        // Auto-expand le premier axe qui a des tips envoyés
-        const firstWithSent = fetched.find((t: Tip) => t.sent)
-        if (firstWithSent) {
-          setExpandedAxes(new Set([firstWithSent.axe_id]))
-        }
+        setTips(data.tips || [])
         setLoading(false)
       })
       .catch(() => setLoading(false))
