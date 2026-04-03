@@ -12,7 +12,7 @@ export async function GET() {
     .select('id, axe_id, week_number, content, advice, sent, acted, axe:axes(subject)')
     .eq('learner_id', user.id)
     .order('axe_id')
-    .order('week_number')
+    .order('week_number', { ascending: false })
 
   return NextResponse.json({ tips: tips || [] })
 }
