@@ -270,7 +270,9 @@ export default function NotificationBell() {
     }
   }
 
-  const grouped = groupNotifications(notifications)
+  // Filtrer les messages privés (ils ont leur propre bulle sur l'icône 💬)
+  const visibleNotifications = notifications.filter(n => n.type !== 'message')
+  const grouped = groupNotifications(visibleNotifications)
   const groupOrder: GroupKey[] = ['today', 'this_week', 'earlier']
 
   return (

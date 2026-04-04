@@ -114,7 +114,6 @@ export async function POST(req: NextRequest) {
       body: content.trim().length > 50 ? content.trim().substring(0, 50) + '…' : content.trim(),
       url: '/messages',
       data: { senderId: user.id },
-      pushOnly: true,
     })
   } catch { /* silencieux */ }
 
