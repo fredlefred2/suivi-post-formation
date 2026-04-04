@@ -58,22 +58,18 @@ export default async function TrainerLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ── Header gradient fort ── */}
-      <header className="text-white sticky top-0 z-20" style={{
-        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 60%, #6366f1 100%)',
-        boxShadow: '0 4px 20px rgba(49, 46, 129, 0.3)',
+      {/* ── Header Cream & Warm ── */}
+      <header className="sticky top-0 z-20 bg-white" style={{
+        borderBottom: '2px solid #f0ebe0',
       }}>
         <div className="px-4 h-14 flex items-center justify-between sm:pl-52">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <MobileDrawer variant="trainer" />
-            <span className="font-semibold text-sm tracking-tight">
-              {profile.first_name} {profile.last_name}
-              <span className="ml-2 text-xs bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full font-medium border border-white/20">
-                Formateur
-              </span>
+            <span className="font-display font-bold text-lg tracking-tight" style={{ color: '#1a1a2e' }}>
+              YAPL<span style={{ color: '#fbbf24' }}>UKA</span>
             </span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <MessageIcon variant="trainer" currentUserId={user.id} allLearners={allLearners} />
             <LogoutButton />
           </div>
@@ -90,7 +86,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
         </div>
       </main>
 
-      {/* ── Bottom nav mobile (fond noir + active state) ── */}
+      {/* ── Bottom nav mobile ── */}
       <BottomNav items={navItems.map(({ href, label, iconName }) => ({
         href,
         label,

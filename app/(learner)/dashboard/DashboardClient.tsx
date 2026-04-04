@@ -48,22 +48,21 @@ type Props = {
 }
 
 function getEncouragement(delta: number, streak: number): string {
-  if (streak >= 3) return 'Tu es sur une lancee !'
+  if (streak >= 3) return 'Tu es sur une lancée !'
   if (delta >= 3) return 'Semaine productive !'
-  if (delta >= 1) return 'Bon debut, continue !'
+  if (delta >= 1) return 'Bon début, continue !'
   return "C'est le moment de s'y mettre !"
 }
 
-// Gradients par niveau
-const LEVEL_GRADIENTS = [
-  'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)', // violet — Veille
-  'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)', // blue — Impulsion
-  'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', // green — Rythme
-  'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', // orange — Intensité
-  'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)', // rose — Propulsion
+// Couleurs de barre par niveau — warm palette
+const LEVEL_BAR_COLORS = ['#94a3b8', '#38bdf8', '#10b981', '#f59e0b', '#fb7185']
+const LEVEL_BAR_GRADIENTS = [
+  'linear-gradient(90deg, #94a3b8, #cbd5e1)', // slate — Veille
+  'linear-gradient(90deg, #0284c7, #38bdf8)', // sky — Impulsion
+  'linear-gradient(90deg, #059669, #10b981)',  // green — Rythme
+  'linear-gradient(90deg, #d97706, #f59e0b)',  // amber — Intensité
+  'linear-gradient(90deg, #e11d48, #fb7185)',  // rose — Propulsion
 ]
-
-const LEVEL_BAR_COLORS = ['#a78bfa', '#38bdf8', '#34d399', '#fb923c', '#f472b6']
 
 export default function DashboardClient({
   firstName,
@@ -107,63 +106,50 @@ export default function DashboardClient({
     <TipProvider>
       <div className="space-y-3 pb-20 sm:pb-4">
 
-        {/* ── 1. Header + Stats — design avec gradient et relief ── */}
+        {/* ── 1. Header navy — Cream & Warm ── */}
         <div
-          className="rounded-2xl p-4 relative overflow-hidden"
+          className="rounded-[28px] p-5 relative overflow-hidden"
           data-onboarding="checkin-area"
-          style={{
-            background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
-            boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
-          }}
+          style={{ background: '#1a1a2e' }}
         >
-          {/* Cercle décoratif */}
-          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
-          <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
+          {/* Cercle décoratif amber */}
+          <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
 
-          {/* Ligne 1 : Bonjour + dernière météo */}
+          {/* Ligne 1 : Bonjour */}
           <div className="relative flex items-start justify-between mb-4">
             <div>
-              <h1 className="text-xl font-extrabold text-white">Bonjour {firstName} 👋</h1>
-              <p className="text-xs text-indigo-200 mt-0.5">{encouragement}</p>
+              <h1 className="text-[22px] font-extrabold text-white">Bonjour {firstName} 👋</h1>
+              <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{encouragement}</p>
             </div>
-            {/* Dernière météo bien visible */}
-            {weatherHistory.length > 0 && (
-              <Link href="/checkin" className="flex flex-col items-center">
-                <span className="text-3xl drop-shadow-lg">
-                  {WEATHER_ICONS[weatherHistory[weatherHistory.length - 1]] ?? '❓'}
-                </span>
-                <span className="text-[9px] text-indigo-200 mt-0.5">ma météo</span>
-              </Link>
-            )}
           </div>
 
-          {/* Stats en 3 colonnes avec fond semi-transparent */}
+          {/* Stats en 3 colonnes */}
           <div className="relative grid grid-cols-3 gap-2">
             {/* Cette semaine */}
-            <Link href="/axes" className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
-              <div className={`text-2xl font-black ${deltaActionsThisWeek > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
+            <Link href="/axes" className="rounded-2xl py-3 px-2 text-center transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="font-display text-[26px] font-bold" style={{ color: deltaActionsThisWeek > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
                 {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
               </div>
-              <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
+              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>cette sem.</p>
             </Link>
 
             {/* Total actions */}
-            <Link href="/axes" className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
-              <div className="text-2xl font-black text-white">{animatedActions}</div>
-              <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
+            <Link href="/axes" className="rounded-2xl py-3 px-2 text-center transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="font-display text-[26px] font-bold text-white">{animatedActions}</div>
+              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>actions</p>
               {rank && rank <= 3 && groupSize && groupSize > 1 && (
-                <p className="text-[10px] font-bold text-amber-300 mt-0.5">
+                <p className="text-[10px] font-bold mt-0.5" style={{ color: '#fbbf24' }}>
                   {rank === 1 ? '1er' : rank === 2 ? '2e' : '3e'} du groupe
                 </p>
               )}
             </Link>
 
             {/* Check-ins + streak */}
-            <Link href="/checkin" className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
-              <div className="text-2xl font-black text-white">{totalCheckins}</div>
-              <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
+            <Link href="/checkin" className="rounded-2xl py-3 px-2 text-center transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="font-display text-[26px] font-bold text-white">{totalCheckins}</div>
+              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>check-ins</p>
               {streak >= 2 && (
-                <p className="text-[10px] font-bold text-orange-300 mt-0.5">
+                <p className="text-[10px] font-bold mt-0.5" style={{ color: '#fbbf24' }}>
                   🔥 {streak} sem.
                 </p>
               )}
@@ -175,20 +161,21 @@ export default function DashboardClient({
         {!checkinDone && (
           <button
             onClick={() => setQuickCheckinOpen(true)}
-            className="w-full rounded-xl px-3 py-2 flex items-center gap-2 bg-amber-50 border border-amber-300 text-left active:scale-[0.98] transition-transform"
+            className="w-full rounded-[18px] px-4 py-3 flex items-center gap-3 bg-white text-left active:scale-[0.98] transition-transform"
+            style={{ border: '2px solid #f0ebe0' }}
           >
-            <AlertCircle className="text-amber-600 shrink-0" size={16} />
-            <p className="font-semibold text-amber-900 text-xs flex-1 truncate">Check-in en attente · {checkinWeekLabel}</p>
-            <span className="btn-primary text-xs shrink-0 py-1 px-2.5">Faire</span>
+            <span className="text-base">⚡</span>
+            <p className="font-semibold text-[13px] flex-1 truncate" style={{ color: '#92400e' }}>Check-in en attente · {checkinWeekLabel}</p>
+            <span className="btn-navy text-xs shrink-0 py-1.5 px-4 rounded-xl">Faire</span>
           </button>
         )}
 
         {/* Recap semaine derniere (lundi/mardi) */}
         {showRecap && (
-          <div className="rounded-xl px-3 py-2 flex items-center gap-2 bg-indigo-50 border border-indigo-200">
+          <div className="rounded-[18px] px-4 py-3 flex items-center gap-3 bg-white" style={{ border: '2px solid #f0ebe0' }}>
             <span className="text-sm">📊</span>
-            <p className="text-xs text-indigo-800">
-              <span className="font-semibold">Sem. derniere :</span> +{lastWeekActions} action{lastWeekActions > 1 ? 's' : ''}
+            <p className="text-xs" style={{ color: '#1a1a2e' }}>
+              <span className="font-bold">Sem. dernière :</span> +{lastWeekActions} action{lastWeekActions > 1 ? 's' : ''}
               {streak > 1 && <span> · 🔥 {streak} sem.</span>}
             </p>
           </div>
@@ -196,20 +183,20 @@ export default function DashboardClient({
 
         {/* Barre de progression onboarding */}
         {pct < 100 && (
-          <div className="card p-3">
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-xs font-semibold text-gray-700">Votre onboarding</p>
-              <span className="text-xs font-bold text-gray-900">{pct}%</span>
+          <div className="card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold" style={{ color: '#1a1a2e' }}>Votre onboarding</p>
+              <span className="text-xs font-bold" style={{ color: '#1a1a2e' }}>{pct}%</span>
             </div>
-            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: '#f5f0e8' }}>
               <div className="h-full rounded-full transition-all duration-500" style={{
                 width: `${pct}%`,
-                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7)',
+                background: '#fbbf24',
               }} />
             </div>
             <div className="flex gap-3 mt-2">
               {stepsData.map((s, i) => (
-                <span key={i} className={`text-[11px] ${s.done ? 'text-emerald-600 font-medium' : 'text-gray-500'}`}>
+                <span key={i} className={`text-[11px] ${s.done ? 'font-semibold' : ''}`} style={{ color: s.done ? '#059669' : '#a0937c' }}>
                   {s.done ? '✓' : '○'} {s.label}
                 </span>
               ))}
@@ -217,15 +204,16 @@ export default function DashboardClient({
           </div>
         )}
 
-        {/* ── 3. Bouton Nouvelle Action dans le flow ── */}
+        {/* ── 3. Bouton Nouvelle Action ── */}
         {axes.length > 0 && (
           <button
             data-onboarding="fab-action"
             onClick={() => setQuickAddOpen(true)}
-            className="w-full flex flex-col items-center justify-center gap-0.5 py-3 rounded-2xl text-white active:scale-[0.97] transition-transform"
+            className="w-full flex flex-col items-center justify-center gap-0.5 py-4 rounded-[18px] active:scale-[0.97] transition-transform"
             style={{
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
-              boxShadow: '0 4px 15px rgba(79, 70, 229, 0.35)',
+              background: '#fbbf24',
+              color: '#1a1a2e',
+              boxShadow: '0 4px 20px rgba(251, 191, 36, 0.3)',
             }}
           >
             <span className="flex items-center gap-2 text-[15px] font-bold">
@@ -233,11 +221,11 @@ export default function DashboardClient({
               Nouvelle action
             </span>
             {deltaActionsThisWeek > 0 ? (
-              <span className="text-[11px] text-white/70">
+              <span className="text-[11px]" style={{ color: 'rgba(26,26,46,0.6)' }}>
                 Tu en as fait {deltaActionsThisWeek} cette semaine
               </span>
             ) : (
-              <span className="text-[11px] text-white/70">
+              <span className="text-[11px]" style={{ color: 'rgba(26,26,46,0.6)' }}>
                 Lance-toi, 1 action suffit !
               </span>
             )}
@@ -246,20 +234,20 @@ export default function DashboardClient({
 
         {/* ── Empty state ── */}
         {axes.length === 0 && totalActions === 0 && (
-          <Link href="/axes" className="card p-5 text-center border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition-colors">
+          <Link href="/axes" className="card p-5 text-center hover:shadow-warm-hover transition-shadow" style={{ border: '2px dashed #f0ebe0' }}>
             <p className="text-2xl mb-2">👣</p>
-            <p className="text-sm font-semibold text-gray-800">Commence ton parcours !</p>
-            <p className="text-xs text-gray-500 mt-1">Cr&eacute;e ton premier axe de progr&egrave;s</p>
+            <p className="text-sm font-bold" style={{ color: '#1a1a2e' }}>Commence ton parcours !</p>
+            <p className="text-xs mt-1" style={{ color: '#a0937c' }}>Crée ton premier axe de progrès</p>
           </Link>
         )}
 
-        {/* ── 4. Axes pleine largeur avec densité variable ── */}
+        {/* ── 4. Axes — cartes blanches bordure warm ── */}
         {axes.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-gray-700">Mes axes de progres</h2>
+              <h2 className="section-title">Mes axes de progrès</h2>
               {axesCount < 3 && (
-                <Link href="/axes" className="text-xs text-indigo-600 hover:underline font-semibold">
+                <Link href="/axes" className="text-xs font-bold hover:underline" style={{ color: '#92400e' }}>
                   + Ajouter
                 </Link>
               )}
@@ -269,68 +257,58 @@ export default function DashboardClient({
               const levelIdx = getCurrentLevelIndex(axe.completedCount)
               const progress = getProgress(axe.completedCount)
               const currentMarker = MARKERS[levelIdx]
-              const isVeille = levelIdx === 0
-              const isHigh = levelIdx >= 3
 
               return (
                 <Link
                   key={axe.id}
                   href={`/axes?index=${axe.index}`}
                   {...(axe.index === 0 ? { 'data-onboarding': 'progression' } : {})}
-                  className={`block rounded-2xl overflow-hidden transition-shadow ${
-                    isVeille ? 'opacity-80 hover:opacity-100' : ''
-                  } ${isHigh ? 'hover:shadow-xl' : 'hover:shadow-lg'}`}
-                  style={{
-                    background: LEVEL_GRADIENTS[levelIdx] ?? LEVEL_GRADIENTS[0],
-                    ...(isHigh ? { boxShadow: `0 0 20px ${LEVEL_BAR_COLORS[levelIdx]}25` } : {}),
-                  }}
+                  className="block bg-white rounded-[22px] overflow-hidden transition-all hover:shadow-warm-hover"
+                  style={{ border: '2px solid #f0ebe0' }}
                 >
-                  <div className={isVeille ? 'p-3' : 'p-4'}>
-                    {/* Titre */}
-                    <div className="flex items-start gap-2">
-                      <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                        {axe.index + 1}
-                      </span>
-                      <p className={`font-bold leading-snug line-clamp-2 flex-1 text-gray-800 ${isVeille ? 'text-[13px]' : 'text-sm'}`}>
+                  <div className="p-4">
+                    {/* Titre avec numéro navy */}
+                    <div className="flex items-start gap-2.5">
+                      <span className="axe-num">{axe.index + 1}</span>
+                      <p className="font-bold text-sm leading-snug line-clamp-2 flex-1" style={{ color: '#1a1a2e' }}>
                         {axe.subject}
                       </p>
                     </div>
 
                     {/* Barre de progression */}
-                    <div className={`flex items-center gap-2.5 ${isVeille ? 'mt-2' : 'mt-3'}`}>
-                      <span className={isVeille ? 'text-base' : 'text-lg'}>{currentMarker.icon}</span>
-                      <div className="flex-1">
-                        <div className={`bg-white/60 rounded-full overflow-hidden ${isHigh ? 'h-2' : 'h-1.5'}`}>
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                              width: `${progress}%`,
-                              background: LEVEL_BAR_COLORS[levelIdx] ?? LEVEL_BAR_COLORS[0],
-                            }}
-                          />
-                        </div>
+                    <div className="flex items-center gap-2.5 mt-3.5">
+                      <div className="bar-bg">
+                        <div
+                          className="bar-fill transition-all duration-700"
+                          style={{
+                            width: `${progress}%`,
+                            background: LEVEL_BAR_GRADIENTS[levelIdx] ?? LEVEL_BAR_GRADIENTS[0],
+                          }}
+                        />
                       </div>
-                      <span className={`${isVeille ? 'text-base' : 'text-lg'} ${levelIdx >= 4 ? '' : 'opacity-30'}`}>🚀</span>
-                    </div>
-
-                    {/* Niveau + compteur + likes/comments inline */}
-                    <div className={`flex items-center justify-between ${isVeille ? 'mt-1.5' : 'mt-2'}`}>
-                      <span className={`text-xs font-semibold ${axe.dyn.color.split(' ')[0]}`}>{axe.dyn.label}</span>
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
-                        {axe.completedCount === 0 && (
-                          <span className={`font-medium ${axe.dyn.color.split(' ')[0]}`}>· commence !</span>
-                        )}
-                        {axe.completedCount > 0 && axe.completedCount < 9 && (
-                          <span className={`font-medium ${axe.dyn.color.split(' ')[0]}`}>· encore {axe.dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
-                        )}
-                        {/* Micro-badges likes/comments */}
-                        {axe.likesCount > 0 && <span className="text-pink-500 font-semibold ml-1">❤️{axe.likesCount}</span>}
-                        {axe.commentsCount > 0 && <span className="text-gray-400 font-semibold">💬{axe.commentsCount}</span>}
+                      <span className="text-[11px] font-bold whitespace-nowrap" style={{ color: '#1a1a2e' }}>
+                        {axe.dyn.icon} {axe.dyn.label}
                       </span>
                     </div>
 
-                    {/* ── 5. Tip intégré dans la carte de l'axe ── */}
+                    {/* Meta : compteur + likes/comments */}
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-[11px]" style={{ color: '#a0937c' }}>
+                        {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
+                        {axe.completedCount === 0 && (
+                          <span className="font-semibold" style={{ color: '#92400e' }}> · commence !</span>
+                        )}
+                        {axe.completedCount > 0 && axe.completedCount < 9 && (
+                          <span className="font-semibold" style={{ color: '#92400e' }}> · encore {axe.dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
+                        )}
+                      </span>
+                      <span className="text-[11px] flex items-center gap-1">
+                        {axe.likesCount > 0 && <span className="font-semibold" style={{ color: '#e11d48' }}>❤️ {axe.likesCount}</span>}
+                        {axe.commentsCount > 0 && <span className="font-semibold" style={{ color: '#a0937c' }}>💬 {axe.commentsCount}</span>}
+                      </span>
+                    </div>
+
+                    {/* ── Tip intégré dans la carte de l'axe ── */}
                     <AxeTipBadge axeId={axe.id} />
                   </div>
                 </Link>

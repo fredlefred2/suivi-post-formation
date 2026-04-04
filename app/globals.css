@@ -5,70 +5,81 @@
 @layer base {
   body {
     @apply text-gray-900 antialiased;
-    background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 25%, #c7d2fe 50%, #a5b4fc 75%, #ddd6fe 100%);
-    background-attachment: fixed;
+    background: #faf8f4;
     min-height: 100vh;
   }
 }
 
 @layer components {
-  /* ──────── Cards — ombres fortes + bordure accent ──────── */
+  /* ──────── Cards — Cream & Warm ──────── */
   .card {
-    @apply bg-white rounded-2xl p-6;
-    border: 1px solid rgba(139, 92, 246, 0.15);
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.05),
-      0 4px 16px rgba(99, 102, 241, 0.12),
-      0 12px 40px rgba(99, 102, 241, 0.08);
+    @apply bg-white rounded-3xl p-5;
+    border: 2px solid #f0ebe0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
     transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
   }
   .card:hover {
-    border-color: rgba(139, 92, 246, 0.2);
-    box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.04),
-      0 8px 24px rgba(99, 102, 241, 0.12),
-      0 20px 60px rgba(99, 102, 241, 0.08);
+    border-color: #e0d8c8;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 12px 40px rgba(0, 0, 0, 0.08);
     transform: translateY(-2px);
   }
 
-  /* ──────── Boutons gradient — plus punchy ──────── */
+  /* ──────── Header navy arrondi ──────── */
+  .header-navy {
+    @apply rounded-4xl p-6 relative overflow-hidden;
+    background: #1a1a2e;
+  }
+  .header-navy::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -20px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(251, 191, 36, 0.15);
+  }
+
+  /* ──────── Boutons — Cream & Warm ──────── */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5
-           text-white text-sm font-semibold rounded-xl
+           text-sm font-bold rounded-2xl
            transition-all duration-300
            disabled:opacity-50 disabled:cursor-not-allowed;
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
-    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: #fbbf24;
+    color: #1a1a2e;
+    box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
   }
   .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #7c3aed 100%);
-    box-shadow: 0 6px 25px rgba(79, 70, 229, 0.5), 0 2px 6px rgba(0, 0, 0, 0.12);
+    background: #f59e0b;
+    box-shadow: 0 6px 25px rgba(251, 191, 36, 0.4);
     transform: translateY(-2px);
   }
   .btn-primary:active:not(:disabled) {
     transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
-           bg-white hover:bg-indigo-50
-           text-gray-700 hover:text-indigo-700 text-sm font-medium rounded-xl
+           bg-white text-sm font-semibold rounded-2xl
            transition-all duration-300;
-    border: 1px solid rgba(139, 92, 246, 0.15);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    color: #1a1a2e;
+    border: 2px solid #f0ebe0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
   .btn-secondary:hover {
-    border-color: rgba(139, 92, 246, 0.3);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+    border-color: #e0d8c8;
+    background: #faf8f4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
   }
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
            bg-red-100 hover:bg-red-200
-           text-red-800 text-sm font-medium rounded-xl
-           border border-red-300 hover:border-red-400
+           text-red-800 text-sm font-medium rounded-2xl
+           border-2 border-red-300 hover:border-red-400
            transition-all duration-300;
   }
   .btn-danger:hover {
@@ -84,8 +95,19 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
+  /* ──────── Bouton accent navy (ex: check-in) ──────── */
+  .btn-navy {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           text-xs font-bold rounded-xl
+           transition-all duration-300;
+    background: #1a1a2e;
+    color: #fbbf24;
+  }
+  .btn-navy:hover {
+    background: #2a2a45;
+  }
+
   /* ──────── Tailles boutons standardisées ──────── */
-  /* Par défaut : px-5 py-2.5 text-sm (défini dans btn-primary/secondary/danger) */
   .btn-sm {
     @apply px-3 py-1.5 text-xs gap-1.5;
   }
@@ -100,7 +122,7 @@
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
-    outline: 2px solid #818cf8;
+    outline: 2px solid #fbbf24;
     outline-offset: 2px;
     border-radius: 8px;
   }
@@ -118,43 +140,105 @@
     transform: scale(0.97);
   }
 
-  /* ──────── Inputs — bordure accent au focus ──────── */
+  /* ──────── Inputs — Cream & Warm ──────── */
   .input {
-    @apply w-full rounded-xl px-4 py-2.5 text-sm
+    @apply w-full rounded-2xl px-4 py-2.5 text-sm
            bg-white
-           placeholder:text-gray-400
            transition-all duration-300;
-    border: 1.5px solid #e5e7eb;
+    border: 2px solid #f0ebe0;
+    color: #1a1a2e;
     font-size: 16px; /* Prevent iOS Safari auto-zoom on focus */
   }
+  .input::placeholder {
+    color: #c4b99a;
+  }
   .input:hover {
-    border-color: rgba(139, 92, 246, 0.3);
+    border-color: #e0d8c8;
   }
   .input:focus {
     outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), 0 2px 8px rgba(99, 102, 241, 0.1);
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15), 0 2px 8px rgba(251, 191, 36, 0.1);
   }
 
   .label {
-    @apply block text-sm font-semibold text-gray-700 mb-1.5;
+    @apply block text-sm font-bold mb-1.5;
+    color: #1a1a2e;
   }
 
-  /* ──────── Titres — gris charbon moderne ──────── */
+  /* ──────── Titres — navy moderne ──────── */
   .page-title {
-    @apply text-2xl font-extrabold text-gray-900;
+    @apply text-2xl font-extrabold;
+    color: #1a1a2e;
     letter-spacing: -0.02em;
   }
 
   .section-title {
-    @apply text-lg font-bold text-gray-800;
-    letter-spacing: -0.01em;
+    @apply text-xs font-bold uppercase tracking-wider;
+    color: #a0937c;
+    letter-spacing: 0.1em;
+  }
+
+  /* ──────── Tip card style ──────── */
+  .tip-card {
+    @apply rounded-2xl p-4;
+    background: #fffbeb;
+    border: 2px solid #fde68a;
+  }
+  .tip-banner {
+    @apply rounded-xl px-4 py-3 flex items-center gap-3;
+    background: #fffbeb;
+    border: 2px solid #fde68a;
+  }
+
+  /* ──────── Avatar arrondi ──────── */
+  .avatar {
+    @apply flex items-center justify-center font-extrabold text-white flex-shrink-0;
+    border-radius: 16px;
+  }
+  .avatar-sm { @apply w-7 h-7 text-xs; border-radius: 10px; }
+  .avatar-md { @apply w-12 h-12 text-lg; }
+  .avatar-lg { @apply w-14 h-14 text-xl; border-radius: 18px; }
+
+  /* ──────── Axe number badge ──────── */
+  .axe-num {
+    @apply w-8 h-8 rounded-xl flex items-center justify-center text-sm font-extrabold flex-shrink-0;
+    background: #1a1a2e;
+    color: #fbbf24;
+  }
+
+  /* ──────── Progress bar ──────── */
+  .bar-bg {
+    @apply flex-1 h-2 rounded-full overflow-hidden;
+    background: #f5f0e8;
+  }
+  .bar-fill {
+    @apply h-full rounded-full;
+  }
+
+  /* ──────── Bottom nav warm ──────── */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-white flex justify-around;
+    border-top: 2px solid #f0ebe0;
+    padding: 10px 0 env(safe-area-inset-bottom, 12px);
+    z-index: 50;
+  }
+  .bottom-nav-item {
+    @apply flex flex-col items-center gap-1 text-xs font-semibold;
+    color: #a0937c;
+  }
+  .bottom-nav-item.active {
+    color: #1a1a2e;
+  }
+  .bottom-nav-item .dot {
+    @apply w-1 h-1 rounded-full;
+    background: #fbbf24;
   }
 
   /* ──────── Scrollbar discrète ──────── */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #e5e7eb transparent;
+    scrollbar-color: #e0d8c8 transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
@@ -163,11 +247,11 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
+    background-color: #e0d8c8;
     border-radius: 9999px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #9ca3af;
+    background-color: #c4b99a;
   }
 
   /* ──────── Animation onboarding — pulse amber ──────── */

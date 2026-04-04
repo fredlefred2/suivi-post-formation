@@ -43,8 +43,9 @@ export default function BottomNav({ items }: { items: NavItem[] }) {
   }
 
   return (
-    <nav className={`bg-gray-950 sm:hidden fixed bottom-0 left-0 right-0 z-10 transition-opacity duration-300 ${disabled ? 'opacity-40 pointer-events-none' : ''}`} style={{
-      boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)',
+    <nav className={`bg-white sm:hidden fixed bottom-0 left-0 right-0 z-10 transition-opacity duration-300 ${disabled ? 'opacity-40 pointer-events-none' : ''}`} style={{
+      borderTop: '2px solid #f0ebe0',
+      paddingBottom: 'env(safe-area-inset-bottom, 12px)',
     }}>
       <div className="flex">
         {items.map(({ href, label, shortLabel, iconName }) => {
@@ -54,13 +55,14 @@ export default function BottomNav({ items }: { items: NavItem[] }) {
           return (
             <Link key={href} href={getGroupHref(href)}
               data-onboarding={`nav-${href.split('/').pop()}`}
-              className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-all duration-150 font-medium active:scale-90 ${
-                isActive ? 'text-white' : 'text-gray-500'
+              className={`flex-1 flex flex-col items-center py-2.5 text-[10px] transition-all duration-150 font-semibold active:scale-90 relative ${
+                isActive ? 'text-[#1a1a2e]' : 'text-[#a0937c]'
               }`}
               tabIndex={disabled ? -1 : undefined}
               aria-disabled={disabled || undefined}>
-              <Icon size={20} className={`transition-transform duration-150 ${isActive ? 'text-indigo-400' : ''}`} />
+              <Icon size={20} className="transition-transform duration-150" />
               <span className="mt-0.5">{shortLabel ?? label}</span>
+              {isActive && <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[#fbbf24]" />}
             </Link>
           )
         })}
