@@ -195,7 +195,8 @@ export default function TrainerTipsManager({
                   <button
                     onClick={handleRewriteTheme}
                     disabled={rewritingTheme}
-                    className="flex items-center gap-1 ml-auto text-xs text-violet-600 hover:text-violet-700 font-medium transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1 ml-auto text-xs font-medium transition-colors disabled:opacity-50"
+                    style={{ color: '#92400e' }}
                   >
                     {rewritingTheme ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                     {rewritingTheme ? 'Réécriture...' : 'Reformuler'}
@@ -213,7 +214,7 @@ export default function TrainerTipsManager({
           {!editingTheme && (
             <button
               onClick={() => setEditingTheme(true)}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors shrink-0"
+              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#1a1a2e] transition-colors shrink-0"
               title="Modifier le thème"
             >
               <Pencil size={14} />
@@ -233,7 +234,7 @@ export default function TrainerTipsManager({
         <>
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-              <Sparkles size={16} className="text-indigo-500" />
+              <Sparkles size={16} className="text-[#92400e]" />
               Rappels & Conseils
             </h3>
             <span className="text-xs text-gray-500">{tips.length} éléments</span>
@@ -251,7 +252,7 @@ export default function TrainerTipsManager({
                   className="w-full flex items-center gap-2 p-3 hover:bg-gray-50 transition-colors"
                 >
                   {isExpanded ? <ChevronDown size={16} className="text-gray-500" /> : <ChevronRight size={16} className="text-gray-500" />}
-                  <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-800 font-semibold flex items-center justify-center text-xs shrink-0">
+                  <div className="w-8 h-8 rounded-full font-semibold flex items-center justify-center text-xs shrink-0" style={{ background: '#1a1a2e', color: '#fbbf24' }}>
                     {learner.learnerName.split(' ').map(n => n[0]).join('')}
                   </div>
                   <span className="font-semibold text-sm text-gray-800">{learner.learnerName}</span>
@@ -262,7 +263,7 @@ export default function TrainerTipsManager({
                   <div className="px-3 pb-3 space-y-4">
                     {learner.axes.map(axe => (
                       <div key={axe.axeId}>
-                        <p className="text-xs font-semibold text-indigo-600 mb-2 uppercase tracking-wide">🎯 {axe.axeSubject}</p>
+                        <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#1a1a2e' }}>🎯 {axe.axeSubject}</p>
                         <div className="space-y-2">
                           {axe.tips.map(tip => {
                             const isLocked = tip.sent
@@ -313,9 +314,9 @@ export default function TrainerTipsManager({
 
                                     {/* Conseil */}
                                     {tip.advice && (
-                                      <div className="bg-indigo-50 rounded-lg p-2.5 mt-2">
-                                        <p className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wide mb-0.5">💡 Conseil de la semaine</p>
-                                        <p className="text-sm text-indigo-900 leading-relaxed">{tip.advice}</p>
+                                      <div className="rounded-lg p-2.5 mt-2" style={{ background: '#fffbeb' }}>
+                                        <p className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#1a1a2e' }}>💡 Conseil de la semaine</p>
+                                        <p className="text-sm leading-relaxed" style={{ color: '#1a1a2e' }}>{tip.advice}</p>
                                       </div>
                                     )}
 
@@ -323,7 +324,7 @@ export default function TrainerTipsManager({
                                     {!isLocked && (
                                       <div className="flex items-center gap-1 pt-2 border-t border-gray-100 mt-2">
                                         <button onClick={() => { setEditingTip(tip.id); setEditContent(tip.content); setEditAdvice(tip.advice || '') }}
-                                          className="flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors">
+                                          className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#1a1a2e] px-2 py-1 rounded-lg hover:bg-[#fffbeb] transition-colors">
                                           <Pencil size={12} /> Modifier
                                         </button>
                                         <button onClick={() => handleRegenerate(tip)} disabled={regenerating === tip.id}
@@ -342,7 +343,7 @@ export default function TrainerTipsManager({
                             )
                           })}
                           <button onClick={() => handleAdd(axe.axeId, learner.learnerId, axe.tips.length + 1)}
-                            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1.5 mt-1 transition-colors">
+                            className="flex items-center gap-1 text-xs px-2 py-1.5 mt-1 transition-colors" style={{ color: '#1a1a2e' }}>
                             <Plus size={12} /> Ajouter un rappel
                           </button>
                         </div>

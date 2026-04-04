@@ -248,9 +248,10 @@ export default function BugReportButton() {
                           key={report.id}
                           className={`px-5 py-3.5 ${
                             report.read_at === null
-                              ? 'bg-indigo-50/50 border-l-4 border-indigo-400'
+                              ? 'border-l-4 border-[#fbbf24]'
                               : 'border-l-4 border-transparent'
                           }`}
+                          {...(report.read_at === null ? { style: { background: '#fffbeb' } } : {})}
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className={`text-sm ${
@@ -312,7 +313,7 @@ export default function BugReportButton() {
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Décrivez le problème rencontré..."
                         rows={4}
-                        className="w-full rounded-xl px-4 py-2.5 text-sm bg-white border border-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400 transition-all resize-none"
+                        className="w-full rounded-xl px-4 py-2.5 text-sm bg-white border border-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]/50 focus:border-[#fbbf24] transition-all resize-none"
                         style={{ fontSize: '16px' }}
                         required
                         autoFocus

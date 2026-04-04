@@ -179,8 +179,8 @@ export default function PushRegistration() {
     <div className="fixed bottom-20 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm z-[80]">
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-            <Bell size={20} className="text-indigo-600" />
+          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#fffbeb' }}>
+            <Bell size={20} style={{ color: '#1a1a2e' }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900">
@@ -196,7 +196,8 @@ export default function PushRegistration() {
               {state === 'prompt' && (
                 <button
                   onClick={handleActivate}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:scale-95 transition-all"
+                  className="px-4 py-2 text-xs font-semibold rounded-lg active:scale-95 transition-all hover:opacity-90"
+                  style={{ background: '#fbbf24', color: '#1a1a2e' }}
                 >
                   Activer
                 </button>

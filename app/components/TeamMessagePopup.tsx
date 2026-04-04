@@ -97,7 +97,7 @@ export default function TeamMessagePopup({ userId }: { userId: string }) {
         {phase === 'announce' ? (
           /* Phase 1 : Annonce */
           <div className="text-center px-6 py-8 space-y-5">
-            <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto" style={{ background: '#fffbeb' }}>
               <span className="text-2xl">💬</span>
             </div>
             <div>
@@ -119,7 +119,7 @@ export default function TeamMessagePopup({ userId }: { userId: string }) {
           /* Phase 2 : Lecture lettre par lettre */
           <div className="px-6 py-8">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: '#fffbeb', color: '#1a1a2e' }}>
                 {`${message.senderFirstName[0]}${message.senderLastName[0]}`.toUpperCase()}
               </div>
               <p className="text-sm font-semibold text-gray-700">
@@ -128,7 +128,7 @@ export default function TeamMessagePopup({ userId }: { userId: string }) {
             </div>
             <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words min-h-[40px]">
               {displayedText}
-              <span className="inline-block w-0.5 h-4 bg-indigo-500 ml-0.5 animate-pulse align-text-bottom" />
+              <span className="inline-block w-0.5 h-4 ml-0.5 animate-pulse align-text-bottom" style={{ background: '#1a1a2e' }} />
             </p>
           </div>
         )}

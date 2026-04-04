@@ -217,9 +217,9 @@ export default function OnboardingFlow({
         <div className="card !p-0 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
           <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden flex flex-col flex-1">
             {/* Header gradient */}
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4 shrink-0">
+            <div className="px-5 py-4 shrink-0" style={{ background: '#1a1a2e' }}>
               <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
-              <p className="text-indigo-100 text-xs mt-0.5">Modifie les détails de ton axe</p>
+              <p className="text-white/50 text-xs mt-0.5">Modifie les détails de ton axe</p>
             </div>
 
             <form onSubmit={handleEditAxeSubmit} className="p-5 space-y-5 flex-1 flex flex-col">
@@ -229,7 +229,7 @@ export default function OnboardingFlow({
                   value={editSubject}
                   onChange={(e) => setEditSubject(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-[#fbbf24] focus:ring-2 focus:ring-[#fbbf24]/20 outline-none transition-all"
                 />
               </div>
               <div>
@@ -239,7 +239,7 @@ export default function OnboardingFlow({
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-[#fbbf24] focus:ring-2 focus:ring-[#fbbf24]/20 outline-none transition-all resize-none h-20"
                 />
               </div>
               <div>
@@ -260,11 +260,11 @@ export default function OnboardingFlow({
                         />
                         <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
                           isSelected
-                            ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                            ? 'border-[#fbbf24] bg-[#fffbeb] shadow-md scale-[1.03]'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}>
                           <span className="text-lg">{emoji}</span>
-                          <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
+                          <span className={`text-xs font-semibold ${isSelected ? 'text-[#1a1a2e]' : 'text-gray-500'}`}>{label}</span>
                         </div>
                       </label>
                     )
@@ -277,7 +277,7 @@ export default function OnboardingFlow({
                   type="submit"
                   disabled={editSaving}
                   className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98] ${editSaving ? 'opacity-60' : ''}`}
-                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+                  style={{ background: '#fbbf24', color: '#1a1a2e' }}
                 >
                   {editSaving ? (
                     <span className="flex items-center justify-center gap-2">
@@ -343,7 +343,7 @@ export default function OnboardingFlow({
           key={s}
           className={`h-1.5 rounded-full transition-all duration-300 ${
             i < currentIdx ? 'w-3 bg-emerald-400'
-            : i === currentIdx ? 'w-5 bg-indigo-500'
+            : i === currentIdx ? 'w-5 bg-[#1a1a2e]'
             : 'w-3 bg-gray-200'
           }`}
         />
@@ -361,7 +361,7 @@ export default function OnboardingFlow({
       <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
         <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
           <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-            <span className="text-xs font-semibold text-indigo-600">Étape {stepLabel}</span>
+            <span className="text-xs font-semibold text-[#1a1a2e]">Étape {stepLabel}</span>
             {renderDots(stepIndex)}
           </div>
 
@@ -378,7 +378,7 @@ export default function OnboardingFlow({
                 { n: '3', text: <>Comprends le <strong>check-in</strong> hebdomadaire</> },
               ].map((s) => (
                 <div key={s.n} className="flex items-center gap-3 text-sm">
-                  <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
+                  <span className="w-7 h-7 rounded-full bg-[#fffbeb] text-[#1a1a2e] font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
                   <span className="text-gray-600">{s.text}</span>
                 </div>
               ))}
@@ -405,7 +405,7 @@ export default function OnboardingFlow({
       <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
         <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
           <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-            <span className="text-xs font-semibold text-indigo-600">Étape {stepLabel}</span>
+            <span className="text-xs font-semibold text-[#1a1a2e]">Étape {stepLabel}</span>
             {renderDots(stepIndex)}
           </div>
 
@@ -415,9 +415,9 @@ export default function OnboardingFlow({
             <p className="text-sm text-gray-500 leading-relaxed">
               Un axe représente un domaine que tu souhaites améliorer suite à ta formation.
             </p>
-            <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
+            <div className="bg-[#fffbeb] rounded-xl p-3 mt-3 text-left text-sm text-[#1a1a2e]">
               <p className="font-medium mb-1">Exemple d&apos;axe :</p>
-              <p className="text-indigo-600">&laquo; Déléguer efficacement &raquo; — Difficulté : Intermédiaire</p>
+              <p className="text-[#1a1a2e]">&laquo; Déléguer efficacement &raquo; — Difficulté : Intermédiaire</p>
             </div>
           </div>
 
@@ -451,7 +451,7 @@ export default function OnboardingFlow({
       <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
         <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
           <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-            <span className="text-xs font-semibold text-indigo-600">Étape {stepLabel}</span>
+            <span className="text-xs font-semibold text-[#1a1a2e]">Étape {stepLabel}</span>
             {renderDots(stepIndex)}
           </div>
 
@@ -466,9 +466,9 @@ export default function OnboardingFlow({
             <p className="text-sm text-gray-500 leading-relaxed">
               Excellent début ! Continue sur ta lancée. Tu peux aussi le faire plus tard.
             </p>
-            <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
+            <div className="bg-[#fffbeb] rounded-xl p-3 mt-3 text-left text-sm text-[#1a1a2e]">
               <p className="font-medium mb-1">Idée d&apos;axe :</p>
-              <p className="text-indigo-600">&laquo; Mieux communiquer en réunion &raquo;</p>
+              <p className="text-[#1a1a2e]">&laquo; Mieux communiquer en réunion &raquo;</p>
             </div>
           </div>
 
@@ -502,7 +502,7 @@ export default function OnboardingFlow({
       <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
         <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
           <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-            <span className="text-xs font-semibold text-indigo-600">Étape {stepLabel}</span>
+            <span className="text-xs font-semibold text-[#1a1a2e]">Étape {stepLabel}</span>
             {renderDots(stepIndex)}
           </div>
 
@@ -516,9 +516,9 @@ export default function OnboardingFlow({
             <p className="text-sm text-gray-500 leading-relaxed">
               Plus qu&apos;un axe et tu auras posé toutes les bases de ta progression ! Tu peux aussi le faire plus tard.
             </p>
-            <div className="bg-indigo-50 rounded-xl p-3 mt-3 text-left text-sm text-indigo-800">
+            <div className="bg-[#fffbeb] rounded-xl p-3 mt-3 text-left text-sm text-[#1a1a2e]">
               <p className="font-medium mb-1">Idée d&apos;axe :</p>
-              <p className="text-indigo-600">&laquo; Gérer mon temps et mes priorités &raquo;</p>
+              <p className="text-[#1a1a2e]">&laquo; Gérer mon temps et mes priorités &raquo;</p>
             </div>
           </div>
 
@@ -742,8 +742,8 @@ export default function OnboardingFlow({
                   <p style={{ fontSize: 11, color: '#92400e', margin: 0 }}>Semaine du 10 au 16 mars</p>
                 </div>
                 <span style={{
-                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                  color: 'white',
+                  background: '#fbbf24',
+                  color: '#1a1a2e',
                   fontSize: 12,
                   fontWeight: 600,
                   padding: '4px 10px',

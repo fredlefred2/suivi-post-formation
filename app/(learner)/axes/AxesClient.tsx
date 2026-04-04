@@ -182,8 +182,8 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       <div
         className="rounded-2xl p-4 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
-          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+          background: '#1a1a2e',
+          boxShadow: '0 8px 30px rgba(26, 26, 46, 0.3)',
         }}
       >
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
@@ -191,12 +191,13 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-xl font-extrabold text-white">Mes actions</h1>
-            <p className="text-xs text-indigo-200 mt-0.5">{axes.length} axe{axes.length !== 1 ? 's' : ''} de progrès</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{axes.length} axe{axes.length !== 1 ? 's' : ''} de progrès</p>
           </div>
           {axes.length < 3 && !isOnboardingCreate && (
             <button
               onClick={() => setShowAxeForm(true)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-white/90 hover:bg-white transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/90 hover:bg-white transition-colors"
+              style={{ color: '#1a1a2e' }}
             >
               <Plus size={14} /> Ajouter un axe
             </button>
@@ -210,8 +211,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           onClick={() => setQuickAddOpen(true)}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-white active:scale-[0.97] transition-transform"
           style={{
-            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
-            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.35)',
+            background: '#fbbf24',
+            color: '#1a1a2e',
+            boxShadow: '0 4px 15px rgba(251, 191, 36, 0.35)',
           }}
         >
           <Plus size={20} strokeWidth={2.5} />
@@ -223,9 +225,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {showAxeForm && (
         <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden">
           {/* Header gradient */}
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4">
+          <div className="px-5 py-4" style={{ background: '#1a1a2e' }}>
             <h2 className="text-white font-bold text-base">🎯 Nouvel axe de progrès</h2>
-            <p className="text-indigo-100 text-xs mt-0.5">Définis un domaine à améliorer</p>
+            <p className="text-white/50 text-xs mt-0.5">Définis un domaine à améliorer</p>
           </div>
 
           <form onSubmit={handleCreateAxe} className="p-5 space-y-5">
@@ -235,7 +237,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               <input
                 name="subject"
                 required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-gray-500"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-[#fbbf24] focus:ring-2 focus:ring-[#fbbf24]/20 outline-none transition-all placeholder:text-gray-500"
                 placeholder="Ex : Déléguer efficacement"
               />
             </div>
@@ -247,7 +249,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               </label>
               <textarea
                 name="description"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20 placeholder:text-gray-500"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-[#fbbf24] focus:ring-2 focus:ring-[#fbbf24]/20 outline-none transition-all resize-none h-20 placeholder:text-gray-500"
                 placeholder="Comment comptez-vous progresser sur cet axe ?"
               />
             </div>
@@ -271,11 +273,11 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                       />
                       <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
                         isSelected
-                          ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                          ? 'border-[#fbbf24] bg-[#fffbeb] shadow-md scale-[1.03]'
                           : 'border-gray-200 bg-white hover:border-gray-300'
                       }`}>
                         <span className="text-lg">{emoji}</span>
-                        <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
+                        <span className={`text-xs font-semibold ${isSelected ? 'text-[#1a1a2e]' : 'text-gray-500'}`}>{label}</span>
                       </div>
                     </label>
                   )
@@ -291,7 +293,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                 type="submit"
                 disabled={isPending || isSaving}
                 className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98] ${(isPending || isSaving) ? 'opacity-60' : ''}`}
-                style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+                style={{ background: '#fbbf24', color: '#1a1a2e' }}
               >
                 {(isPending || isSaving) ? (
                   <span className="flex items-center justify-center gap-2">
@@ -459,7 +461,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                             const rank = rankMap.get(action.id) ?? 1
                             const isNewlyAdded = highlightAxeId === axe.id && actionIndex === 0
                             return (
-                              <li key={action.id} className={`flex items-start gap-2 rounded-lg px-1 -mx-1 transition-colors duration-1000 ${isNewlyAdded ? 'bg-indigo-100' : ''}`}>
+                              <li key={action.id} className={`flex items-start gap-2 rounded-lg px-1 -mx-1 transition-colors duration-1000 ${isNewlyAdded ? 'bg-[#fffbeb]' : ''}`}>
                                 <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{getActionPhaseIcon(rank)}</span>
                                 <div className="flex-1 min-w-0">
                                   <span className="text-sm text-gray-700">{action.description}</span>
@@ -475,7 +477,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                                 <div className="flex items-center gap-1 shrink-0 mt-0.5">
                                   <button
                                     onClick={() => { setEditingActionId(action.id); setEditingText(action.description) }}
-                                    className="text-gray-300 hover:text-indigo-500 transition-colors p-0.5"
+                                    className="text-gray-300 hover:text-[#1a1a2e] transition-colors p-0.5"
                                     title="Modifier"
                                   >
                                     <Pencil size={13} />
@@ -514,7 +516,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                   }}
                   className={`h-2 rounded-full transition-all duration-200 ${
                     i === safeIndex
-                      ? 'w-6 bg-indigo-500'
+                      ? 'w-6 bg-[#1a1a2e]'
                       : 'w-2 bg-gray-300 hover:bg-gray-400'
                   }`}
                 />
@@ -735,9 +737,9 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           <div className="absolute inset-0 bg-black/40" onClick={() => setEditingAxe(null)} />
           <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
             {/* Header gradient */}
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-4">
+            <div className="px-5 py-4" style={{ background: '#1a1a2e' }}>
               <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
-              <p className="text-indigo-100 text-xs mt-0.5">Modifie les détails de ton axe</p>
+              <p className="text-white/50 text-xs mt-0.5">Modifie les détails de ton axe</p>
             </div>
 
             <form onSubmit={handleUpdateAxe} className="p-5 space-y-5">
@@ -748,7 +750,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                   value={editAxeSubject}
                   onChange={(e) => setEditAxeSubject(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-[#fbbf24] focus:ring-2 focus:ring-[#fbbf24]/20 outline-none transition-all"
                 />
               </div>
 
@@ -760,7 +762,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                 <textarea
                   value={editAxeDescription}
                   onChange={(e) => setEditAxeDescription(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none h-20"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-[#fbbf24] focus:ring-2 focus:ring-[#fbbf24]/20 outline-none transition-all resize-none h-20"
                 />
               </div>
 
@@ -783,11 +785,11 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                         />
                         <div className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-200 ${
                           isSelected
-                            ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.03]'
+                            ? 'border-[#fbbf24] bg-[#fffbeb] shadow-md scale-[1.03]'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}>
                           <span className="text-lg">{emoji}</span>
-                          <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-500'}`}>{label}</span>
+                          <span className={`text-xs font-semibold ${isSelected ? 'text-[#1a1a2e]' : 'text-gray-500'}`}>{label}</span>
                         </div>
                       </label>
                     )
@@ -803,7 +805,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                   type="submit"
                   disabled={isPending}
                   className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-[0.98]"
-                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+                  style={{ background: '#fbbf24', color: '#1a1a2e' }}
                 >
                   {isPending ? 'Enregistrement...' : '✓ Valider'}
                 </button>

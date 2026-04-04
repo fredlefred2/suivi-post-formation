@@ -139,7 +139,8 @@ export default function GroupsClient({
         <h1 className="page-title">Groupes</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-xl transition-colors"
+          style={{ background: '#fbbf24', color: '#1a1a2e' }}
         >
           <Plus size={14} /> Nouveau
         </button>
@@ -147,7 +148,7 @@ export default function GroupsClient({
 
       {/* Formulaire de création */}
       {showForm && (
-        <div className="card border-2 border-indigo-100">
+        <div className="card border-2 border-[#f0ebe0]">
           <p className="font-semibold text-gray-800 text-sm mb-3">Nouveau groupe</p>
           <form onSubmit={handleCreate} className="space-y-3">
             <div>
@@ -162,7 +163,8 @@ export default function GroupsClient({
                     type="button"
                     disabled={rewritingTheme}
                     onClick={() => handleRewriteTheme(createThemeValue, setCreateThemeValue)}
-                    className="flex items-center gap-1 text-xs text-violet-600 hover:text-violet-700 font-medium transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1 text-xs font-medium transition-colors disabled:opacity-50"
+                    style={{ color: '#92400e' }}
                   >
                     {rewritingTheme ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                     {rewritingTheme ? 'Réécriture...' : 'Reformuler'}
@@ -204,20 +206,20 @@ export default function GroupsClient({
             const isExpanded = expandedGroups.has(group.id)
 
             return (
-              <div key={group.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-visible">
+              <div key={group.id} className="bg-white rounded-[22px] overflow-visible" style={{ border: '2px solid #f0ebe0' }}>
                 {/* Header du groupe */}
                 <div className="flex items-center gap-3 px-4 py-3.5">
                   <button
                     onClick={() => toggleGroup(group.id)}
                     className="flex items-center gap-3 flex-1 min-w-0 text-left"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-lg shrink-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: '#fffbeb' }}>
                       👥
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-gray-900 text-[15px] truncate">{group.name}</p>
-                        <span className="text-[11px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium shrink-0">
+                        <span className="text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: '#fffbeb', color: '#92400e' }}>
                           {memberCount}
                         </span>
                       </div>
@@ -240,7 +242,7 @@ export default function GroupsClient({
                       <MoreVertical size={16} />
                     </button>
                     {openMenu === `group-${group.id}` && (
-                      <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-30 py-1">
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[18px] shadow-lg z-30 py-1" style={{ border: '2px solid #f0ebe0' }}>
                         <Link
                           href={`/trainer/groups/${group.id}`}
                           className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -260,7 +262,7 @@ export default function GroupsClient({
 
                 {/* Membres */}
                 {isExpanded && (
-                  <div className="border-t border-gray-100">
+                  <div style={{ borderTop: '2px solid #f0ebe0' }}>
                     {members.length === 0 ? (
                       <p className="text-sm text-gray-400 text-center py-6">Aucun participant dans ce groupe</p>
                     ) : (
@@ -274,7 +276,7 @@ export default function GroupsClient({
                               <div key={m.learner_id}>
                                 <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
                                   {/* Avatar */}
-                                  <div className="w-8 h-8 rounded-full bg-indigo-200 text-indigo-800 font-semibold flex items-center justify-center text-xs shrink-0">
+                                  <div className="w-8 h-8 rounded-full font-semibold flex items-center justify-center text-xs shrink-0" style={{ background: '#1a1a2e', color: '#fbbf24' }}>
                                     {m.first_name[0]}{m.last_name[0]}
                                   </div>
 
@@ -283,7 +285,7 @@ export default function GroupsClient({
                                     href={`/trainer/apprenants?group=${group.id}&learner=${m.learner_id}`}
                                     className="flex-1 min-w-0"
                                   >
-                                    <p className="text-sm font-medium text-gray-800 hover:text-indigo-600 transition-colors truncate">
+                                    <p className="text-sm font-medium transition-colors truncate" style={{ color: '#1a1a2e' }}>
                                       {m.first_name} {m.last_name}
                                     </p>
                                   </Link>
@@ -318,7 +320,7 @@ export default function GroupsClient({
                                       <MoreVertical size={14} />
                                     </button>
                                     {openMenu === m.learner_id && (
-                                      <div className={`absolute right-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-30 py-1 ${
+                                      <div className={`absolute right-0 w-48 bg-white rounded-[18px] shadow-lg z-30 py-1 ${
                                         isLastTwo ? 'bottom-full mb-1' : 'top-full mt-1'
                                       }`}>
                                         {/* Réaffecter */}
@@ -332,7 +334,10 @@ export default function GroupsClient({
                                                   key={g.id}
                                                   disabled={isPending}
                                                   onClick={() => handleReassign(m.learner_id, group.id, g.id)}
-                                                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                                                  className="w-full text-left px-3 py-2 text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+                                  style={{ color: '#1a1a2e' }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = '#fffbeb' }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = '' }}
                                                 >
                                                   <span>🔄</span> {g.name}
                                                 </button>
@@ -367,7 +372,7 @@ export default function GroupsClient({
       {deletingLearnerId && deletingLearner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/30" onClick={() => { setDeletingLearnerId(null); setDeletingLearnerGroupId(null) }} />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full">
+          <div className="relative bg-white rounded-[28px] shadow-xl max-w-sm w-full" style={{ border: '2px solid #f0ebe0' }}>
             <button onClick={() => { setDeletingLearnerId(null); setDeletingLearnerGroupId(null) }} className="absolute top-3 right-3 text-gray-500 hover:text-gray-600">
               <X size={18} />
             </button>
@@ -402,7 +407,7 @@ export default function GroupsClient({
       {deletingGroupId && deletingGroup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/30" onClick={() => setDeletingGroupId(null)} />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full">
+          <div className="relative bg-white rounded-[28px] shadow-xl max-w-sm w-full" style={{ border: '2px solid #f0ebe0' }}>
             <button onClick={() => setDeletingGroupId(null)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-600">
               <X size={18} />
             </button>

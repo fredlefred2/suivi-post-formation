@@ -30,7 +30,8 @@ export default function LearnerError({
         <div className="flex flex-col gap-3">
           <button
             onClick={() => reset()}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors active:scale-95"
+            className="inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors active:scale-95"
+            style={{ background: '#fbbf24', color: '#1a1a2e', padding: '0.625rem 1.25rem' }}
           >
             <RefreshCw size={16} />
             R&eacute;essayer

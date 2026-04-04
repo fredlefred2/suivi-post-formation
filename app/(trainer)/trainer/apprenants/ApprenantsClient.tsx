@@ -26,8 +26,8 @@ type Group = {
 }
 
 function RadioDot({ active, amber = false }: { active: boolean; amber?: boolean }) {
-  const color = amber ? 'border-amber-500' : 'border-indigo-600'
-  const dot = amber ? 'bg-amber-500' : 'bg-indigo-600'
+  const color = amber ? 'border-amber-500' : 'border-[#fbbf24]'
+  const dot = amber ? 'bg-amber-500' : 'bg-[#fbbf24]'
   return (
     <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? color : 'border-gray-300'}`}>
       {active && <span className={`w-2 h-2 rounded-full ${dot}`} />}
@@ -66,7 +66,7 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
       {/* Avatar */}
-      <div className="w-9 h-9 rounded-full bg-indigo-200 text-indigo-800 font-semibold flex items-center justify-center text-sm shrink-0">
+      <div className="w-9 h-9 rounded-full font-semibold flex items-center justify-center text-sm shrink-0" style={{ background: '#1a1a2e', color: '#fbbf24' }}>
         {learner.first_name[0]}{learner.last_name[0]}
       </div>
 
@@ -74,14 +74,14 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
       <div className="flex-1 min-w-0">
         <Link
           href={`/trainer/learner/${learner.id}?from=apprenants${learner.groupId ? `&group=${learner.groupId}` : ''}`}
-          className="font-medium text-gray-900 hover:text-indigo-600 hover:underline transition-colors"
+          className="font-medium text-gray-900 hover:text-[#1a1a2e] hover:underline transition-colors"
         >
           {learner.first_name} {learner.last_name}
         </Link>
         {learner.stats && (
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             {/* Axes */}
-            <span className="inline-flex items-center gap-1 text-xs bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full font-medium">
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#fffbeb', color: '#1a1a2e', border: '2px solid #f0ebe0' }}>
               🎯 <span>{learner.stats.axesCount} axe{learner.stats.axesCount > 1 ? 's' : ''}</span>
             </span>
             {/* Actions totales */}
@@ -129,7 +129,7 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
               <select
                 value={selectedGroup}
                 onChange={(e) => setSelectedGroup(e.target.value)}
-                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#fbbf24]"
               >
                 <option value="">Affecter à...</option>
                 {groups.map((g) => (
@@ -140,7 +140,7 @@ function LearnerRow({ learner, groups }: { learner: Learner; groups: Group[] }) 
                 onClick={handleAssign}
                 disabled={isPending || !selectedGroup}
                 title="Affecter au groupe"
-                className="p-1.5 text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors disabled:opacity-40"
+                className="p-1.5 hover:bg-[#fffbeb] rounded-lg transition-colors disabled:opacity-40" style={{ color: '#1a1a2e' }}
               >
                 <UserCheck size={16} />
               </button>
@@ -216,15 +216,15 @@ export default function ApprenantsClient({
       <div
         className="rounded-2xl p-4 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
-          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+          background: '#1a1a2e',
+          boxShadow: '0 8px 30px rgba(26, 26, 46, 0.3)',
         }}
       >
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
         <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
         <div className="relative">
           <h1 className="text-xl font-extrabold text-white">Participants</h1>
-          <p className="text-xs text-indigo-200 mt-0.5">{learners.length} inscrit{learners.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{learners.length} inscrit{learners.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
@@ -240,8 +240,8 @@ export default function ApprenantsClient({
               onClick={() => setDropdownOpen((o) => !o)}
               className={`flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-colors shadow-sm min-w-[220px] justify-between ${
                 dropdownOpen
-                  ? 'border-indigo-400 text-indigo-700 ring-2 ring-indigo-100'
-                  : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-700'
+                  ? 'border-[#fbbf24] text-[#1a1a2e] ring-2 ring-[rgba(251,191,36,0.15)]'
+                  : 'border-gray-200 text-gray-700 hover:border-[#fbbf24] hover:text-[#1a1a2e]'
               }`}
             >
               <span className="truncate">👥 {selectionLabel}</span>
@@ -258,11 +258,11 @@ export default function ApprenantsClient({
                 <button
                   onClick={() => selectOption('all')}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${
-                    selectedOption === 'all' ? 'bg-indigo-50' : 'hover:bg-gray-50'
+                    selectedOption === 'all' ? 'bg-[#fffbeb]' : 'hover:bg-gray-50'
                   }`}
                 >
                   <RadioDot active={selectedOption === 'all'} />
-                  <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
+                  <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-[#1a1a2e]' : 'text-gray-900'}`}>
                     Tous les groupes
                   </span>
                   <span className="ml-auto text-xs text-gray-500">{totalAssigned} app.</span>
@@ -277,11 +277,11 @@ export default function ApprenantsClient({
                         key={g.id}
                         onClick={() => selectOption(g.id)}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                          selectedOption === g.id ? 'bg-indigo-50' : 'hover:bg-gray-50'
+                          selectedOption === g.id ? 'bg-[#fffbeb]' : 'hover:bg-gray-50'
                         }`}
                       >
                         <RadioDot active={selectedOption === g.id} />
-                        <span className={`text-sm ${selectedOption === g.id ? 'text-indigo-700 font-medium' : 'text-gray-700'}`}>
+                        <span className={`text-sm ${selectedOption === g.id ? 'text-[#1a1a2e] font-medium' : 'text-gray-700'}`}>
                           {g.name}
                         </span>
                         <span className="ml-auto text-xs text-gray-500">{count} app.</span>
@@ -345,7 +345,7 @@ export default function ApprenantsClient({
                 <div key={group.id} className="card">
                   <h2 className="section-title mb-3">
                     {group.name}
-                    <span className="ml-2 text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                    <span className="ml-2 text-xs font-normal px-2 py-0.5 rounded-full bg-[#fffbeb] text-[#1a1a2e]">
                       {groupLearners.length}
                     </span>
                   </h2>
@@ -371,7 +371,7 @@ export default function ApprenantsClient({
               <div className="card">
                 <h2 className="section-title mb-3">
                   {groups.find((g) => g.id === selectedOption)?.name}
-                  <span className="ml-2 text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                  <span className="ml-2 text-xs font-normal px-2 py-0.5 rounded-full bg-[#fffbeb] text-[#1a1a2e]">
                     {filteredByGroup.length}
                   </span>
                 </h2>

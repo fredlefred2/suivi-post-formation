@@ -203,8 +203,8 @@ export default async function LearnerDetailPage({
       <div
         className="rounded-2xl p-4 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
-          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+          background: '#1a1a2e',
+          boxShadow: '0 8px 30px rgba(26, 26, 46, 0.3)',
         }}
       >
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
@@ -214,13 +214,14 @@ export default async function LearnerDetailPage({
         <div className="relative flex items-start justify-between mb-4">
           <div>
             <h1 className="text-xl font-extrabold text-white">{profile.first_name} {profile.last_name}</h1>
-            <p className="text-xs text-indigo-200 mt-0.5">{(axes ?? []).length} axe{(axes ?? []).length !== 1 ? 's' : ''} de progrès</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{(axes ?? []).length} axe{(axes ?? []).length !== 1 ? 's' : ''} de progrès</p>
           </div>
           <div className="flex items-center gap-2">
             {weatherEmoji && <span className="text-3xl drop-shadow-lg">{weatherEmoji}</span>}
             <Link
               href={`/trainer/messages?with=${params.id}`}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-white/90 hover:bg-white transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/90 hover:bg-white transition-colors"
+              style={{ color: '#1a1a2e' }}
             >
               <MessageCircle size={13} />
               Message
@@ -232,20 +233,20 @@ export default async function LearnerDetailPage({
         <div className="relative grid grid-cols-3 gap-2">
           <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
             <div className="text-2xl font-black text-white">{totalActions}</div>
-            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>actions</p>
           </div>
           <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
             <div className={`text-2xl font-black ${actionsThisWeek > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
               {actionsThisWeek > 0 ? `+${actionsThisWeek}` : '0'}
             </div>
-            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>cette semaine</p>
           </div>
           <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
             <div className="text-2xl font-black text-white">
               {totalCheckins}
-              {expected > 0 && <span className="text-sm font-normal text-indigo-300">/{expected}</span>}
+              {expected > 0 && <span className="text-sm font-normal" style={{ color: 'rgba(255,255,255,0.5)' }}>/{expected}</span>}
             </div>
-            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>check-ins</p>
           </div>
         </div>
       </div>

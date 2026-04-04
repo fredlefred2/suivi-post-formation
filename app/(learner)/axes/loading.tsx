@@ -25,7 +25,7 @@ export default function AxesLoading() {
         </div>
 
         {/* Bouton ajouter */}
-        <div className="h-10 w-full bg-indigo-50 rounded-xl" />
+        <div className="h-10 w-full rounded-xl" style={{ background: '#fffbeb' }} />
       </div>
     </div>
   )

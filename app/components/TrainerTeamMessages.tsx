@@ -107,12 +107,13 @@ export default function TrainerTeamMessages({
       <div className="flex items-center gap-2">
         <button
           onClick={() => messages.length > 0 && setShowAll(true)}
-          className="relative shrink-0 w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 hover:bg-indigo-100 transition-colors"
+          className="relative shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+          style={{ background: '#fffbeb', color: '#92400e' }}
           title={lastMessage ? `Dernier message : ${timeAgo(lastMessage.createdAt)}` : 'Messages à la team'}
         >
           <MessageSquare size={16} />
           {messages.length > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center">
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center" style={{ background: '#fbbf24', color: '#1a1a2e' }}>
               {messages.length}
             </span>
           )}
@@ -124,12 +125,13 @@ export default function TrainerTeamMessages({
           onKeyDown={handleKeyDown}
           placeholder="Message à la team…"
           maxLength={500}
-          className="flex-1 min-w-0 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent bg-white"
+          className="flex-1 min-w-0 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-[#fbbf24] bg-white"
         />
         <button
           onClick={handleSend}
           disabled={!input.trim() || sending}
-          className="shrink-0 p-2 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90"
+          className="shrink-0 p-2 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90"
+          style={{ background: '#fbbf24', color: '#1a1a2e' }}
         >
           <Send size={16} />
         </button>
@@ -138,7 +140,7 @@ export default function TrainerTeamMessages({
       {!loading && lastMessage && (
         <button
           onClick={() => setShowAll(true)}
-          className="mt-1.5 text-[10px] text-gray-400 hover:text-indigo-500 transition-colors truncate block w-full text-left pl-11"
+          className="mt-1.5 text-[10px] text-gray-400 hover:text-[#92400e] transition-colors truncate block w-full text-left pl-11"
         >
           Dernier : &ldquo;{lastMessage.content.slice(0, 50)}{lastMessage.content.length > 50 ? '…' : ''}&rdquo; · {timeAgo(lastMessage.createdAt)}
         </button>

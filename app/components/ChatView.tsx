@@ -140,7 +140,7 @@ export default function ChatView({
             <ArrowLeft size={20} />
           </button>
         )}
-        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: '#fffbeb', color: '#1a1a2e' }}>
           {userName.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
         </div>
         <p className="font-semibold text-sm text-gray-800">{userName}</p>
@@ -171,12 +171,13 @@ export default function ChatView({
                 <div
                   className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
                     isMine
-                      ? 'bg-indigo-500 text-white rounded-br-md'
+                      ? 'text-white rounded-br-md'
                       : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
                   }`}
+                  {...(isMine ? { style: { background: '#1a1a2e' } } : {})}
                 >
                   <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                  <p className={`text-[10px] mt-1 ${isMine ? 'text-indigo-200' : 'text-gray-500'}`}>
+                  <p className={`text-[10px] mt-1 ${isMine ? '' : 'text-gray-500'}`} {...(isMine ? { style: { color: 'rgba(255,255,255,0.5)' } } : {})}>
                     {formatTime(msg.created_at)}
                   </p>
                 </div>
@@ -196,12 +197,13 @@ export default function ChatView({
             onKeyDown={handleKeyDown}
             placeholder="Votre message…"
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent max-h-24"
+            className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-[#fbbf24] max-h-24"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || sending}
-            className="p-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90"
+            className="p-2.5 rounded-xl text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90 hover:opacity-90"
+            style={{ background: '#fbbf24', color: '#1a1a2e' }}
           >
             <Send size={18} />
           </button>

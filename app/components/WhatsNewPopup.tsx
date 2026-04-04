@@ -77,7 +77,7 @@ export default function WhatsNewPopup({ userId }: { userId: string }) {
       <div className={`bg-white rounded-2xl shadow-2xl max-w-sm w-full max-h-[85vh] flex flex-col overflow-hidden transition-all duration-300 ${animating ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
         {/* Header */}
         <div className="px-6 pt-6 pb-4 text-center shrink-0" style={{
-          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 100%)',
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%)',
         }}>
           <div className="flex justify-end -mt-2 -mr-2">
             <button
@@ -93,7 +93,7 @@ export default function WhatsNewPopup({ userId }: { userId: string }) {
             <h2 className="text-lg font-bold text-white">Quoi de neuf ?</h2>
             <Sparkles size={22} className="text-amber-300" />
           </div>
-          <p className="text-xs text-indigo-200 mt-1">Ton appli a évolué !</p>
+          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>Ton appli a évolué !</p>
         </div>
 
         {/* Updates list — scrollable */}

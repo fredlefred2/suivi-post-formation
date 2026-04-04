@@ -91,10 +91,10 @@ export default function ConversationList({
           key={conv.userId}
           onClick={() => onSelect(conv.userId, `${conv.firstName} ${conv.lastName}`)}
           className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
-            selectedUserId === conv.userId ? 'bg-indigo-50' : ''
+            selectedUserId === conv.userId ? 'bg-[#fffbeb]' : ''
           }`}
         >
-          <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ background: '#fffbeb', color: '#1a1a2e' }}>
             {getInitials(conv.firstName, conv.lastName)}
           </div>
           <div className="flex-1 min-w-0">
@@ -111,7 +111,7 @@ export default function ConversationList({
                 {conv.lastMessageByMe ? 'Vous : ' : ''}{conv.lastMessage}
               </p>
               {conv.unreadCount > 0 && (
-                <span className="ml-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-indigo-500 rounded-full px-1 flex-shrink-0">
+                <span className="ml-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white rounded-full px-1 flex-shrink-0" style={{ background: '#1a1a2e' }}>
                   {conv.unreadCount}
                 </span>
               )}

@@ -72,8 +72,8 @@ export default function LearnerNav({
             onClick={() => setDropdownOpen((o) => !o)}
             className={`flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-colors shadow-sm min-w-[200px] justify-between ${
               dropdownOpen
-                ? 'border-indigo-400 text-indigo-700 ring-2 ring-indigo-100'
-                : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-700'
+                ? 'border-[#fbbf24] text-[#1a1a2e] ring-2 ring-[rgba(251,191,36,0.15)]'
+                : 'border-gray-200 text-gray-700 hover:border-[#fbbf24] hover:text-[#1a1a2e]'
             }`}
           >
             <span className="truncate">👥 {currentGroupName ?? 'Groupe'}</span>
@@ -96,15 +96,15 @@ export default function LearnerNav({
                     }
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                    g.id === currentGroupId ? 'bg-indigo-50' : 'hover:bg-gray-50'
+                    g.id === currentGroupId ? 'bg-[#fffbeb]' : 'hover:bg-gray-50'
                   }`}
                 >
                   <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    g.id === currentGroupId ? 'border-indigo-600' : 'border-gray-300'
+                    g.id === currentGroupId ? 'border-[#fbbf24]' : 'border-gray-300'
                   }`}>
-                    {g.id === currentGroupId && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    {g.id === currentGroupId && <span className="w-2 h-2 rounded-full bg-[#fbbf24]" />}
                   </span>
-                  <span className={`text-sm ${g.id === currentGroupId ? 'text-indigo-700 font-medium' : 'text-gray-700'}`}>
+                  <span className={`text-sm ${g.id === currentGroupId ? 'text-[#1a1a2e] font-medium' : 'text-gray-700'}`}>
                     {g.name}
                   </span>
                   <span className="ml-auto text-xs text-gray-500">{g.count} app.</span>
@@ -121,7 +121,7 @@ export default function LearnerNav({
           <button
             onClick={() => prevUrl && router.push(prevUrl)}
             disabled={!prevUrl}
-            className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+            className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-[#1a1a2e] hover:border-[#fbbf24] transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
           >
             <ChevronLeft size={16} />
           </button>
@@ -136,7 +136,7 @@ export default function LearnerNav({
                     }}
                     className={`h-2 rounded-full transition-all duration-200 ${
                       i === currentIndex
-                        ? 'w-6 bg-indigo-500'
+                        ? 'w-6 bg-[#fbbf24]'
                         : 'w-2 bg-gray-300 hover:bg-gray-400 cursor-pointer'
                     }`}
                   />
@@ -152,7 +152,7 @@ export default function LearnerNav({
           <button
             onClick={() => nextUrl && router.push(nextUrl)}
             disabled={!nextUrl}
-            className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+            className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-[#1a1a2e] hover:border-[#fbbf24] transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
           >
             <ChevronRight size={16} />
           </button>

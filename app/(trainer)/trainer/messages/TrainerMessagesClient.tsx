@@ -265,7 +265,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
             >
               <ArrowLeft size={20} className="text-gray-600" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: '#fffbeb', color: '#1a1a2e' }}>
               {selected.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
             </div>
             <p className="font-semibold text-sm text-gray-800 flex-1 truncate">{selected.name}</p>
@@ -276,7 +276,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
             {!showNewMessage && (
               <button
                 onClick={() => setShowNewMessage(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors" style={{ color: '#1a1a2e', background: '#fffbeb' }}
               >
                 <Plus size={14} />
                 Nouveau
@@ -321,11 +321,11 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                   <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
                       isMine
-                        ? 'bg-indigo-500 text-white rounded-br-md'
+                        ? 'text-white rounded-br-md bg-[#1a1a2e]'
                         : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
                     }`}>
                       <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                      <p className={`text-[10px] mt-1 ${isMine ? 'text-indigo-200' : 'text-gray-500'}`}>
+                      <p className={`text-[10px] mt-1 ${isMine ? 'text-white/50' : 'text-gray-500'}`}>
                         {formatTime(msg.created_at)}
                       </p>
                     </div>
@@ -345,12 +345,13 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                 onKeyDown={handleKeyDown}
                 placeholder="Votre message…"
                 rows={1}
-                className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent max-h-24"
+                className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-[#fbbf24] max-h-24"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="p-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90 shrink-0"
+                className="p-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-90 shrink-0"
+                style={{ background: '#fbbf24', color: '#1a1a2e' }}
               >
                 <Send size={18} />
               </button>
@@ -370,7 +371,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Rechercher un apprenant…"
-                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-[#fbbf24]"
                 autoFocus
               />
             </div>
@@ -382,7 +383,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                 onClick={() => handleSelect(learner.id, learner.name)}
                 className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ background: '#fffbeb', color: '#1a1a2e' }}>
                   {learner.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
                 </div>
                 <p className="text-sm font-medium text-gray-700">{learner.name}</p>
@@ -428,7 +429,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                     onClick={() => handleSelect(conv.userId, `${conv.firstName} ${conv.lastName}`)}
                     className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ background: '#fffbeb', color: '#1a1a2e' }}>
                       {`${conv.firstName.charAt(0)}${conv.lastName.charAt(0)}`.toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -445,7 +446,7 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                           {conv.lastMessageByMe ? 'Vous : ' : ''}{conv.lastMessage}
                         </p>
                         {conv.unreadCount > 0 && (
-                          <span className="ml-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-indigo-500 rounded-full px-1 flex-shrink-0">
+                          <span className="ml-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full px-1 flex-shrink-0" style={{ background: '#fbbf24', color: '#1a1a2e' }}>
                             {conv.unreadCount}
                           </span>
                         )}

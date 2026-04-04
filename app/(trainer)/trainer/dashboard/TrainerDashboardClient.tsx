@@ -289,8 +289,8 @@ export default function TrainerDashboardClient({
 
   function RadioDot({ active }: { active: boolean }) {
     return (
-      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? 'border-indigo-600' : 'border-gray-300'}`}>
-        {active && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? 'border-[#fbbf24]' : 'border-gray-300'}`}>
+        {active && <span className="w-2 h-2 rounded-full bg-[#fbbf24]" />}
       </span>
     )
   }
@@ -375,8 +375,8 @@ export default function TrainerDashboardClient({
             onClick={() => setDropdownOpen((o) => !o)}
             className={`w-full flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-colors shadow-sm justify-between ${
               dropdownOpen
-                ? 'border-indigo-400 text-indigo-700 ring-2 ring-indigo-100'
-                : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-700'
+                ? 'border-[#fbbf24] text-[#1a1a2e] ring-2 ring-[rgba(251,191,36,0.15)]'
+                : 'border-gray-200 text-gray-700 hover:border-[#fbbf24] hover:text-[#1a1a2e]'
             }`}
           >
             <span className="truncate">{selectionLabel}</span>
@@ -387,10 +387,10 @@ export default function TrainerDashboardClient({
             <div className="absolute top-full mt-1.5 left-0 right-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
               <button
                 onClick={() => selectOption('all')}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${selectedOption === 'all' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${selectedOption === 'all' ? 'bg-[#fffbeb]' : 'hover:bg-gray-50'}`}
               >
                 <RadioDot active={selectedOption === 'all'} />
-                <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-indigo-700' : 'text-gray-900'}`}>
+                <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-[#1a1a2e]' : 'text-gray-900'}`}>
                   Tous les groupes
                   <span className="ml-1 font-normal text-gray-500">({groups.length})</span>
                 </span>
@@ -407,14 +407,14 @@ export default function TrainerDashboardClient({
                       onClick={() => selectOption(g.id)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                         selectedOption === g.id
-                          ? isSalleAttente ? 'bg-amber-50' : 'bg-indigo-50'
+                          ? isSalleAttente ? 'bg-amber-50' : 'bg-[#fffbeb]'
                           : isSalleAttente ? 'hover:bg-amber-50' : 'hover:bg-gray-50'
                       }`}
                     >
                       <RadioDot active={selectedOption === g.id} />
                       <span className={`text-sm ${
                         selectedOption === g.id
-                          ? isSalleAttente ? 'text-amber-700 font-medium' : 'text-indigo-700 font-medium'
+                          ? isSalleAttente ? 'text-amber-700 font-medium' : 'text-[#1a1a2e] font-medium'
                           : isSalleAttente ? 'text-amber-600' : 'text-gray-700'
                       }`}>
                         {isSalleAttente ? '⚪ ' : ''}{g.name}
@@ -433,7 +433,8 @@ export default function TrainerDashboardClient({
           <button
             onClick={handleDownloadReport}
             disabled={isDownloading}
-            className="flex items-center gap-1.5 px-3 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+            style={{ background: '#fbbf24', color: '#1a1a2e' }}
             title="Telecharger le rapport PDF"
           >
             {isDownloading ? (
@@ -446,12 +447,12 @@ export default function TrainerDashboardClient({
         )}
       </div>
 
-      {/* ── Bloc principal : gradient indigo harmonisé ── */}
+      {/* ── Bloc principal : gradient warm harmonise ── */}
       <div
         className="rounded-2xl p-4 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
-          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
+          background: '#1a1a2e',
+          boxShadow: '0 8px 30px rgba(26, 26, 46, 0.3)',
         }}
       >
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
@@ -461,7 +462,7 @@ export default function TrainerDashboardClient({
         <div className="relative flex items-start justify-between mb-4">
           <div>
             <h1 className="text-xl font-extrabold text-white">{selectionLabel}</h1>
-            <p className="text-xs text-indigo-200 mt-0.5">{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
           </div>
           {totalWithCheckin > 0 && (() => {
             const max = Math.max(weatherDistribution.sunny, weatherDistribution.cloudy, weatherDistribution.stormy)
@@ -474,14 +475,14 @@ export default function TrainerDashboardClient({
         <div className="relative grid grid-cols-3 gap-2">
           <Link href={apprenantLink} className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
             <div className="text-2xl font-black text-white">{animatedMembers}</div>
-            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">membre{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>membre{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
           </Link>
 
           <Link href={apprenantLink} className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
             <div className={`text-2xl font-black ${recentActionsFiltered.length > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
               {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
             </div>
-            <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>cette semaine</p>
           </Link>
 
           <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
@@ -494,7 +495,7 @@ export default function TrainerDashboardClient({
               ) : (
                 <>
                   <div className="text-2xl font-black text-amber-300">{missingCount}</div>
-                  <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">en attente</p>
+                  <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>en attente</p>
                 </>
               )
             ) : (
@@ -502,7 +503,7 @@ export default function TrainerDashboardClient({
                 <div className={`text-2xl font-black ${lastWeekInfo.pct === 100 ? 'text-emerald-300' : lastWeekInfo.pct >= 50 ? 'text-white' : 'text-amber-300'}`}>
                   {lastWeekInfo.pct}%
                 </div>
-                <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
+                <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>check-ins</p>
               </>
             )}
           </div>
@@ -525,7 +526,7 @@ export default function TrainerDashboardClient({
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-bold text-gray-800">Actions récentes</h2>
-            <button onClick={handleOpenAll} className="text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
+            <button onClick={handleOpenAll} className="text-xs font-semibold" style={{ color: '#92400e' }}>
               Voir tout →
             </button>
           </div>
@@ -562,7 +563,7 @@ export default function TrainerDashboardClient({
                       <p className="text-xs font-bold text-gray-800 truncate">
                         {action.learner_first_name} {action.learner_last_name}
                       </p>
-                      <p className="text-[10px] text-indigo-500 font-medium truncate">{action.axe_subject}</p>
+                      <p className="text-[10px] font-medium truncate text-[#92400e]">{action.axe_subject}</p>
                     </div>
                     <span className="text-base shrink-0">{dyn.icon}</span>
                   </div>
@@ -574,7 +575,7 @@ export default function TrainerDashboardClient({
                     {(action.feedback.likes_count > 0 || action.feedback.comments_count > 0) && (
                       <div className="flex items-center gap-2 text-[10px]">
                         {action.feedback.likes_count > 0 && <span className="text-pink-400 font-semibold">❤️ {action.feedback.likes_count}</span>}
-                        {action.feedback.comments_count > 0 && <span className="text-indigo-400 font-semibold">💬 {action.feedback.comments_count}</span>}
+                        {action.feedback.comments_count > 0 && <span className="font-semibold" style={{ color: '#92400e' }}>💬 {action.feedback.comments_count}</span>}
                       </div>
                     )}
                   </div>
@@ -588,7 +589,7 @@ export default function TrainerDashboardClient({
                 <div
                   key={i}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentSlide % carouselActions.length ? 'w-4 bg-indigo-500' : 'w-1.5 bg-gray-200'
+                    i === currentSlide % carouselActions.length ? 'w-4 bg-[#fbbf24]' : 'w-1.5 bg-gray-200'
                   }`}
                 />
               ))}
@@ -707,7 +708,7 @@ export default function TrainerDashboardClient({
                       <p className="text-sm font-semibold text-gray-700">
                         {action.learner_first_name} {action.learner_last_name}
                       </p>
-                      <p className="text-xs text-indigo-500">{action.axe_subject}</p>
+                      <p className="text-xs" style={{ color: '#92400e' }}>{action.axe_subject}</p>
                     </div>
                     <span className="text-xs text-gray-500">
                       {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}

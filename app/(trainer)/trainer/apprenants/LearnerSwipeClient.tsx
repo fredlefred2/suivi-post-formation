@@ -155,11 +155,12 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((o) => !o)}
-            className={`flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-colors shadow-sm min-w-[200px] justify-between ${
-              dropdownOpen
-                ? 'border-indigo-400 text-indigo-700 ring-2 ring-indigo-100'
-                : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-700'
-            }`}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl text-sm font-medium transition-colors shadow-sm min-w-[200px] justify-between"
+            style={{
+              border: dropdownOpen ? '2px solid #fbbf24' : '2px solid #f0ebe0',
+              color: '#1a1a2e',
+              ...(dropdownOpen ? { boxShadow: '0 0 0 3px rgba(251,191,36,0.15)' } : {}),
+            }}
           >
             <span className="truncate">📊 {currentGroupName ?? 'Groupe'}</span>
             <ChevronDown
@@ -169,7 +170,7 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
           </button>
 
           {dropdownOpen && (
-            <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[220px]">
+            <div className="absolute top-full mt-1.5 left-0 z-50 bg-white rounded-[18px] shadow-xl overflow-hidden min-w-[220px]" style={{ border: '2px solid #f0ebe0' }}>
               {groups.map((g) => (
                 <button
                   key={g.id}
@@ -180,16 +181,13 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                       router.push(`/trainer/apprenants?group=${g.id}`)
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                    g.id === currentGroupId ? 'bg-indigo-50' : 'hover:bg-gray-50'
-                  }`}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
+                  style={{ background: g.id === currentGroupId ? '#fffbeb' : '' }}
                 >
-                  <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    g.id === currentGroupId ? 'border-indigo-600' : 'border-gray-300'
-                  }`}>
-                    {g.id === currentGroupId && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                  <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: g.id === currentGroupId ? '#fbbf24' : '#e0d8c8' }}>
+                    {g.id === currentGroupId && <span className="w-2 h-2 rounded-full" style={{ background: '#fbbf24' }} />}
                   </span>
-                  <span className={`text-sm ${g.id === currentGroupId ? 'text-indigo-700 font-medium' : 'text-gray-700'}`}>
+                  <span className="text-sm" style={{ color: g.id === currentGroupId ? '#1a1a2e' : '#a0937c', fontWeight: g.id === currentGroupId ? 600 : 400 }}>
                     {g.name}
                   </span>
                   <span className="ml-auto text-xs text-gray-500">{g.count} app.</span>
@@ -206,7 +204,8 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
           <button
             onClick={() => currentIndex > 0 && scrollToIndex(currentIndex - 1)}
             disabled={currentIndex <= 0}
-            className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+            className="w-8 h-8 rounded-full bg-white flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+            style={{ border: '2px solid #f0ebe0', color: '#a0937c' }}
           >
             <ChevronLeft size={16} />
           </button>
@@ -217,11 +216,11 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                   <button
                     key={i}
                     onClick={() => scrollToIndex(i)}
-                    className={`h-2 rounded-full transition-all duration-200 ${
-                      i === currentIndex
-                        ? 'w-6 bg-indigo-500'
-                        : 'w-2 bg-gray-300 hover:bg-gray-400'
-                    }`}
+                    className="h-2 rounded-full transition-all duration-200"
+                    style={{
+                      width: i === currentIndex ? '24px' : '8px',
+                      background: i === currentIndex ? '#fbbf24' : '#f0ebe0',
+                    }}
                   />
                 ))
               : (
@@ -235,7 +234,8 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
           <button
             onClick={() => currentIndex < learners.length - 1 && scrollToIndex(currentIndex + 1)}
             disabled={currentIndex >= learners.length - 1}
-            className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+            className="w-8 h-8 rounded-full bg-white flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+            style={{ border: '2px solid #f0ebe0', color: '#a0937c' }}
           >
             <ChevronRight size={16} />
           </button>
@@ -256,22 +256,18 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
             >
               <div className="space-y-5">
 
-                {/* ── Header gradient indigo ──────────────────────── */}
+                {/* ── Header navy ────────────────────────────────── */}
                 <div
-                  className="rounded-2xl p-4 relative overflow-hidden"
-                  style={{
-                    background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
-                    boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
-                  }}
+                  className="rounded-[28px] p-4 relative overflow-hidden"
+                  style={{ background: '#1a1a2e' }}
                 >
-                  <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
-                  <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
+                  <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
 
                   {/* Nom + dernière météo */}
                   <div className="relative flex items-start justify-between mb-4">
                     <div>
                       <h2 className="text-xl font-extrabold text-white">{learner.firstName} {learner.lastName}</h2>
-                      <p className="text-xs text-indigo-200 mt-0.5">{learner.axes.length} axe{learner.axes.length !== 1 ? 's' : ''} de progrès</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{learner.axes.length} axe{learner.axes.length !== 1 ? 's' : ''} de progrès</p>
                     </div>
                     {learner.lastWeather && (
                       <span className="text-3xl drop-shadow-lg">{WEATHER_ICONS[learner.lastWeather] ?? '❓'}</span>
@@ -280,22 +276,22 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
 
                   {/* Stats en 3 colonnes glass */}
                   <div className="relative grid grid-cols-3 gap-2">
-                    <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
-                      <div className={`text-2xl font-black ${learner.actionsThisWeek > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
+                    <div className="rounded-2xl py-2.5 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                      <div className="font-display text-[26px] font-bold" style={{ color: learner.actionsThisWeek > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
                         {learner.actionsThisWeek > 0 ? `+${learner.actionsThisWeek}` : '0'}
                       </div>
-                      <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">cette semaine</p>
+                      <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>cette semaine</p>
                     </div>
-                    <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
-                      <div className="text-2xl font-black text-white">{learner.totalActions}</div>
-                      <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">actions</p>
+                    <div className="rounded-2xl py-2.5 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                      <div className="font-display text-[26px] font-bold text-white">{learner.totalActions}</div>
+                      <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>actions</p>
                     </div>
-                    <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
-                      <div className="text-2xl font-black text-white">
+                    <div className="rounded-2xl py-2.5 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                      <div className="font-display text-[26px] font-bold text-white">
                         {learner.totalCheckins}
-                        {learner.expectedCheckins > 0 && <span className="text-sm font-normal text-indigo-300">/{learner.expectedCheckins}</span>}
+                        {learner.expectedCheckins > 0 && <span className="text-sm font-normal" style={{ color: 'rgba(255,255,255,0.4)' }}>/{learner.expectedCheckins}</span>}
                       </div>
-                      <p className="text-[10px] text-indigo-200 mt-0.5 leading-tight">check-ins</p>
+                      <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>check-ins</p>
                     </div>
                   </div>
                 </div>

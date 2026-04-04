@@ -35,7 +35,7 @@ export default function CheckinLoading() {
       </div>
 
       {/* Bouton */}
-      <div className="h-12 w-full bg-indigo-100 rounded-xl" />
+      <div className="h-12 w-full rounded-xl" style={{ background: '#fffbeb' }} />
     </div>
   )
 }

@@ -4,7 +4,7 @@ export default function GroupsLoading() {
       {/* Titre + bouton créer */}
       <div className="flex items-center justify-between">
         <div className="h-7 w-36 bg-gray-200 rounded-lg" />
-        <div className="h-9 w-28 bg-indigo-100 rounded-xl" />
+        <div className="h-9 w-28 rounded-xl" style={{ background: '#fffbeb' }} />
       </div>
 
       {/* Cards groupes */}

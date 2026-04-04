@@ -27,7 +27,7 @@ export default async function GroupDetailPage({
   return (
     <div className="space-y-6 pb-4">
       <div>
-        <Link href="/trainer/groups" className="text-sm text-indigo-600 hover:underline">
+        <Link href="/trainer/groups" className="text-sm hover:underline" style={{ color: '#1a1a2e' }}>
           ← Retour aux groupes
         </Link>
         <h1 className="page-title mt-2">{group.name}</h1>
