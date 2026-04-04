@@ -142,18 +142,18 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
 
       {levelUpInfo ? (
-        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xs mx-4 p-8 text-center animate-fade-in-up">
+        <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-4 p-8 text-center animate-fade-in-up" style={{ border: '2px solid #f0ebe0' }}>
           <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
           <div className="animate-level-up-text">
-            <p className="text-xl font-bold text-gray-900 mb-1">Niveau {levelUpInfo.label}</p>
-            <p className="text-lg font-semibold text-gray-500">débloqué !</p>
-            <p className="text-sm text-gray-500 mt-3">Continue comme ça 💪</p>
+            <p className="text-xl font-bold mb-1" style={{ color: '#1a1a2e' }}>Niveau {levelUpInfo.label}</p>
+            <p className="text-lg font-semibold" style={{ color: '#a0937c' }}>débloqué !</p>
+            <p className="text-sm mt-3" style={{ color: '#a0937c' }}>Continue comme ça 💪</p>
           </div>
         </div>
       ) : showConfirm ? (
-        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xs mx-4 p-8 text-center animate-fade-in-up">
+        <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-4 p-8 text-center animate-fade-in-up" style={{ border: '2px solid #f0ebe0' }}>
           <div className="text-7xl mb-4">✅</div>
-          <p className="text-xl font-bold text-gray-900 mb-1">Action ajoutée !</p>
+          <p className="text-xl font-bold mb-1" style={{ color: '#1a1a2e' }}>Action ajoutée !</p>
           {confirmInfo ? (
             <div className="mt-3">
               <p className="text-sm text-gray-500">{confirmInfo.message}</p>
@@ -164,10 +164,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           )}
         </div>
       ) : (
-        <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-md mx-0 sm:mx-4 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-in-up">
+        <div className="relative bg-white rounded-t-[28px] sm:rounded-[28px] shadow-xl w-full max-w-md mx-0 sm:mx-4 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-in-up" style={{ border: '2px solid #f0ebe0' }}>
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
-            <h3 className="font-bold text-gray-900 text-lg">
+            <h3 className="font-bold text-lg" style={{ color: '#1a1a2e' }}>
               {step === 'axe' && 'Sur quel axe ?'}
               {step === 'comment' && 'Qu\'as-tu fait ?'}
             </h3>
@@ -218,9 +218,9 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           {step === 'comment' && (
             <div className="space-y-4">
               {onboardingMode && (
-                <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-sm text-indigo-700">
+                <div className="rounded-xl px-3 py-2 text-sm" style={{ background: '#fffbeb', border: '2px solid #fde68a', color: '#92400e' }}>
                   <p className="font-medium">🎯 C&apos;est un exemple !</p>
-                  <p className="text-xs text-indigo-500 mt-0.5">Ton axe est pré-sélectionné. Valide cette action pour découvrir la suite.</p>
+                  <p className="text-xs mt-0.5" style={{ color: '#92400e' }}>Ton axe est pré-sélectionné. Valide cette action pour découvrir la suite.</p>
                 </div>
               )}
               <div className="flex items-center gap-2 text-sm">

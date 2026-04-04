@@ -167,10 +167,10 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
         }}
         className={`flex items-center gap-1.5 transition-colors duration-150 ${
           hasComments
-            ? 'text-indigo-500 hover:text-indigo-600'
+            ? 'text-[#1a1a2e]'
             : canInteract
-              ? 'text-indigo-200 hover:text-indigo-400'
-              : 'text-indigo-200'
+              ? 'text-[#c4b99a] hover:text-[#a0937c]'
+              : 'text-[#c4b99a]'
         }`}
         title={canInteract ? 'Commenter' : 'Voir les commentaires'}
       >
@@ -226,7 +226,7 @@ export default function ActionFeedback({ actionId, feedback, canInteract }: Prop
               }}
               placeholder="Votre commentaire..."
               className="w-full text-sm px-3 py-2.5 border border-gray-200 rounded-lg h-20 resize-none
-                         focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20
+                         focus:outline-none focus:border-[#fbbf24] focus:ring-1 focus:ring-[#fbbf24]/20
                          transition-all"
               maxLength={500}
               autoFocus

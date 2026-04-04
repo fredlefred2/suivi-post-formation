@@ -132,9 +132,9 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
 
       {/* Célébration */}
       {showCelebration ? (
-        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xs mx-4 p-8 text-center animate-fade-in-up">
+        <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-4 p-8 text-center animate-fade-in-up" style={{ border: '2px solid #f0ebe0' }}>
           <div className="text-6xl mb-3">✅</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Check-in validé !</h2>
+          <h2 className="text-xl font-bold mb-2" style={{ color: '#1a1a2e' }}>Check-in validé !</h2>
           {weather && <p className="text-4xl mb-2">{WEATHER_EMOJI_MAP[weather]}</p>}
           {(streak + 1) >= 2 ? (
             <div className="flex items-center justify-center gap-2">
@@ -146,19 +146,19 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
           )}
         </div>
       ) : (
-        <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-md mx-0 sm:mx-4 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-in-up max-h-[85vh] overflow-y-auto">
+        <div className="relative bg-white rounded-t-[28px] sm:rounded-[28px] shadow-xl w-full max-w-md mx-0 sm:mx-4 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-in-up max-h-[85vh] overflow-y-auto" style={{ border: '2px solid #f0ebe0' }}>
           {/* Header */}
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               {step !== 'weather' && (
                 <button
                   onClick={() => setStep(step === 'difficult' ? 'good' : 'weather')}
-                  className="p-1 text-gray-500 hover:text-gray-600"
+                  className="p-1" style={{ color: '#a0937c' }}
                 >
                   <ChevronLeft size={20} />
                 </button>
               )}
-              <h3 className="font-bold text-gray-900 text-lg">
+              <h3 className="font-bold text-lg" style={{ color: '#1a1a2e' }}>
                 {step === 'weather' && 'Ta météo de la semaine'}
                 {step === 'good' && 'Cette semaine, j\'ai observé...'}
                 {step === 'difficult' && 'J\'ai eu du mal avec...'}
@@ -168,18 +168,19 @@ export default function QuickCheckin({ axes, weekLabel, streak, open, onClose, o
               <X size={20} />
             </button>
           </div>
-          <p className="text-xs text-gray-500 mb-5">{weekLabel}</p>
+          <p className="text-xs mb-5" style={{ color: '#a0937c' }}>{weekLabel}</p>
 
           {/* Indicateur d'étapes */}
           <div className="flex gap-1.5 mb-5">
             {['weather', 'good', 'difficult'].map((s, i) => (
               <div
                 key={s}
-                className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                  i <= ['weather', 'good', 'difficult'].indexOf(step)
-                    ? 'bg-indigo-500'
-                    : 'bg-gray-200'
-                }`}
+                className="h-1.5 flex-1 rounded-full transition-all duration-300"
+                style={{
+                  background: i <= ['weather', 'good', 'difficult'].indexOf(step)
+                    ? '#fbbf24'
+                    : '#f0ebe0',
+                }}
               />
             ))}
           </div>
