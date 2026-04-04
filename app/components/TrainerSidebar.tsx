@@ -24,18 +24,25 @@ export default function TrainerSidebar() {
   }
 
   return (
-    <div className="hidden sm:block fixed left-0 top-14 bottom-0 w-48 bg-white border-r border-indigo-100 pt-6" style={{
-      boxShadow: '4px 0 20px rgba(99, 102, 241, 0.06)',
+    <div className="hidden sm:block fixed left-0 top-14 bottom-0 w-48 bg-white pt-6" style={{
+      borderRight: '2px solid #f0ebe0',
     }}>
       <nav className="space-y-1 px-3">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link key={href} href={getGroupHref(href)}
-              className={`flex items-center gap-2.5 px-3 py-2.5 text-sm hover:text-indigo-800 hover:bg-indigo-100 rounded-xl transition-all duration-200 font-medium group active:scale-[0.97] ${
-                isActive ? 'text-indigo-800 bg-indigo-50' : 'text-gray-500'
-              }`}>
-              <Icon size={17} className={`transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-500 group-hover:text-indigo-600'}`} />
+              className={`flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-xl transition-all duration-200 font-medium group active:scale-[0.97] ${
+                isActive ? 'font-bold' : ''
+              }`}
+              style={isActive ? {
+                color: '#1a1a2e',
+                background: '#fffbeb',
+                borderLeft: '3px solid #fbbf24',
+              } : {
+                color: '#a0937c',
+              }}>
+              <Icon size={17} className="transition-colors" style={{ color: isActive ? '#1a1a2e' : '#a0937c' }} />
               {label}
             </Link>
           )

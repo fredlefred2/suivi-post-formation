@@ -62,8 +62,8 @@ export default function CoachingClient({ userId }: { userId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-gray-500">
-        <div className="animate-spin w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full mr-2" />
+      <div className="flex items-center justify-center py-16" style={{ color: '#a0937c' }}>
+        <div className="animate-spin w-5 h-5 border-2 border-t-transparent rounded-full mr-2" style={{ borderColor: '#fbbf24', borderTopColor: 'transparent' }} />
         Chargement...
       </div>
     )
@@ -73,24 +73,20 @@ export default function CoachingClient({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
-      {/* ── Header gradient harmonisé ── */}
+      {/* ── Header navy — Cream & Warm ── */}
       <div
-        className="rounded-2xl p-4 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%)',
-          boxShadow: '0 8px 30px rgba(67, 56, 202, 0.3)',
-        }}
+        className="rounded-[28px] p-5 relative overflow-hidden"
+        style={{ background: '#1a1a2e' }}
       >
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
-        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
+        <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
 
         <div className="relative flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-white/20 shadow-lg">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-lg" style={{ background: 'rgba(255,255,255,0.2)' }}>
             💪
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-white">Mon coaching</h1>
-            <p className="text-xs text-indigo-200 mt-0.5">
+            <h1 className="text-[22px] font-extrabold text-white">Mon coaching</h1>
+            <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
               {sentTips.length} conseil{sentTips.length > 1 ? 's' : ''} reçu{sentTips.length > 1 ? 's' : ''}
             </p>
           </div>
@@ -98,10 +94,10 @@ export default function CoachingClient({ userId }: { userId: string }) {
       </div>
 
       {tips.length === 0 ? (
-        <div className="rounded-2xl bg-white p-8 text-center" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center text-3xl mx-auto mb-4">💪</div>
-          <p className="text-sm font-medium text-gray-600">Tes conseils apparaîtront ici chaque semaine.</p>
-          <p className="text-xs text-gray-400 mt-1.5">Crée tes axes de progrès pour recevoir du coaching personnalisé !</p>
+        <div className="rounded-[22px] bg-white p-8 text-center" style={{ border: '2px solid #f0ebe0' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4" style={{ background: '#fffbeb' }}>💪</div>
+          <p className="text-sm font-medium" style={{ color: '#1a1a2e' }}>Tes conseils apparaîtront ici chaque semaine.</p>
+          <p className="text-xs mt-1.5" style={{ color: '#a0937c' }}>Crée tes axes de progrès pour recevoir du coaching personnalisé !</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -111,35 +107,36 @@ export default function CoachingClient({ userId }: { userId: string }) {
             const progress = axe.tips.length > 0 ? Math.round((axeSentTips.length / axe.tips.length) * 100) : 0
 
             return (
-              <div key={axe.axeId} className="rounded-2xl bg-white overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+              <div key={axe.axeId} className="rounded-[22px] bg-white overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
                 {/* Header axe — accordéon */}
                 <button
                   onClick={() => toggleAxe(axe.axeId)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50/80"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 transition-colors"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-base shrink-0">
+                  <div className="axe-num w-9 h-9 text-base">
                     🎯
                   </div>
                   <div className="flex-1 min-w-0 text-left">
-                    <p className="text-sm font-bold text-gray-800 truncate">{axe.axeSubject}</p>
+                    <p className="text-sm font-bold truncate" style={{ color: '#1a1a2e' }}>{axe.axeSubject}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="bar-bg">
                         <div
-                          className="h-full rounded-full transition-all duration-500"
+                          className="bar-fill transition-all duration-500"
                           style={{
                             width: `${progress}%`,
-                            background: 'linear-gradient(90deg, #6366f1, #818cf8)',
+                            background: '#fbbf24',
                           }}
                         />
                       </div>
-                      <span className="text-[10px] text-gray-400 font-medium shrink-0">
+                      <span className="text-[10px] font-medium shrink-0" style={{ color: '#a0937c' }}>
                         {axeSentTips.length}/{axe.tips.length}
                       </span>
                     </div>
                   </div>
                   <ChevronDown
                     size={18}
-                    className={`text-gray-400 shrink-0 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                    className={`shrink-0 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                    style={{ color: '#a0937c' }}
                   />
                 </button>
 
@@ -147,11 +144,11 @@ export default function CoachingClient({ userId }: { userId: string }) {
                 {isExpanded && (
                   <div className="px-4 pb-4">
                     {axeSentTips.length === 0 ? (
-                      <p className="text-xs text-gray-400 text-center py-4">Pas encore de conseil pour cet axe</p>
+                      <p className="text-xs text-center py-4" style={{ color: '#a0937c' }}>Pas encore de conseil pour cet axe</p>
                     ) : (
                       <div className="relative ml-4">
                         {/* Ligne verticale de timeline */}
-                        <div className="absolute left-0 top-2 bottom-2 w-px bg-indigo-100" />
+                        <div className="absolute left-0 top-2 bottom-2 w-px" style={{ background: '#f0ebe0' }} />
 
                         <div className="space-y-4">
                           {axeSentTips.map((tip, idx) => (
@@ -162,20 +159,20 @@ export default function CoachingClient({ userId }: { userId: string }) {
                                 style={{
                                   background: tip.acted
                                     ? '#10b981'
-                                    : idx === 0 ? '#6366f1' : '#d1d5db',
+                                    : idx === 0 ? '#fbbf24' : '#e0d8c8',
                                 }}
                               />
 
-                              <div className={`rounded-xl p-3.5 transition-all ${
-                                tip.acted
-                                  ? 'bg-emerald-50/60'
-                                  : idx === 0 ? 'bg-indigo-50/60' : 'bg-gray-50/60'
-                              }`}
-                              style={{ border: `1px solid ${tip.acted ? '#d1fae5' : idx === 0 ? '#e0e7ff' : '#f1f5f9'}` }}
+                              <div
+                                className="rounded-[18px] p-3.5 transition-all"
+                                style={{
+                                  background: tip.acted ? '#ecfdf5' : idx === 0 ? '#fffbeb' : '#faf8f4',
+                                  border: `2px solid ${tip.acted ? '#d1fae5' : idx === 0 ? '#fde68a' : '#f0ebe0'}`,
+                                }}
                               >
                                 {/* En-tête : semaine + statut */}
                                 <div className="flex items-center justify-between mb-2.5">
-                                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#a0937c' }}>
                                     Semaine {tip.week_number}
                                   </span>
                                   {tip.acted && (
@@ -185,18 +182,18 @@ export default function CoachingClient({ userId }: { userId: string }) {
                                   )}
                                 </div>
 
-                                {/* Rappel — style bulle de chat */}
-                                <p className="text-[13px] font-semibold text-gray-800 leading-relaxed">
+                                {/* Rappel */}
+                                <p className="text-[13px] font-semibold leading-relaxed" style={{ color: '#1a1a2e' }}>
                                   {tip.content}
                                 </p>
 
                                 {/* Conseil */}
                                 {tip.advice && (
-                                  <div className="mt-2.5 pt-2.5 border-t border-gray-200/60">
-                                    <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">
+                                  <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid #f0ebe0' }}>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: '#92400e' }}>
                                       💡 Essaye cette semaine
                                     </p>
-                                    <p className="text-[13px] text-gray-600 leading-relaxed">{tip.advice}</p>
+                                    <p className="text-[13px] leading-relaxed" style={{ color: '#1a1a2e' }}>{tip.advice}</p>
                                   </div>
                                 )}
                               </div>
