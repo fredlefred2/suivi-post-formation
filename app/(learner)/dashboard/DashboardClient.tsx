@@ -115,12 +115,20 @@ export default function DashboardClient({
           {/* Cercle décoratif amber */}
           <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
 
-          {/* Ligne 1 : Bonjour */}
+          {/* Ligne 1 : Bonjour + dernière météo */}
           <div className="relative flex items-start justify-between mb-4">
             <div>
               <h1 className="text-[22px] font-extrabold text-white">Bonjour {firstName} 👋</h1>
               <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{encouragement}</p>
             </div>
+            {weatherHistory.length > 0 && (
+              <Link href="/checkin" className="flex flex-col items-center">
+                <span className="text-3xl drop-shadow-lg">
+                  {WEATHER_ICONS[weatherHistory[weatherHistory.length - 1]] ?? '❓'}
+                </span>
+                <span className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>ma météo</span>
+              </Link>
+            )}
           </div>
 
           {/* Stats en 3 colonnes */}
