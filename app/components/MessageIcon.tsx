@@ -109,12 +109,13 @@ export default function MessageIcon(props: Props) {
     <>
       <button
         onClick={handleClick}
-        className="relative text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90"
+        className="relative transition-all p-2 rounded-full active:scale-90"
+        style={{ color: '#1a1a2e', background: 'white', border: '2px solid #f0ebe0' }}
         aria-label="Messages"
       >
         <MessageCircle size={18} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-red-500 rounded-full px-1 leading-none">
+          <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-extrabold text-white rounded-full px-1 leading-none" style={{ background: '#e11d48' }}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}

@@ -25,7 +25,8 @@ export default function LogoutButton() {
     <form action={handleLogout}>
       <button
         type="submit"
-        className="text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90"
+        className="transition-all p-2 rounded-full active:scale-90"
+        style={{ color: '#a0937c' }}
       >
         <LogOut size={18} />
       </button>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAPLUKA — Redesign proposals</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; padding: 40px 20px; }
+
+  h1 { text-align: center; font-size: 28px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(135deg, #fff 0%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 50px; }
+
+  .proposals { display: flex; flex-wrap: wrap; gap: 60px; justify-content: center; align-items: flex-start; }
+
+  .proposal { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .proposal-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #555; }
+  .proposal-desc { font-size: 12px; color: #444; max-width: 375px; text-align: center; line-height: 1.5; }
+
+  .phone {
+    width: 375px; height: 812px;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0 2px #333, 0 30px 80px rgba(0,0,0,0.6);
+  }
+  .phone-scroll {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+  }
+  .phone-scroll::-webkit-scrollbar { display: none; }
+
+  /* ═══════════════════════════════════════════════════
+     OPTION A — DARK GLASS (dark mode, glassmorphism)
+     ═══════════════════════════════════════════════════ */
+  .a-bg { background: #0f0f13; padding: 60px 16px 100px; }
+
+  .a-header {
+    background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 24px;
+    padding: 24px 20px;
+    backdrop-filter: blur(20px);
+    margin-bottom: 16px;
+  }
+  .a-header h2 { font-size: 22px; font-weight: 800; color: #f0f0f5; }
+  .a-header .greeting { font-size: 13px; color: rgba(165,165,195,0.8); margin-top: 4px; }
+  .a-header .weather { position: absolute; top: 24px; right: 24px; font-size: 28px; }
+
+  .a-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 18px; }
+  .a-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 14px 8px;
+    text-align: center;
+  }
+  .a-stat .num { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; }
+  .a-stat .num.green { color: #4ade80; }
+  .a-stat .num.white { color: #e0e0e5; }
+  .a-stat .lbl { font-size: 10px; color: #666; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .a-checkin {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.15);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .a-checkin span { font-size: 13px; color: #fbbf24; font-weight: 600; flex: 1; }
+  .a-checkin-btn { background: #fbbf24; color: #000; font-size: 12px; font-weight: 700; border: none; border-radius: 10px; padding: 8px 16px; cursor: pointer; }
+
+  .a-action-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 18px;
+    border: none;
+    font-size: 15px; font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+    margin-bottom: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .a-action-btn .sub { font-size: 11px; font-weight: 500; opacity: 0.6; }
+
+  .a-section-title { font-size: 13px; font-weight: 700; color: #888; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+  .a-axe {
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .a-axe-1 { background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(16,185,129,0.06)); border: 1px solid rgba(52,211,153,0.15); }
+  .a-axe-2 { background: linear-gradient(135deg, rgba(251,146,60,0.12), rgba(249,115,22,0.06)); border: 1px solid rgba(251,146,60,0.15); }
+  .a-axe-3 { background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(99,102,241,0.04)); border: 1px solid rgba(99,102,241,0.1); }
+  .a-axe .num { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #ccc; flex-shrink: 0; }
+  .a-axe .title-row { display: flex; align-items: center; gap: 10px; }
+  .a-axe .axe-title { font-size: 14px; font-weight: 700; color: #e0e0e5; }
+  .a-axe .bar-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .a-axe .bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .a-axe .bar-fill-green { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #34d399, #10b981); }
+  .a-axe .bar-fill-orange { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #fb923c, #f97316); }
+  .a-axe .bar-fill-indigo { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #818cf8, #6366f1); }
+  .a-axe .level { font-size: 11px; font-weight: 600; }
+  .a-axe .level-green { color: #34d399; }
+  .a-axe .level-orange { color: #fb923c; }
+  .a-axe .level-indigo { color: #818cf8; }
+  .a-axe .meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .a-axe .meta span { font-size: 11px; color: #666; }
+  .a-axe .meta .likes { color: #f472b6; }
+
+  .a-tip {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.12);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-top: 10px;
+  }
+  .a-tip span { font-size: 12px; color: #fbbf24; font-weight: 600; flex: 1; }
+  .a-tip .badge { font-size: 10px; font-weight: 700; color: #000; background: rgba(251,191,36,0.6); padding: 4px 10px; border-radius: 6px; }
+
+  .a-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(15,15,19,0.85);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex; padding: 12px 0 28px; justify-content: space-around;
+  }
+  .a-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: #555; }
+  .a-nav-item.active { color: #818cf8; }
+  .a-nav-item .dot { width: 4px; height: 4px; border-radius: 50%; background: #818cf8; }
+
+
+  /* ═══════════════════════════════════════════════════
+     OPTION B — CREAM & WARM (light, warm, organic)
+     ═══════════════════════════════════════════════════ */
+  .b-bg { background: #faf8f4; padding: 60px 16px 100px; }
+
+  .b-header {
+    background: #1a1a2e;
+    border-radius: 28px;
+    padding: 26px 22px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .b-header::before { content: ''; position: absolute; top: -30px; right: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(251,191,36,0.15); }
+  .b-header h2 { font-size: 22px; font-weight: 800; color: #fff; position: relative; }
+  .b-header .greeting { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; position: relative; }
+
+  .b-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 18px; position: relative; }
+  .b-stat { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 14px 8px; text-align: center; }
+  .b-stat .num { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: #fff; }
+  .b-stat .num.accent { color: #fbbf24; }
+  .b-stat .lbl { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+  .b-checkin {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff;
+    border: 2px solid #f0ebe0;
+    border-radius: 18px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .b-checkin span { font-size: 13px; color: #92400e; font-weight: 600; flex: 1; }
+  .b-checkin-btn { background: #1a1a2e; color: #fbbf24; font-size: 12px; font-weight: 700; border: none; border-radius: 12px; padding: 8px 18px; cursor: pointer; }
+
+  .b-action-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 18px;
+    border: none;
+    font-size: 15px; font-weight: 700;
+    color: #1a1a2e;
+    background: #fbbf24;
+    box-shadow: 0 4px 20px rgba(251,191,36,0.3);
+    margin-bottom: 20px;
+    cursor: pointer;
+  }
+
+  .b-section-title { font-size: 12px; font-weight: 700; color: #a0937c; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px; }
+
+  .b-axe {
+    background: #fff;
+    border: 2px solid #f0ebe0;
+    border-radius: 22px;
+    padding: 18px;
+    margin-bottom: 10px;
+  }
+  .b-axe .title-row { display: flex; align-items: center; gap: 10px; }
+  .b-axe .num { width: 30px; height: 30px; border-radius: 12px; background: #1a1a2e; color: #fbbf24; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+  .b-axe .axe-title { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+  .b-axe .bar-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .b-axe .bar-bg { flex: 1; height: 8px; background: #f5f0e8; border-radius: 4px; overflow: hidden; }
+  .b-axe .bar-fill { height: 100%; border-radius: 4px; }
+  .b-axe .bar-fill.green { background: linear-gradient(90deg, #059669, #10b981); }
+  .b-axe .bar-fill.amber { background: linear-gradient(90deg, #d97706, #f59e0b); }
+  .b-axe .bar-fill.navy { background: #1a1a2e; }
+  .b-axe .level { font-size: 11px; font-weight: 700; color: #1a1a2e; }
+  .b-axe .meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .b-axe .meta span { font-size: 11px; color: #a0937c; }
+  .b-axe .meta .likes { color: #e11d48; font-weight: 600; }
+
+  .b-tip {
+    background: #fffbeb;
+    border: 2px solid #fde68a;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .b-tip span { font-size: 12px; color: #92400e; font-weight: 600; flex: 1; }
+
+  .b-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 2px solid #f0ebe0;
+    display: flex; padding: 12px 0 28px; justify-content: space-around;
+  }
+  .b-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: #a0937c; font-weight: 600; }
+  .b-nav-item.active { color: #1a1a2e; }
+
+
+  /* ═══════════════════════════════════════════════════
+     OPTION C — ULTRA MINIMAL (noir/blanc, une couleur accent)
+     ═══════════════════════════════════════════════════ */
+  .c-bg { background: #ffffff; padding: 60px 16px 100px; }
+
+  .c-header { padding: 0 4px; margin-bottom: 24px; }
+  .c-header h2 { font-size: 28px; font-weight: 900; color: #000; letter-spacing: -0.5px; }
+  .c-header .greeting { font-size: 13px; color: #999; margin-top: 2px; }
+  .c-header .weather-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .c-header .weather-row span { font-size: 24px; }
+
+  .c-stats { display: flex; gap: 0; margin-bottom: 20px; border: 2px solid #000; border-radius: 16px; overflow: hidden; }
+  .c-stat { flex: 1; padding: 16px 8px; text-align: center; }
+  .c-stat + .c-stat { border-left: 2px solid #000; }
+  .c-stat .num { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: #000; }
+  .c-stat .num.accent { color: #6366f1; }
+  .c-stat .lbl { font-size: 10px; color: #999; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .c-checkin {
+    display: flex; align-items: center; gap: 12px;
+    background: #f5f5f5;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .c-checkin span { font-size: 13px; color: #666; font-weight: 500; flex: 1; }
+  .c-checkin-btn { background: #000; color: #fff; font-size: 12px; font-weight: 700; border: none; border-radius: 10px; padding: 8px 16px; cursor: pointer; }
+
+  .c-action-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 14px;
+    border: 2px solid #000;
+    font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: #000;
+    margin-bottom: 24px;
+    cursor: pointer;
+    letter-spacing: -0.3px;
+  }
+
+  .c-section-title { font-size: 11px; font-weight: 800; color: #bbb; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px; }
+
+  .c-axe {
+    border: 2px solid #f0f0f0;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .c-axe:hover { border-color: #ddd; }
+  .c-axe .title-row { display: flex; align-items: center; gap: 10px; }
+  .c-axe .num { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: #ccc; width: 28px; text-align: center; }
+  .c-axe .axe-title { font-size: 14px; font-weight: 700; color: #111; }
+  .c-axe .bar-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .c-axe .bar-bg { flex: 1; height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden; }
+  .c-axe .bar-fill { height: 100%; border-radius: 2px; background: #000; }
+  .c-axe .bar-fill.accent { background: #6366f1; }
+  .c-axe .level { font-size: 11px; font-weight: 700; color: #111; }
+  .c-axe .meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .c-axe .meta span { font-size: 11px; color: #bbb; }
+  .c-axe .meta .accent { color: #6366f1; font-weight: 700; }
+
+  .c-tip {
+    background: #6366f1;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .c-tip span { font-size: 12px; color: #fff; font-weight: 600; flex: 1; }
+  .c-tip .badge { font-size: 10px; font-weight: 700; color: #6366f1; background: #fff; padding: 4px 10px; border-radius: 6px; }
+
+  .c-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    display: flex; padding: 12px 0 28px; justify-content: space-around;
+  }
+  .c-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: #ccc; font-weight: 700; }
+  .c-nav-item.active { color: #000; }
+  .c-nav-item .dot { width: 4px; height: 4px; border-radius: 50%; background: #6366f1; }
+</style>
+</head>
+<body>
+
+<h1>YAPLUKA Redesign</h1>
+<p class="subtitle">3 directions visuelles — Dashboard apprenant</p>
+
+<div class="proposals">
+
+  <!-- ═══ OPTION A — DARK GLASS ═══ -->
+  <div class="proposal">
+    <span class="proposal-label">Option A</span>
+    <p class="proposal-desc">Dark mode, glassmorphism, gradients subtils. Premium, tech, immersif.</p>
+    <div class="phone">
+      <div class="phone-scroll a-bg">
+
+        <div class="a-header" style="position:relative;">
+          <h2>Bonjour Sophie</h2>
+          <p class="greeting">Semaine productive !</p>
+          <span class="a-header weather" style="position:absolute;top:24px;right:24px;">&#9728;&#65039;</span>
+          <div class="a-stats">
+            <div class="a-stat"><div class="num green">+3</div><div class="lbl">cette semaine</div></div>
+            <div class="a-stat"><div class="num white">17</div><div class="lbl">actions</div></div>
+            <div class="a-stat"><div class="num white">8</div><div class="lbl">check-ins</div></div>
+          </div>
+        </div>
+
+        <div class="a-checkin">
+          <span>&#9888;&#65039;</span>
+          <span>Check-in en attente</span>
+          <button class="a-checkin-btn">Faire</button>
+        </div>
+
+        <button class="a-action-btn">
+          <span>+ Nouvelle action</span>
+        </button>
+
+        <p class="a-section-title">Mes axes</p>
+
+        <div class="a-axe a-axe-1">
+          <div class="title-row"><div class="num">1</div><div class="axe-title">Structurer mes entretiens</div></div>
+          <div class="bar-row">
+            <span>&#129345;</span>
+            <div class="bar-bg"><div class="bar-fill-green" style="width:70%"></div></div>
+            <span>&#128640;</span>
+          </div>
+          <div class="meta">
+            <span class="level level-green">Rythme &middot; 5 actions</span>
+            <span class="likes">&#10084;&#65039;3 &#128172;1</span>
+          </div>
+          <div class="a-tip">
+            <span>&#128170;</span>
+            <span>Conseil dispo</span>
+            <span class="badge">Voir</span>
+          </div>
+        </div>
+
+        <div class="a-axe a-axe-2">
+          <div class="title-row"><div class="num">2</div><div class="axe-title">Oser dire non en nego</div></div>
+          <div class="bar-row">
+            <span>&#128165;</span>
+            <div class="bar-bg"><div class="bar-fill-orange" style="width:85%"></div></div>
+            <span>&#128640;</span>
+          </div>
+          <div class="meta">
+            <span class="level level-orange">Intensite &middot; 7 actions</span>
+            <span class="likes">&#10084;&#65039;5</span>
+          </div>
+        </div>
+
+        <div class="a-axe a-axe-3">
+          <div class="title-row"><div class="num">3</div><div class="axe-title">Preparer mes rdv</div></div>
+          <div class="bar-row">
+            <span>&#128163;</span>
+            <div class="bar-bg"><div class="bar-fill-indigo" style="width:30%"></div></div>
+            <span>&#128640;</span>
+          </div>
+          <div class="meta">
+            <span class="level level-indigo">Impulsion &middot; 2 actions</span>
+            <span></span>
+          </div>
+        </div>
+
+        <div style="height:80px"></div>
+      </div>
+
+      <div class="a-nav">
+        <div class="a-nav-item active">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg>
+          <span>Accueil</span>
+          <span class="dot"></span>
+        </div>
+        <div class="a-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <span>Axes</span>
+        </div>
+        <div class="a-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span>Team</span>
+        </div>
+        <div class="a-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          <span>Check-in</span>
+        </div>
+        <div class="a-nav-item">
+          <span style="font-size:18px">&#128170;</span>
+          <span>Coach</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ OPTION B — CREAM & WARM ═══ -->
+  <div class="proposal">
+    <span class="proposal-label">Option B</span>
+    <p class="proposal-desc">Fond creme, tons chauds, navy. Chaleureux, pro, confiance.</p>
+    <div class="phone">
+      <div class="phone-scroll b-bg">
+
+        <div class="b-header">
+          <h2>Bonjour Sophie</h2>
+          <p class="greeting">Bon debut, continue !</p>
+          <div class="b-stats">
+            <div class="b-stat"><div class="num accent">+3</div><div class="lbl">cette sem.</div></div>
+            <div class="b-stat"><div class="num">17</div><div class="lbl">actions</div></div>
+            <div class="b-stat"><div class="num">8</div><div class="lbl">check-ins</div></div>
+          </div>
+        </div>
+
+        <div class="b-checkin">
+          <span>&#9888;&#65039;</span>
+          <span>Check-in en attente</span>
+          <button class="b-checkin-btn">Faire</button>
+        </div>
+
+        <button class="b-action-btn">+ Nouvelle action</button>
+
+        <p class="b-section-title">Mes axes de progres</p>
+
+        <div class="b-axe">
+          <div class="title-row"><div class="num">1</div><div class="axe-title">Structurer mes entretiens</div></div>
+          <div class="bar-row">
+            <span>&#129345;</span>
+            <div class="bar-bg"><div class="bar-fill green" style="width:70%"></div></div>
+            <span>&#128640;</span>
+          </div>
+          <div class="meta">
+            <span class="level">Rythme &middot; 5 actions</span>
+            <span class="likes">&#10084;&#65039;3 &#128172;1</span>
+          </div>
+          <div class="b-tip">
+            <span>&#128170;</span>
+            <span>Ton coach a un conseil</span>
+          </div>
+        </div>
+
+        <div class="b-axe">
+          <div class="title-row"><div class="num">2</div><div class="axe-title">Oser dire non en nego</div></div>
+          <div class="bar-row">
+            <span>&#128165;</span>
+            <div class="bar-bg"><div class="bar-fill amber" style="width:85%"></div></div>
+            <span>&#128640;</span>
+          </div>
+          <div class="meta">
+            <span class="level">Intensite &middot; 7 actions</span>
+            <span class="likes">&#10084;&#65039;5</span>
+          </div>
+        </div>
+
+        <div class="b-axe">
+          <div class="title-row"><div class="num">3</div><div class="axe-title">Preparer mes rdv</div></div>
+          <div class="bar-row">
+            <span>&#128163;</span>
+            <div class="bar-bg"><div class="bar-fill navy" style="width:30%"></div></div>
+            <span>&#128640;</span>
+          </div>
+          <div class="meta">
+            <span class="level">Impulsion &middot; 2 actions</span>
+            <span></span>
+          </div>
+        </div>
+
+        <div style="height:80px"></div>
+      </div>
+
+      <div class="b-nav">
+        <div class="b-nav-item active">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg>
+          <span>Accueil</span>
+        </div>
+        <div class="b-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <span>Axes</span>
+        </div>
+        <div class="b-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span>Team</span>
+        </div>
+        <div class="b-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          <span>Check-in</span>
+        </div>
+        <div class="b-nav-item">
+          <span style="font-size:18px">&#128170;</span>
+          <span>Coach</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ OPTION C — ULTRA MINIMAL ═══ -->
+  <div class="proposal">
+    <span class="proposal-label">Option C</span>
+    <p class="proposal-desc">Blanc pur, noir, une seule couleur accent. Radical, epure, direct.</p>
+    <div class="phone">
+      <div class="phone-scroll c-bg">
+
+        <div class="c-header">
+          <h2>Bonjour Sophie</h2>
+          <p class="greeting">Semaine productive !</p>
+          <div class="weather-row"><span>&#9728;&#65039;</span> <span style="font-size:12px;color:#999;">ta derniere meteo</span></div>
+        </div>
+
+        <div class="c-stats">
+          <div class="c-stat"><div class="num accent">+3</div><div class="lbl">cette sem.</div></div>
+          <div class="c-stat"><div class="num">17</div><div class="lbl">actions</div></div>
+          <div class="c-stat"><div class="num">8</div><div class="lbl">check-ins</div></div>
+        </div>
+
+        <div style="height:14px"></div>
+
+        <div class="c-checkin">
+          <span style="font-size:14px">&#9888;&#65039;</span>
+          <span>Check-in en attente</span>
+          <button class="c-checkin-btn">Faire</button>
+        </div>
+
+        <button class="c-action-btn">+ Nouvelle action</button>
+
+        <p class="c-section-title">Mes axes</p>
+
+        <div class="c-axe">
+          <div class="title-row"><div class="num">01</div><div class="axe-title">Structurer mes entretiens</div></div>
+          <div class="bar-row">
+            <div class="bar-bg"><div class="bar-fill accent" style="width:70%"></div></div>
+            <span class="level">70%</span>
+          </div>
+          <div class="meta">
+            <span>Rythme &middot; 5 actions</span>
+            <span class="accent">&#10084;&#65039;3 &#128172;1</span>
+          </div>
+          <div class="c-tip">
+            <span>&#128170;</span>
+            <span>Conseil dispo</span>
+            <span class="badge">Voir</span>
+          </div>
+        </div>
+
+        <div class="c-axe">
+          <div class="title-row"><div class="num">02</div><div class="axe-title">Oser dire non en nego</div></div>
+          <div class="bar-row">
+            <div class="bar-bg"><div class="bar-fill" style="width:85%"></div></div>
+            <span class="level">85%</span>
+          </div>
+          <div class="meta">
+            <span>Intensite &middot; 7 actions</span>
+            <span class="accent">&#10084;&#65039;5</span>
+          </div>
+        </div>
+
+        <div class="c-axe">
+          <div class="title-row"><div class="num">03</div><div class="axe-title">Preparer mes rdv</div></div>
+          <div class="bar-row">
+            <div class="bar-bg"><div class="bar-fill accent" style="width:30%"></div></div>
+            <span class="level">30%</span>
+          </div>
+          <div class="meta">
+            <span>Impulsion &middot; 2 actions</span>
+            <span></span>
+          </div>
+        </div>
+
+        <div style="height:80px"></div>
+      </div>
+
+      <div class="c-nav">
+        <div class="c-nav-item active">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg>
+          <span>Accueil</span>
+          <span class="dot"></span>
+        </div>
+        <div class="c-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <span>Axes</span>
+        </div>
+        <div class="c-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span>Team</span>
+        </div>
+        <div class="c-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          <span>Check-in</span>
+        </div>
+        <div class="c-nav-item">
+          <span style="font-size:18px">&#128170;</span>
+          <span>Coach</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

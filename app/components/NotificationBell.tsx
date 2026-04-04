@@ -288,12 +288,13 @@ export default function NotificationBell() {
             markAllRead()
           }
         }}
-        className="relative text-indigo-200 hover:text-white transition-all p-2 hover:bg-white/15 rounded-lg active:scale-90"
+        className="relative transition-all p-2 rounded-full active:scale-90"
+        style={{ color: '#1a1a2e', background: 'white', border: '2px solid #f0ebe0' }}
         aria-label="Notifications"
       >
         <Bell size={18} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-red-500 rounded-full px-1 leading-none animate-in fade-in zoom-in duration-200">
+          <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-extrabold text-white rounded-full px-1 leading-none" style={{ background: '#e11d48' }}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -301,17 +302,17 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {open && (
-        <div className="fixed left-1/2 -translate-x-1/2 top-14 mt-2 w-96 max-w-[calc(100vw-1rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed left-1/2 -translate-x-1/2 top-14 mt-2 w-96 max-w-[calc(100vw-1rem)] bg-white rounded-[18px] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200" style={{ border: '2px solid #f0ebe0', boxShadow: '0 10px 40px rgba(0,0,0,0.08)' }}>
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-800">Notifications</p>
+          <div className="px-4 py-3" style={{ borderBottom: '2px solid #f0ebe0' }}>
+            <p className="text-sm font-bold" style={{ color: '#1a1a2e' }}>Notifications</p>
           </div>
 
           {/* Content */}
           {notifications.length === 0 ? (
             <div className="px-4 py-12 text-center">
               <div className="text-3xl mb-2">🔔</div>
-              <p className="text-sm text-gray-500">Aucune notification</p>
+              <p className="text-sm" style={{ color: '#a0937c' }}>Aucune notification</p>
             </div>
           ) : (
             <div className="max-h-[28rem] overflow-y-auto">
@@ -321,19 +322,21 @@ export default function NotificationBell() {
 
                 return (
                   <div key={groupKey}>
-                    <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                    <div className="px-4 py-2" style={{ background: '#faf8f4', borderBottom: '1px solid #f0ebe0' }}>
+                      <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#a0937c' }}>
                         {GROUP_LABELS[groupKey]}
                       </p>
                     </div>
-                    <div className="divide-y divide-gray-50">
+                    <div>
                       {items.map(notif => (
                         <button
                           key={notif.id}
                           onClick={() => handleNotifClick(notif)}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex gap-3 items-start ${
-                            !notif.read ? 'bg-blue-50/60' : ''
-                          }`}
+                          className="w-full text-left px-4 py-3 transition-colors flex gap-3 items-start rounded-xl"
+                          style={{
+                            background: !notif.read ? '#fffbeb' : 'transparent',
+                            borderBottom: '1px solid #f5f0e8',
+                          }}
                         >
                           {/* Icon */}
                           <span className="text-lg mt-0.5 shrink-0">
@@ -342,22 +345,22 @@ export default function NotificationBell() {
 
                           {/* Text */}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-800 leading-snug">
+                            <p className="text-[13px] leading-snug" style={{ color: '#1a1a2e' }}>
                               <span className={!notif.read ? 'font-semibold' : 'font-medium'}>
                                 {notif.title}
                               </span>
                             </p>
-                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                            <p className="text-xs mt-0.5 line-clamp-2" style={{ color: '#a0937c' }}>
                               {notif.body}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-1">
+                            <p className="text-[10px] mt-1" style={{ color: '#a0937c' }}>
                               {timeAgo(notif.created_at)}
                             </p>
                           </div>
 
                           {/* Unread dot */}
                           {!notif.read && (
-                            <span className="mt-2 w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+                            <span className="mt-2 w-2 h-2 rounded-full shrink-0" style={{ background: '#fbbf24' }} />
                           )}
                         </button>
                       ))}

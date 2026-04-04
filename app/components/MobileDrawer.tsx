@@ -40,7 +40,6 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
   // Persist group selection across trainer pages
   const getGroupHref = useCallback((href: string) => {
     if (!isTrainer) return href
-    // Read from URL first, then localStorage
     const group = searchParams.get('group') || (typeof window !== 'undefined' ? localStorage.getItem('trainer_selected_group') : null)
     if (group && (href === '/trainer/dashboard' || href === '/trainer/apprenants')) {
       return `${href}?group=${group}`
@@ -61,7 +60,7 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
     <>
       <button
         onClick={() => !onboardingDisabled && setOpen(true)}
-        className={`sm:hidden p-2 rounded-xl transition-all duration-200 text-indigo-200 hover:text-white hover:bg-white/15 ${onboardingDisabled ? 'opacity-40 pointer-events-none' : ''}`}
+        className={`sm:hidden p-2 rounded-xl transition-all duration-200 ${onboardingDisabled ? 'opacity-40 pointer-events-none' : ''}`}
         aria-label="Ouvrir le menu"
         disabled={onboardingDisabled}
       >
@@ -71,24 +70,23 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
       {open && (
         <div className="fixed inset-0 z-50 sm:hidden">
           <div
-            className="absolute inset-0 bg-indigo-950/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
 
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col animate-slide-in" style={{
-            boxShadow: '8px 0 40px rgba(49, 46, 129, 0.15)',
+            boxShadow: '8px 0 40px rgba(0, 0, 0, 0.08)',
           }}>
             {/* En-tête */}
-            <div className="flex items-center justify-between px-5 h-16" style={{
-              background: 'linear-gradient(135deg, #1e1b4b, #4338ca)',
-            }}>
-              <span className="font-semibold text-sm tracking-tight text-white flex items-center gap-2">
+            <div className="flex items-center justify-between px-5 h-16" style={{ background: '#1a1a2e' }}>
+              <span className="font-display font-bold text-base tracking-tight text-white flex items-center gap-2">
                 <Image src="/yapluka-symbol.png" alt="YAPLUKA" width={18} height={17} />
-                Navigation
+                YAPL<span style={{ color: '#fbbf24' }}>UKA</span>
               </span>
               <button
                 onClick={() => setOpen(false)}
-                className="p-2 rounded-xl transition-all duration-200 text-indigo-200 hover:text-white hover:bg-white/15"
+                className="p-2 rounded-xl transition-all duration-200"
+                style={{ color: 'rgba(255,255,255,0.5)' }}
                 aria-label="Fermer le menu"
               >
                 <X size={20} />
@@ -105,15 +103,18 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
                     href={getGroupHref(href)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'text-indigo-800 bg-indigo-100'
-                        : 'text-gray-500 hover:bg-indigo-100 hover:text-indigo-800'
+                        ? 'font-bold'
+                        : ''
                     }`}
                     style={isActive ? {
-                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.12)',
-                      borderLeft: '3px solid #6366f1',
-                    } : {}}
+                      color: '#1a1a2e',
+                      background: '#fffbeb',
+                      borderLeft: '3px solid #fbbf24',
+                    } : {
+                      color: '#a0937c',
+                    }}
                   >
-                    <Icon size={18} className={isActive ? 'text-indigo-500' : 'text-gray-500'} />
+                    <Icon size={18} style={{ color: isActive ? '#1a1a2e' : '#a0937c' }} />
                     {label}
                   </Link>
                 )

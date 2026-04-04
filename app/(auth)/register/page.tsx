@@ -52,45 +52,40 @@ export default function RegisterPage() {
     }
   }
 
-  const inputClass =
-    'w-full border border-white/20 rounded-xl px-4 py-2.5 text-sm bg-white/10 backdrop-blur-sm text-white placeholder:text-indigo-300/50 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 transition-all duration-200'
-  const labelClass = 'block text-sm font-medium text-indigo-100 mb-1.5'
-  const selectClass = 'w-full border border-white/20 rounded-xl px-4 py-2.5 text-sm bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 transition-all duration-200 [&>option]:text-gray-900'
-
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 relative overflow-hidden">
-      {/* Decorative orbs */}
-      <div className="absolute top-1/3 -left-32 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/3 -right-32 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl" />
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden" style={{ background: '#faf8f4' }}>
+      {/* Decorative circles */}
+      <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full" style={{ background: 'rgba(251,191,36,0.1)' }} />
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full" style={{ background: 'rgba(26,26,46,0.05)' }} />
 
       <div className="w-full max-w-sm relative z-10 animate-fade-in">
         <div className="text-center mb-8">
-          <img src="/yapluka-symbol.png" alt="YAPLUKA" className="w-16 h-16 mx-auto mb-2 drop-shadow-lg" />
-          <h1 className="text-2xl font-bold text-white tracking-tight">Créer un compte</h1>
-          <p className="text-sm text-indigo-200/70 mt-1.5">Rejoignez YAPLUKA et passez à l&apos;action</p>
+          <img src="/yapluka-symbol.png" alt="YAPLUKA" className="w-16 h-16 mx-auto mb-3 drop-shadow-lg" />
+          <h1 className="font-display text-2xl font-bold tracking-tight" style={{ color: '#1a1a2e' }}>Créer un compte</h1>
+          <p className="text-sm mt-1.5" style={{ color: '#a0937c' }}>Rejoignez YAPLUKA et passez à l&apos;action</p>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-glass-lg border border-white/20 p-6">
+        <div className="bg-white rounded-[28px] p-6" style={{ border: '2px solid #f0ebe0', boxShadow: '0 4px 30px rgba(0,0,0,0.06)' }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="first_name" className={labelClass}>Prénom</label>
-                <input id="first_name" name="first_name" type="text" required className={inputClass} placeholder="Marie" />
+                <label htmlFor="first_name" className="label">Prénom</label>
+                <input id="first_name" name="first_name" type="text" required className="input" placeholder="Marie" />
               </div>
               <div>
-                <label htmlFor="last_name" className={labelClass}>Nom</label>
-                <input id="last_name" name="last_name" type="text" required className={inputClass} placeholder="Dupont" />
+                <label htmlFor="last_name" className="label">Nom</label>
+                <input id="last_name" name="last_name" type="text" required className="input" placeholder="Dupont" />
               </div>
             </div>
             <div>
-              <label htmlFor="email" className={labelClass}>Email</label>
+              <label htmlFor="email" className="label">Email</label>
               <input id="email" name="email" type="email" required autoComplete="email"
-                className={inputClass} placeholder="prenom.nom@email.fr" />
+                className="input" placeholder="prenom.nom@email.fr" />
             </div>
             <div>
-              <label htmlFor="role" className={labelClass}>Je suis</label>
+              <label htmlFor="role" className="label">Je suis</label>
               <select id="role" name="role" required value={role} onChange={(e) => setRole(e.target.value)}
-                className={selectClass}>
+                className="input" style={{ appearance: 'auto' }}>
                 <option value="learner">Participant</option>
                 <option value="trainer">Formateur</option>
               </select>
@@ -99,17 +94,17 @@ export default function RegisterPage() {
             {/* Clé formateur */}
             {role === 'trainer' && (
               <div>
-                <label htmlFor="trainer_key" className={labelClass}>Clé formateur *</label>
+                <label htmlFor="trainer_key" className="label">Clé formateur *</label>
                 <input id="trainer_key" name="trainer_key" type="text" required
-                  className={inputClass} placeholder="Entrez la clé d'accès formateur" />
+                  className="input" placeholder="Entrez la clé d'accès formateur" />
               </div>
             )}
 
             {/* Choix du formateur (apprenants) */}
             {role === 'learner' && trainers.length > 0 && (
               <div>
-                <label htmlFor="trainer_id" className={labelClass}>Votre formateur</label>
-                <select id="trainer_id" name="trainer_id" className={selectClass}>
+                <label htmlFor="trainer_id" className="label">Votre formateur</label>
+                <select id="trainer_id" name="trainer_id" className="input" style={{ appearance: 'auto' }}>
                   <option value="">— Choisissez votre formateur —</option>
                   {trainers.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -121,32 +116,32 @@ export default function RegisterPage() {
             )}
 
             <div>
-              <label htmlFor="password" className={labelClass}>Mot de passe</label>
+              <label htmlFor="password" className="label">Mot de passe</label>
               <input id="password" name="password" type="password" required minLength={8}
-                autoComplete="new-password" className={inputClass} placeholder="8 caractères minimum" />
+                autoComplete="new-password" className="input" placeholder="8 caractères minimum" />
             </div>
             <div>
-              <label htmlFor="confirm_password" className={labelClass}>Confirmer le mot de passe</label>
+              <label htmlFor="confirm_password" className="label">Confirmer le mot de passe</label>
               <input id="confirm_password" name="confirm_password" type="password" required
-                autoComplete="new-password" className={inputClass} placeholder="••••••••" />
+                autoComplete="new-password" className="input" placeholder="••••••••" />
             </div>
             {error && (
-              <p className="text-sm text-red-300 bg-red-500/20 backdrop-blur-sm rounded-xl px-3 py-2 border border-red-400/30">
+              <p className="text-sm text-red-800 bg-red-50 rounded-xl px-3 py-2" style={{ border: '2px solid #fca5a5' }}>
                 {error}
               </p>
             )}
             <button type="submit" disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="btn-primary w-full py-3 text-[15px]">
               {loading ? 'Inscription...' : 'Créer mon compte'}
             </button>
           </form>
-          <p className="text-center text-sm text-indigo-200/60 mt-5">
+          <p className="text-center text-sm mt-5" style={{ color: '#a0937c' }}>
             Déjà un compte ?{' '}
-            <Link href="/login" className="text-indigo-300 hover:text-white font-medium transition-colors hover:underline">
+            <Link href="/login" className="font-bold transition-colors hover:underline" style={{ color: '#1a1a2e' }}>
               Se connecter
             </Link>
           </p>
-          <p className="text-center text-[11px] text-indigo-300/30 mt-4">V1.27</p>
+          <p className="text-center text-[11px] mt-4" style={{ color: '#c4b99a' }}>V1.28</p>
         </div>
       </div>
     </div>

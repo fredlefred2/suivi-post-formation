@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAPLUKA — Option B Cream & Warm — Tous les écrans</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; padding: 40px 20px; }
+
+  h1 { text-align: center; font-size: 28px; font-weight: 800; margin-bottom: 6px; color: #fbbf24; }
+  .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 16px; }
+
+  .row-label {
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+    color: #fbbf24; text-align: center; margin: 40px 0 20px; padding-top: 20px;
+    border-top: 1px solid #222;
+  }
+  .row-label:first-of-type { border-top: none; margin-top: 20px; }
+
+  .proposals { display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; align-items: flex-start; }
+
+  .proposal { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .proposal-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #888; }
+
+  .phone {
+    width: 375px; height: 812px;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0 2px #333, 0 30px 80px rgba(0,0,0,0.6);
+  }
+  .phone-scroll {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+  }
+  .phone-scroll::-webkit-scrollbar { display: none; }
+
+  /* ═══════════════════════════════════════════════════
+     DESIGN SYSTEM — CREAM & WARM
+     ═══════════════════════════════════════════════════ */
+  :root {
+    --bg: #faf8f4;
+    --navy: #1a1a2e;
+    --amber: #fbbf24;
+    --amber-dark: #92400e;
+    --amber-light: #fffbeb;
+    --border: #f0ebe0;
+    --border-light: #f5f0e8;
+    --muted: #a0937c;
+    --card: #fff;
+    --green: #059669;
+    --green-light: #ecfdf5;
+    --orange: #d97706;
+    --rose: #e11d48;
+    --sky: #0284c7;
+    --slate: #64748b;
+    --radius-sm: 12px;
+    --radius: 18px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+  }
+
+  .b-bg { background: var(--bg); padding: 60px 16px 100px; }
+
+  /* ── Header ── */
+  .b-header {
+    background: var(--navy);
+    border-radius: var(--radius-xl);
+    padding: 26px 22px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .b-header::before { content: ''; position: absolute; top: -30px; right: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(251,191,36,0.15); }
+  .b-header h2 { font-size: 22px; font-weight: 800; color: #fff; position: relative; }
+  .b-header .greeting { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; position: relative; }
+
+  .b-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 18px; position: relative; }
+  .b-stat { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 14px 8px; text-align: center; }
+  .b-stat .num { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: #fff; }
+  .b-stat .num.accent { color: var(--amber); }
+  .b-stat .lbl { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+  /* ── Top bar compact ── */
+  .b-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 54px 6px 12px;
+  }
+  .b-topbar .logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); }
+  .b-topbar .logo span { color: var(--amber); }
+  .b-topbar-icons { display: flex; gap: 8px; }
+  .b-topbar-icon {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--card); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; position: relative;
+  }
+  .b-topbar-icon .badge {
+    position: absolute; top: -2px; right: -2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--rose); color: #fff;
+    font-size: 9px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── Cards ── */
+  .b-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    margin-bottom: 10px;
+  }
+
+  /* ── Check-in ── */
+  .b-checkin {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .b-checkin span { font-size: 13px; color: var(--amber-dark); font-weight: 600; flex: 1; }
+  .b-checkin-btn {
+    background: var(--navy); color: var(--amber);
+    font-size: 12px; font-weight: 700; border: none;
+    border-radius: var(--radius-sm); padding: 8px 18px; cursor: pointer;
+  }
+
+  /* ── Buttons ── */
+  .b-btn-primary {
+    width: 100%; padding: 16px;
+    border-radius: var(--radius); border: none;
+    font-size: 15px; font-weight: 700;
+    color: var(--navy); background: var(--amber);
+    box-shadow: 0 4px 20px rgba(251,191,36,0.3);
+    margin-bottom: 20px; cursor: pointer;
+  }
+  .b-btn-secondary {
+    width: 100%; padding: 14px;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    background: var(--card);
+    font-size: 14px; font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 10px; cursor: pointer;
+  }
+
+  /* ── Section title ── */
+  .b-section-title { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px; }
+
+  /* ── Axe card ── */
+  .b-axe {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    margin-bottom: 10px;
+  }
+  .b-axe .title-row { display: flex; align-items: center; gap: 10px; }
+  .b-axe .axe-num {
+    width: 30px; height: 30px; border-radius: 12px;
+    background: var(--navy); color: var(--amber);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; flex-shrink: 0;
+  }
+  .b-axe .axe-title { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .b-axe .bar-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .b-axe .bar-bg { flex: 1; height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden; }
+  .b-axe .bar-fill { height: 100%; border-radius: 4px; }
+  .b-axe .bar-fill.green { background: linear-gradient(90deg, #059669, #10b981); }
+  .b-axe .bar-fill.amber { background: linear-gradient(90deg, #d97706, #f59e0b); }
+  .b-axe .bar-fill.navy { background: var(--navy); }
+  .b-axe .bar-fill.sky { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+  .b-axe .bar-fill.rose { background: linear-gradient(90deg, #e11d48, #fb7185); }
+  .b-axe .bar-fill.slate { background: #94a3b8; }
+  .b-axe .level { font-size: 11px; font-weight: 700; color: var(--navy); }
+  .b-axe .meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .b-axe .meta span { font-size: 11px; color: var(--muted); }
+  .b-axe .meta .likes { color: var(--rose); font-weight: 600; }
+
+  /* ── Tip banner ── */
+  .b-tip {
+    background: var(--amber-light);
+    border: 2px solid #fde68a;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .b-tip span { font-size: 12px; color: var(--amber-dark); font-weight: 600; flex: 1; }
+  .b-tip .badge { font-size: 10px; font-weight: 700; color: #fff; background: var(--navy); padding: 4px 10px; border-radius: 8px; }
+
+  /* ── Tip card (coaching page) ── */
+  .b-tip-card {
+    background: var(--amber-light);
+    border: 2px solid #fde68a;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .b-tip-card .tip-week { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .b-tip-card .tip-label { font-size: 10px; font-weight: 700; color: var(--amber-dark); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; margin-top: 10px; }
+  .b-tip-card .tip-text { font-size: 13px; color: var(--navy); line-height: 1.5; }
+
+  /* ── Check-in form ── */
+  .b-weather-row { display: flex; gap: 10px; margin: 16px 0; }
+  .b-weather-btn {
+    flex: 1; padding: 16px 0;
+    border-radius: var(--radius); border: 2px solid var(--border);
+    background: var(--card); text-align: center;
+    font-size: 28px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .b-weather-btn.selected {
+    border-color: var(--amber); background: var(--amber-light);
+    box-shadow: 0 4px 12px rgba(251,191,36,0.2);
+    transform: scale(1.05);
+  }
+  .b-textarea {
+    width: 100%; padding: 14px;
+    border-radius: var(--radius); border: 2px solid var(--border);
+    background: var(--card);
+    font-size: 14px; font-family: 'Inter', sans-serif;
+    color: var(--navy);
+    resize: none; outline: none;
+    min-height: 80px;
+    margin-bottom: 12px;
+  }
+  .b-textarea::placeholder { color: #c4b99a; }
+  .b-label { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 8px; display: block; }
+
+  /* ── Team ── */
+  .b-team-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .b-avatar {
+    width: 48px; height: 48px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; color: #fff; flex-shrink: 0;
+  }
+  .b-team-info { flex: 1; }
+  .b-team-info .name { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .b-team-info .detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .b-team-badge {
+    font-size: 10px; font-weight: 700; padding: 4px 10px;
+    border-radius: 8px; white-space: nowrap;
+  }
+
+  /* ── Message bubbles ── */
+  .b-msg-row { display: flex; margin-bottom: 12px; }
+  .b-msg-row.sent { justify-content: flex-end; }
+  .b-msg-bubble {
+    max-width: 75%; padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 13px; line-height: 1.5;
+  }
+  .b-msg-row.received .b-msg-bubble {
+    background: var(--card); border: 2px solid var(--border);
+    color: var(--navy);
+    border-bottom-left-radius: 4px;
+  }
+  .b-msg-row.sent .b-msg-bubble {
+    background: var(--navy); color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .b-msg-time { font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .b-msg-input {
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px 12px;
+    background: var(--card); border: 2px solid var(--border);
+    border-radius: 24px;
+    margin-top: 12px;
+  }
+  .b-msg-input input {
+    flex: 1; border: none; outline: none;
+    font-size: 14px; font-family: 'Inter', sans-serif;
+    color: var(--navy); background: transparent;
+  }
+  .b-msg-input input::placeholder { color: #c4b99a; }
+  .b-msg-send {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--amber); border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px;
+  }
+
+  /* ── Action card (recent actions carousel) ── */
+  .b-action-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .b-action-card .action-text { font-size: 13px; color: var(--navy); line-height: 1.4; font-weight: 500; }
+  .b-action-card .action-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .b-action-card .action-meta span { font-size: 11px; color: var(--muted); }
+  .b-action-card .action-meta .react { font-size: 12px; }
+
+  /* ── Bottom nav ── */
+  .b-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 2px solid var(--border);
+    display: flex; padding: 10px 0 28px; justify-content: space-around;
+  }
+  .b-nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 10px; color: var(--muted); font-weight: 600;
+    cursor: pointer; position: relative;
+  }
+  .b-nav-item.active { color: var(--navy); }
+  .b-nav-item .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--amber); position: absolute; bottom: -6px; }
+
+  /* ── Trainer specific ── */
+  .b-breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 16px; padding: 54px 4px 0; }
+  .b-breadcrumb a { color: var(--amber-dark); text-decoration: none; font-weight: 600; }
+  .b-breadcrumb span { margin: 0 6px; }
+
+  .b-trainer-header {
+    background: var(--navy);
+    border-radius: var(--radius-xl);
+    padding: 22px;
+    margin-bottom: 16px;
+    position: relative; overflow: hidden;
+  }
+  .b-trainer-header::before { content: ''; position: absolute; top: -20px; right: -10px; width: 80px; height: 80px; border-radius: 50%; background: rgba(251,191,36,0.12); }
+  .b-trainer-header h2 { font-size: 18px; font-weight: 800; color: #fff; position: relative; }
+  .b-trainer-header .sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; position: relative; }
+
+  .b-kpi-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .b-kpi {
+    background: var(--card); border: 2px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 6px; text-align: center;
+  }
+  .b-kpi .num { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--navy); }
+  .b-kpi .num.green { color: var(--green); }
+  .b-kpi .num.amber { color: var(--orange); }
+  .b-kpi .num.rose { color: var(--rose); }
+  .b-kpi .lbl { font-size: 9px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Trainer learner card ── */
+  .b-learner-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .b-learner-card:hover { border-color: var(--amber); }
+  .b-learner-card .initials {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: var(--navy); color: var(--amber);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; flex-shrink: 0;
+  }
+  .b-learner-card .info { flex: 1; }
+  .b-learner-card .info .name { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .b-learner-card .info .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .b-learner-card .arrow { color: var(--muted); font-size: 16px; }
+
+  /* ── Notification dropdown preview ── */
+  .b-notif-dropdown {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  }
+  .b-notif-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+  }
+  .b-notif-item:not(:last-child) { border-bottom: 1px solid var(--border-light); }
+  .b-notif-item.unread { background: var(--amber-light); }
+  .b-notif-icon { font-size: 18px; flex-shrink: 0; }
+  .b-notif-text { flex: 1; }
+  .b-notif-text .msg { font-size: 13px; color: var(--navy); font-weight: 500; line-height: 1.3; }
+  .b-notif-text .time { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Select/input styled ── */
+  .b-select {
+    width: 100%; padding: 12px 14px;
+    border-radius: var(--radius-sm); border: 2px solid var(--border);
+    background: var(--card);
+    font-size: 14px; font-family: 'Inter', sans-serif;
+    color: var(--navy); outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a0937c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    margin-bottom: 12px;
+  }
+
+  /* ── Podium ── */
+  .b-podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin: 20px 0; }
+  .b-podium-item { display: flex; flex-direction: column; align-items: center; }
+  .b-podium-bar {
+    width: 72px; border-radius: 12px 12px 0 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    padding: 12px 8px;
+  }
+  .b-podium-bar .rank { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: #fff; }
+  .b-podium-name { font-size: 11px; font-weight: 700; color: var(--navy); margin-top: 8px; text-align: center; }
+  .b-podium-score { font-size: 10px; color: var(--muted); }
+
+  /* ── Responsive ── */
+  @media (max-width: 800px) {
+    .proposals { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<h1>✦ YAPLUKA — Option B</h1>
+<p class="subtitle">Cream & Warm — Design system complet — 8 écrans</p>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     ROW 1 — APPRENANT : Dashboard + Check-in + Coaching
+     ═══════════════════════════════════════════════════════════ -->
+<p class="row-label">Apprenant</p>
+<div class="proposals">
+
+  <!-- ── 1. Dashboard Apprenant ── -->
+  <div class="proposal">
+    <span class="proposal-label">Dashboard</span>
+    <div class="phone">
+      <div class="phone-scroll b-bg" style="padding-top:0;">
+
+        <!-- Top bar -->
+        <div class="b-topbar">
+          <div class="logo">YAPL<span>UKA</span></div>
+          <div class="b-topbar-icons">
+            <div class="b-topbar-icon">💬<div class="badge">2</div></div>
+            <div class="b-topbar-icon">🔔<div class="badge">3</div></div>
+          </div>
+        </div>
+
+        <!-- Header card -->
+        <div style="padding:0 16px 100px;">
+          <div class="b-header">
+            <h2>Bonjour Sophie 👋</h2>
+            <p class="greeting">Semaine 6 · Bonne dynamique !</p>
+            <div class="b-stats">
+              <div class="b-stat"><div class="num accent">+3</div><div class="lbl">cette sem.</div></div>
+              <div class="b-stat"><div class="num">17</div><div class="lbl">actions</div></div>
+              <div class="b-stat"><div class="num">6</div><div class="lbl">check-ins</div></div>
+            </div>
+          </div>
+
+          <!-- Tip banner -->
+          <div class="b-tip" style="margin-top:0; margin-bottom:12px;">
+            <span>💪</span>
+            <span>Ton coach a un message pour toi</span>
+            <span class="badge">Voir</span>
+          </div>
+
+          <!-- Check-in reminder -->
+          <div class="b-checkin">
+            <span>⚡</span>
+            <span>Check-in de la semaine</span>
+            <button class="b-checkin-btn">Faire</button>
+          </div>
+
+          <!-- CTA -->
+          <button class="b-btn-primary">+ Nouvelle action</button>
+
+          <!-- Axes -->
+          <p class="b-section-title">Mes axes de progrès</p>
+
+          <div class="b-axe">
+            <div class="title-row"><div class="axe-num">1</div><div class="axe-title">Structurer mes entretiens</div></div>
+            <div class="bar-row">
+              <div class="bar-bg"><div class="bar-fill green" style="width:65%"></div></div>
+              <span class="level">🥁 Rythme</span>
+            </div>
+            <div class="meta">
+              <span>5 actions · S6</span>
+              <span class="likes">❤️ 3 · 💬 1</span>
+            </div>
+          </div>
+
+          <div class="b-axe">
+            <div class="title-row"><div class="axe-num">2</div><div class="axe-title">Oser dire non en négociation</div></div>
+            <div class="bar-row">
+              <div class="bar-bg"><div class="bar-fill amber" style="width:85%"></div></div>
+              <span class="level">🔥 Intensité</span>
+            </div>
+            <div class="meta">
+              <span>7 actions · S6</span>
+              <span class="likes">❤️ 5</span>
+            </div>
+          </div>
+
+          <div class="b-axe">
+            <div class="title-row"><div class="axe-num">3</div><div class="axe-title">Préparer mes rendez-vous</div></div>
+            <div class="bar-row">
+              <div class="bar-bg"><div class="bar-fill sky" style="width:25%"></div></div>
+              <span class="level">👣 Impulsion</span>
+            </div>
+            <div class="meta">
+              <span>2 actions · S4</span>
+              <span></span>
+            </div>
+            <div class="b-tip">
+              <span>💪</span>
+              <span>Conseil dispo</span>
+              <span class="badge">Voir</span>
+            </div>
+          </div>
+
+          <div style="height:20px"></div>
+        </div>
+      </div>
+
+      <div class="b-nav">
+        <div class="b-nav-item active">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg>
+          <span>Accueil</span>
+          <span class="dot"></span>
+        </div>
+        <div class="b-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <span>Axes</span>
+        </div>
+        <div class="b-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span>Team</span>
+        </div>
+        <div class="b-nav-item">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          <span>Check-in</span>
+        </div>
+        <div class="b-nav-item">
+          <span style="font-size:18px">💪</span>
+          <span>Coach</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── 2. Check-in ── -->
+  <div class="proposal">
+    <span class="proposal-label">Check-in hebdo</span>
+    <div class="phone">
+      <div class="phone-scroll b-bg" style="padding-top:0;">
+        <div class="b-topbar">
+          <div class="logo">YAPL<span>UKA</span></div>
+          <div class="b-topbar-icons">
+            <div class="b-topbar-icon">💬</div>
+            <div class="b-topbar-icon">🔔</div>
+          </div>
+        </div>
+        <div style="padding:0 16px 100px;">
+          <p style="font-size:22px; font-weight:800; color:var(--navy); margin-bottom:4px;">Check-in hebdo</p>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:24px;">Semaine 6 · Comment ça s'est passé ?</p>
+
+          <label class="b-label">Comment te sens-tu cette semaine ?</label>
+          <div class="b-weather-row">
+            <div class="b-weather-btn">⛈️</div>
+            <div class="b-weather-btn selected">⛅</div>
+            <div class="b-weather-btn">☀️</div>
+          </div>
+
+          <label class="b-label">Qu'est-ce qui a bien marché ?</label>
+          <textarea class="b-textarea" placeholder="J'ai réussi à..."></textarea>
+
+          <label class="b-label">Quelles difficultés as-tu rencontrées ?</label>
+          <textarea class="b-textarea" placeholder="J'ai eu du mal à..."></textarea>
+
+          <label class="b-label">Auto-évaluation : Structurer mes entretiens</label>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+            <div style="flex:1; height:8px; background:var(--border-light); border-radius:4px; overflow:hidden;">
+              <div style="width:70%; height:100%; background:linear-gradient(90deg, var(--amber), #f59e0b); border-radius:4px;"></div>
+            </div>
+            <span style="font-size:14px; font-weight:800; color:var(--navy);">7/10</span>
+          </div>
+
+          <label class="b-label">Auto-évaluation : Oser dire non</label>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:24px;">
+            <div style="flex:1; height:8px; background:var(--border-light); border-radius:4px; overflow:hidden;">
+              <div style="width:50%; height:100%; background:linear-gradient(90deg, var(--amber), #f59e0b); border-radius:4px;"></div>
+            </div>
+            <span style="font-size:14px; font-weight:800; color:var(--navy);">5/10</span>
+          </div>
+
+          <button class="b-btn-primary">✓ Valider mon check-in</button>
+          <div style="height:20px"></div>
+        </div>
+      </div>
+      <div class="b-nav">
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg><span>Accueil</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Axes</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Team</span></div>
+        <div class="b-nav-item active"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span>Check-in</span><span class="dot"></span></div>
+        <div class="b-nav-item"><span style="font-size:18px">💪</span><span>Coach</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── 3. Page Coach (tips) ── -->
+  <div class="proposal">
+    <span class="proposal-label">Page Coach</span>
+    <div class="phone">
+      <div class="phone-scroll b-bg" style="padding-top:0;">
+        <div class="b-topbar">
+          <div class="logo">YAPL<span>UKA</span></div>
+          <div class="b-topbar-icons">
+            <div class="b-topbar-icon">💬</div>
+            <div class="b-topbar-icon">🔔</div>
+          </div>
+        </div>
+        <div style="padding:0 16px 100px;">
+          <p style="font-size:22px; font-weight:800; color:var(--navy); margin-bottom:4px;">💪 Mon coach</p>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">Tes conseils personnalisés</p>
+
+          <!-- Current tip highlighted -->
+          <div style="background:var(--navy); border-radius:var(--radius-lg); padding:20px; margin-bottom:20px; position:relative; overflow:hidden;">
+            <div style="position:absolute; top:-15px; right:-10px; width:60px; height:60px; border-radius:50%; background:rgba(251,191,36,0.15);"></div>
+            <p style="font-size:10px; font-weight:700; color:var(--amber); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; position:relative;">💪 Conseil de la semaine</p>
+            <p style="font-size:11px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; position:relative;">Rappel</p>
+            <p style="font-size:14px; color:#fff; line-height:1.5; margin-bottom:12px; position:relative;">En entretien, pose une question ouverte avant de donner ton avis.</p>
+            <p style="font-size:11px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; position:relative;">Conseil</p>
+            <p style="font-size:14px; color:#fff; line-height:1.5; position:relative;">Essaie "Qu'est-ce que tu en penses ?" au début de ton prochain entretien. Note ce que ça change dans l'échange.</p>
+          </div>
+
+          <p class="b-section-title">Structurer mes entretiens</p>
+
+          <div class="b-tip-card">
+            <div class="tip-week">Semaine 6 — Envoyé mardi</div>
+            <div class="tip-label">Rappel</div>
+            <div class="tip-text">En entretien, pose une question ouverte avant de donner ton avis.</div>
+            <div class="tip-label">Conseil</div>
+            <div class="tip-text">Essaie "Qu'est-ce que tu en penses ?" au début de ton prochain entretien.</div>
+          </div>
+
+          <div class="b-tip-card" style="opacity:0.7;">
+            <div class="tip-week">Semaine 4</div>
+            <div class="tip-label">Rappel</div>
+            <div class="tip-text">Prépare un fil conducteur écrit avant chaque entretien important.</div>
+            <div class="tip-label">Conseil</div>
+            <div class="tip-text">3 points max sur un post-it : objectif, questions clés, prochaine étape.</div>
+          </div>
+
+          <p class="b-section-title" style="margin-top:20px;">Oser dire non en négociation</p>
+
+          <div class="b-tip-card">
+            <div class="tip-week">Semaine 5</div>
+            <div class="tip-label">Rappel</div>
+            <div class="tip-text">Dire non, c'est protéger tes priorités, pas rejeter l'autre.</div>
+            <div class="tip-label">Conseil</div>
+            <div class="tip-text">Utilise la formule DESC : Décris, Exprime, Suggère, Conséquences.</div>
+          </div>
+
+          <div style="height:20px"></div>
+        </div>
+      </div>
+      <div class="b-nav">
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg><span>Accueil</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Axes</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Team</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span>Check-in</span></div>
+        <div class="b-nav-item active"><span style="font-size:18px">💪</span><span>Coach</span><span class="dot"></span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     ROW 2 — APPRENANT : Team + Messagerie
+     ═══════════════════════════════════════════════════════════ -->
+<p class="row-label">Apprenant — Social</p>
+<div class="proposals">
+
+  <!-- ── 4. Team ── -->
+  <div class="proposal">
+    <span class="proposal-label">Page Team</span>
+    <div class="phone">
+      <div class="phone-scroll b-bg" style="padding-top:0;">
+        <div class="b-topbar">
+          <div class="logo">YAPL<span>UKA</span></div>
+          <div class="b-topbar-icons">
+            <div class="b-topbar-icon">💬<div class="badge">2</div></div>
+            <div class="b-topbar-icon">🔔</div>
+          </div>
+        </div>
+        <div style="padding:0 16px 100px;">
+          <p style="font-size:22px; font-weight:800; color:var(--navy); margin-bottom:4px;">Mon équipe</p>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">Groupe h3O — 6 membres</p>
+
+          <!-- Podium -->
+          <div class="b-podium">
+            <div class="b-podium-item">
+              <div class="b-podium-bar" style="height:80px; background:linear-gradient(180deg, #94a3b8, #64748b);">
+                <span class="rank">2</span>
+              </div>
+              <span class="b-podium-name">Thomas</span>
+              <span class="b-podium-score">12 actions</span>
+            </div>
+            <div class="b-podium-item">
+              <div class="b-podium-bar" style="height:110px; background:linear-gradient(180deg, var(--amber), #d97706);">
+                <span class="rank">1</span>
+              </div>
+              <span class="b-podium-name">Sophie</span>
+              <span class="b-podium-score">17 actions</span>
+            </div>
+            <div class="b-podium-item">
+              <div class="b-podium-bar" style="height:65px; background:linear-gradient(180deg, #c4b5a2, var(--muted));">
+                <span class="rank">3</span>
+              </div>
+              <span class="b-podium-name">Marie</span>
+              <span class="b-podium-score">9 actions</span>
+            </div>
+          </div>
+
+          <p class="b-section-title" style="margin-top:24px;">Classement</p>
+
+          <div class="b-team-card">
+            <div class="b-avatar" style="background:var(--amber);">SP</div>
+            <div class="b-team-info">
+              <div class="name">Sophie Petit 👑</div>
+              <div class="detail">🚀 Propulsion · 17 actions</div>
+            </div>
+            <span class="b-team-badge" style="background:var(--green-light); color:var(--green);">+3</span>
+          </div>
+
+          <div class="b-team-card">
+            <div class="b-avatar" style="background:var(--sky);">TB</div>
+            <div class="b-team-info">
+              <div class="name">Thomas Bernard</div>
+              <div class="detail">🔥 Intensité · 12 actions</div>
+            </div>
+            <span class="b-team-badge" style="background:var(--amber-light); color:var(--amber-dark);">+2</span>
+          </div>
+
+          <div class="b-team-card">
+            <div class="b-avatar" style="background:var(--green);">MD</div>
+            <div class="b-team-info">
+              <div class="name">Marie Dupont</div>
+              <div class="detail">🥁 Rythme · 9 actions</div>
+            </div>
+            <span class="b-team-badge" style="background:var(--green-light); color:var(--green);">+1</span>
+          </div>
+
+          <div class="b-team-card">
+            <div class="b-avatar" style="background:var(--orange);">LP</div>
+            <div class="b-team-info">
+              <div class="name">Lucas Petit</div>
+              <div class="detail">👣 Impulsion · 3 actions</div>
+            </div>
+          </div>
+
+          <p class="b-section-title" style="margin-top:20px;">Actions récentes</p>
+
+          <div class="b-action-card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div class="b-avatar" style="width:28px;height:28px;border-radius:10px;font-size:11px;background:var(--sky);">TB</div>
+              <span style="font-size:12px;font-weight:700;color:var(--navy);">Thomas</span>
+              <span style="font-size:11px;color:var(--muted);">· il y a 2h</span>
+            </div>
+            <div class="action-text">J'ai préparé un plan pour mon entretien de vendredi avec 3 objectifs clairs</div>
+            <div class="action-meta">
+              <span class="react">❤️ 2</span>
+              <span class="react">💬 1</span>
+            </div>
+          </div>
+
+          <div class="b-action-card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div class="b-avatar" style="width:28px;height:28px;border-radius:10px;font-size:11px;background:var(--green);">MD</div>
+              <span style="font-size:12px;font-weight:700;color:var(--navy);">Marie</span>
+              <span style="font-size:11px;color:var(--muted);">· hier</span>
+            </div>
+            <div class="action-text">Première négo où j'ai osé demander un délai supplémentaire !</div>
+            <div class="action-meta">
+              <span class="react">❤️ 4</span>
+              <span class="react">💬 2</span>
+            </div>
+          </div>
+
+          <div style="height:20px"></div>
+        </div>
+      </div>
+      <div class="b-nav">
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg><span>Accueil</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Axes</span></div>
+        <div class="b-nav-item active"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Team</span><span class="dot"></span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span>Check-in</span></div>
+        <div class="b-nav-item"><span style="font-size:18px">💪</span><span>Coach</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── 5. Messagerie ── -->
+  <div class="proposal">
+    <span class="proposal-label">Messagerie</span>
+    <div class="phone">
+      <div class="phone-scroll b-bg" style="padding-top:0;">
+        <div style="padding:54px 16px 0;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+            <div style="width:36px;height:36px;border-radius:12px;background:var(--navy);color:var(--amber);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">FL</div>
+            <div>
+              <p style="font-size:16px; font-weight:800; color:var(--navy);">Fred Lacabanne</p>
+              <p style="font-size:11px; color:var(--muted);">Formateur · En ligne</p>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 16px 100px;">
+
+          <div class="b-msg-row received">
+            <div>
+              <div class="b-msg-bubble">Salut Sophie ! Super progrès sur la structuration des entretiens 👏 Continue comme ça !</div>
+              <div class="b-msg-time">Lundi 9:15</div>
+            </div>
+          </div>
+
+          <div class="b-msg-row sent">
+            <div>
+              <div class="b-msg-bubble">Merci Fred ! J'ai appliqué le DESC en réunion hier, ça a bien marché 😊</div>
+              <div class="b-msg-time" style="text-align:right;">Lundi 10:30</div>
+            </div>
+          </div>
+
+          <div class="b-msg-row received">
+            <div>
+              <div class="b-msg-bubble">Excellent ! C'est exactement le genre de mise en pratique qui fait la différence. Tu as noté l'action ?</div>
+              <div class="b-msg-time">Lundi 10:45</div>
+            </div>
+          </div>
+
+          <div class="b-msg-row sent">
+            <div>
+              <div class="b-msg-bubble">Oui c'est fait ! Et j'ai aussi fait mon check-in de la semaine ✅</div>
+              <div class="b-msg-time" style="text-align:right;">Lundi 11:02</div>
+            </div>
+          </div>
+
+          <div class="b-msg-row received">
+            <div>
+              <div class="b-msg-bubble">Parfait. N'hésite pas si tu as des questions sur le module négociation, c'est ton prochain axe de travail 💪</div>
+              <div class="b-msg-time">Mardi 8:00</div>
+            </div>
+          </div>
+
+          <!-- Message team -->
+          <div style="margin:20px 0 12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+              <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Message au groupe</span>
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+            </div>
+          </div>
+
+          <div class="b-msg-row received">
+            <div>
+              <div class="b-msg-bubble" style="background:var(--amber-light);border-color:#fde68a;color:var(--navy);border-radius:18px 18px 18px 4px;">
+                <div style="font-size:10px;font-weight:700;color:var(--amber-dark);margin-bottom:4px;">📢 Fred — Message au groupe</div>
+                Bravo à toute l'équipe, 12 nouvelles actions cette semaine ! Vous êtes le groupe le plus actif 🔥
+              </div>
+              <div class="b-msg-time">Mercredi 9:00</div>
+            </div>
+          </div>
+
+          <div class="b-msg-input">
+            <input type="text" placeholder="Écrire un message...">
+            <button class="b-msg-send">➤</button>
+          </div>
+
+          <div style="height:20px"></div>
+        </div>
+      </div>
+      <div class="b-nav">
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg><span>Accueil</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Axes</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Team</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span>Check-in</span></div>
+        <div class="b-nav-item"><span style="font-size:18px">💪</span><span>Coach</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── 6. Notifications ── -->
+  <div class="proposal">
+    <span class="proposal-label">Notifications</span>
+    <div class="phone">
+      <div class="phone-scroll b-bg" style="padding-top:0;">
+        <div class="b-topbar">
+          <div class="logo">YAPL<span>UKA</span></div>
+          <div class="b-topbar-icons">
+            <div class="b-topbar-icon">💬<div class="badge">2</div></div>
+            <div class="b-topbar-icon" style="border-color:var(--amber);background:var(--amber-light);">🔔</div>
+          </div>
+        </div>
+        <div style="padding:0 16px 100px;">
+          <p style="font-size:22px; font-weight:800; color:var(--navy); margin-bottom:16px;">Notifications</p>
+
+          <div class="b-notif-dropdown">
+            <div class="b-notif-item unread">
+              <span class="b-notif-icon">💪</span>
+              <div class="b-notif-text">
+                <div class="msg">Ton équipe avance ! 5 nouvelles actions cette semaine</div>
+                <div class="time">Il y a 2h · Digest hebdo</div>
+              </div>
+            </div>
+            <div class="b-notif-item unread">
+              <span class="b-notif-icon">❤️</span>
+              <div class="b-notif-text">
+                <div class="msg">Thomas a aimé ton action "J'ai préparé un plan..."</div>
+                <div class="time">Il y a 3h</div>
+              </div>
+            </div>
+            <div class="b-notif-item unread">
+              <span class="b-notif-icon">💬</span>
+              <div class="b-notif-text">
+                <div class="msg">Marie a commenté : "Trop bien, j'essaie aussi !"</div>
+                <div class="time">Hier 18:30</div>
+              </div>
+            </div>
+            <div class="b-notif-item">
+              <span class="b-notif-icon">💪</span>
+              <div class="b-notif-text">
+                <div class="msg">Ton coach a un message pour toi</div>
+                <div class="time">Mardi 8:00</div>
+              </div>
+            </div>
+            <div class="b-notif-item">
+              <span class="b-notif-icon">⚡</span>
+              <div class="b-notif-text">
+                <div class="msg">N'oublie pas ton check-in de la semaine !</div>
+                <div class="time">Vendredi 8:00</div>
+              </div>
+            </div>
+            <div class="b-notif-item">
+              <span class="b-notif-icon">❤️</span>
+              <div class="b-notif-text">
+                <div class="msg">Fred a aimé ton action "Première négo..."</div>
+                <div class="time">Jeudi 10:00</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:20px"></div>
+        </div>
+      </div>
+      <div class="b-nav">
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg><span>Accueil</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Axes</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Team</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span>Check-in</span></div>
+        <div class="b-nav-item"><span style="font-size:18px">💪</span><span>Coach</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     ROW 3 — FORMATEUR
+     ═══════════════════════════════════════════════════════════ -->
+<p class="row-label">Formateur</p>
+<div class="proposals">
+
+  <!-- ── 7. Dashboard Formateur (liste groupes) ── -->
+  <div class="proposal">
+    <span class="proposal-label">Dashboard groupes</span>
+    <div class="phone">
+      <div class="phone-scroll b-bg" style="padding-top:0;">
+        <div class="b-topbar">
+          <div class="logo">YAPL<span>UKA</span></div>
+          <div class="b-topbar-icons">
+            <div class="b-topbar-icon">💬<div class="badge">4</div></div>
+            <div class="b-topbar-icon">🔔<div class="badge">7</div></div>
+          </div>
+        </div>
+        <div style="padding:0 16px 100px;">
+          <p style="font-size:22px; font-weight:800; color:var(--navy); margin-bottom:4px;">Mes groupes</p>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">3 groupes actifs · 18 apprenants</p>
+
+          <!-- Group card 1 -->
+          <div class="b-card" style="cursor:pointer;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+              <div>
+                <p style="font-size:16px; font-weight:800; color:var(--navy);">Groupe h3O</p>
+                <p style="font-size:12px; color:var(--muted);">Management DISC · 6 membres</p>
+              </div>
+              <span style="font-size:22px;">›</span>
+            </div>
+            <div class="b-kpi-row" style="margin-bottom:0;">
+              <div class="b-kpi"><div class="num green">42</div><div class="lbl">actions</div></div>
+              <div class="b-kpi"><div class="num">+8</div><div class="lbl">cette sem.</div></div>
+              <div class="b-kpi"><div class="num amber">83%</div><div class="lbl">check-in</div></div>
+              <div class="b-kpi"><div class="num rose">1</div><div class="lbl">⛈️</div></div>
+            </div>
+          </div>
+
+          <!-- Group card 2 -->
+          <div class="b-card" style="cursor:pointer;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+              <div>
+                <p style="font-size:16px; font-weight:800; color:var(--navy);">Groupe Demo</p>
+                <p style="font-size:12px; color:var(--muted);">Négociation · 4 membres</p>
+              </div>
+              <span style="font-size:22px;">›</span>
+            </div>
+            <div class="b-kpi-row" style="margin-bottom:0;">
+              <div class="b-kpi"><div class="num green">28</div><div class="lbl">actions</div></div>
+              <div class="b-kpi"><div class="num">+5</div><div class="lbl">cette sem.</div></div>
+              <div class="b-kpi"><div class="num amber">75%</div><div class="lbl">check-in</div></div>
+              <div class="b-kpi"><div class="num" style="color:var(--green);">0</div><div class="lbl">⛈️</div></div>
+            </div>
+          </div>
+
+          <!-- Group card 3 -->
+          <div class="b-card" style="cursor:pointer;opacity:0.6;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+              <div>
+                <p style="font-size:16px; font-weight:800; color:var(--navy);">Groupe Pilote</p>
+                <p style="font-size:12px; color:var(--muted);">Communication · 8 membres · Terminé</p>
+              </div>
+              <span style="font-size:22px;">›</span>
+            </div>
+            <div class="b-kpi-row" style="margin-bottom:0;">
+              <div class="b-kpi"><div class="num">67</div><div class="lbl">actions</div></div>
+              <div class="b-kpi"><div class="num">—</div><div class="lbl">cette sem.</div></div>
+              <div class="b-kpi"><div class="num">92%</div><div class="lbl">check-in</div></div>
+              <div class="b-kpi"><div class="num">0</div><div class="lbl">⛈️</div></div>
+            </div>
+          </div>
+
+          <button class="b-btn-secondary" style="margin-top:8px;">+ Créer un groupe</button>
+
+          <div style="height:20px"></div>
+        </div>
+      </div>
+      <div class="b-nav">
+        <div class="b-nav-item active"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg><span>Groupes</span><span class="dot"></span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Apprenants</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span>Messages</span></div>
+        <div class="b-nav-item"><span style="font-size:18px">💪</span><span>Tips</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg><span>Réglages</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── 8. Fiche Apprenant (vue formateur) ── -->
+  <div class="proposal">
+    <span class="proposal-label">Fiche apprenant</span>
+    <div class="phone">
+      <div class="phone-scroll b-bg" style="padding-top:0;">
+
+        <div class="b-breadcrumb">
+          <a href="#">Groupes</a><span>›</span><a href="#">h3O</a><span>›</span><span style="color:var(--navy);font-weight:700;">Sophie Petit</span>
+        </div>
+
+        <div style="padding:0 16px 100px;">
+
+          <!-- Learner header -->
+          <div class="b-trainer-header">
+            <div style="display:flex;align-items:center;gap:14px;position:relative;">
+              <div class="b-avatar" style="width:52px;height:52px;border-radius:18px;font-size:18px;background:var(--amber);">SP</div>
+              <div>
+                <h2 style="font-size:20px;">Sophie Petit</h2>
+                <p class="sub">Groupe h3O · Semaine 6</p>
+              </div>
+            </div>
+            <div class="b-stats" style="grid-template-columns:1fr 1fr 1fr 1fr; margin-top:14px;">
+              <div class="b-stat"><div class="num accent">17</div><div class="lbl">actions</div></div>
+              <div class="b-stat"><div class="num">6</div><div class="lbl">check-ins</div></div>
+              <div class="b-stat"><div class="num">☀️</div><div class="lbl">météo</div></div>
+              <div class="b-stat"><div class="num">🔥</div><div class="lbl">niveau</div></div>
+            </div>
+          </div>
+
+          <!-- Badge -->
+          <div style="display:flex;justify-content:center;margin-bottom:16px;">
+            <span class="b-team-badge" style="background:var(--green-light);color:var(--green);font-size:12px;padding:6px 16px;">✓ BONNE DYNAMIQUE</span>
+          </div>
+
+          <!-- Quick actions -->
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <button class="b-btn-secondary" style="flex:1;margin-bottom:0;font-size:13px;padding:12px;">💬 Message</button>
+            <button class="b-btn-secondary" style="flex:1;margin-bottom:0;font-size:13px;padding:12px;">📄 Export PDF</button>
+          </div>
+
+          <!-- Tip coaching -->
+          <div style="background:var(--amber-light);border:2px solid #fde68a;border-radius:var(--radius);padding:14px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:11px;font-weight:700;color:var(--amber-dark);text-transform:uppercase;letter-spacing:0.5px;">💪 Prochain tip — Axe 1</span>
+              <span style="font-size:10px;color:var(--muted);">Mardi 8h ▸</span>
+            </div>
+            <p style="font-size:12px;color:var(--navy);line-height:1.4;">En entretien, pose une question ouverte avant de donner ton avis.</p>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <button style="font-size:11px;font-weight:700;color:var(--amber-dark);background:transparent;border:1.5px solid #fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;">✏️ Modifier</button>
+              <button style="font-size:11px;font-weight:700;color:var(--amber-dark);background:transparent;border:1.5px solid #fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;">🔄 Régénérer</button>
+            </div>
+          </div>
+
+          <!-- Axes -->
+          <p class="b-section-title">Axes de progrès</p>
+
+          <div class="b-axe">
+            <div class="title-row"><div class="axe-num">1</div><div class="axe-title">Structurer mes entretiens</div></div>
+            <div class="bar-row">
+              <div class="bar-bg"><div class="bar-fill green" style="width:65%"></div></div>
+              <span class="level">🥁 Rythme</span>
+            </div>
+            <div class="meta">
+              <span>5 actions</span>
+              <span class="likes">❤️ 3 · 💬 1</span>
+            </div>
+            <!-- Actions inline -->
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light);">
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+                <span style="font-size:10px;color:var(--muted);">S6</span>
+                <span style="font-size:12px;color:var(--navy);flex:1;">Préparé un plan d'entretien avec 3 objectifs</span>
+                <span style="font-size:11px;">❤️ 2</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+                <span style="font-size:10px;color:var(--muted);">S5</span>
+                <span style="font-size:12px;color:var(--navy);flex:1;">Utilisé le DESC avec un collaborateur difficile</span>
+                <span style="font-size:11px;">❤️ 1 💬</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+                <span style="font-size:10px;color:var(--muted);">S4</span>
+                <span style="font-size:12px;color:var(--navy);flex:1;">Noté mes objectifs avant la réunion d'équipe</span>
+              </div>
+              <p style="font-size:11px;color:var(--amber-dark);font-weight:600;margin-top:4px;cursor:pointer;">Voir les 5 actions ›</p>
+            </div>
+          </div>
+
+          <div class="b-axe">
+            <div class="title-row"><div class="axe-num">2</div><div class="axe-title">Oser dire non en négociation</div></div>
+            <div class="bar-row">
+              <div class="bar-bg"><div class="bar-fill amber" style="width:85%"></div></div>
+              <span class="level">🔥 Intensité</span>
+            </div>
+            <div class="meta">
+              <span>7 actions</span>
+              <span class="likes">❤️ 5</span>
+            </div>
+          </div>
+
+          <div class="b-axe">
+            <div class="title-row"><div class="axe-num">3</div><div class="axe-title">Préparer mes rendez-vous</div></div>
+            <div class="bar-row">
+              <div class="bar-bg"><div class="bar-fill sky" style="width:25%"></div></div>
+              <span class="level">👣 Impulsion</span>
+            </div>
+            <div class="meta">
+              <span>2 actions</span>
+              <span></span>
+            </div>
+          </div>
+
+          <div style="height:20px"></div>
+        </div>
+      </div>
+      <div class="b-nav">
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1a1 1 0 00.7-1.7l-9-9a1 1 0 00-1.4 0l-9 9A1 1 0 003 13z"/></svg><span>Groupes</span></div>
+        <div class="b-nav-item active"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Apprenants</span><span class="dot"></span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span>Messages</span></div>
+        <div class="b-nav-item"><span style="font-size:18px">💪</span><span>Tips</span></div>
+        <div class="b-nav-item"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg><span>Réglages</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="height:80px;"></div>
+
+</body>
+</html>

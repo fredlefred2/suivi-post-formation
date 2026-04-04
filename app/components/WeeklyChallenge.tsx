@@ -92,8 +92,8 @@ export function TipProvider({ children }: { children: ReactNode }) {
                 </div>
               </div>
               {tip.advice && (
-                <div className="rounded-xl p-3.5 bg-indigo-50 border border-indigo-200/60">
-                  <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">
+                <div className="rounded-xl p-3.5 bg-[#faf8f4] border-2 border-[#f0ebe0]">
+                  <p className="text-[10px] font-bold text-[#92400e] uppercase tracking-wider mb-1.5">
                     🎯 Cette semaine, essaye
                   </p>
                   <p className="text-[13px] text-gray-700 leading-relaxed">{tip.advice}</p>
@@ -208,7 +208,7 @@ export default function WeeklyChallenge() {
             </div>
             <div className="bg-white px-5 py-4 space-y-3">
               <div className="flex gap-3 items-start"><span className="text-2xl shrink-0 mt-0.5">💪</span><div className="relative bg-amber-50 border border-amber-200/60 rounded-2xl rounded-tl-sm px-3.5 py-3"><p className="text-[13px] font-semibold text-gray-800 leading-relaxed">{tip.content}</p></div></div>
-              {tip.advice && (<div className="rounded-xl p-3.5 bg-indigo-50 border border-indigo-200/60"><p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">🎯 Cette semaine, essaye</p><p className="text-[13px] text-gray-700 leading-relaxed">{tip.advice}</p></div>)}
+              {tip.advice && (<div className="rounded-xl p-3.5 bg-[#faf8f4] border-2 border-[#f0ebe0]"><p className="text-[10px] font-bold text-[#92400e] uppercase tracking-wider mb-1.5">🎯 Cette semaine, essaye</p><p className="text-[13px] text-gray-700 leading-relaxed">{tip.advice}</p></div>)}
             </div>
             <div className="bg-white px-5 pb-5 pt-1">
               <button onClick={handleAccept} disabled={acting} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-95 shadow-md" style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', boxShadow: '0 4px 14px rgba(217,119,6,0.4)' }}>
