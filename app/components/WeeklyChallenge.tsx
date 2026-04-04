@@ -76,7 +76,7 @@ export function TipProvider({ children }: { children: ReactNode }) {
               </button>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-white/20 shadow-lg">
-                  🥷
+                  💪
                 </div>
                 <div>
                   <p className="text-white font-bold text-base">Le conseil de ton coach</p>
@@ -86,7 +86,7 @@ export function TipProvider({ children }: { children: ReactNode }) {
             </div>
             <div className="bg-white px-5 py-4 space-y-3">
               <div className="flex gap-3 items-start">
-                <span className="text-2xl shrink-0 mt-0.5">🥷</span>
+                <span className="text-2xl shrink-0 mt-0.5">💪</span>
                 <div className="relative bg-amber-50 border border-amber-200/60 rounded-2xl rounded-tl-sm px-3.5 py-3">
                   <p className="text-[13px] font-semibold text-gray-800 leading-relaxed">{tip.content}</p>
                 </div>
@@ -132,7 +132,7 @@ export function AxeTipBadge({ axeId }: { axeId: string }) {
       className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left active:scale-[0.98] transition-transform"
       style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.3), rgba(253,230,138,0.4))', border: '1px solid rgba(251,191,36,0.5)' }}
     >
-      <span className="text-base shrink-0">🥷</span>
+      <span className="text-base shrink-0">💪</span>
       <span className="text-xs font-semibold text-amber-900 flex-1 truncate">Conseil dispo</span>
       <span className="text-[10px] font-bold text-amber-700 bg-amber-200/60 px-2 py-0.5 rounded-md shrink-0">Voir</span>
     </button>
@@ -183,7 +183,7 @@ export default function WeeklyChallenge() {
         >
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
-            🥷
+            💪
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-amber-900 text-sm">Ton coach a un conseil pour toi</p>
@@ -202,12 +202,12 @@ export default function WeeklyChallenge() {
             <div className="relative px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)' }}>
               <button onClick={() => setModalOpen(false)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white/80"><X size={16} /></button>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-white/20 shadow-lg">🥷</div>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-white/20 shadow-lg">💪</div>
                 <div><p className="text-white font-bold text-base">Le conseil de ton coach</p><p className="text-white/80 text-xs mt-0.5">{axeName} · Semaine {tip.week_number}</p></div>
               </div>
             </div>
             <div className="bg-white px-5 py-4 space-y-3">
-              <div className="flex gap-3 items-start"><span className="text-2xl shrink-0 mt-0.5">🥷</span><div className="relative bg-amber-50 border border-amber-200/60 rounded-2xl rounded-tl-sm px-3.5 py-3"><p className="text-[13px] font-semibold text-gray-800 leading-relaxed">{tip.content}</p></div></div>
+              <div className="flex gap-3 items-start"><span className="text-2xl shrink-0 mt-0.5">💪</span><div className="relative bg-amber-50 border border-amber-200/60 rounded-2xl rounded-tl-sm px-3.5 py-3"><p className="text-[13px] font-semibold text-gray-800 leading-relaxed">{tip.content}</p></div></div>
               {tip.advice && (<div className="rounded-xl p-3.5 bg-indigo-50 border border-indigo-200/60"><p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">🎯 Cette semaine, essaye</p><p className="text-[13px] text-gray-700 leading-relaxed">{tip.advice}</p></div>)}
             </div>
             <div className="bg-white px-5 pb-5 pt-1">

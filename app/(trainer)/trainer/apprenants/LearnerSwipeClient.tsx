@@ -300,7 +300,7 @@ export default function LearnerSwipeClient({ learners, groups, currentGroupId, i
                   </div>
                 </div>
 
-                {/* ── Tips IA ───────────────────────────────────────────── */}
+                {/* ── Tips coaching ──────────────────────────────────────── */}
                 {learner.axes.length > 0 && (
                   <LearnerTipsSection
                     learnerId={learner.id}

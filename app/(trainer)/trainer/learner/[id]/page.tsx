@@ -250,7 +250,7 @@ export default async function LearnerDetailPage({
         </div>
       </div>
 
-      {/* ── Tips IA ─────────────────────────────────────────────────────────── */}
+      {/* ── Tips coaching ────────────────────────────────────────────────────── */}
       {axes && axes.length > 0 && (
         <LearnerTipsSection
           learnerId={params.id}

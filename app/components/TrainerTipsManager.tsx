@@ -139,7 +139,7 @@ export default function TrainerTipsManager({
   }
 
   const handleAdd = async (axeId: string, learnerId: string, nextWeek: number) => {
-    const content = prompt('🥷 Rappel (punchline) :')
+    const content = prompt('💪 Rappel (punchline) :')
     if (!content) return
     const advice = prompt('💡 Conseil pratique :')
     await fetch('/api/tips/admin', {
@@ -290,7 +290,7 @@ export default function TrainerTipsManager({
                                 {isEditing ? (
                                   <div className="space-y-2">
                                     <div>
-                                      <label className="text-[10px] font-semibold text-gray-500 uppercase mb-0.5 block">🥷 Rappel</label>
+                                      <label className="text-[10px] font-semibold text-gray-500 uppercase mb-0.5 block">💪 Rappel</label>
                                       <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
                                         className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 min-h-[60px]" autoFocus />
                                     </div>

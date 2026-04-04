@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     const weekNumber = Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + new Date(now.getFullYear(), 0, 1).getDay() + 1) / 7)
 
     const result = await generatePersonalizedTip(ctx, weekNumber)
-    if (!result) return NextResponse.json({ error: 'Erreur generation IA' }, { status: 500 })
+    if (!result) return NextResponse.json({ error: 'Erreur de génération' }, { status: 500 })
 
     return NextResponse.json({ success: true, tip: result })
   }
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Generer un nouveau
     const result = await generatePersonalizedTip(ctx, currentTip.week_number)
-    if (!result) return NextResponse.json({ error: 'Erreur regeneration IA' }, { status: 500 })
+    if (!result) return NextResponse.json({ error: 'Erreur de régénération' }, { status: 500 })
 
     return NextResponse.json({ success: true, tip: result })
   }

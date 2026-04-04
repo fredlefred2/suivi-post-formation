@@ -245,7 +245,7 @@ export default function GroupsClient({
                           href={`/trainer/groups/${group.id}`}
                           className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                         >
-                          <span>🥷</span> Gérer les tips
+                          <span>💪</span> Gérer les tips
                         </Link>
                         <button
                           onClick={() => { setDeletingGroupId(group.id); setOpenMenu(null) }}
@@ -306,7 +306,7 @@ export default function GroupsClient({
                                         —
                                       </span>
                                     )}
-                                    <span className={`text-base ${m.tips_total > 0 ? '' : 'opacity-25'}`}>🥷</span>
+                                    <span className={`text-base ${m.tips_total > 0 ? '' : 'opacity-25'}`}>💪</span>
                                   </Link>
 
                                   {/* Menu membre */}

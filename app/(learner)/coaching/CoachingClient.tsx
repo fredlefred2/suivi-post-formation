@@ -86,7 +86,7 @@ export default function CoachingClient({ userId }: { userId: string }) {
 
         <div className="relative flex items-center gap-3">
           <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-white/20 shadow-lg">
-            🥷
+            💪
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-white">Mon coaching</h1>
@@ -99,7 +99,7 @@ export default function CoachingClient({ userId }: { userId: string }) {
 
       {tips.length === 0 ? (
         <div className="rounded-2xl bg-white p-8 text-center" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center text-3xl mx-auto mb-4">🥷</div>
+          <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center text-3xl mx-auto mb-4">💪</div>
           <p className="text-sm font-medium text-gray-600">Tes conseils apparaîtront ici chaque semaine.</p>
           <p className="text-xs text-gray-400 mt-1.5">Crée tes axes de progrès pour recevoir du coaching personnalisé !</p>
         </div>
