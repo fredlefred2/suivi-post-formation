@@ -91,28 +91,22 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
           : displaySorted.slice(0, MAX_VISIBLE_ACTIONS)
         const hiddenCount = displaySorted.length - MAX_VISIBLE_ACTIONS
 
-        const cardGradient = levelIdx === 0
-          ? 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)'
-          : levelIdx === 1
-          ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
-          : levelIdx === 2
-          ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
-          : levelIdx === 3
-          ? 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)'
-          : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)'
+        const LEVEL_BORDER_COLORS = ['#94a3b8', '#38bdf8', '#10b981', '#f59e0b', '#fb7185']
+        const LEVEL_BAR_COLORS = ['#94a3b8', '#38bdf8', '#34d399', '#fb923c', '#f472b6']
+        const borderColor = LEVEL_BORDER_COLORS[levelIdx] ?? LEVEL_BORDER_COLORS[0]
 
         return (
           <div
             key={axe.id}
-            className="rounded-2xl border-2 p-4"
-            style={{ background: cardGradient }}
+            className="rounded-[22px] bg-white p-4"
+            style={{ border: `2px solid ${borderColor}` }}
           >
             {/* Titre */}
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
+              <span className="axe-num shrink-0" style={{ background: borderColor, color: '#fff' }}>
                 {axe.index + 1}
               </span>
-              <p className="font-bold text-sm leading-snug line-clamp-1 flex-1">{axe.subject}</p>
+              <p className="font-bold text-sm leading-snug line-clamp-1 flex-1" style={{ color: '#1a1a2e' }}>{axe.subject}</p>
             </div>
 
             {/* Description */}
@@ -124,20 +118,12 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
             <div className="mt-3 flex items-center gap-2.5">
               <span className="text-lg">{level.icon}</span>
               <div className="flex-1">
-                <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
+                <div className="bar-bg">
                   <div
-                    className="h-full rounded-full transition-all duration-700"
+                    className="bar-fill transition-all duration-700"
                     style={{
                       width: `${progress}%`,
-                      background: levelIdx === 0
-                        ? '#a78bfa'
-                        : levelIdx === 1
-                        ? '#38bdf8'
-                        : levelIdx === 2
-                        ? '#34d399'
-                        : levelIdx === 3
-                        ? '#fb923c'
-                        : '#f472b6',
+                      background: LEVEL_BAR_COLORS[levelIdx] ?? LEVEL_BAR_COLORS[0],
                     }}
                   />
                 </div>
@@ -147,20 +133,20 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
 
             {/* Niveau + compteur sur 1 ligne */}
             <div className="mt-2 flex items-center justify-between">
-              <span className={`text-xs font-semibold ${dyn.color.split(' ')[0]}`}>{dyn.label}</span>
-              <span className="text-xs text-gray-500">
+              <span className="text-[11px] font-bold" style={{ color: '#1a1a2e' }}>{dyn.icon} {dyn.label}</span>
+              <span className="text-[11px]" style={{ color: '#a0937c' }}>
                 {actionsCount} action{actionsCount !== 1 ? 's' : ''}
                 {actionsCount === 0 && (
-                  <span className={`font-medium ml-1 ${dyn.color.split(' ')[0]}`}>· commence !</span>
+                  <span className="font-semibold ml-1" style={{ color: '#92400e' }}>· commence !</span>
                 )}
                 {actionsCount > 0 && actionsCount < 9 && (
-                  <span className={`font-medium ml-1 ${dyn.color.split(' ')[0]}`}>· encore {dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
+                  <span className="font-semibold ml-1" style={{ color: '#92400e' }}>· encore {dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
                 )}
               </span>
             </div>
 
             {/* Séparateur + Actions menées */}
-            <div className="border-t border-current/10 pt-3 mt-2">
+            <div className="pt-3 mt-2" style={{ borderTop: '2px solid #f0ebe0' }}>
               <p className="text-sm font-medium text-gray-700 mb-2">
                 Actions menées
                 {actionsCount > 0 && (
@@ -179,7 +165,7 @@ export default function LearnerAxesSection({ axes, feedbackMap }: Props) {
                       const rank = rankMap.get(action.id) ?? 1
                       return (
                         <li key={action.id} className="flex items-start gap-2">
-                          <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">
+                          <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm" style={{ background: '#f5f0e8' }}>
                             {getActionPhaseIcon(rank)}
                           </span>
                           <div className="flex-1 min-w-0">

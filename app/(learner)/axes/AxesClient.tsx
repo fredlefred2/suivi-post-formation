@@ -223,7 +223,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
 
       {/* Formulaire nouvel axe */}
       {showAxeForm && (
-        <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden">
+        <div className="rounded-[22px] bg-white shadow-lg overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
           {/* Header gradient */}
           <div className="px-5 py-4" style={{ background: '#1a1a2e' }}>
             <h2 className="text-white font-bold text-base">🎯 Nouvel axe de progrès</h2>
@@ -339,28 +339,22 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               const progress = getProgress(axe.actions.length)
               const levelIdx = getCurrentLevelIndex(axe.actions.length)
               const level = getCurrentLevel(axe.actions.length)
-              const cardGradient = levelIdx === 0
-                ? 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)'
-                : levelIdx === 1
-                ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
-                : levelIdx === 2
-                ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
-                : levelIdx === 3
-                ? 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)'
-                : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)'
+              const LEVEL_BORDER_COLORS = ['#94a3b8', '#38bdf8', '#10b981', '#f59e0b', '#fb7185']
+              const LEVEL_BAR_COLORS = ['#94a3b8', '#38bdf8', '#34d399', '#fb923c', '#f472b6']
+              const borderColor = LEVEL_BORDER_COLORS[levelIdx] ?? LEVEL_BORDER_COLORS[0]
               return (
                 <div
                   key={axe.id}
-                  className="snap-center shrink-0 w-[85vw] max-w-[420px] rounded-2xl p-4 flex flex-col max-h-[calc(100dvh-11rem)]"
-                  style={{ background: cardGradient }}
+                  className="snap-center shrink-0 w-[85vw] max-w-[420px] rounded-[22px] bg-white p-4 flex flex-col max-h-[calc(100dvh-11rem)]"
+                  style={{ border: `2px solid ${borderColor}` }}
                 >
                  <div className="shrink-0">
                   {/* Titre + boutons edit/delete */}
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0">
+                    <span className="axe-num shrink-0" style={{ background: borderColor, color: '#fff' }}>
                       {axeIndex + 1}
                     </span>
-                    <p className="font-bold text-sm leading-snug line-clamp-1 flex-1">{axe.subject}</p>
+                    <p className="font-bold text-sm leading-snug line-clamp-1 flex-1" style={{ color: '#1a1a2e' }}>{axe.subject}</p>
                     <div className="flex items-center gap-0.5 shrink-0">
                       <button
                         onClick={() => {
@@ -395,20 +389,12 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                   <div className="mt-3 flex items-center gap-2.5">
                     <span className="text-lg">{level.icon}</span>
                     <div className="flex-1">
-                      <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
+                      <div className="bar-bg">
                         <div
-                          className="h-full rounded-full transition-all duration-700"
+                          className="bar-fill transition-all duration-700"
                           style={{
                             width: `${progress}%`,
-                            background: levelIdx === 0
-                              ? '#a78bfa'
-                              : levelIdx === 1
-                              ? '#38bdf8'
-                              : levelIdx === 2
-                              ? '#34d399'
-                              : levelIdx === 3
-                              ? '#fb923c'
-                              : '#f472b6',
+                            background: LEVEL_BAR_COLORS[levelIdx] ?? LEVEL_BAR_COLORS[0],
                           }}
                         />
                       </div>
@@ -418,21 +404,21 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
 
                   {/* Niveau + compteur sur 1 ligne */}
                   <div className="mt-2 flex items-center justify-between">
-                    <span className={`text-xs font-semibold ${dyn.color.split(' ')[0]}`}>{dyn.label}</span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-[11px] font-bold" style={{ color: '#1a1a2e' }}>{dyn.icon} {dyn.label}</span>
+                    <span className="text-[11px]" style={{ color: '#a0937c' }}>
                       {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
                       {axe.actions.length === 0 && (
-                        <span className={`font-medium ml-1 ${dyn.color.split(' ')[0]}`}>· commence !</span>
+                        <span className="font-semibold ml-1" style={{ color: '#92400e' }}>· commence !</span>
                       )}
                       {axe.actions.length > 0 && axe.actions.length < 9 && (
-                        <span className={`font-medium ml-1 ${dyn.color.split(' ')[0]}`}>· encore {dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
+                        <span className="font-semibold ml-1" style={{ color: '#92400e' }}>· encore {dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
                       )}
                     </span>
                   </div>
                  </div>
 
                   {/* Séparateur + titre Actions menées (fixe) */}
-                  <div className="border-t border-current/10 pt-3 mt-2 shrink-0">
+                  <div className="pt-3 mt-2 shrink-0" style={{ borderTop: '2px solid #f0ebe0' }}>
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium text-gray-700">
                         Actions menées
@@ -462,7 +448,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                             const isNewlyAdded = highlightAxeId === axe.id && actionIndex === 0
                             return (
                               <li key={action.id} className={`flex items-start gap-2 rounded-lg px-1 -mx-1 transition-colors duration-1000 ${isNewlyAdded ? 'bg-[#fffbeb]' : ''}`}>
-                                <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm bg-white/60">{getActionPhaseIcon(rank)}</span>
+                                <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm" style={{ background: '#f5f0e8' }}>{getActionPhaseIcon(rank)}</span>
                                 <div className="flex-1 min-w-0">
                                   <span className="text-sm text-gray-700">{action.description}</span>
                                   <div className="flex items-center gap-2 mt-0.5">
@@ -529,7 +515,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {addActionAxeId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setAddActionAxeId(null)} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="relative bg-white rounded-[28px] shadow-xl w-full max-w-md p-6 space-y-4" style={{ border: '2px solid #f0ebe0' }}>
             <h3 className="font-semibold text-gray-900 text-lg">Nouvelle action</h3>
             <p className="text-sm text-gray-500">Décrivez une action concrète que vous avez menée pour progresser sur cet axe.</p>
             <form
@@ -560,7 +546,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {editingActionId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setEditingActionId(null)} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="relative bg-white rounded-[28px] shadow-xl w-full max-w-md p-6 space-y-4" style={{ border: '2px solid #f0ebe0' }}>
             <h3 className="font-semibold text-gray-900 text-lg">Modifier l&apos;action</h3>
             <form
               onSubmit={(e) => {
@@ -596,7 +582,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {deletingAxeStep === 1 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDeletingAxeStep(0)} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+          <div className="relative bg-white rounded-[28px] shadow-xl w-full max-w-sm p-6 space-y-4" style={{ border: '2px solid #f0ebe0' }}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                 <span className="text-xl">⚠️</span>
@@ -625,7 +611,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {deletingAxeStep === 2 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDeletingAxeStep(0)} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+          <div className="relative bg-white rounded-[28px] shadow-xl w-full max-w-sm p-6 space-y-4" style={{ border: '2px solid #f0ebe0' }}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                 <Trash2 size={20} className="text-red-500" />
@@ -661,12 +647,12 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {levelUpInfo && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setLevelUpInfo(null)}>
           <div className="absolute inset-0 bg-black/40" />
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xs p-8 text-center">
+          <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs p-8 text-center" style={{ border: '2px solid #f0ebe0' }}>
             <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
             <div className="animate-level-up-text">
-              <p className="text-xl font-bold text-gray-900 mb-1">Niveau {levelUpInfo.label}</p>
-              <p className="text-lg font-semibold text-gray-500">débloqué !</p>
-              <p className="text-sm text-gray-500 mt-3">Continue comme ça 💪</p>
+              <p className="text-xl font-bold mb-1" style={{ color: '#1a1a2e' }}>Niveau {levelUpInfo.label}</p>
+              <p className="text-lg font-semibold" style={{ color: '#a0937c' }}>débloqué !</p>
+              <p className="text-sm mt-3" style={{ color: '#a0937c' }}>Continue comme ça 💪</p>
             </div>
           </div>
         </div>
@@ -676,7 +662,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {deletingActionId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDeletingActionId(null)} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+          <div className="relative bg-white rounded-[28px] shadow-xl w-full max-w-sm p-6 space-y-4" style={{ border: '2px solid #f0ebe0' }}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                 <Trash2 size={20} className="text-red-500" />
@@ -735,7 +721,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {editingAxe && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setEditingAxe(null)} />
-          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
+          <div className="relative w-full max-w-md rounded-[28px] bg-white shadow-xl overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
             {/* Header gradient */}
             <div className="px-5 py-4" style={{ background: '#1a1a2e' }}>
               <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
