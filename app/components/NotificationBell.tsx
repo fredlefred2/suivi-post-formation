@@ -21,6 +21,7 @@ type NotificationType =
   | 'team_message'
   | 'streak_risk'
   | 'inactivity'
+  | 'action_digest'
 
 type Notification = {
   id: string
@@ -47,6 +48,7 @@ const TYPE_ICONS: Record<NotificationType, string> = {
   team_message: '📢',
   streak_risk: '⚠️',
   inactivity: '⚠️',
+  action_digest: '💪',
 }
 
 function timeAgo(dateStr: string): string {

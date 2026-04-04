@@ -17,6 +17,7 @@ type NotificationType =
   | 'streak_risk'
   | 'inactivity'
   | 'weekly_tip'
+  | 'action_digest'
 
 interface SendNotificationParams {
   userId: string
