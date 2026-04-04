@@ -67,6 +67,13 @@ export default function MessageIcon(props: Props) {
 
   const handleClick = () => {
     setOpen(true)
+    // Fermer les notifications push du téléphone
+    try {
+      navigator.serviceWorker?.ready.then(reg => {
+        reg.getNotifications().then(notifs => notifs.forEach(n => n.close()))
+      })
+      if ('clearAppBadge' in navigator) navigator.clearAppBadge?.()
+    } catch { /* silencieux */ }
   }
 
   const handleClose = () => {

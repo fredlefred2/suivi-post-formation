@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,12 +14,21 @@ export async function POST(req: NextRequest) {
   const { senderId } = (await req.json()) as { senderId?: string }
   if (!senderId) return NextResponse.json({ error: 'senderId requis' }, { status: 400 })
 
-  const { error } = await supabase
-    .from('messages')
-    .update({ is_read: true })
-    .eq('sender_id', senderId)
-    .eq('receiver_id', user.id)
-    .eq('is_read', false)
+  // Marquer les messages comme lus + les notifications de type 'message' associées
+  const [{ error }] = await Promise.all([
+    supabase
+      .from('messages')
+      .update({ is_read: true })
+      .eq('sender_id', senderId)
+      .eq('receiver_id', user.id)
+      .eq('is_read', false),
+    supabaseAdmin
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', user.id)
+      .eq('type', 'message')
+      .eq('read', false),
+  ])
 
   if (error) { console.error('DB error:', error); return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 }) }
   return NextResponse.json({ ok: true })
