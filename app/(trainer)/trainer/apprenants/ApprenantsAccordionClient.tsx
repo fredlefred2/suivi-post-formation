@@ -269,19 +269,23 @@ export default function ApprenantsAccordionClient({
                   {totalActions} action{totalActions !== 1 ? 's' : ''} · {learner.totalCheckins} check-in{learner.totalCheckins !== 1 ? 's' : ''}
                 </p>
               </div>
-              <span
-                className="text-[11px] font-bold shrink-0 px-1.5 py-0.5"
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0"
                 style={{
-                  borderRadius: 8,
-                  color: learner.regularity >= 75 ? '#059669' : learner.regularity >= 50 ? '#d97706' : '#e11d48',
                   background: learner.regularity >= 75 ? '#d1fae5' : learner.regularity >= 50 ? '#ffedd5' : '#ffe4e6',
+                  color: learner.regularity >= 75 ? '#059669' : learner.regularity >= 50 ? '#d97706' : '#e11d48',
                 }}
               >
                 {learner.regularity}%
-              </span>
-              {learner.lastWeather && (
-                <span className="text-lg shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>
-              )}
+              </div>
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
+                style={{
+                  background: learner.lastWeather === 'sunny' ? '#fef9c3' : learner.lastWeather === 'cloudy' ? '#f1f5f9' : learner.lastWeather === 'stormy' ? '#ffe4e6' : '#f1f5f9',
+                }}
+              >
+                {learner.lastWeather ? (WEATHER_ICONS[learner.lastWeather] ?? '—') : '—'}
+              </div>
               <span
                 className="text-sm shrink-0 transition-transform"
                 style={{ color: '#a0937c', transform: isExpanded ? 'rotate(180deg)' : 'none' }}
