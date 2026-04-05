@@ -78,9 +78,7 @@ export default function ApprenantsAccordionClient({
 }: Props) {
   const router = useRouter()
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [expandedId, setExpandedId] = useState<string | null>(
-    initialIndex >= 0 && initialIndex < learners.length ? learners[initialIndex].id : null
-  )
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   // Track which axes show all actions (keyed by axeId)
   const [expandedAxeActions, setExpandedAxeActions] = useState<Set<string>>(new Set())
   // Track which axe shows tips tab instead of actions (keyed by axeId)
