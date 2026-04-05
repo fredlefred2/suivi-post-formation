@@ -57,6 +57,8 @@ type LearnerCardData = {
   checkins: CheckinRow[]
   axes: AxeData[]
   feedbackMap: Record<string, ActionFeedbackData>
+  regularity: number
+  checkinStreak: number
 }
 
 type GroupInfo = { id: string; name: string; count: number }
@@ -267,6 +269,16 @@ export default function ApprenantsAccordionClient({
                   {totalActions} action{totalActions !== 1 ? 's' : ''} · {learner.totalCheckins} check-in{learner.totalCheckins !== 1 ? 's' : ''}
                 </p>
               </div>
+              <span
+                className="text-[11px] font-bold shrink-0 px-1.5 py-0.5"
+                style={{
+                  borderRadius: 8,
+                  color: learner.regularity >= 75 ? '#059669' : learner.regularity >= 50 ? '#d97706' : '#e11d48',
+                  background: learner.regularity >= 75 ? '#d1fae5' : learner.regularity >= 50 ? '#ffedd5' : '#ffe4e6',
+                }}
+              >
+                {learner.regularity}%
+              </span>
               {learner.lastWeather && (
                 <span className="text-lg shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>
               )}
@@ -305,8 +317,10 @@ export default function ApprenantsAccordionClient({
                       <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>actions</p>
                     </div>
                     <div className="text-center">
-                      <div className="font-display text-xl font-bold text-white">{learner.totalCheckins}/{learner.expectedCheckins}</div>
-                      <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>check-ins</p>
+                      <div className="font-display text-xl font-bold" style={{ color: learner.checkinStreak > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
+                        {learner.checkinStreak > 0 ? `${learner.checkinStreak}🔥` : '0'}
+                      </div>
+                      <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>streak</p>
                     </div>
                   </div>
                 </div>

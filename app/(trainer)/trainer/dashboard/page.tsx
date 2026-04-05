@@ -162,20 +162,48 @@ export default async function TrainerDashboardPage({
     }
   })
 
-  // ── 6. Axes par apprenant (pour le scoring) ──────────────────────────────
+  // ── 6. Axes par apprenant (pour le scoring + régularité) ────────────────
   const { data: axesRaw } = learnerIds.length > 0
     ? await admin
         .from('axes')
-        .select('id, learner_id, actions(id)')
+        .select('id, learner_id, created_at, actions(id)')
         .in('learner_id', learnerIds)
         .order('created_at')
-    : { data: [] as Array<{ id: string; learner_id: string; actions: { id: string }[] }> }
+    : { data: [] as Array<{ id: string; learner_id: string; created_at: string; actions: { id: string }[] }> }
 
   const learnerAxesMap: Record<string, number[]> = {}
+  const learnerFirstAxeDate: Record<string, number> = {}
   ;(axesRaw ?? []).forEach((axe) => {
     if (!learnerAxesMap[axe.learner_id]) learnerAxesMap[axe.learner_id] = []
     learnerAxesMap[axe.learner_id].push((axe.actions as { id: string }[])?.length ?? 0)
+    // Garder la date du premier axe (déjà trié par created_at)
+    if (!learnerFirstAxeDate[axe.learner_id]) {
+      learnerFirstAxeDate[axe.learner_id] = new Date(axe.created_at).getTime()
+    }
   })
+
+  // ── Régularité par apprenant ──────────────────────────────────────────
+  const now = new Date()
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000
+  const learnerRegularity: Record<string, number> = {}
+  for (const lid of learnerIds) {
+    const firstAxe = learnerFirstAxeDate[lid]
+    if (!firstAxe) { learnerRegularity[lid] = 0; continue }
+    const totalWeeks = Math.max(1, Math.ceil((now.getTime() - firstAxe) / msPerWeek))
+    const activeWeeks = new Set<string>()
+    // Actions
+    for (const a of (actionsRaw ?? []).filter(a => a.learner_id === lid)) {
+      const d = new Date(a.created_at)
+      const jan1 = new Date(d.getFullYear(), 0, 1)
+      const wk = Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7)
+      activeWeeks.add(`${d.getFullYear()}-${wk}`)
+    }
+    // Check-ins
+    for (const c of (checkinsRaw ?? []).filter(c => c.learner_id === lid)) {
+      activeWeeks.add(`${c.year}-${c.week_number}`)
+    }
+    learnerRegularity[lid] = Math.min(100, Math.round((activeWeeks.size / totalWeeks) * 100))
+  }
 
   // ── 7. Apprenants non affectés ─────────────────────────────────────────
   const { data: allGroupMembers } = await admin
@@ -203,6 +231,7 @@ export default async function TrainerDashboardPage({
       isCheckinOpen={checkinCtx.isOpen}
       unassignedLearners={unassignedLearners}
       learnerAxesMap={learnerAxesMap}
+      learnerRegularity={learnerRegularity}
       initialGroup={searchParams.group}
       currentUserId={user!.id}
     />

@@ -70,6 +70,7 @@ type Props = {
   isCheckinOpen: boolean
   unassignedLearners?: UnassignedLearner[]
   learnerAxesMap?: Record<string, number[]>
+  learnerRegularity?: Record<string, number>
   initialGroup?: string
   currentUserId: string
 }
@@ -83,6 +84,7 @@ export default function TrainerDashboardClient({
   isCheckinOpen,
   unassignedLearners = [],
   learnerAxesMap = {},
+  learnerRegularity = {},
   initialGroup,
   currentUserId,
 }: Props) {
@@ -245,8 +247,16 @@ export default function TrainerDashboardClient({
     return { pct, label, nextCheckinLabel, uniqueLearnersChecked, totalMembers }
   }, [currentWeek, currentYear, filteredCheckins, filteredLearnerIds])
 
+  // ── Régularité moyenne du groupe ──
+  const avgRegularity = useMemo(() => {
+    const ids = Array.from(filteredLearnerIds)
+    if (ids.length === 0) return 0
+    const sum = ids.reduce((acc, lid) => acc + (learnerRegularity[lid] ?? 0), 0)
+    return Math.round(sum / ids.length)
+  }, [filteredLearnerIds, learnerRegularity])
+
   // ── Compteurs animes ──
-  const animatedMembers = useCountUp(filteredLearnerIds.size)
+  const animatedRegularity = useCountUp(avgRegularity)
   const animatedDelta = useCountUp(recentActionsFiltered.length)
 
   // ── Scoring ──
@@ -427,8 +437,9 @@ export default function TrainerDashboardClient({
 
       {/* ── Header navy ── */}
       <div
-        className="rounded-[28px] p-5 relative overflow-hidden"
+        className="rounded-[28px] p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
         style={{ background: '#1a1a2e' }}
+        onClick={() => router.push(`/trainer/apprenants${selectedOption !== 'all' && selectedOption !== 'unassigned' ? `?group=${selectedOption}` : ''}`)}
       >
         <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
 
@@ -446,8 +457,10 @@ export default function TrainerDashboardClient({
 
         <div className="relative grid grid-cols-3 gap-2">
           <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <div className="font-display text-[26px] font-bold text-white">{animatedMembers}</div>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>membres</p>
+            <div className="font-display text-[26px] font-bold" style={{ color: avgRegularity >= 75 ? '#6ee7b7' : avgRegularity >= 50 ? '#fbbf24' : '#f87171' }}>
+              {animatedRegularity}%
+            </div>
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>régularité</p>
           </div>
           <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
             <div className="font-display text-[26px] font-bold" style={{ color: recentActionsFiltered.length > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
@@ -511,7 +524,10 @@ export default function TrainerDashboardClient({
         }
 
         return (
-          <div>
+          <div
+            className="cursor-pointer active:scale-[0.98] transition-transform"
+            onClick={() => router.push(`/trainer/apprenants${selectedOption !== 'all' && selectedOption !== 'unassigned' ? `?group=${selectedOption}` : ''}`)}
+          >
             <h2 className="text-[14px] font-bold mb-1" style={{ color: '#1a1a2e' }}>Les plus actifs sur Yapluka</h2>
             <div className="flex items-end justify-center gap-2 pt-4 pb-0 px-2">
               {podiumDisplay.map((learner, displayIdx) => {

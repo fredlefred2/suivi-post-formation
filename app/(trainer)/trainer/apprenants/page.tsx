@@ -239,6 +239,49 @@ export default async function ApprenantsPage({
       }
     })
 
+    // ── Régularité : (semaines actives / semaines depuis 1er axe) × 100 ──
+    const firstAxeDate = learnerAxes.length > 0
+      ? ((allAxes ?? []) as AxeRow[])
+          .filter(a => a.learner_id === member.learner_id)
+          .map(a => new Date(a.created_at).getTime())
+          .sort((a, b) => a - b)[0]
+      : null
+
+    let regularity = 0
+    if (firstAxeDate) {
+      const msPerWeek = 7 * 24 * 60 * 60 * 1000
+      const totalWeeks = Math.max(1, Math.ceil((now.getTime() - firstAxeDate) / msPerWeek))
+      // Compter les semaines avec au moins 1 action OU 1 check-in
+      const activeWeeks = new Set<string>()
+      for (const action of allLearnerActions) {
+        const d = new Date(action.created_at)
+        // ISO week key
+        const jan1 = new Date(d.getFullYear(), 0, 1)
+        const wk = Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7)
+        activeWeeks.add(`${d.getFullYear()}-${wk}`)
+      }
+      for (const ci of learnerCheckins) {
+        activeWeeks.add(`${ci.year}-${ci.week_number}`)
+      }
+      regularity = Math.min(100, Math.round((activeWeeks.size / totalWeeks) * 100))
+    }
+
+    // ── Streak check-in : semaines consécutives récentes ──
+    let checkinStreak = 0
+    if (learnerCheckins.length > 0) {
+      // Construire un set de (year, week) avec check-in
+      const checkedWeeks = new Set(learnerCheckins.map(c => `${c.year}-${c.week_number}`))
+      // Remonter depuis la semaine courante
+      const currentWeekNum = Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + new Date(now.getFullYear(), 0, 1).getDay() + 1) / 7)
+      let w = currentWeekNum
+      let y = now.getFullYear()
+      while (checkedWeeks.has(`${y}-${w}`)) {
+        checkinStreak++
+        w--
+        if (w <= 0) { w = 52; y-- }
+      }
+    }
+
     return {
       id: member.learner_id,
       firstName,
@@ -253,6 +296,8 @@ export default async function ApprenantsPage({
       checkins: learnerCheckins,
       axes: learnerAxes,
       feedbackMap: learnerFeedbackMap,
+      regularity,
+      checkinStreak,
     }
   })
 

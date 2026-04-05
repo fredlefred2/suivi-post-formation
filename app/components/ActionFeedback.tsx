@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Heart, MessageCircle, Send, X } from 'lucide-react'
 import { toggleLike, createComment } from '@/app/actions/feedback'
 import type { ActionFeedbackData } from '@/lib/types'
@@ -32,7 +33,7 @@ function FeedbackModal({ open, onClose, children }: { open: boolean, onClose: ()
 
   if (!open) return null
 
-  return (
+  const modal = (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div
@@ -51,6 +52,12 @@ function FeedbackModal({ open, onClose, children }: { open: boolean, onClose: ()
       </div>
     </div>
   )
+
+  // Portal pour échapper au contexte CSS transform (scale-90) du parent
+  if (typeof document !== 'undefined') {
+    return createPortal(modal, document.body)
+  }
+  return modal
 }
 
 export default function ActionFeedback({ actionId, feedback, canInteract }: Props) {
