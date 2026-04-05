@@ -188,8 +188,8 @@ export default function CoachingClient({ userId }: { userId: string }) {
                           <div
                             className="rounded-[22px] p-4 transition-all"
                             style={{
-                              background: latestTip.acted ? '#ecfdf5' : '#fffbeb',
-                              border: `2px solid ${latestTip.acted ? '#d1fae5' : '#fde68a'}`,
+                              background: '#fffbeb',
+                              border: `2px solid ${latestTip.acted ? '#f0ebe0' : '#fde68a'}`,
                               boxShadow: latestTip.acted ? 'none' : '0 2px 12px rgba(251,191,36,0.12)',
                             }}
                           >
@@ -198,7 +198,7 @@ export default function CoachingClient({ userId }: { userId: string }) {
                                 Semaine {latestTip.week_number}
                               </span>
                               {latestTip.acted && (
-                                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: '#92400e', background: '#fde68a' }}>
                                   ✓ Lu
                                 </span>
                               )}
@@ -250,14 +250,14 @@ export default function CoachingClient({ userId }: { userId: string }) {
                                       onClick={() => toggleTipDetail(tip.id)}
                                       className="w-full text-left flex items-start gap-2.5 p-3 rounded-[16px] transition-all"
                                       style={{
-                                        background: tip.acted ? '#ecfdf5' : '#faf8f4',
-                                        border: `1.5px solid ${tip.acted ? '#d1fae5' : '#f0ebe0'}`,
+                                        background: tip.acted ? '#fffbeb' : '#faf8f4',
+                                        border: `1.5px solid ${tip.acted ? '#f0ebe0' : '#f0ebe0'}`,
                                       }}
                                     >
                                       {/* Dot */}
                                       <div
                                         className="w-2 h-2 rounded-full mt-1.5 shrink-0"
-                                        style={{ background: tip.acted ? '#10b981' : '#e0d8c8' }}
+                                        style={{ background: tip.acted ? '#fbbf24' : '#e0d8c8' }}
                                       />
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5">
@@ -265,7 +265,7 @@ export default function CoachingClient({ userId }: { userId: string }) {
                                             Semaine {tip.week_number}
                                           </span>
                                           {tip.acted && (
-                                            <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+                                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ color: '#92400e', background: '#fde68a' }}>
                                               ✓ Lu
                                             </span>
                                           )}
