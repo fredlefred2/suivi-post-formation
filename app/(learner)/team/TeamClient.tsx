@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { X } from 'lucide-react'
 import ActionFeedback from '@/app/components/ActionFeedback'
 import type { ActionFeedbackData } from '@/lib/types'
@@ -14,16 +14,20 @@ function getDynamiqueForCount(count: number) {
   return { icon: '🚀', level: 4, label: 'Propulsion' }
 }
 
+const AVATAR_BG_COLORS: Record<number, string> = {
+  0: '#94a3b8', 1: '#0284c7', 2: '#059669', 3: '#d97706', 4: '#e11d48',
+}
+
+const LEVEL_DOT_BG: Record<number, string> = {
+  0: '#f1f5f9', 1: '#e0f2fe', 2: '#d1fae5', 3: '#ffedd5', 4: '#ffe4e6',
+}
+
 const LEVEL_AVATAR_COLORS: Record<number, string> = {
   0: 'bg-slate-200 text-slate-700',
   1: 'bg-sky-200 text-sky-700',
   2: 'bg-emerald-200 text-emerald-700',
   3: 'bg-orange-200 text-orange-700',
   4: 'bg-rose-200 text-rose-700',
-}
-
-const AVATAR_BG_COLORS: Record<number, string> = {
-  0: '#94a3b8', 1: '#0284c7', 2: '#059669', 3: '#d97706', 4: '#e11d48',
 }
 
 type ScoringEntry = {
@@ -58,7 +62,6 @@ type Props = {
 }
 
 export default function TeamClient({
-  groupId,
   groupName,
   membersCount,
   totalActions,
@@ -68,32 +71,11 @@ export default function TeamClient({
   scoringData,
   recentActions,
   feedbackMap,
-  isCheckinOpen,
 }: Props) {
   const [showAllActions, setShowAllActions] = useState(false)
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
 
   const animatedMembers = useCountUp(membersCount)
   const animatedDelta = useCountUp(recentActionsCount)
-
-  useEffect(() => {
-    if (recentActions.length <= 1) return
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % recentActions.length)
-    }, 2000)
-    return () => clearInterval(timer)
-  }, [recentActions.length])
-
-  useEffect(() => {
-    if (!scrollRef.current) return
-    const cardWidth = 220
-    const gap = 12
-    scrollRef.current.scrollTo({
-      left: currentSlide * (cardWidth + gap),
-      behavior: 'smooth',
-    })
-  }, [currentSlide])
 
   const handleOpenAll = useCallback(() => {
     setShowAllActions(true)
@@ -107,13 +89,28 @@ export default function TeamClient({
     })
     .sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
 
-  function getInitials(first: string, last: string) {
-    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
+  function getInitials(name: string) {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase()
   }
 
+  // Podium: 2e gauche, 1er centre, 3e droite
+  const podium = sorted.slice(0, 3)
+  // Réordonner: [2e, 1er, 3e] pour l'affichage
+  const podiumDisplay = podium.length >= 3
+    ? [podium[1], podium[0], podium[2]]
+    : podium.length === 2
+    ? [podium[1], podium[0]]
+    : podium
+
+  const podiumConfig = [
+    { rank: 2, avatarSize: 'w-11 h-11', fontSize: 'text-sm', border: '2px solid #94a3b8', shadow: 'none', baseH: 56, baseGrad: 'linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%)', baseFontSize: 22 },
+    { rank: 1, avatarSize: 'w-14 h-14', fontSize: 'text-lg', border: '3px solid #fbbf24', shadow: '0 4px 16px rgba(251,191,36,0.4)', baseH: 80, baseGrad: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)', baseFontSize: 28 },
+    { rank: 3, avatarSize: 'w-11 h-11', fontSize: 'text-sm', border: '2px solid #f97316', shadow: 'none', baseH: 40, baseGrad: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)', baseFontSize: 22 },
+  ]
+
   return (
-    <div className="space-y-6 pb-4">
-      {/* ── Header navy — Cream & Warm ── */}
+    <div className="space-y-5 pb-4">
+      {/* ── Header navy ── */}
       <div
         className="rounded-[28px] p-5 relative overflow-hidden"
         style={{ background: '#1a1a2e' }}
@@ -150,7 +147,75 @@ export default function TeamClient({
         </div>
       </div>
 
-      {/* ── Actions récentes ── */}
+      {/* ── Podium ── */}
+      {podium.length > 0 && (
+        <div>
+          <h2 className="section-title mb-1">Classement</h2>
+          <div className="flex items-end justify-center gap-2 pt-4 pb-0 px-2">
+            {podiumDisplay.map((learner, displayIdx) => {
+              // Trouver la config selon le nombre de participants sur le podium
+              const configIdx = podium.length >= 3 ? displayIdx
+                : podium.length === 2 ? displayIdx
+                : 1 // un seul = config du 1er
+              const cfg = podiumConfig[podium.length >= 3 ? configIdx : podium.length === 2 ? (displayIdx === 0 ? 0 : 1) : 1]
+              const actualRank = podium.indexOf(learner) + 1
+
+              return (
+                <div key={learner.id} className="flex flex-col items-center flex-1" style={{ maxWidth: 120 }}>
+                  {/* Avatar */}
+                  <div
+                    className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-extrabold text-white mb-2`}
+                    style={{
+                      background: '#1a1a2e',
+                      border: cfg.border,
+                      boxShadow: cfg.shadow,
+                      fontSize: cfg.fontSize === 'text-lg' ? 18 : 14,
+                    }}
+                  >
+                    {getInitials(learner.name)}
+                  </div>
+
+                  {/* Nom + actions */}
+                  <p className="text-[11px] font-bold text-center truncate w-full" style={{ color: '#1a1a2e' }}>
+                    {learner.name}
+                  </p>
+                  <p className="text-[10px] font-medium mb-1.5" style={{ color: '#a0937c' }}>
+                    {learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}
+                  </p>
+
+                  {/* Niveaux par axe */}
+                  <div className="flex gap-1 mb-2">
+                    {learner.dyns.map((d, i) => (
+                      <span
+                        key={i}
+                        className="w-[22px] h-[22px] rounded-lg flex items-center justify-center text-[11px]"
+                        style={{ background: LEVEL_DOT_BG[d.level] }}
+                      >
+                        {d.icon}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Socle */}
+                  <div
+                    className="w-full rounded-t-xl flex items-center justify-center font-bold text-white"
+                    style={{
+                      height: cfg.baseH,
+                      background: cfg.baseGrad,
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: cfg.baseFontSize,
+                    }}
+                  >
+                    {actualRank}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Actions récentes — liste verticale ── */}
       {recentActions.length === 0 ? (
         <div className="rounded-[22px] bg-white p-6 text-center" style={{ border: '2px solid #f0ebe0' }}>
           <p className="text-2xl mb-2">💤</p>
@@ -159,126 +224,82 @@ export default function TeamClient({
         </div>
       ) : (
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2.5">
             <h2 className="section-title">Actions récentes</h2>
-            <button onClick={handleOpenAll} className="text-xs font-bold hover:underline" style={{ color: '#92400e' }}>
-              Voir tout →
-            </button>
+            {recentActions.length > 4 && (
+              <button onClick={handleOpenAll} className="text-xs font-bold hover:underline" style={{ color: '#92400e' }}>
+                Voir tout →
+              </button>
+            )}
           </div>
-          <div
-            ref={scrollRef}
-            className="flex gap-3 overflow-x-auto pb-2"
-            style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
-          >
-            {recentActions.map((action) => {
+
+          <div className="space-y-2">
+            {recentActions.slice(0, 4).map((action) => {
               const dyn = getDynamiqueForCount(action.axe_action_count)
               return (
-              <button
-                key={action.id}
-                onClick={handleOpenAll}
-                className="flex-shrink-0 w-[240px] bg-white rounded-[22px] p-4 text-left transition-all duration-200 active:scale-[0.97] relative overflow-hidden"
-                style={{
-                  scrollSnapAlign: 'start',
-                  border: '2px solid #f0ebe0',
-                }}
-              >
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <div
-                    className="w-9 h-9 rounded-2xl flex items-center justify-center text-xs font-bold text-white shrink-0"
-                    style={{ background: AVATAR_BG_COLORS[dyn.level] ?? AVATAR_BG_COLORS[0] }}
-                  >
-                    {getInitials(action.learner_first_name, action.learner_last_name)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold truncate" style={{ color: '#1a1a2e' }}>
-                      {action.learner_first_name} {action.learner_last_name}
-                    </p>
-                    <p className="text-[10px] font-medium truncate" style={{ color: '#92400e' }}>{action.axe_subject}</p>
-                  </div>
-                  <span className="text-base shrink-0">{dyn.icon}</span>
-                </div>
-                <p className="text-[13px] line-clamp-2 leading-relaxed" style={{ color: '#1a1a2e' }}>{action.description}</p>
-                <div className="flex items-center justify-between mt-2.5 pt-2" style={{ borderTop: '1px solid #f5f0e8' }}>
-                  <p className="text-[10px] font-medium" style={{ color: '#a0937c' }}>
-                    {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                  </p>
-                  {feedbackMap[action.id] && (feedbackMap[action.id].likes_count > 0 || feedbackMap[action.id].comments_count > 0) && (
-                    <div className="flex items-center gap-2 text-[10px]">
-                      {feedbackMap[action.id].likes_count > 0 && (
-                        <span className="font-semibold" style={{ color: '#e11d48' }}>{'\u2764\u{FE0F}'} {feedbackMap[action.id].likes_count}</span>
-                      )}
-                      {feedbackMap[action.id].comments_count > 0 && (
-                        <span className="font-semibold" style={{ color: '#a0937c' }}>{'\u{1F4AC}'} {feedbackMap[action.id].comments_count}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </button>
-              )
-            })}
-          </div>
-          {recentActions.length > 1 && (
-            <div className="flex justify-center gap-1 mt-3">
-              {recentActions.map((_, i) => (
-                <div
-                  key={i}
-                  className="h-1.5 rounded-full transition-all duration-300"
-                  style={{
-                    width: i === currentSlide % recentActions.length ? '16px' : '6px',
-                    background: i === currentSlide % recentActions.length ? '#fbbf24' : '#f0ebe0',
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Trio de tête ── */}
-      {sorted.length > 0 && (
-      <div>
-        <h2 className="section-title mb-3">Trio de tête</h2>
-          <div className="space-y-2">
-            {sorted.slice(0, 3).map((learner, idx) => {
-              const rankStyles: Record<number, { bg: string; badgeBg: string; textColor: string }> = {
-                0: { bg: '#fffbeb', badgeBg: '#fbbf24', textColor: '#92400e' },
-                1: { bg: '#f8fafc', badgeBg: '#94a3b8', textColor: '#475569' },
-                2: { bg: '#fff7ed', badgeBg: '#f97316', textColor: '#9a3412' },
-              }
-              const rs = rankStyles[idx]!
-              return (
-                <div
-                  key={learner.id}
-                  className="rounded-[22px] p-4 flex items-center gap-3 bg-white"
-                  style={{ border: '2px solid #f0ebe0' }}
+                <button
+                  key={action.id}
+                  onClick={handleOpenAll}
+                  className="w-full text-left flex items-start gap-2.5 p-3 bg-white rounded-[16px] transition-all active:scale-[0.98]"
+                  style={{ border: '1.5px solid #f0ebe0' }}
                 >
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 text-white"
-                    style={{ background: rs.badgeBg }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                    style={{ background: AVATAR_BG_COLORS[dyn.level] ?? AVATAR_BG_COLORS[0] }}
                   >
-                    {idx + 1}
+                    {getInitials(`${action.learner_first_name} ${action.learner_last_name}`)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate" style={{ color: '#1a1a2e' }}>
-                      {learner.name} {idx === 0 && '👑'}
-                    </p>
-                    <p className="text-[11px] font-medium" style={{ color: '#a0937c' }}>{learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}</p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {learner.dyns.map((m, i) => (
-                      <span
-                        key={i}
-                        className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-sm ${LEVEL_AVATAR_COLORS[m.level] ?? LEVEL_AVATAR_COLORS[0]}`}
-                      >
-                        {m.icon}
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-xs font-bold" style={{ color: '#1a1a2e' }}>
+                        {action.learner_first_name} {action.learner_last_name}
                       </span>
-                    ))}
+                      <span className="text-xs">{dyn.icon}</span>
+                    </div>
+                    <p className="text-[10px] font-medium mb-1" style={{ color: '#92400e' }}>{action.axe_subject}</p>
+                    <p
+                      className="text-xs leading-relaxed"
+                      style={{
+                        color: '#374151',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {action.description}
+                    </p>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-[10px]" style={{ color: '#a0937c' }}>
+                        {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </span>
+                      {feedbackMap[action.id] && (feedbackMap[action.id].likes_count > 0 || feedbackMap[action.id].comments_count > 0) && (
+                        <div className="flex items-center gap-2 text-[10px]">
+                          {feedbackMap[action.id].likes_count > 0 && (
+                            <span className="font-semibold" style={{ color: '#e11d48' }}>{'\u2764\u{FE0F}'} {feedbackMap[action.id].likes_count}</span>
+                          )}
+                          {feedbackMap[action.id].comments_count > 0 && (
+                            <span className="font-semibold" style={{ color: '#a0937c' }}>{'\u{1F4AC}'} {feedbackMap[action.id].comments_count}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
-      </div>
+
+          {recentActions.length > 4 && (
+            <button
+              onClick={handleOpenAll}
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-2 rounded-[14px] text-xs font-semibold transition-all"
+              style={{ border: '2px dashed #f0ebe0', color: '#a0937c' }}
+            >
+              +{recentActions.length - 4} autres actions
+            </button>
+          )}
+        </div>
       )}
 
       {/* ── Modale : toutes les actions récentes ── */}
@@ -300,31 +321,32 @@ export default function TeamClient({
               {recentActions.map((action) => {
                 const dyn = getDynamiqueForCount(action.axe_action_count)
                 return (
-                <div key={action.id} className="rounded-[18px] p-4" style={{ background: '#faf8f4', border: '2px solid #f0ebe0' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-base`}>
-                      {dyn.icon}
+                  <div key={action.id} className="rounded-[18px] p-4" style={{ background: '#faf8f4', border: '2px solid #f0ebe0' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-base`}>
+                        {dyn.icon}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold" style={{ color: '#1a1a2e' }}>
+                          {action.learner_first_name} {action.learner_last_name}
+                        </p>
+                        <p className="text-xs" style={{ color: '#92400e' }}>{action.axe_subject}</p>
+                      </div>
+                      <span className="text-xs" style={{ color: '#a0937c' }}>
+                        {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </span>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold" style={{ color: '#1a1a2e' }}>
-                        {action.learner_first_name} {action.learner_last_name}
-                      </p>
-                      <p className="text-xs" style={{ color: '#92400e' }}>{action.axe_subject}</p>
-                    </div>
-                    <span className="text-xs" style={{ color: '#a0937c' }}>
-                      {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                    </span>
+                    <p className="text-sm leading-relaxed mb-2" style={{ color: '#1a1a2e' }}>{action.description}</p>
+                    {feedbackMap[action.id] && (
+                      <ActionFeedback
+                        actionId={action.id}
+                        feedback={feedbackMap[action.id]}
+                        canInteract={true}
+                      />
+                    )}
                   </div>
-                  <p className="text-sm leading-relaxed mb-2" style={{ color: '#1a1a2e' }}>{action.description}</p>
-                  {feedbackMap[action.id] && (
-                    <ActionFeedback
-                      actionId={action.id}
-                      feedback={feedbackMap[action.id]}
-                      canInteract={true}
-                    />
-                  )}
-                </div>
-              )})}
+                )
+              })}
             </div>
           </div>
         </div>
