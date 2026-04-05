@@ -88,6 +88,7 @@ export default function ApprenantsAccordionClient({
   const [editContent, setEditContent] = useState('')
   const [editAdvice, setEditAdvice] = useState('')
   const [tipLoading, setTipLoading] = useState<string | null>(null)
+  const [addingTip, setAddingTip] = useState<string | null>(null) // axeId currently generating
 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const expandedRef = useRef<HTMLDivElement>(null)
@@ -180,6 +181,19 @@ export default function ApprenantsAccordionClient({
       router.refresh()
     } catch { /* silently fail */ }
     setTipLoading(null)
+  }
+
+  async function addTip(axeId: string, learnerId: string) {
+    setAddingTip(axeId)
+    try {
+      await fetch('/api/tips/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate-next', axeId, learnerId }),
+      })
+      router.refresh()
+    } catch { /* silently fail */ }
+    setAddingTip(null)
   }
 
   return (
@@ -358,33 +372,31 @@ export default function ApprenantsAccordionClient({
                           )}
                         </div>
 
-                        {/* Sub-tabs Actions / Tips */}
-                        {tipsTotal > 0 && (
-                          <div className="flex mt-2.5 mb-2" style={{ borderBottom: '1.5px solid #f0ebe0' }}>
-                            <button
-                              onClick={() => showTips && toggleAxeTipsTab(axe.id)}
-                              className="flex-1 pb-1.5 text-[11px] font-semibold text-center transition-all"
-                              style={{
-                                color: !showTips ? '#1a1a2e' : '#a0937c',
-                                borderBottom: !showTips ? '2px solid #fbbf24' : '2px solid transparent',
-                                marginBottom: -1.5,
-                              }}
-                            >
-                              Actions ({axe.actions.length})
-                            </button>
-                            <button
-                              onClick={() => !showTips && toggleAxeTipsTab(axe.id)}
-                              className="flex-1 pb-1.5 text-[11px] font-semibold text-center transition-all"
-                              style={{
-                                color: showTips ? '#1a1a2e' : '#a0937c',
-                                borderBottom: showTips ? '2px solid #fbbf24' : '2px solid transparent',
-                                marginBottom: -1.5,
-                              }}
-                            >
-                              Tips ({tipsTotal})
-                            </button>
-                          </div>
-                        )}
+                        {/* Sub-tabs Actions / Tips — toujours visibles */}
+                        <div className="flex mt-2.5 mb-2" style={{ borderBottom: '1.5px solid #f0ebe0' }}>
+                          <button
+                            onClick={() => showTips && toggleAxeTipsTab(axe.id)}
+                            className="flex-1 pb-1.5 text-[11px] font-semibold text-center transition-all"
+                            style={{
+                              color: !showTips ? '#1a1a2e' : '#a0937c',
+                              borderBottom: !showTips ? '2px solid #fbbf24' : '2px solid transparent',
+                              marginBottom: -1.5,
+                            }}
+                          >
+                            Actions ({axe.actions.length})
+                          </button>
+                          <button
+                            onClick={() => !showTips && toggleAxeTipsTab(axe.id)}
+                            className="flex-1 pb-1.5 text-[11px] font-semibold text-center transition-all"
+                            style={{
+                              color: showTips ? '#1a1a2e' : '#a0937c',
+                              borderBottom: showTips ? '2px solid #fbbf24' : '2px solid transparent',
+                              marginBottom: -1.5,
+                            }}
+                          >
+                            Tips ({tipsTotal})
+                          </button>
+                        </div>
 
                         {/* ── Tab Actions ─��� */}
                         {!showTips && (
@@ -392,7 +404,7 @@ export default function ApprenantsAccordionClient({
                             {sortedActions.length === 0 ? (
                               <p className="text-[11px] italic mt-2" style={{ color: '#a0937c' }}>Aucune action</p>
                             ) : (
-                              <div className={tipsTotal === 0 ? 'mt-2 space-y-1.5' : 'space-y-1.5'}>
+                              <div className="space-y-1.5">
                                 {visibleActions.map(action => {
                                   const fb = learner.feedbackMap[action.id]
                                   return (
@@ -434,119 +446,138 @@ export default function ApprenantsAccordionClient({
                         {/* ── Tab Tips ── */}
                         {showTips && (
                           <div className="space-y-1.5">
-                            {axe.tips.map(tip => {
-                              const isEditing = editingTipId === tip.id
-                              const isLoading = tipLoading === tip.id
-                              const statusBadge = tip.read_at
-                                ? { label: '✅ Lu', bg: '#fde68a', color: '#92400e' }
-                                : tip.sent
-                                ? { label: '📤 Envoye', bg: '#e0f2fe', color: '#0369a1' }
-                                : { label: '⏳ En attente', bg: '#f1f5f9', color: '#64748b' }
+                            {axe.tips.length === 0 ? (
+                              <p className="text-[11px] italic py-3 text-center" style={{ color: '#a0937c' }}>Aucun tip pour cet axe</p>
+                            ) : (
+                              axe.tips.map(tip => {
+                                const isEditing = editingTipId === tip.id
+                                const isLoading = tipLoading === tip.id
+                                const statusBadge = tip.read_at
+                                  ? { label: '✅ Lu', bg: '#fde68a', color: '#92400e' }
+                                  : tip.sent
+                                  ? { label: '📤 Envoy\u00e9', bg: '#e0f2fe', color: '#0369a1' }
+                                  : { label: '⏳ En attente', bg: '#f1f5f9', color: '#64748b' }
 
-                              return (
-                                <div
-                                  key={tip.id}
-                                  style={{
-                                    padding: '10px 12px',
-                                    borderRadius: 12,
-                                    border: tip.sent ? '1px solid #fde68a' : '1px solid #f0ebe0',
-                                    background: tip.sent ? '#fffbeb' : 'white',
-                                    opacity: isLoading ? 0.5 : 1,
-                                  }}
-                                >
-                                  <div className="flex items-center gap-1.5 mb-1.5">
-                                    <span className="text-[9px] font-extrabold text-white px-2 py-0.5" style={{ background: '#1a1a2e', borderRadius: 6 }}>
-                                      S{tip.week_number}
-                                    </span>
-                                    <span className="text-[9px] font-bold px-2 py-0.5" style={{ background: statusBadge.bg, color: statusBadge.color, borderRadius: 6 }}>
-                                      {statusBadge.label}
-                                    </span>
-                                    {tip.sent && <span className="text-[10px] ml-auto" style={{ color: '#a0937c' }}>🔒</span>}
-                                  </div>
-
-                                  {isEditing ? (
-                                    <div className="space-y-2 mt-2">
-                                      <div>
-                                        <label className="text-[9px] font-bold" style={{ color: '#a0937c' }}>💪 Rappel</label>
-                                        <textarea
-                                          value={editContent}
-                                          onChange={e => setEditContent(e.target.value)}
-                                          className="w-full text-xs p-2 mt-0.5 resize-y min-h-[60px]"
-                                          style={{ border: '1px solid #f0ebe0', borderRadius: 8, background: '#faf8f4' }}
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="text-[9px] font-bold" style={{ color: '#a0937c' }}>💡 Conseil</label>
-                                        <textarea
-                                          value={editAdvice}
-                                          onChange={e => setEditAdvice(e.target.value)}
-                                          className="w-full text-xs p-2 mt-0.5 resize-y min-h-[60px]"
-                                          style={{ border: '1px solid #f0ebe0', borderRadius: 8, background: '#faf8f4' }}
-                                        />
-                                      </div>
-                                      <div className="flex gap-2">
-                                        <button
-                                          onClick={() => saveTip(tip.id)}
-                                          className="flex-1 text-[10px] font-bold py-1.5 text-white"
-                                          style={{ background: '#fbbf24', color: '#1a1a2e', borderRadius: 8 }}
-                                        >
-                                          Enregistrer
-                                        </button>
-                                        <button
-                                          onClick={() => setEditingTipId(null)}
-                                          className="flex-1 text-[10px] font-bold py-1.5"
-                                          style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#a0937c' }}
-                                        >
-                                          Annuler
-                                        </button>
-                                      </div>
+                                return (
+                                  <div
+                                    key={tip.id}
+                                    style={{
+                                      padding: '10px 12px',
+                                      borderRadius: 12,
+                                      border: tip.sent ? '1px solid #fde68a' : '1px solid #f0ebe0',
+                                      background: tip.sent ? '#fffbeb' : 'white',
+                                      opacity: isLoading ? 0.5 : 1,
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                      <span className="text-[9px] font-extrabold text-white px-2 py-0.5" style={{ background: '#1a1a2e', borderRadius: 6 }}>
+                                        S{tip.week_number}
+                                      </span>
+                                      <span className="text-[9px] font-bold px-2 py-0.5" style={{ background: statusBadge.bg, color: statusBadge.color, borderRadius: 6 }}>
+                                        {statusBadge.label}
+                                      </span>
+                                      {tip.sent && <span className="text-[10px] ml-auto" style={{ color: '#a0937c' }}>🔒</span>}
                                     </div>
-                                  ) : (
-                                    <>
-                                      <p className="text-xs leading-relaxed" style={{ color: '#1a1a2e' }}>
-                                        <strong>💪</strong> {tip.content}
-                                      </p>
-                                      {tip.advice && (
-                                        <div className="text-[11px] leading-relaxed mt-1 p-1.5" style={{
-                                          background: tip.sent ? '#fef9ee' : '#faf8f4',
-                                          borderRadius: 8,
-                                          color: '#64748b',
-                                        }}>
-                                          <strong>💡</strong> {tip.advice}
-                                        </div>
-                                      )}
 
-                                      {/* Actions pour tips non envoyés */}
-                                      {!tip.sent && (
-                                        <div className="flex gap-1 mt-2 pt-2" style={{ borderTop: '1px solid #f0ebe0' }}>
+                                    {isEditing ? (
+                                      <div className="space-y-2 mt-2">
+                                        <div>
+                                          <label className="text-[9px] font-bold" style={{ color: '#a0937c' }}>💪 Rappel</label>
+                                          <textarea
+                                            value={editContent}
+                                            onChange={e => setEditContent(e.target.value)}
+                                            className="w-full text-xs p-2 mt-0.5 resize-y min-h-[60px]"
+                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, background: '#faf8f4' }}
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="text-[9px] font-bold" style={{ color: '#a0937c' }}>💡 Conseil</label>
+                                          <textarea
+                                            value={editAdvice}
+                                            onChange={e => setEditAdvice(e.target.value)}
+                                            className="w-full text-xs p-2 mt-0.5 resize-y min-h-[60px]"
+                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, background: '#faf8f4' }}
+                                          />
+                                        </div>
+                                        <div className="flex gap-2">
                                           <button
-                                            onClick={() => startEditTip(tip)}
-                                            className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 transition-all"
-                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#1a1a2e', background: 'white' }}
+                                            onClick={() => saveTip(tip.id)}
+                                            className="flex-1 text-[10px] font-bold py-1.5 text-white"
+                                            style={{ background: '#fbbf24', color: '#1a1a2e', borderRadius: 8 }}
                                           >
-                                            ✏️ Modifier
+                                            Enregistrer
                                           </button>
                                           <button
-                                            onClick={() => regenerateTip(tip.id)}
-                                            className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 transition-all"
-                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#1a1a2e', background: 'white' }}
+                                            onClick={() => setEditingTipId(null)}
+                                            className="flex-1 text-[10px] font-bold py-1.5"
+                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#a0937c' }}
                                           >
-                                            🔄 Regenerer
-                                          </button>
-                                          <button
-                                            onClick={() => deleteTip(tip.id)}
-                                            className="text-[10px] font-semibold px-2.5 py-1 transition-all"
-                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#a0937c', background: 'white' }}
-                                          >
-                                            🗑️
+                                            Annuler
                                           </button>
                                         </div>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              )
-                            })}
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <p className="text-xs leading-relaxed" style={{ color: '#1a1a2e' }}>
+                                          <strong>💪</strong> {tip.content}
+                                        </p>
+                                        {tip.advice && (
+                                          <div className="text-[11px] leading-relaxed mt-1 p-1.5" style={{
+                                            background: tip.sent ? '#fef9ee' : '#faf8f4',
+                                            borderRadius: 8,
+                                            color: '#64748b',
+                                          }}>
+                                            <strong>💡</strong> {tip.advice}
+                                          </div>
+                                        )}
+
+                                        {/* Actions pour tips non envoy\u00e9s */}
+                                        {!tip.sent && (
+                                          <div className="flex gap-1 mt-2 pt-2" style={{ borderTop: '1px solid #f0ebe0' }}>
+                                            <button
+                                              onClick={() => startEditTip(tip)}
+                                              className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 transition-all"
+                                              style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#1a1a2e', background: 'white' }}
+                                            >
+                                              ✏️ Modifier
+                                            </button>
+                                            <button
+                                              onClick={() => regenerateTip(tip.id)}
+                                              className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 transition-all"
+                                              style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#1a1a2e', background: 'white' }}
+                                            >
+                                              🔄 R\u00e9g\u00e9n\u00e9rer
+                                            </button>
+                                            <button
+                                              onClick={() => deleteTip(tip.id)}
+                                              className="text-[10px] font-semibold px-2.5 py-1 transition-all"
+                                              style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#a0937c', background: 'white' }}
+                                            >
+                                              🗑️
+                                            </button>
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                )
+                              })
+                            )}
+
+                            {/* Bouton ajouter un tip */}
+                            <button
+                              onClick={() => addTip(axe.id, learner.id)}
+                              disabled={addingTip === axe.id}
+                              className="w-full flex items-center justify-center gap-1 py-2 text-[11px] font-semibold transition-all"
+                              style={{
+                                border: '1.5px dashed #f0ebe0',
+                                borderRadius: 10,
+                                color: addingTip === axe.id ? '#a0937c' : '#a0937c',
+                                background: addingTip === axe.id ? '#fffbeb' : 'transparent',
+                              }}
+                            >
+                              {addingTip === axe.id ? '⏳ G\u00e9n\u00e9ration IA...' : '+ Ajouter un tip'}
+                            </button>
                           </div>
                         )}
                       </div>
