@@ -23,6 +23,16 @@ function getInitials(first: string, last: string) {
 type ActionRow = { id: string; description: string; completed: boolean; created_at: string }
 type CheckinRow = { id: string; learner_id: string; weather: string; week_number: number; year: number; created_at: string }
 
+type TipData = {
+  id: string
+  week_number: number
+  content: string
+  advice: string | null
+  sent: boolean
+  acted: boolean
+  read_at: string | null
+}
+
 type AxeData = {
   id: string
   index: number
@@ -30,6 +40,7 @@ type AxeData = {
   description: string | null
   difficulty: string
   actions: ActionRow[]
+  tips: TipData[]
 }
 
 type LearnerCardData = {
@@ -70,6 +81,13 @@ export default function ApprenantsAccordionClient({
   )
   // Track which axes show all actions (keyed by axeId)
   const [expandedAxeActions, setExpandedAxeActions] = useState<Set<string>>(new Set())
+  // Track which axe shows tips tab instead of actions (keyed by axeId)
+  const [axeTipsTab, setAxeTipsTab] = useState<Set<string>>(new Set())
+  // Track tip editing state
+  const [editingTipId, setEditingTipId] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState('')
+  const [editAdvice, setEditAdvice] = useState('')
+  const [tipLoading, setTipLoading] = useState<string | null>(null)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const expandedRef = useRef<HTMLDivElement>(null)
@@ -112,6 +130,56 @@ export default function ApprenantsAccordionClient({
       next.has(axeId) ? next.delete(axeId) : next.add(axeId)
       return next
     })
+  }
+
+  function toggleAxeTipsTab(axeId: string) {
+    setAxeTipsTab(prev => {
+      const next = new Set(prev)
+      next.has(axeId) ? next.delete(axeId) : next.add(axeId)
+      return next
+    })
+  }
+
+  function startEditTip(tip: TipData) {
+    setEditingTipId(tip.id)
+    setEditContent(tip.content)
+    setEditAdvice(tip.advice ?? '')
+  }
+
+  async function saveTip(tipId: string) {
+    setTipLoading(tipId)
+    try {
+      await fetch('/api/tips/admin', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipId, content: editContent, advice: editAdvice }),
+      })
+      setEditingTipId(null)
+      router.refresh()
+    } catch { /* silently fail */ }
+    setTipLoading(null)
+  }
+
+  async function regenerateTip(tipId: string) {
+    setTipLoading(tipId)
+    try {
+      await fetch('/api/tips/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'regenerate', tipId }),
+      })
+      router.refresh()
+    } catch { /* silently fail */ }
+    setTipLoading(null)
+  }
+
+  async function deleteTip(tipId: string) {
+    setTipLoading(tipId)
+    try {
+      await fetch(`/api/tips/admin?tipId=${tipId}`, { method: 'DELETE' })
+      router.refresh()
+    } catch { /* silently fail */ }
+    setTipLoading(null)
   }
 
   return (
@@ -265,6 +333,9 @@ export default function ApprenantsAccordionClient({
                     const showAll = expandedAxeActions.has(axe.id)
                     const visibleActions = showAll ? sortedActions : sortedActions.slice(0, 3)
                     const hasMore = sortedActions.length > 3
+                    const showTips = axeTipsTab.has(axe.id)
+                    const tipsSent = axe.tips.filter(t => t.sent).length
+                    const tipsTotal = axe.tips.length
 
                     return (
                       <div
@@ -282,46 +353,200 @@ export default function ApprenantsAccordionClient({
                           </div>
                           <span className="text-xs font-semibold flex-1 truncate" style={{ color: '#1a1a2e' }}>{axe.subject}</span>
                           <span className="text-sm">{dyn.icon}</span>
+                          {tipsTotal > 0 && (
+                            <span className="text-[10px] font-semibold shrink-0" style={{ color: '#a0937c' }}>💡 {tipsSent}/{tipsTotal}</span>
+                          )}
                         </div>
 
-                        {/* Actions list */}
-                        {sortedActions.length === 0 ? (
-                          <p className="text-[11px] italic mt-2" style={{ color: '#a0937c' }}>Aucune action</p>
-                        ) : (
-                          <div className="mt-2 space-y-1.5">
-                            {visibleActions.map(action => {
-                              const fb = learner.feedbackMap[action.id]
-                              return (
-                                <div key={action.id} style={{ padding: '8px 10px', background: '#faf8f4', border: '1px solid #f0ebe0', borderRadius: 12 }}>
-                                  <p className="text-xs leading-relaxed" style={{ color: '#1a1a2e' }}>{action.description}</p>
-                                  <div className="flex items-center justify-between mt-1">
-                                    <span className="text-[9px]" style={{ color: '#a0937c' }}>
-                                      {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                                    </span>
-                                    {fb && (
-                                      <div className="scale-90 origin-right">
-                                        <ActionFeedback actionId={action.id} feedback={fb} canInteract={true} />
+                        {/* Sub-tabs Actions / Tips */}
+                        {tipsTotal > 0 && (
+                          <div className="flex mt-2.5 mb-2" style={{ borderBottom: '1.5px solid #f0ebe0' }}>
+                            <button
+                              onClick={() => showTips && toggleAxeTipsTab(axe.id)}
+                              className="flex-1 pb-1.5 text-[11px] font-semibold text-center transition-all"
+                              style={{
+                                color: !showTips ? '#1a1a2e' : '#a0937c',
+                                borderBottom: !showTips ? '2px solid #fbbf24' : '2px solid transparent',
+                                marginBottom: -1.5,
+                              }}
+                            >
+                              Actions ({axe.actions.length})
+                            </button>
+                            <button
+                              onClick={() => !showTips && toggleAxeTipsTab(axe.id)}
+                              className="flex-1 pb-1.5 text-[11px] font-semibold text-center transition-all"
+                              style={{
+                                color: showTips ? '#1a1a2e' : '#a0937c',
+                                borderBottom: showTips ? '2px solid #fbbf24' : '2px solid transparent',
+                                marginBottom: -1.5,
+                              }}
+                            >
+                              Tips ({tipsTotal})
+                            </button>
+                          </div>
+                        )}
+
+                        {/* ── Tab Actions ─��� */}
+                        {!showTips && (
+                          <>
+                            {sortedActions.length === 0 ? (
+                              <p className="text-[11px] italic mt-2" style={{ color: '#a0937c' }}>Aucune action</p>
+                            ) : (
+                              <div className={tipsTotal === 0 ? 'mt-2 space-y-1.5' : 'space-y-1.5'}>
+                                {visibleActions.map(action => {
+                                  const fb = learner.feedbackMap[action.id]
+                                  return (
+                                    <div key={action.id} style={{ padding: '8px 10px', background: '#faf8f4', border: '1px solid #f0ebe0', borderRadius: 12 }}>
+                                      <p className="text-xs leading-relaxed" style={{ color: '#1a1a2e' }}>{action.description}</p>
+                                      <div className="flex items-center justify-between mt-1">
+                                        <span className="text-[9px]" style={{ color: '#a0937c' }}>
+                                          {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                        </span>
+                                        {fb && (
+                                          <div className="scale-90 origin-right">
+                                            <ActionFeedback actionId={action.id} feedback={fb} canInteract={true} />
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
+                                    </div>
+                                  )
+                                })}
+                                {hasMore && (
+                                  <button
+                                    onClick={() => toggleAxeActions(axe.id)}
+                                    className="w-full py-1.5 text-center text-[10px] font-semibold transition-all"
+                                    style={{
+                                      border: '1.5px dashed #f0ebe0',
+                                      borderRadius: 10,
+                                      color: '#a0937c',
+                                      background: showAll ? '#fffbeb' : 'transparent',
+                                      borderColor: showAll ? '#fbbf24' : '#f0ebe0',
+                                    }}
+                                  >
+                                    {showAll ? '▲ Replier' : `Voir les ${sortedActions.length - 3} precedentes`}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {/* ── Tab Tips ── */}
+                        {showTips && (
+                          <div className="space-y-1.5">
+                            {axe.tips.map(tip => {
+                              const isEditing = editingTipId === tip.id
+                              const isLoading = tipLoading === tip.id
+                              const statusBadge = tip.read_at
+                                ? { label: '✅ Lu', bg: '#fde68a', color: '#92400e' }
+                                : tip.sent
+                                ? { label: '📤 Envoye', bg: '#e0f2fe', color: '#0369a1' }
+                                : { label: '⏳ En attente', bg: '#f1f5f9', color: '#64748b' }
+
+                              return (
+                                <div
+                                  key={tip.id}
+                                  style={{
+                                    padding: '10px 12px',
+                                    borderRadius: 12,
+                                    border: tip.sent ? '1px solid #fde68a' : '1px solid #f0ebe0',
+                                    background: tip.sent ? '#fffbeb' : 'white',
+                                    opacity: isLoading ? 0.5 : 1,
+                                  }}
+                                >
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <span className="text-[9px] font-extrabold text-white px-2 py-0.5" style={{ background: '#1a1a2e', borderRadius: 6 }}>
+                                      S{tip.week_number}
+                                    </span>
+                                    <span className="text-[9px] font-bold px-2 py-0.5" style={{ background: statusBadge.bg, color: statusBadge.color, borderRadius: 6 }}>
+                                      {statusBadge.label}
+                                    </span>
+                                    {tip.sent && <span className="text-[10px] ml-auto" style={{ color: '#a0937c' }}>🔒</span>}
                                   </div>
+
+                                  {isEditing ? (
+                                    <div className="space-y-2 mt-2">
+                                      <div>
+                                        <label className="text-[9px] font-bold" style={{ color: '#a0937c' }}>💪 Rappel</label>
+                                        <textarea
+                                          value={editContent}
+                                          onChange={e => setEditContent(e.target.value)}
+                                          className="w-full text-xs p-2 mt-0.5 resize-y min-h-[60px]"
+                                          style={{ border: '1px solid #f0ebe0', borderRadius: 8, background: '#faf8f4' }}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[9px] font-bold" style={{ color: '#a0937c' }}>💡 Conseil</label>
+                                        <textarea
+                                          value={editAdvice}
+                                          onChange={e => setEditAdvice(e.target.value)}
+                                          className="w-full text-xs p-2 mt-0.5 resize-y min-h-[60px]"
+                                          style={{ border: '1px solid #f0ebe0', borderRadius: 8, background: '#faf8f4' }}
+                                        />
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => saveTip(tip.id)}
+                                          className="flex-1 text-[10px] font-bold py-1.5 text-white"
+                                          style={{ background: '#fbbf24', color: '#1a1a2e', borderRadius: 8 }}
+                                        >
+                                          Enregistrer
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingTipId(null)}
+                                          className="flex-1 text-[10px] font-bold py-1.5"
+                                          style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#a0937c' }}
+                                        >
+                                          Annuler
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <p className="text-xs leading-relaxed" style={{ color: '#1a1a2e' }}>
+                                        <strong>💪</strong> {tip.content}
+                                      </p>
+                                      {tip.advice && (
+                                        <div className="text-[11px] leading-relaxed mt-1 p-1.5" style={{
+                                          background: tip.sent ? '#fef9ee' : '#faf8f4',
+                                          borderRadius: 8,
+                                          color: '#64748b',
+                                        }}>
+                                          <strong>💡</strong> {tip.advice}
+                                        </div>
+                                      )}
+
+                                      {/* Actions pour tips non envoyés */}
+                                      {!tip.sent && (
+                                        <div className="flex gap-1 mt-2 pt-2" style={{ borderTop: '1px solid #f0ebe0' }}>
+                                          <button
+                                            onClick={() => startEditTip(tip)}
+                                            className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 transition-all"
+                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#1a1a2e', background: 'white' }}
+                                          >
+                                            ✏️ Modifier
+                                          </button>
+                                          <button
+                                            onClick={() => regenerateTip(tip.id)}
+                                            className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 transition-all"
+                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#1a1a2e', background: 'white' }}
+                                          >
+                                            🔄 Regenerer
+                                          </button>
+                                          <button
+                                            onClick={() => deleteTip(tip.id)}
+                                            className="text-[10px] font-semibold px-2.5 py-1 transition-all"
+                                            style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#a0937c', background: 'white' }}
+                                          >
+                                            🗑️
+                                          </button>
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
                                 </div>
                               )
                             })}
-                            {hasMore && (
-                              <button
-                                onClick={() => toggleAxeActions(axe.id)}
-                                className="w-full py-1.5 text-center text-[10px] font-semibold transition-all"
-                                style={{
-                                  border: '1.5px dashed #f0ebe0',
-                                  borderRadius: 10,
-                                  color: '#a0937c',
-                                  background: showAll ? '#fffbeb' : 'transparent',
-                                  borderColor: showAll ? '#fbbf24' : '#f0ebe0',
-                                }}
-                              >
-                                {showAll ? '▲ Replier' : `Voir les ${sortedActions.length - 3} precedentes`}
-                              </button>
-                            )}
                           </div>
                         )}
                       </div>

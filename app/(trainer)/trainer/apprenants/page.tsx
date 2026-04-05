@@ -113,6 +113,16 @@ export default async function ApprenantsPage({
     .order('year')
     .order('week_number')
 
+  // 3b. Tips par axe (pour affichage dans accordion)
+  const allAxeIds = (allAxes ?? []).map((a) => (a as AxeRow).id)
+  const { data: allTips } = allAxeIds.length > 0
+    ? await supabase
+        .from('tips')
+        .select('id, axe_id, learner_id, week_number, content, advice, sent, acted, read_at')
+        .in('axe_id', allAxeIds)
+        .order('week_number')
+    : { data: [] as Array<{ id: string; axe_id: string; learner_id: string; week_number: number; content: string; advice: string | null; sent: boolean; acted: boolean; read_at: string | null }> }
+
   // 4 & 5. Feedback (likes + commentaires) via admin client
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -177,14 +187,28 @@ export default async function ApprenantsPage({
 
     const learnerAxes = ((allAxes ?? []) as AxeRow[])
       .filter((a) => a.learner_id === member.learner_id)
-      .map((axe, i) => ({
-        id: axe.id,
-        index: i,
-        subject: axe.subject,
-        description: axe.description,
-        difficulty: axe.difficulty,
-        actions: axe.actions as ActionRow[],
-      }))
+      .map((axe, i) => {
+        const axeTips = (allTips ?? [])
+          .filter((t) => t.axe_id === axe.id)
+          .map((t) => ({
+            id: t.id,
+            week_number: t.week_number,
+            content: t.content,
+            advice: t.advice,
+            sent: t.sent,
+            acted: t.acted,
+            read_at: t.read_at,
+          }))
+        return {
+          id: axe.id,
+          index: i,
+          subject: axe.subject,
+          description: axe.description,
+          difficulty: axe.difficulty,
+          actions: axe.actions as ActionRow[],
+          tips: axeTips,
+        }
+      })
 
     const learnerCheckins = ((allCheckins ?? []) as CheckinRow[])
       .filter((c) => c.learner_id === member.learner_id)
