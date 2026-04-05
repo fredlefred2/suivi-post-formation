@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { expectedCheckins } from '@/lib/utils'
+import { expectedCheckins, calculateStreak, getCheckinContext } from '@/lib/utils'
 import type { ActionFeedbackData } from '@/lib/types'
 import ApprenantsAccordionClient from './ApprenantsAccordionClient'
 
@@ -18,6 +18,7 @@ export default async function ApprenantsPage({
 }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const checkinCtx = getCheckinContext()
 
   // ── Groupes du formateur ─────────────────────────────────────────────────
   const { data: groups } = await supabase
@@ -266,21 +267,12 @@ export default async function ApprenantsPage({
       regularity = Math.min(100, Math.round((activeWeeks.size / totalWeeks) * 100))
     }
 
-    // ── Streak check-in : semaines consécutives récentes ──
-    let checkinStreak = 0
-    if (learnerCheckins.length > 0) {
-      // Construire un set de (year, week) avec check-in
-      const checkedWeeks = new Set(learnerCheckins.map(c => `${c.year}-${c.week_number}`))
-      // Remonter depuis la semaine courante
-      const currentWeekNum = Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + new Date(now.getFullYear(), 0, 1).getDay() + 1) / 7)
-      let w = currentWeekNum
-      let y = now.getFullYear()
-      while (checkedWeeks.has(`${y}-${w}`)) {
-        checkinStreak++
-        w--
-        if (w <= 0) { w = 52; y-- }
-      }
-    }
+    // ── Streak check-in : même calcul que le dashboard apprenant ──
+    const checkinStreak = calculateStreak(
+      learnerCheckins.map(c => ({ week_number: c.week_number, year: c.year })),
+      checkinCtx.checkinWeek,
+      checkinCtx.checkinYear
+    )
 
     return {
       id: member.learner_id,
