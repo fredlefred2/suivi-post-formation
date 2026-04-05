@@ -550,10 +550,10 @@ export default function ApprenantsAccordionClient({
                                             </button>
                                             <button
                                               onClick={() => deleteTip(tip.id)}
-                                              className="text-[10px] font-semibold px-2.5 py-1 transition-all"
+                                              className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 transition-all"
                                               style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#a0937c', background: 'white' }}
                                             >
-                                              🗑️
+                                              🗑️ Supprimer
                                             </button>
                                           </div>
                                         )}
