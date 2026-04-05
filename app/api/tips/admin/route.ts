@@ -120,12 +120,12 @@ export async function POST(request: NextRequest) {
     const ctx = await gatherLearnerContext(currentTip.learner_id, currentTip.axe_id)
     if (!ctx) return NextResponse.json({ error: 'Contexte introuvable' }, { status: 404 })
 
-    // Supprimer l'ancien tip
-    await supabaseAdmin.from('tips').delete().eq('id', tipId)
-
-    // Generer un nouveau
+    // Generer le nouveau AVANT de supprimer l'ancien (evite la perte si erreur)
     const result = await generatePersonalizedTip(ctx, currentTip.week_number)
     if (!result) return NextResponse.json({ error: 'Erreur de régénération' }, { status: 500 })
+
+    // Supprimer l'ancien seulement apres generation reussie
+    await supabaseAdmin.from('tips').delete().eq('id', tipId)
 
     return NextResponse.json({ success: true, tip: result })
   }
