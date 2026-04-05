@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useTransition, useCallback } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Pencil } from 'lucide-react'
 import { createAxe, createAxeFast, deleteAxe, updateAxe, createAction, updateAction, deleteAction } from './actions'
@@ -52,7 +52,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const [isPending, startTransition] = useTransition()
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [editingActionId, setEditingActionId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
   const [deletingActionId, setDeletingActionId] = useState<string | null>(null)
@@ -65,45 +64,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
   const [editAxeSubject, setEditAxeSubject] = useState('')
   const [editAxeDescription, setEditAxeDescription] = useState('')
   const [editAxeDifficulty, setEditAxeDifficulty] = useState<Difficulty | null>(null)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-
-  // Index sécurisé (évite les débordements si un axe est supprimé)
-  const safeIndex = Math.max(0, Math.min(currentIndex, axes.length - 1))
-
-  // Scroll handler : met à jour l'index courant en fonction de la carte visible
-  const handleScroll = useCallback(() => {
-    const container = scrollContainerRef.current
-    if (!container || container.children.length === 0) return
-    const containerRect = container.getBoundingClientRect()
-    const containerCenter = containerRect.left + containerRect.width / 2
-    let closestIndex = 0
-    let closestDist = Infinity
-    for (let i = 0; i < container.children.length; i++) {
-      const child = container.children[i] as HTMLElement
-      const childRect = child.getBoundingClientRect()
-      const childCenter = childRect.left + childRect.width / 2
-      const dist = Math.abs(containerCenter - childCenter)
-      if (dist < closestDist) {
-        closestDist = dist
-        closestIndex = i
-      }
-    }
-    setCurrentIndex(closestIndex)
-  }, [])
-
-  // Scroll initial vers l'index demandé
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container || axes.length === 0) return
-    const targetIndex = initialIndex
-    if (targetIndex > 0 && targetIndex < axes.length) {
-      const card = container.children[targetIndex] as HTMLElement
-      if (card) {
-        card.scrollIntoView({ inline: 'center', block: 'nearest' })
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const [expandedAxes, setExpandedAxes] = useState<Set<string>>(new Set())
 
   async function handleCreateAxe(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -122,7 +83,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         else {
           setShowAxeForm(false)
           setSelectedDifficulty(null)
-          setCurrentIndex(axes.length)
         }
       })
     }
@@ -177,49 +137,59 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
 
   const deletingAxe = deletingAxeId ? axes.find(a => a.id === deletingAxeId) : null
 
-  return (
-    <div className="space-y-6 pb-4">
-      <div
-        className="rounded-2xl p-4 relative overflow-hidden"
-        style={{
-          background: '#1a1a2e',
-          boxShadow: '0 8px 30px rgba(26, 26, 46, 0.3)',
-        }}
-      >
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
-        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
-        <div className="relative flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-extrabold text-white">Mes actions</h1>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{axes.length} axe{axes.length !== 1 ? 's' : ''} de progrès</p>
-          </div>
-          {axes.length < 3 && !isOnboardingCreate && (
-            <button
-              onClick={() => setShowAxeForm(true)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/90 hover:bg-white transition-colors"
-              style={{ color: '#1a1a2e' }}
-            >
-              <Plus size={14} /> Ajouter un axe
-            </button>
-          )}
-        </div>
-      </div>
+  const MAX_VISIBLE_ACTIONS = 3
 
-      {/* Bouton Nouvelle Action — full width harmonisé avec dashboard */}
-      {axes.length > 0 && !isOnboardingMode && (
-        <button
-          onClick={() => setQuickAddOpen(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-white active:scale-[0.97] transition-transform"
-          style={{
-            background: '#fbbf24',
-            color: '#1a1a2e',
-            boxShadow: '0 4px 15px rgba(251, 191, 36, 0.35)',
-          }}
+  function toggleAxeExpand(axeId: string) {
+    setExpandedAxes(prev => {
+      const next = new Set(prev)
+      if (next.has(axeId)) next.delete(axeId)
+      else next.add(axeId)
+      return next
+    })
+  }
+
+  return (
+    <div className="flex flex-col h-[calc(100dvh-4rem)] pb-[env(safe-area-inset-bottom)]">
+      {/* ── Bloc sticky : header navy + bouton nouvelle action ── */}
+      <div className="shrink-0 space-y-3 pb-3">
+        <div
+          className="rounded-[28px] p-4 relative overflow-hidden"
+          style={{ background: '#1a1a2e' }}
         >
-          <Plus size={20} strokeWidth={2.5} />
-          <span className="text-[15px] font-bold">Nouvelle action</span>
-        </button>
-      )}
+          <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
+          <div className="relative flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-extrabold text-white">Mes actions</h1>
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{axes.length} axe{axes.length !== 1 ? 's' : ''} de progrès</p>
+            </div>
+            {axes.length < 3 && !isOnboardingCreate && (
+              <button
+                onClick={() => setShowAxeForm(true)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/90 hover:bg-white transition-colors"
+                style={{ color: '#1a1a2e' }}
+              >
+                <Plus size={14} /> Ajouter un axe
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Bouton Nouvelle Action */}
+        {axes.length > 0 && !isOnboardingMode && (
+          <button
+            onClick={() => setQuickAddOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl active:scale-[0.97] transition-transform"
+            style={{
+              background: '#fbbf24',
+              color: '#1a1a2e',
+              boxShadow: '0 4px 15px rgba(251, 191, 36, 0.35)',
+            }}
+          >
+            <Plus size={20} strokeWidth={2.5} />
+            <span className="text-[15px] font-bold">Nouvelle action</span>
+          </button>
+        )}
+      </div>
 
       {/* Formulaire nouvel axe */}
       {showAxeForm && (
@@ -326,189 +296,160 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         </div>
       )}
 
-      {/* Carrousel scroll-snap (masqué pendant l'onboarding création d'axes) */}
+      {/* ── Liste verticale des axes (scrollable) ── */}
       {axes.length > 0 && !isOnboardingCreate && (
-        <div className="space-y-3">
-          <div
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
-          >
-            {axes.map((axe, axeIndex) => {
-              const dyn = getDynamique(axe.actions.length)
-              const progress = getProgress(axe.actions.length)
-              const levelIdx = getCurrentLevelIndex(axe.actions.length)
-              const level = getCurrentLevel(axe.actions.length)
-              const LEVEL_BORDER_COLORS = ['#94a3b8', '#38bdf8', '#10b981', '#f59e0b', '#fb7185']
-              const LEVEL_BAR_COLORS = ['#94a3b8', '#38bdf8', '#34d399', '#fb923c', '#f472b6']
-              const borderColor = LEVEL_BORDER_COLORS[levelIdx] ?? LEVEL_BORDER_COLORS[0]
-              return (
-                <div
-                  key={axe.id}
-                  className="snap-center shrink-0 w-[85vw] max-w-[420px] rounded-[22px] bg-white p-4 flex flex-col max-h-[calc(100dvh-11rem)]"
-                  style={{ border: `2px solid ${borderColor}` }}
-                >
-                 <div className="shrink-0">
-                  {/* Titre + boutons edit/delete */}
-                  <div className="flex items-center gap-2">
-                    <span className="axe-num shrink-0" style={{ background: borderColor, color: '#fff' }}>
-                      {axeIndex + 1}
-                    </span>
-                    <p className="font-bold text-sm leading-snug line-clamp-1 flex-1" style={{ color: '#1a1a2e' }}>{axe.subject}</p>
-                    <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pb-4">
+          {axes.map((axe, axeIndex) => {
+            const dyn = getDynamique(axe.actions.length)
+            const progress = getProgress(axe.actions.length)
+            const levelIdx = getCurrentLevelIndex(axe.actions.length)
+            const level = getCurrentLevel(axe.actions.length)
+            const LEVEL_BORDER_COLORS = ['#94a3b8', '#38bdf8', '#10b981', '#f59e0b', '#fb7185']
+            const LEVEL_BAR_COLORS = ['#94a3b8', '#38bdf8', '#34d399', '#fb923c', '#f472b6']
+            const borderColor = LEVEL_BORDER_COLORS[levelIdx] ?? LEVEL_BORDER_COLORS[0]
+            const isExpanded = expandedAxes.has(axe.id)
+
+            // Tri chronologique pour les rangs, antichrono pour l'affichage
+            const chronoSorted = [...axe.actions].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+            const rankMap = new Map(chronoSorted.map((a, i) => [a.id, i + 1]))
+            const displaySorted = [...axe.actions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            const visibleActions = isExpanded ? displaySorted : displaySorted.slice(0, MAX_VISIBLE_ACTIONS)
+            const hiddenCount = displaySorted.length - MAX_VISIBLE_ACTIONS
+
+            return (
+              <div
+                key={axe.id}
+                className="rounded-[22px] bg-white p-4"
+                style={{ border: `2px solid ${borderColor}` }}
+              >
+                {/* Titre + boutons edit/delete */}
+                <div className="flex items-center gap-2">
+                  <span className="axe-num shrink-0" style={{ background: borderColor, color: '#fff' }}>
+                    {axeIndex + 1}
+                  </span>
+                  <p className="font-bold text-sm leading-snug line-clamp-1 flex-1" style={{ color: '#1a1a2e' }}>{axe.subject}</p>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <button
+                      onClick={() => {
+                        setEditingAxe(axe)
+                        setEditAxeSubject(axe.subject)
+                        setEditAxeDescription(axe.description ?? '')
+                        setEditAxeDifficulty(axe.difficulty as Difficulty)
+                      }}
+                      className="opacity-40 hover:opacity-80 transition-opacity p-1"
+                      title="Modifier cet axe"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                    {axes.length > 1 && (
                       <button
-                        onClick={() => {
-                          setEditingAxe(axe)
-                          setEditAxeSubject(axe.subject)
-                          setEditAxeDescription(axe.description ?? '')
-                          setEditAxeDifficulty(axe.difficulty as Difficulty)
-                        }}
+                        onClick={() => { setDeletingAxeId(axe.id); setDeletingAxeStep(1) }}
                         className="opacity-40 hover:opacity-80 transition-opacity p-1"
-                        title="Modifier cet axe"
+                        title="Supprimer cet axe"
                       >
-                        <Pencil size={15} />
+                        <Trash2 size={15} />
                       </button>
-                      {axes.length > 1 && (
-                        <button
-                          onClick={() => { setDeletingAxeId(axe.id); setDeletingAxeStep(1) }}
-                          className="opacity-40 hover:opacity-80 transition-opacity p-1"
-                          title="Supprimer cet axe"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  {axe.description && (
-                    <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-1 ml-8">{axe.description}</p>
-                  )}
-
-                  {/* Barre de progression simplifiée */}
-                  <div className="mt-3 flex items-center gap-2.5">
-                    <span className="text-lg">{level.icon}</span>
-                    <div className="flex-1">
-                      <div className="bar-bg">
-                        <div
-                          className="bar-fill transition-all duration-700"
-                          style={{
-                            width: `${progress}%`,
-                            background: LEVEL_BAR_COLORS[levelIdx] ?? LEVEL_BAR_COLORS[0],
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <span className={`text-lg ${levelIdx >= 4 ? '' : 'opacity-30'}`}>🚀</span>
-                  </div>
-
-                  {/* Niveau + compteur sur 1 ligne */}
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-[11px] font-bold" style={{ color: '#1a1a2e' }}>{dyn.icon} {dyn.label}</span>
-                    <span className="text-[11px]" style={{ color: '#a0937c' }}>
-                      {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
-                      {axe.actions.length === 0 && (
-                        <span className="font-semibold ml-1" style={{ color: '#92400e' }}>· commence !</span>
-                      )}
-                      {axe.actions.length > 0 && axe.actions.length < 9 && (
-                        <span className="font-semibold ml-1" style={{ color: '#92400e' }}>· encore {dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
-                      )}
-                    </span>
-                  </div>
-                 </div>
-
-                  {/* Séparateur + titre Actions menées (fixe) */}
-                  <div className="pt-3 mt-2 shrink-0" style={{ borderTop: '2px solid #f0ebe0' }}>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium text-gray-700">
-                        Actions menées
-                        {axe.actions.length > 0 && (
-                          <span className="ml-1.5 text-xs font-normal text-gray-500">({axe.actions.length})</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Liste d'actions (scrollable) */}
-                  <div className="flex-1 min-h-0 overflow-y-auto">
-                    {axe.actions.length === 0 && (
-                      <p className="text-xs text-gray-500 italic">Aucune action enregistrée</p>
                     )}
-
-                    {(() => {
-                      // Tri chronologique pour attribuer les rangs, puis affichage antéchronologique
-                      const chronoSorted = [...axe.actions].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-                      const rankMap = new Map(chronoSorted.map((a, i) => [a.id, i + 1]))
-                      const displaySorted = [...axe.actions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-
-                      return (
-                        <ul className="space-y-2">
-                          {displaySorted.map((action, actionIndex) => {
-                            const rank = rankMap.get(action.id) ?? 1
-                            const isNewlyAdded = highlightAxeId === axe.id && actionIndex === 0
-                            return (
-                              <li key={action.id} className={`flex items-start gap-2 rounded-lg px-1 -mx-1 transition-colors duration-1000 ${isNewlyAdded ? 'bg-[#fffbeb]' : ''}`}>
-                                <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm" style={{ background: '#f5f0e8' }}>{getActionPhaseIcon(rank)}</span>
-                                <div className="flex-1 min-w-0">
-                                  <span className="text-sm text-gray-700">{action.description}</span>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-xs text-gray-500">{formatDate(action.created_at)}</span>
-                                    <ActionFeedback
-                                      actionId={action.id}
-                                      feedback={feedbackMap[action.id] ?? emptyFeedback}
-                                      canInteract={false}
-                                    />
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-1 shrink-0 mt-0.5">
-                                  <button
-                                    onClick={() => { setEditingActionId(action.id); setEditingText(action.description) }}
-                                    className="text-gray-300 hover:text-[#1a1a2e] transition-colors p-0.5"
-                                    title="Modifier"
-                                  >
-                                    <Pencil size={13} />
-                                  </button>
-                                  <button
-                                    onClick={() => setDeletingActionId(action.id)}
-                                    className="text-gray-300 hover:text-red-400 transition-colors p-0.5"
-                                    title="Supprimer"
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
-                                </div>
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      )
-                    })()}
                   </div>
                 </div>
-              )
-            })}
-          </div>
 
-          {/* Indicateurs dots */}
-          {axes.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5">
-              {axes.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    const container = scrollContainerRef.current
-                    if (container && container.children[i]) {
-                      (container.children[i] as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
-                    }
-                  }}
-                  className={`h-2 rounded-full transition-all duration-200 ${
-                    i === safeIndex
-                      ? 'w-6 bg-[#1a1a2e]'
-                      : 'w-2 bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+                {/* Description */}
+                {axe.description && (
+                  <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-1 ml-8">{axe.description}</p>
+                )}
+
+                {/* Barre de progression */}
+                <div className="mt-3 flex items-center gap-2.5">
+                  <span className="text-lg">{level.icon}</span>
+                  <div className="flex-1">
+                    <div className="bar-bg">
+                      <div
+                        className="bar-fill transition-all duration-700"
+                        style={{
+                          width: `${progress}%`,
+                          background: LEVEL_BAR_COLORS[levelIdx] ?? LEVEL_BAR_COLORS[0],
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span className={`text-lg ${levelIdx >= 4 ? '' : 'opacity-30'}`}>🚀</span>
+                </div>
+
+                {/* Niveau + compteur */}
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-[11px] font-bold" style={{ color: '#1a1a2e' }}>{dyn.icon} {dyn.label}</span>
+                  <span className="text-[11px]" style={{ color: '#a0937c' }}>
+                    {axe.actions.length} action{axe.actions.length !== 1 ? 's' : ''}
+                    {axe.actions.length === 0 && (
+                      <span className="font-semibold ml-1" style={{ color: '#92400e' }}>· commence !</span>
+                    )}
+                    {axe.actions.length > 0 && axe.actions.length < 9 && (
+                      <span className="font-semibold ml-1" style={{ color: '#92400e' }}>· encore {dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
+                    )}
+                  </span>
+                </div>
+
+                {/* Séparateur + Actions menées */}
+                {axe.actions.length > 0 && (
+                  <div className="pt-3 mt-2" style={{ borderTop: '2px solid #f0ebe0' }}>
+                    <ul className="space-y-2">
+                      {visibleActions.map((action, actionIndex) => {
+                        const rank = rankMap.get(action.id) ?? 1
+                        const isNewlyAdded = highlightAxeId === axe.id && actionIndex === 0
+                        return (
+                          <li key={action.id} className={`flex items-start gap-2 rounded-lg px-1 -mx-1 transition-colors duration-1000 ${isNewlyAdded ? 'bg-[#fffbeb]' : ''}`}>
+                            <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-sm" style={{ background: '#f5f0e8' }}>{getActionPhaseIcon(rank)}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm text-gray-700">{action.description}</span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs text-gray-500">{formatDate(action.created_at)}</span>
+                                <ActionFeedback
+                                  actionId={action.id}
+                                  feedback={feedbackMap[action.id] ?? emptyFeedback}
+                                  canInteract={false}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                              <button
+                                onClick={() => { setEditingActionId(action.id); setEditingText(action.description) }}
+                                className="text-gray-300 hover:text-[#1a1a2e] transition-colors p-0.5"
+                                title="Modifier"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                onClick={() => setDeletingActionId(action.id)}
+                                className="text-gray-300 hover:text-red-400 transition-colors p-0.5"
+                                title="Supprimer"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+
+                    {/* Voir plus / Voir moins */}
+                    {hiddenCount > 0 && (
+                      <button
+                        onClick={() => toggleAxeExpand(axe.id)}
+                        className="flex items-center gap-1 text-xs font-medium transition-colors mt-2 mx-auto"
+                        style={{ color: '#92400e' }}
+                      >
+                        {isExpanded ? '▲ Voir moins' : `▼ Voir ${hiddenCount} de plus`}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {axe.actions.length === 0 && (
+                  <p className="text-xs text-gray-500 italic mt-3 pt-3" style={{ borderTop: '2px solid #f0ebe0' }}>Aucune action enregistrée</p>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
       {/* Modale ajout d'action */}
@@ -628,9 +569,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
               <button
                 onClick={() => {
                   if (!deletingAxe) return
-                  const axeIdx = axes.findIndex(a => a.id === deletingAxe.id)
                   startTransition(() => { deleteAxe(deletingAxe.id) })
-                  setCurrentIndex(Math.max(0, axeIdx - 1))
                   setDeletingAxeStep(0)
                   setDeletingAxeId(null)
                 }}
@@ -701,15 +640,6 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
         open={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
         onSuccess={(axeId) => {
-          // Scroll vers la carte de l'axe concerné
-          const axeIndex = axes.findIndex(a => a.id === axeId)
-          if (axeIndex >= 0) {
-            setCurrentIndex(axeIndex)
-            const container = scrollContainerRef.current
-            if (container && container.children[axeIndex]) {
-              (container.children[axeIndex] as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
-            }
-          }
           // Flash sur la dernière action ajoutée
           setHighlightAxeId(axeId)
           setTimeout(() => setHighlightAxeId(null), 2000)
