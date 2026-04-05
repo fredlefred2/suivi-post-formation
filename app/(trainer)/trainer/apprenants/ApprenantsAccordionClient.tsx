@@ -268,19 +268,17 @@ export default function ApprenantsAccordionClient({
                 </p>
               </div>
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0"
                 style={{
-                  background: learner.regularity >= 75 ? '#6ee7b7' : learner.regularity >= 50 ? '#fbbf24' : '#f87171',
-                  color: '#1a1a2e',
+                  background: '#1a1a2e',
+                  color: learner.regularity >= 75 ? '#6ee7b7' : learner.regularity >= 50 ? '#fbbf24' : '#f87171',
                 }}
               >
                 {learner.regularity}%
               </div>
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
-                style={{
-                  background: learner.lastWeather === 'sunny' ? '#6ee7b7' : learner.lastWeather === 'stormy' ? '#f87171' : '#fbbf24',
-                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[15px] shrink-0"
+                style={{ background: '#1a1a2e' }}
               >
                 {learner.lastWeather ? (WEATHER_ICONS[learner.lastWeather] ?? '—') : '—'}
               </div>
