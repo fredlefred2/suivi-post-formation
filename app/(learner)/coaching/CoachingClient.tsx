@@ -24,6 +24,8 @@ export default function CoachingClient({ userId }: { userId: string }) {
   const [tips, setTips] = useState<Tip[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedAxes, setExpandedAxes] = useState<Set<string>>(new Set())
+  const [expandedHistory, setExpandedHistory] = useState<Set<string>>(new Set())
+  const [expandedTips, setExpandedTips] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetch('/api/tips/learner')
@@ -60,6 +62,22 @@ export default function CoachingClient({ userId }: { userId: string }) {
     })
   }
 
+  const toggleHistory = (axeId: string) => {
+    setExpandedHistory(prev => {
+      const next = new Set(prev)
+      next.has(axeId) ? next.delete(axeId) : next.add(axeId)
+      return next
+    })
+  }
+
+  const toggleTipDetail = (tipId: string) => {
+    setExpandedTips(prev => {
+      const next = new Set(prev)
+      next.has(tipId) ? next.delete(tipId) : next.add(tipId)
+      return next
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16" style={{ color: '#a0937c' }}>
@@ -73,7 +91,7 @@ export default function CoachingClient({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
-      {/* ── Header navy — Cream & Warm ── */}
+      {/* Header navy */}
       <div
         className="rounded-[28px] p-5 relative overflow-hidden"
         style={{ background: '#1a1a2e' }}
@@ -101,20 +119,26 @@ export default function CoachingClient({ userId }: { userId: string }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {axeGroups.map(axe => {
+          {axeGroups.map((axe, axeIndex) => {
             const isExpanded = expandedAxes.has(axe.axeId)
             const axeSentTips = axe.tips.filter(t => t.sent)
             const progress = axe.tips.length > 0 ? Math.round((axeSentTips.length / axe.tips.length) * 100) : 0
 
+            // Dernier tip envoye = le plus recent (week_number le plus eleve)
+            const sortedSent = [...axeSentTips].sort((a, b) => b.week_number - a.week_number)
+            const latestTip = sortedSent[0] || null
+            const olderTips = sortedSent.slice(1)
+            const showHistory = expandedHistory.has(axe.axeId)
+
             return (
               <div key={axe.axeId} className="rounded-[22px] bg-white overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
-                {/* Header axe — accordéon */}
+                {/* Header axe */}
                 <button
                   onClick={() => toggleAxe(axe.axeId)}
                   className="w-full flex items-center gap-3 px-4 py-3.5 transition-colors"
                 >
                   <div className="axe-num w-9 h-9 text-base">
-                    🎯
+                    {axeIndex + 1}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
                     <p className="text-sm font-bold truncate" style={{ color: '#1a1a2e' }}>{axe.axeSubject}</p>
@@ -140,67 +164,143 @@ export default function CoachingClient({ userId }: { userId: string }) {
                   />
                 </button>
 
-                {/* Tips — timeline verticale */}
+                {/* Contenu deplie */}
                 {isExpanded && (
                   <div className="px-4 pb-4">
                     {axeSentTips.length === 0 ? (
                       <p className="text-xs text-center py-4" style={{ color: '#a0937c' }}>Pas encore de conseil pour cet axe</p>
                     ) : (
-                      <div className="relative ml-4">
-                        {/* Ligne verticale de timeline */}
-                        <div className="absolute left-0 top-2 bottom-2 w-px" style={{ background: '#f0ebe0' }} />
-
-                        <div className="space-y-4">
-                          {axeSentTips.map((tip, idx) => (
-                            <div key={tip.id} className="relative pl-6">
-                              {/* Point sur la timeline */}
-                              <div
-                                className="absolute left-0 top-3 w-2.5 h-2.5 rounded-full -translate-x-1/2 ring-2 ring-white"
-                                style={{
-                                  background: tip.acted
-                                    ? '#10b981'
-                                    : idx === 0 ? '#fbbf24' : '#e0d8c8',
-                                }}
-                              />
-
-                              <div
-                                className="rounded-[18px] p-3.5 transition-all"
-                                style={{
-                                  background: tip.acted ? '#ecfdf5' : idx === 0 ? '#fffbeb' : '#faf8f4',
-                                  border: `2px solid ${tip.acted ? '#d1fae5' : idx === 0 ? '#fde68a' : '#f0ebe0'}`,
-                                }}
-                              >
-                                {/* En-tête : semaine + statut */}
-                                <div className="flex items-center justify-between mb-2.5">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#a0937c' }}>
-                                    Semaine {tip.week_number}
-                                  </span>
-                                  {tip.acted && (
-                                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                      ✓ Lu
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Rappel */}
-                                <p className="text-[13px] font-semibold leading-relaxed" style={{ color: '#1a1a2e' }}>
-                                  {tip.content}
-                                </p>
-
-                                {/* Conseil */}
-                                {tip.advice && (
-                                  <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid #f0ebe0' }}>
-                                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: '#92400e' }}>
-                                      💡 Essaye cette semaine
-                                    </p>
-                                    <p className="text-[13px] leading-relaxed" style={{ color: '#1a1a2e' }}>{tip.advice}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                      <>
+                        {/* Label + badge nouveau */}
+                        <div className="flex items-center justify-between mb-2.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#a0937c' }}>
+                            Dernier conseil
+                          </span>
+                          {latestTip && !latestTip.acted && (
+                            <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: '#fde68a', color: '#92400e' }}>
+                              Nouveau
+                            </span>
+                          )}
                         </div>
-                      </div>
+
+                        {/* Dernier tip — mis en avant */}
+                        {latestTip && (
+                          <div
+                            className="rounded-[22px] p-4 transition-all"
+                            style={{
+                              background: latestTip.acted ? '#ecfdf5' : '#fffbeb',
+                              border: `2px solid ${latestTip.acted ? '#d1fae5' : '#fde68a'}`,
+                              boxShadow: latestTip.acted ? 'none' : '0 2px 12px rgba(251,191,36,0.12)',
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#a0937c' }}>
+                                Semaine {latestTip.week_number}
+                              </span>
+                              {latestTip.acted && (
+                                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                  ✓ Lu
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-[13px] font-semibold leading-relaxed" style={{ color: '#1a1a2e' }}>
+                              {latestTip.content}
+                            </p>
+
+                            {latestTip.advice && (
+                              <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid #f0ebe0' }}>
+                                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: '#92400e' }}>
+                                  💡 Essaye cette semaine
+                                </p>
+                                <p className="text-[13px] leading-relaxed" style={{ color: '#1a1a2e' }}>{latestTip.advice}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Bouton voir precedents */}
+                        {olderTips.length > 0 && (
+                          <>
+                            <button
+                              onClick={() => toggleHistory(axe.axeId)}
+                              className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-3 rounded-[16px] text-xs font-semibold transition-all"
+                              style={{
+                                border: '2px dashed #f0ebe0',
+                                color: '#a0937c',
+                                background: showHistory ? '#fffbeb' : 'transparent',
+                                borderColor: showHistory ? '#fbbf24' : '#f0ebe0',
+                              }}
+                            >
+                              {showHistory ? (
+                                <>▲ Masquer l&apos;historique</>
+                              ) : (
+                                <>🕐 Voir {olderTips.length > 1 ? `les ${olderTips.length} précédents` : 'le précédent'}</>
+                              )}
+                            </button>
+
+                            {/* Historique compact */}
+                            {showHistory && (
+                              <div className="mt-2.5 space-y-2 animate-fade-in-up">
+                                {olderTips.map(tip => {
+                                  const isDetailOpen = expandedTips.has(tip.id)
+                                  return (
+                                    <button
+                                      key={tip.id}
+                                      onClick={() => toggleTipDetail(tip.id)}
+                                      className="w-full text-left flex items-start gap-2.5 p-3 rounded-[16px] transition-all"
+                                      style={{
+                                        background: tip.acted ? '#ecfdf5' : '#faf8f4',
+                                        border: `1.5px solid ${tip.acted ? '#d1fae5' : '#f0ebe0'}`,
+                                      }}
+                                    >
+                                      {/* Dot */}
+                                      <div
+                                        className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                                        style={{ background: tip.acted ? '#10b981' : '#e0d8c8' }}
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#a0937c' }}>
+                                            Semaine {tip.week_number}
+                                          </span>
+                                          {tip.acted && (
+                                            <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+                                              ✓ Lu
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p
+                                          className="text-xs leading-relaxed mt-1"
+                                          style={{
+                                            color: '#1a1a2e',
+                                            display: isDetailOpen ? 'block' : '-webkit-box',
+                                            WebkitLineClamp: isDetailOpen ? undefined : 2,
+                                            WebkitBoxOrient: isDetailOpen ? undefined : 'vertical',
+                                            overflow: isDetailOpen ? 'visible' : 'hidden',
+                                          }}
+                                        >
+                                          {tip.content}
+                                        </p>
+
+                                        {/* Detail deplie */}
+                                        {isDetailOpen && tip.advice && (
+                                          <div className="mt-2 pt-2" style={{ borderTop: '1px solid #f0ebe0' }}>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: '#92400e' }}>
+                                              💡 Essaye cette semaine
+                                            </p>
+                                            <p className="text-xs leading-relaxed" style={{ color: '#1a1a2e' }}>{tip.advice}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
