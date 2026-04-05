@@ -32,22 +32,18 @@ export default async function TrainerMessagesPage({ searchParams }: { searchPara
     }
   }
 
-  // Fetch all learners + groups belonging to the trainer
+  // Fetch all learners belonging to the trainer's groups
   const { data: groupsRaw } = await admin
     .from('groups')
-    .select('id, name, group_members(learner_id, profiles!inner(id, first_name, last_name))')
+    .select('id, group_members(learner_id, profiles!inner(id, first_name, last_name))')
     .eq('trainer_id', user.id)
-    .order('name')
 
   type MemberRow = { learner_id: string; profiles: { id: string; first_name: string; last_name: string } }
 
   const allLearners: { id: string; name: string }[] = []
-  const groups: { id: string; name: string; count: number }[] = []
   const seen = new Set<string>()
   for (const g of groupsRaw ?? []) {
-    const members = (g.group_members ?? []) as unknown as MemberRow[]
-    groups.push({ id: g.id, name: g.name, count: members.length })
-    for (const m of members) {
+    for (const m of (g.group_members ?? []) as unknown as MemberRow[]) {
       if (!seen.has(m.learner_id)) {
         seen.add(m.learner_id)
         allLearners.push({ id: m.learner_id, name: `${m.profiles.first_name} ${m.profiles.last_name}` })
@@ -56,5 +52,5 @@ export default async function TrainerMessagesPage({ searchParams }: { searchPara
   }
   allLearners.sort((a, b) => a.name.localeCompare(b.name))
 
-  return <TrainerMessagesClient currentUserId={user.id} initialContact={initialContact} allLearners={allLearners} groups={groups} />
+  return <TrainerMessagesClient currentUserId={user.id} initialContact={initialContact} allLearners={allLearners} />
 }

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { ChevronDown, Download, Loader2 } from 'lucide-react'
 import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
@@ -85,6 +86,9 @@ export default function TrainerDashboardClient({
   initialGroup,
   currentUserId,
 }: Props) {
+  const router = useRouter()
+  const pathname = usePathname()
+
   // ── State ──
   const [selectedOption, setSelectedOption] = useState<string>(
     initialGroup && initialGroup !== 'all' && groups.some(g => g.id === initialGroup)
@@ -100,8 +104,10 @@ export default function TrainerDashboardClient({
   useEffect(() => {
     if (!initialGroup || initialGroup === 'all') {
       const stored = localStorage.getItem('trainer_selected_group')
-      if (stored && (stored === 'all' || groups.some(g => g.id === stored))) {
+      if (stored && stored !== 'all' && stored !== 'unassigned' && groups.some(g => g.id === stored)) {
         setSelectedOption(stored)
+        // Mettre à jour l'URL pour que BottomNav puisse lire le group
+        window.history.replaceState(null, '', `${pathname}?group=${stored}`)
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,9 +116,13 @@ export default function TrainerDashboardClient({
   function selectOption(option: string) {
     setSelectedOption(option)
     setDropdownOpen(false)
-    // Ne stocker que les vrais groupIds (pas 'all'/'unassigned') pour la synchro inter-écrans
+    // Synchro : stocker dans localStorage + mettre à jour l'URL
     if (option !== 'all' && option !== 'unassigned') {
       localStorage.setItem('trainer_selected_group', option)
+      window.history.replaceState(null, '', `${pathname}?group=${option}`)
+    } else {
+      // Pour 'all', retirer le param group de l'URL
+      window.history.replaceState(null, '', pathname)
     }
   }
 

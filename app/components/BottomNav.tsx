@@ -37,7 +37,7 @@ export default function BottomNav({ items }: { items: NavItem[] }) {
   function getGroupHref(href: string) {
     if (!isTrainer) return href
     const group = searchParams.get('group') || (typeof window !== 'undefined' ? localStorage.getItem('trainer_selected_group') : null)
-    if (group && (href === '/trainer/dashboard' || href === '/trainer/apprenants')) {
+    if (group && group !== 'all' && group !== 'unassigned' && (href === '/trainer/dashboard' || href === '/trainer/apprenants')) {
       return `${href}?group=${group}`
     }
     return href

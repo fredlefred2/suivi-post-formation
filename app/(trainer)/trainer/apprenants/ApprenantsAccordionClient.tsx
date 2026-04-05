@@ -455,7 +455,7 @@ export default function ApprenantsAccordionClient({
                                 const statusBadge = tip.read_at
                                   ? { label: '✅ Lu', bg: '#fde68a', color: '#92400e' }
                                   : tip.sent
-                                  ? { label: '📤 Envoy\u00e9', bg: '#e0f2fe', color: '#0369a1' }
+                                  ? { label: '📤 Envoyé', bg: '#e0f2fe', color: '#0369a1' }
                                   : { label: '⏳ En attente', bg: '#f1f5f9', color: '#64748b' }
 
                                 return (
@@ -531,7 +531,7 @@ export default function ApprenantsAccordionClient({
                                           </div>
                                         )}
 
-                                        {/* Actions pour tips non envoy\u00e9s */}
+                                        {/* Actions pour tips non envoyés */}
                                         {!tip.sent && (
                                           <div className="flex gap-1 mt-2 pt-2" style={{ borderTop: '1px solid #f0ebe0' }}>
                                             <button
@@ -546,7 +546,7 @@ export default function ApprenantsAccordionClient({
                                               className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 transition-all"
                                               style={{ border: '1px solid #f0ebe0', borderRadius: 8, color: '#1a1a2e', background: 'white' }}
                                             >
-                                              🔄 R\u00e9g\u00e9n\u00e9rer
+                                              🔄 Régénérer
                                             </button>
                                             <button
                                               onClick={() => deleteTip(tip.id)}
@@ -576,7 +576,7 @@ export default function ApprenantsAccordionClient({
                                 background: addingTip === axe.id ? '#fffbeb' : 'transparent',
                               }}
                             >
-                              {addingTip === axe.id ? '⏳ G\u00e9n\u00e9ration IA...' : '+ Ajouter un tip'}
+                              {addingTip === axe.id ? '⏳ Génération IA...' : '+ Ajouter un tip'}
                             </button>
                           </div>
                         )}
