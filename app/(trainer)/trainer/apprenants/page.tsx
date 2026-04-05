@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { expectedCheckins } from '@/lib/utils'
 import type { ActionFeedbackData } from '@/lib/types'
-import LearnerSwipeClient from './LearnerSwipeClient'
+import ApprenantsAccordionClient from './ApprenantsAccordionClient'
 
 type ActionRow = { id: string; description: string; completed: boolean; created_at: string }
 type AxeRow = { id: string; subject: string; description: string | null; difficulty: string; learner_id: string; actions: ActionRow[]; created_at: string }
@@ -233,7 +233,7 @@ export default async function ApprenantsPage({
   })
 
   return (
-    <LearnerSwipeClient
+    <ApprenantsAccordionClient
       learners={learners}
       groups={groupsForSelector}
       currentGroupId={targetGroupId}
