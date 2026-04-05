@@ -2,11 +2,10 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ChevronDown, X, Download, Loader2 } from 'lucide-react'
+import { ChevronDown, Download, Loader2 } from 'lucide-react'
 import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
-import TrainerTeamMessages from '@/app/components/TrainerTeamMessages'
 import { useCountUp } from '@/lib/useCountUp'
 
 export type GroupData = {
@@ -53,20 +52,12 @@ function getDynamiqueForCount(count: number) {
   return { icon: dyn.icon, level: getCurrentLevelIndex(count), label: dyn.label }
 }
 
-const LEVEL_CARD_COLORS: Record<number, string> = {
-  0: 'from-slate-50 to-slate-100',
-  1: 'from-sky-50 to-sky-100',
-  2: 'from-emerald-50 to-emerald-100',
-  3: 'from-orange-50 to-orange-100',
-  4: 'from-rose-50 to-rose-100',
+const AVATAR_BG_COLORS: Record<number, string> = {
+  0: '#94a3b8', 1: '#0284c7', 2: '#059669', 3: '#d97706', 4: '#e11d48',
 }
 
-const LEVEL_AVATAR_COLORS: Record<number, string> = {
-  0: 'bg-slate-200 text-slate-700',
-  1: 'bg-sky-200 text-sky-700',
-  2: 'bg-emerald-200 text-emerald-700',
-  3: 'bg-orange-200 text-orange-700',
-  4: 'bg-rose-200 text-rose-700',
+const LEVEL_DOT_BG: Record<number, string> = {
+  0: '#f1f5f9', 1: '#e0f2fe', 2: '#d1fae5', 3: '#ffedd5', 4: '#ffe4e6',
 }
 
 type Props = {
@@ -103,9 +94,7 @@ export default function TrainerDashboardClient({
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showAllActions, setShowAllActions] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  const [currentSlide, setCurrentSlide] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
 
   // Restaurer le localStorage APRES hydration
   useEffect(() => {
@@ -174,9 +163,6 @@ export default function TrainerDashboardClient({
     return monday.toISOString()
   }, [])
   const recentActionsFiltered = filteredActions.filter((a) => a.created_at >= thisMondayISO)
-
-  // Actions pour le carousel (les 10 plus recentes filtrees)
-  const carouselActions = filteredActions.slice(0, 10)
 
   // ── Meteo : distribution semaine passée ──
   const prevWeek = useMemo(() => {
@@ -249,27 +235,6 @@ export default function TrainerDashboardClient({
   // ── Compteurs animes ──
   const animatedMembers = useCountUp(filteredLearnerIds.size)
   const animatedDelta = useCountUp(recentActionsFiltered.length)
-
-  // ── Auto-scroll carousel ──
-  useEffect(() => {
-    if (carouselActions.length <= 1) return
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselActions.length)
-    }, 3000)
-    return () => clearInterval(timer)
-  }, [carouselActions.length])
-
-  useEffect(() => {
-    if (!scrollRef.current) return
-    const cardWidth = 220
-    const gap = 12
-    scrollRef.current.scrollTo({
-      left: currentSlide * (cardWidth + gap),
-      behavior: 'smooth',
-    })
-  }, [currentSlide])
-
-  const handleOpenAll = useCallback(() => setShowAllActions(true), [])
 
   // ── Scoring ──
   const sorted = useMemo(() => {
@@ -447,22 +412,17 @@ export default function TrainerDashboardClient({
         )}
       </div>
 
-      {/* ── Bloc principal : gradient warm harmonise ── */}
+      {/* ── Header navy ── */}
       <div
-        className="rounded-2xl p-4 relative overflow-hidden"
-        style={{
-          background: '#1a1a2e',
-          boxShadow: '0 8px 30px rgba(26, 26, 46, 0.3)',
-        }}
+        className="rounded-[28px] p-5 relative overflow-hidden"
+        style={{ background: '#1a1a2e' }}
       >
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
-        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
+        <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
 
-        {/* Titre + météo moyenne */}
         <div className="relative flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-xl font-extrabold text-white">{selectionLabel}</h1>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
+            <h1 className="text-[22px] font-extrabold text-white">{selectionLabel}</h1>
+            <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
           </div>
           {totalWithCheckin > 0 && (() => {
             const max = Math.max(weatherDistribution.sunny, weatherDistribution.cloudy, weatherDistribution.stormy)
@@ -471,39 +431,36 @@ export default function TrainerDashboardClient({
           })()}
         </div>
 
-        {/* Stats en 3 colonnes glass */}
         <div className="relative grid grid-cols-3 gap-2">
-          <Link href={apprenantLink} className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
-            <div className="text-2xl font-black text-white">{animatedMembers}</div>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>membre{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
-          </Link>
-
-          <Link href={apprenantLink} className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center hover:bg-white/20 transition-colors">
-            <div className={`text-2xl font-black ${recentActionsFiltered.length > 0 ? 'text-emerald-300' : 'text-white/40'}`}>
+          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            <div className="font-display text-[26px] font-bold text-white">{animatedMembers}</div>
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>membres</p>
+          </div>
+          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            <div className="font-display text-[26px] font-bold" style={{ color: recentActionsFiltered.length > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
               {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
             </div>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>cette semaine</p>
-          </Link>
-
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl py-2.5 px-2 text-center">
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>cette semaine</p>
+          </div>
+          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
             {isCheckinOpen ? (
               missingCount === 0 ? (
                 <>
-                  <div className="text-2xl font-black text-emerald-300">✓</div>
-                  <p className="text-[10px] text-emerald-300 mt-0.5 leading-tight font-medium">tous à jour</p>
+                  <div className="font-display text-[26px] font-bold" style={{ color: '#6ee7b7' }}>✓</div>
+                  <p className="text-[10px] mt-0.5 leading-tight" style={{ color: '#6ee7b7' }}>tous a jour</p>
                 </>
               ) : (
                 <>
-                  <div className="text-2xl font-black text-amber-300">{missingCount}</div>
-                  <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>en attente</p>
+                  <div className="font-display text-[26px] font-bold" style={{ color: '#fbbf24' }}>{missingCount}</div>
+                  <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>en attente</p>
                 </>
               )
             ) : (
               <>
-                <div className={`text-2xl font-black ${lastWeekInfo.pct === 100 ? 'text-emerald-300' : lastWeekInfo.pct >= 50 ? 'text-white' : 'text-amber-300'}`}>
+                <div className="font-display text-[26px] font-bold" style={{ color: lastWeekInfo.pct === 100 ? '#6ee7b7' : lastWeekInfo.pct >= 50 ? 'white' : '#fbbf24' }}>
                   {lastWeekInfo.pct}%
                 </div>
-                <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>check-ins</p>
+                <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>check-ins</p>
               </>
             )}
           </div>
@@ -521,211 +478,160 @@ export default function TrainerDashboardClient({
         </div>
       )}
 
-      {/* ── Actions récentes ── */}
-      {carouselActions.length > 0 ? (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-gray-800">Actions récentes</h2>
-            <button onClick={handleOpenAll} className="text-xs font-semibold" style={{ color: '#92400e' }}>
-              Voir tout →
-            </button>
-          </div>
-          <div
-            ref={scrollRef}
-            className="flex gap-3 overflow-x-auto pb-2"
-            style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
-          >
-            {carouselActions.map((action) => {
-              const dyn = getDynamiqueForCount(action.axe_action_count)
-              const borderColors: Record<number, string> = {
-                0: '#94a3b8', 1: '#38bdf8', 2: '#34d399', 3: '#fb923c', 4: '#fb7185',
-              }
-              const bc = borderColors[dyn.level] ?? borderColors[0]
-              return (
-                <Link
-                  key={action.id}
-                  href={`/trainer/apprenants?group=${learnerGroupMap[action.learner_id] ?? ''}&learner=${action.learner_id}`}
-                  className="flex-shrink-0 w-[240px] bg-white rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] relative overflow-hidden"
-                  style={{
-                    scrollSnapAlign: 'start',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03)',
-                    borderLeft: `3px solid ${bc}`,
-                  }}
-                >
-                  <div className="flex items-center gap-2.5 mb-2.5">
+      {/* ── Podium top 3 ── */}
+      {sorted.length > 0 && (() => {
+        const podium = sorted.slice(0, 3)
+        const podiumDisplay = podium.length >= 3
+          ? [podium[1], podium[0], podium[2]]
+          : podium.length === 2
+          ? [podium[1], podium[0]]
+          : podium
+
+        const podiumConfig = [
+          { avatarSize: 'w-11 h-11', border: '2px solid #94a3b8', shadow: 'none', baseH: 56, baseGrad: 'linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%)', baseFontSize: 22, avatarFontSize: 14 },
+          { avatarSize: 'w-14 h-14', border: '3px solid #fbbf24', shadow: '0 4px 16px rgba(251,191,36,0.4)', baseH: 80, baseGrad: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)', baseFontSize: 28, avatarFontSize: 18 },
+          { avatarSize: 'w-11 h-11', border: '2px solid #f97316', shadow: 'none', baseH: 40, baseGrad: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)', baseFontSize: 22, avatarFontSize: 14 },
+        ]
+
+        function getInitials(name: string) {
+          return name.split(' ').map(n => n[0]).join('').toUpperCase()
+        }
+
+        return (
+          <div>
+            <h2 className="text-[14px] font-bold mb-1" style={{ color: '#1a1a2e' }}>Les plus actifs sur Yapluka</h2>
+            <div className="flex items-end justify-center gap-2 pt-4 pb-0 px-2">
+              {podiumDisplay.map((learner, displayIdx) => {
+                const cfg = podiumConfig[podium.length >= 3 ? displayIdx : podium.length === 2 ? (displayIdx === 0 ? 0 : 1) : 1]
+                const actualRank = podium.indexOf(learner) + 1
+                return (
+                  <div key={learner.id} className="flex flex-col items-center flex-1" style={{ maxWidth: 120 }}>
                     <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                      style={{ background: `linear-gradient(135deg, ${bc}, ${bc}dd)` }}
+                      className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-extrabold text-white mb-2`}
+                      style={{ background: '#1a1a2e', border: cfg.border, boxShadow: cfg.shadow, fontSize: cfg.avatarFontSize }}
+                    >
+                      {getInitials(learner.name)}
+                    </div>
+                    <p className="text-[11px] font-bold text-center truncate w-full" style={{ color: '#1a1a2e' }}>{learner.name}</p>
+                    <p className="text-[10px] font-medium mb-1.5" style={{ color: '#a0937c' }}>{learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}</p>
+                    <div className="flex gap-1 mb-2">
+                      {learner.dyns.map((d, i) => (
+                        <span key={i} className="w-[22px] h-[22px] rounded-lg flex items-center justify-center text-[11px]" style={{ background: LEVEL_DOT_BG[d.level] }}>
+                          {d.icon}
+                        </span>
+                      ))}
+                    </div>
+                    <div
+                      className="w-full rounded-t-xl flex items-center justify-center font-bold text-white"
+                      style={{ height: cfg.baseH, background: cfg.baseGrad, fontFamily: "'Space Grotesk', sans-serif", fontSize: cfg.baseFontSize }}
+                    >
+                      {actualRank}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── Classement complet ── */}
+      {sorted.length > 3 && (
+        <div style={{ marginBottom: 20 }}>
+          {sorted.slice(3).map((learner, idx) => (
+            <Link
+              key={learner.id}
+              href={`/trainer/apprenants?group=${learnerGroupMap[learner.id] ?? ''}&learner=${learner.id}`}
+              className="flex items-center gap-2.5 bg-white hover:bg-[#fffbeb] transition-colors"
+              style={{ padding: '10px 14px', border: '1.5px solid #f0ebe0', borderRadius: 14, marginBottom: 6, textDecoration: 'none' }}
+            >
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0" style={{ background: '#f0ebe0', color: '#a0937c' }}>
+                {idx + 4}
+              </div>
+              <span className="text-[13px] font-semibold flex-1 truncate" style={{ color: '#1a1a2e' }}>{learner.name}</span>
+              {learner.lastWeather && <span className="text-sm shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>}
+              <span className="text-[11px] font-medium shrink-0" style={{ color: '#a0937c' }}>{learner.totalActions} act.</span>
+              <div className="flex gap-0.5 shrink-0">
+                {learner.dyns.map((d, i) => (
+                  <span key={i} className="w-5 h-5 rounded-md flex items-center justify-center text-[10px]" style={{ background: LEVEL_DOT_BG[d.level] }}>
+                    {d.icon}
+                  </span>
+                ))}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* ── Actions récentes avec feedback inline ── */}
+      {filteredActions.length > 0 ? (
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="text-[14px] font-bold" style={{ color: '#1a1a2e' }}>Actions recentes</h2>
+          </div>
+
+          <div className="space-y-2.5">
+            {(showAllActions ? filteredActions.slice(0, 20) : filteredActions.slice(0, 4)).map((action) => {
+              const dyn = getDynamiqueForCount(action.axe_action_count)
+              return (
+                <div
+                  key={action.id}
+                  className="bg-white rounded-[18px] p-3.5"
+                  style={{ border: '1.5px solid #f0ebe0' }}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                      style={{ background: AVATAR_BG_COLORS[dyn.level] ?? AVATAR_BG_COLORS[0] }}
                     >
                       {action.learner_first_name.charAt(0)}{action.learner_last_name.charAt(0)}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-gray-800 truncate">
-                        {action.learner_first_name} {action.learner_last_name}
-                      </p>
-                      <p className="text-[10px] font-medium truncate text-[#92400e]">{action.axe_subject}</p>
-                    </div>
-                    <span className="text-base shrink-0">{dyn.icon}</span>
-                  </div>
-                  <p className="text-[13px] text-gray-600 line-clamp-2 leading-relaxed">{action.description}</p>
-                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-100">
-                    <p className="text-[10px] text-gray-400 font-medium">
-                      {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                    </p>
-                    {(action.feedback.likes_count > 0 || action.feedback.comments_count > 0) && (
-                      <div className="flex items-center gap-2 text-[10px]">
-                        {action.feedback.likes_count > 0 && <span className="text-pink-400 font-semibold">❤️ {action.feedback.likes_count}</span>}
-                        {action.feedback.comments_count > 0 && <span className="font-semibold" style={{ color: '#92400e' }}>💬 {action.feedback.comments_count}</span>}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold" style={{ color: '#1a1a2e' }}>
+                          {action.learner_first_name} {action.learner_last_name}
+                        </span>
+                        <span className="text-xs">{dyn.icon}</span>
+                        <span className="text-[10px] ml-auto" style={{ color: '#a0937c' }}>
+                          {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        </span>
                       </div>
-                    )}
+                      <p className="text-[10px] font-medium" style={{ color: '#92400e' }}>{action.axe_subject}</p>
+                    </div>
                   </div>
-                </Link>
+                  <p className="text-[13px] leading-relaxed mt-2" style={{ color: '#1a1a2e' }}>{action.description}</p>
+                  <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid #f5f0e8' }}>
+                    <ActionFeedback actionId={action.id} feedback={action.feedback} canInteract={true} />
+                  </div>
+                </div>
               )
             })}
           </div>
-          {carouselActions.length > 1 && (
-            <div className="flex justify-center gap-1 mt-3">
-              {carouselActions.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentSlide % carouselActions.length ? 'w-4 bg-[#fbbf24]' : 'w-1.5 bg-gray-200'
-                  }`}
-                />
-              ))}
-            </div>
+
+          {filteredActions.length > 4 && (
+            <button
+              onClick={() => setShowAllActions(prev => !prev)}
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-2.5 rounded-[14px] text-xs font-semibold transition-all"
+              style={{
+                border: '2px dashed #f0ebe0',
+                color: '#a0937c',
+                background: showAllActions ? '#fffbeb' : 'transparent',
+                borderColor: showAllActions ? '#fbbf24' : '#f0ebe0',
+              }}
+            >
+              {showAllActions
+                ? '▲ Replier'
+                : `Voir les ${filteredActions.length - 4} autres actions`
+              }
+            </button>
           )}
         </div>
       ) : filteredLearnerIds.size > 0 ? (
-        <div className="rounded-2xl bg-white p-6 text-center" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <p className="text-gray-500 text-sm">Aucune action enregistrée</p>
+        <div className="rounded-[22px] bg-white p-6 text-center" style={{ border: '2px solid #f0ebe0' }}>
+          <p className="text-2xl mb-2">💤</p>
+          <p className="text-sm" style={{ color: '#a0937c' }}>Aucune action enregistree</p>
         </div>
       ) : null}
-
-      {/* ── Classement ── */}
-      {filteredLearnerIds.size > 0 && sorted.length > 0 && (
-        <div>
-          <h2 className="text-sm font-bold text-gray-800 mb-3">Classement</h2>
-          <div className="space-y-2">
-            {sorted.map((learner, idx) => {
-              const isTop3 = idx < 3
-              const rankColors: Record<number, { bg: string; border: string; text: string; badge: string }> = {
-                0: { bg: 'linear-gradient(135deg, #fef9c3 0%, #fde68a 100%)', border: '1px solid #fbbf24', text: '#92400e', badge: '#f59e0b' },
-                1: { bg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', border: '1px solid #cbd5e1', text: '#475569', badge: '#94a3b8' },
-                2: { bg: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', border: '1px solid #fdba74', text: '#9a3412', badge: '#f97316' },
-              }
-              const rc = rankColors[idx]
-              return (
-                <Link
-                  key={learner.id}
-                  href={`/trainer/apprenants?group=${learnerGroupMap[learner.id] ?? ''}&learner=${learner.id}`}
-                  className="rounded-2xl p-3.5 flex items-center gap-3 transition-all duration-200 hover:shadow-md"
-                  style={isTop3 && rc ? {
-                    background: rc.bg,
-                    border: rc.border,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  } : {
-                    background: 'white',
-                    border: '1px solid #f1f5f9',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
-                  }}
-                >
-                  {/* Rang */}
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0"
-                    style={isTop3 && rc ? {
-                      background: rc.badge,
-                      color: 'white',
-                      boxShadow: `0 2px 8px ${rc.badge}66`,
-                    } : {
-                      background: '#f1f5f9',
-                      color: '#94a3b8',
-                    }}
-                  >
-                    {idx + 1}
-                  </div>
-
-                  {/* Nom + actions + météo */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-bold truncate" style={{ color: isTop3 && rc ? rc.text : '#1f2937' }}>
-                        {learner.name}
-                      </p>
-                      {learner.lastWeather && (
-                        <span className="text-sm shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-gray-500 font-medium">{learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}</p>
-                  </div>
-
-                  {/* Icônes dynamique des axes */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    {learner.dyns.map((m, i) => (
-                      <span
-                        key={i}
-                        className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-sm ${LEVEL_AVATAR_COLORS[m.level] ?? LEVEL_AVATAR_COLORS[0]}`}
-                      >
-                        {m.icon}
-                      </span>
-                    ))}
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Message à la team (barre compacte en bas) ── */}
-      {selectedOption !== 'all' && (
-        <TrainerTeamMessages groupId={selectedOption} currentUserId={currentUserId} />
-      )}
-
-      {/* ── Modale : toutes les actions recentes ── */}
-      {showAllActions && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowAllActions(false)} />
-          <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col pb-[max(0px,env(safe-area-inset-bottom))]">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="font-bold text-gray-800">Actions recentes</h3>
-              <button onClick={() => setShowAllActions(false)} className="text-gray-500 hover:text-gray-600 transition-colors p-1">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {filteredActions.slice(0, 20).map((action) => {
-                const dyn = getDynamiqueForCount(action.axe_action_count)
-                return (
-                <div
-                  key={action.id}
-                  className="bg-gray-50 rounded-xl p-4"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-8 h-8 rounded-full ${LEVEL_AVATAR_COLORS[dyn.level] ?? LEVEL_AVATAR_COLORS[0]} flex items-center justify-center text-base`}>
-                      {dyn.icon}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-700">
-                        {action.learner_first_name} {action.learner_last_name}
-                      </p>
-                      <p className="text-xs" style={{ color: '#92400e' }}>{action.axe_subject}</p>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-2">{action.description}</p>
-                  <ActionFeedback
-                    actionId={action.id}
-                    feedback={action.feedback}
-                    canInteract={true}
-                  />
-                </div>
-              )})}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
