@@ -270,8 +270,8 @@ export default function ApprenantsAccordionClient({
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0"
                 style={{
-                  background: learner.regularity >= 75 ? '#d1fae5' : learner.regularity >= 50 ? '#ffedd5' : '#ffe4e6',
-                  color: learner.regularity >= 75 ? '#059669' : learner.regularity >= 50 ? '#d97706' : '#e11d48',
+                  background: learner.regularity >= 75 ? '#fbbf24' : learner.regularity >= 50 ? '#f0ebe0' : '#ffe4e6',
+                  color: learner.regularity >= 75 ? '#1a1a2e' : learner.regularity >= 50 ? '#92400e' : '#e11d48',
                 }}
               >
                 {learner.regularity}%
@@ -279,7 +279,7 @@ export default function ApprenantsAccordionClient({
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
                 style={{
-                  background: learner.lastWeather === 'sunny' ? '#fef9c3' : learner.lastWeather === 'cloudy' ? '#f1f5f9' : learner.lastWeather === 'stormy' ? '#ffe4e6' : '#f1f5f9',
+                  background: learner.lastWeather === 'sunny' ? '#fffbeb' : learner.lastWeather === 'cloudy' ? '#f0ebe0' : learner.lastWeather === 'stormy' ? '#ffe4e6' : '#f0ebe0',
                 }}
               >
                 {learner.lastWeather ? (WEATHER_ICONS[learner.lastWeather] ?? '—') : '—'}
