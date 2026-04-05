@@ -298,9 +298,10 @@ export default function GroupsClient({
                                     {m.tips_total > 0 ? (
                                       <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity ${
                                         m.tips_sent > 0
-                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                          ? 'border border-[#fde68a]'
                                           : 'bg-gray-100 text-gray-500 border border-gray-200'
-                                      }`}>
+                                      }`}
+                                        style={m.tips_sent > 0 ? { background: '#fffbeb', color: '#92400e' } : {}}>
                                         {m.tips_sent}/{m.tips_total}
                                       </span>
                                     ) : (
