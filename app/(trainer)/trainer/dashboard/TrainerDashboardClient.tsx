@@ -110,7 +110,10 @@ export default function TrainerDashboardClient({
   function selectOption(option: string) {
     setSelectedOption(option)
     setDropdownOpen(false)
-    localStorage.setItem('trainer_selected_group', option)
+    // Ne stocker que les vrais groupIds (pas 'all'/'unassigned') pour la synchro inter-écrans
+    if (option !== 'all' && option !== 'unassigned') {
+      localStorage.setItem('trainer_selected_group', option)
+    }
   }
 
   // Fermeture dropdown au clic exterieur

@@ -11,7 +11,6 @@ import PushRegistration from '@/app/components/PushRegistration'
 const navItems = [
   { href: '/trainer/dashboard', label: 'Accueil', iconName: 'LayoutDashboard' },
   { href: '/trainer/apprenants', label: 'Participants', iconName: 'GraduationCap' },
-  { href: '/trainer/messages', label: 'Messages', iconName: 'MessageSquare' },
   { href: '/trainer/groups', label: 'Groupes', iconName: 'Users' },
 ]
 

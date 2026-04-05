@@ -113,21 +113,21 @@ export default async function ApprenantsPage({
     .order('year')
     .order('week_number')
 
-  // 3b. Tips par axe (pour affichage dans accordion)
+  // 3b. Feedback (likes + commentaires) + Tips via admin client (bypass RLS)
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  // Tips par axe (via admin pour bypass RLS)
   const allAxeIds = (allAxes ?? []).map((a) => (a as AxeRow).id)
   const { data: allTips } = allAxeIds.length > 0
-    ? await supabase
+    ? await admin
         .from('tips')
         .select('id, axe_id, learner_id, week_number, content, advice, sent, acted, read_at')
         .in('axe_id', allAxeIds)
         .order('week_number')
     : { data: [] as Array<{ id: string; axe_id: string; learner_id: string; week_number: number; content: string; advice: string | null; sent: boolean; acted: boolean; read_at: string | null }> }
-
-  // 4 & 5. Feedback (likes + commentaires) via admin client
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
 
   const allActionIds = (allAxes ?? []).flatMap(
     (axe) => ((axe as AxeRow).actions as ActionRow[]).map((a) => a.id)

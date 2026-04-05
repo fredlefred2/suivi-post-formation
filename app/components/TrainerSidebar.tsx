@@ -2,13 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, GraduationCap, MessageSquare, Users } from 'lucide-react'
+import { LayoutDashboard, GraduationCap, Users } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 const navItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/trainer/dashboard', label: 'Accueil', icon: LayoutDashboard },
   { href: '/trainer/apprenants', label: 'Participants', icon: GraduationCap },
-  { href: '/trainer/messages', label: 'Messages', icon: MessageSquare },
   { href: '/trainer/groups', label: 'Groupes', icon: Users },
 ]
 
