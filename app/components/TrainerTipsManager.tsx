@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Pencil, Trash2, Plus, RefreshCw, ChevronDown, ChevronRight, Check, X, Loader2, Sparkles } from 'lucide-react'
+import { Pencil, Trash2, RefreshCw, ChevronDown, ChevronRight, Check, X, Loader2, Sparkles } from 'lucide-react'
 import { updateGroupTheme } from '@/app/(trainer)/trainer/groups/actions'
 
 interface Tip {
@@ -135,18 +135,6 @@ export default function TrainerTipsManager({
       body: JSON.stringify({ action: 'regenerate', tipId: tip.id, groupTheme: theme, axeSubject: tip.axe?.subject || '' }),
     })
     setRegenerating(null)
-    fetchTips()
-  }
-
-  const handleAdd = async (axeId: string, learnerId: string, nextWeek: number) => {
-    const content = prompt('💪 Rappel (punchline) :')
-    if (!content) return
-    const advice = prompt('💡 Conseil pratique :')
-    await fetch('/api/tips/admin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add', axeId, learnerId, weekNumber: nextWeek, content, advice: advice || null }),
-    })
     fetchTips()
   }
 
@@ -342,10 +330,6 @@ export default function TrainerTipsManager({
                               </div>
                             )
                           })}
-                          <button onClick={() => handleAdd(axe.axeId, learner.learnerId, axe.tips.length + 1)}
-                            className="flex items-center gap-1 text-xs px-2 py-1.5 mt-1 transition-colors" style={{ color: '#1a1a2e' }}>
-                            <Plus size={12} /> Ajouter un rappel
-                          </button>
                         </div>
                       </div>
                     ))}
