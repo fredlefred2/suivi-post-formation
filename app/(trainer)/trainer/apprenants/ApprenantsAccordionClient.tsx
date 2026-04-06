@@ -463,7 +463,8 @@ export default function ApprenantsAccordionClient({
                             {axe.tips.length === 0 ? (
                               <p className="text-[11px] italic py-3 text-center" style={{ color: '#a0937c' }}>Aucun tip pour cet axe</p>
                             ) : (
-                              axe.tips.map(tip => {
+                              [...axe.tips].reverse().map((tip, reverseIdx) => {
+                                const tipNumber = axe.tips.length - reverseIdx
                                 const isEditing = editingTipId === tip.id
                                 const isLoading = tipLoading === tip.id
                                 const statusBadge = tip.read_at
@@ -485,7 +486,7 @@ export default function ApprenantsAccordionClient({
                                   >
                                     <div className="flex items-center gap-1.5 mb-1.5">
                                       <span className="text-[9px] font-extrabold text-white px-2 py-0.5" style={{ background: '#1a1a2e', borderRadius: 6 }}>
-                                        S{tip.week_number}
+                                        Tip {tipNumber}
                                       </span>
                                       <span className="text-[9px] font-bold px-2 py-0.5" style={{ background: statusBadge.bg, color: statusBadge.color, borderRadius: 6 }}>
                                         {statusBadge.label}
