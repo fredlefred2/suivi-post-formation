@@ -110,6 +110,13 @@ export default async function TeamPage() {
   sevenDaysAgo.setHours(0, 0, 0, 0)
   const cutoffStr = sevenDaysAgo.toISOString()
 
+  // Lundi courant pour le calcul météo
+  const dayOfWeekNow = now.getDay()
+  const diffToMonday = dayOfWeekNow === 0 ? 6 : dayOfWeekNow - 1
+  const thisMonday = new Date(now)
+  thisMonday.setHours(0, 0, 0, 0)
+  thisMonday.setDate(now.getDate() - diffToMonday)
+
   const allActions = axes.flatMap((axe) =>
     (axe.actions ?? []).map((a) => ({
       ...a,

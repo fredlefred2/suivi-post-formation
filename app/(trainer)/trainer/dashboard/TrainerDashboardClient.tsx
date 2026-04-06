@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { ChevronDown, Download, Loader2 } from 'lucide-react'
+import { Download, Loader2 } from 'lucide-react'
 import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
@@ -97,10 +97,8 @@ export default function TrainerDashboardClient({
       ? initialGroup
       : 'all'
   )
-  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showAllActions, setShowAllActions] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Restaurer le localStorage APRES hydration
   useEffect(() => {
@@ -117,7 +115,6 @@ export default function TrainerDashboardClient({
 
   function selectOption(option: string) {
     setSelectedOption(option)
-    setDropdownOpen(false)
     // Synchro : stocker dans localStorage + mettre à jour l'URL
     if (option !== 'all' && option !== 'unassigned') {
       localStorage.setItem('trainer_selected_group', option)
@@ -127,17 +124,6 @@ export default function TrainerDashboardClient({
       window.history.replaceState(null, '', pathname)
     }
   }
-
-  // Fermeture dropdown au clic exterieur
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false)
-      }
-    }
-    if (dropdownOpen) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [dropdownOpen])
 
   const selectionLabel =
     selectedOption === 'all'
@@ -275,13 +261,6 @@ export default function TrainerDashboardClient({
     }).sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
   }, [filteredLearnerIds, learnerAxesMap, learnerNameMap, filteredCheckins])
 
-  function RadioDot({ active }: { active: boolean }) {
-    return (
-      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? 'border-[#fbbf24]' : 'border-gray-300'}`}>
-        {active && <span className="w-2 h-2 rounded-full bg-[#fbbf24]" />}
-      </span>
-    )
-  }
 
   const [downloadStatus, setDownloadStatus] = useState('')
 
@@ -356,140 +335,115 @@ export default function TrainerDashboardClient({
   return (
     <div className="space-y-4 pb-4">
 
-      {/* ── Dropdown selection groupe + bouton rapport ── */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen((o) => !o)}
-            className={`w-full flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-colors shadow-sm justify-between ${
-              dropdownOpen
-                ? 'border-[#fbbf24] text-[#1a1a2e] ring-2 ring-[rgba(251,191,36,0.15)]'
-                : 'border-gray-200 text-gray-700 hover:border-[#fbbf24] hover:text-[#1a1a2e]'
-            }`}
-          >
-            <span className="truncate">{selectionLabel}</span>
-            <ChevronDown size={16} className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {dropdownOpen && (
-            <div className="absolute top-full mt-1.5 left-0 right-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
-              <button
-                onClick={() => selectOption('all')}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition-colors ${selectedOption === 'all' ? 'bg-[#fffbeb]' : 'hover:bg-gray-50'}`}
-              >
-                <RadioDot active={selectedOption === 'all'} />
-                <span className={`text-sm font-semibold ${selectedOption === 'all' ? 'text-[#1a1a2e]' : 'text-gray-900'}`}>
-                  Tous les groupes
-                  <span className="ml-1 font-normal text-gray-500">({groups.length})</span>
-                </span>
-                <span className="ml-auto text-xs text-gray-500">
-                  {groups.reduce((acc, g) => acc + g.members.length, 0)} app.
-                </span>
-              </button>
-              <div className="py-1">
-                {groups.map((g) => {
-                  const isSalleAttente = g.name === 'Salle d\'attente'
-                  return (
-                    <button
-                      key={g.id}
-                      onClick={() => selectOption(g.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                        selectedOption === g.id
-                          ? isSalleAttente ? 'bg-amber-50' : 'bg-[#fffbeb]'
-                          : isSalleAttente ? 'hover:bg-amber-50' : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <RadioDot active={selectedOption === g.id} />
-                      <span className={`text-sm ${
-                        selectedOption === g.id
-                          ? isSalleAttente ? 'text-amber-700 font-medium' : 'text-[#1a1a2e] font-medium'
-                          : isSalleAttente ? 'text-amber-600' : 'text-gray-700'
-                      }`}>
-                        {isSalleAttente ? '⚪ ' : ''}{g.name}
-                      </span>
-                      <span className="ml-auto text-xs text-gray-500">{g.members.length} app.</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Bouton telecharger rapport PDF */}
-        {selectedOption !== 'all' && (
-          <button
-            onClick={handleDownloadReport}
-            disabled={isDownloading}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-            style={{ background: '#fbbf24', color: '#1a1a2e' }}
-            title="Telecharger le rapport PDF"
-          >
-            {isDownloading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Download size={16} />
-            )}
-            <span className="hidden sm:inline">{isDownloading ? (downloadStatus || 'Generation...') : 'Rapport'}</span>
-          </button>
-        )}
-      </div>
-
-      {/* ── Header navy ── */}
+      {/* ── Header navy avec chips intégrées ── */}
       <div
-        className="rounded-[28px] p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+        className="rounded-[28px] relative overflow-hidden"
         style={{ background: '#1a1a2e' }}
-        onClick={() => router.push(`/trainer/apprenants${selectedOption !== 'all' && selectedOption !== 'unassigned' ? `?group=${selectedOption}` : ''}`)}
       >
         <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
 
-        <div className="relative flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-[22px] font-extrabold text-white">{selectionLabel}</h1>
-            <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
-          </div>
-          {totalWithCheckin > 0 && (() => {
-            const max = Math.max(weatherDistribution.sunny, weatherDistribution.cloudy, weatherDistribution.stormy)
-            const avgEmoji = weatherDistribution.sunny === max ? '☀️' : weatherDistribution.cloudy === max ? '⛅' : '⛈️'
-            return <span className="text-3xl drop-shadow-lg">{avgEmoji}</span>
-          })()}
+        {/* ── Chips groupes ── */}
+        <div className="relative flex gap-1.5 px-4 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); selectOption('all') }}
+            className="shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-all active:scale-95"
+            style={{
+              background: selectedOption === 'all' ? '#fbbf24' : 'transparent',
+              color: selectedOption === 'all' ? '#1a1a2e' : 'rgba(255,255,255,0.5)',
+              border: selectedOption === 'all' ? '1.5px solid #fbbf24' : '1.5px solid rgba(255,255,255,0.15)',
+            }}
+          >
+            Tous
+          </button>
+          {groups.map((g) => (
+            <button
+              key={g.id}
+              onClick={(e) => { e.stopPropagation(); selectOption(g.id) }}
+              className="shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-all active:scale-95"
+              style={{
+                background: selectedOption === g.id ? '#fbbf24' : 'transparent',
+                color: selectedOption === g.id ? '#1a1a2e' : 'rgba(255,255,255,0.5)',
+                border: selectedOption === g.id ? '1.5px solid #fbbf24' : '1.5px solid rgba(255,255,255,0.15)',
+              }}
+            >
+              {g.name === 'Salle d\'attente' ? '⚪ Attente' : g.name}
+              <span className="ml-1 opacity-60" style={{ fontSize: 10 }}>{g.members.length}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="relative grid grid-cols-3 gap-2">
-          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <div className="font-display text-[26px] font-bold" style={{ color: avgRegularity >= 75 ? '#6ee7b7' : avgRegularity >= 50 ? '#fbbf24' : '#f87171' }}>
-              {animatedRegularity}%
+        {/* ── Contenu cliquable → apprenants ── */}
+        <div
+          className="relative px-5 pb-5 cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={() => router.push(`/trainer/apprenants${selectedOption !== 'all' && selectedOption !== 'unassigned' ? `?group=${selectedOption}` : ''}`)}
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-[22px] font-extrabold text-white">{selectionLabel}</h1>
+              <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
             </div>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>régularité</p>
+            {totalWithCheckin > 0 && (() => {
+              const max = Math.max(weatherDistribution.sunny, weatherDistribution.cloudy, weatherDistribution.stormy)
+              const avgEmoji = weatherDistribution.sunny === max ? '☀️' : weatherDistribution.cloudy === max ? '⛅' : '⛈️'
+              return <span className="text-3xl drop-shadow-lg">{avgEmoji}</span>
+            })()}
           </div>
-          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <div className="font-display text-[26px] font-bold" style={{ color: recentActionsFiltered.length > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
-              {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="font-display text-[26px] font-bold" style={{ color: avgRegularity >= 75 ? '#6ee7b7' : avgRegularity >= 50 ? '#fbbf24' : '#f87171' }}>
+                {animatedRegularity}%
+              </div>
+              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>régularité</p>
             </div>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>cette semaine</p>
-          </div>
-          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            {isCheckinOpen ? (
-              missingCount === 0 ? (
-                <>
-                  <div className="font-display text-[26px] font-bold" style={{ color: '#6ee7b7' }}>✓</div>
-                  <p className="text-[10px] mt-0.5 leading-tight" style={{ color: '#6ee7b7' }}>tous a jour</p>
-                </>
+            <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="font-display text-[26px] font-bold" style={{ color: recentActionsFiltered.length > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
+                {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
+              </div>
+              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>cette semaine</p>
+            </div>
+            <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              {isCheckinOpen ? (
+                missingCount === 0 ? (
+                  <>
+                    <div className="font-display text-[26px] font-bold" style={{ color: '#6ee7b7' }}>✓</div>
+                    <p className="text-[10px] mt-0.5 leading-tight" style={{ color: '#6ee7b7' }}>tous a jour</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="font-display text-[26px] font-bold" style={{ color: '#fbbf24' }}>{missingCount}</div>
+                    <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>en attente</p>
+                  </>
+                )
               ) : (
                 <>
-                  <div className="font-display text-[26px] font-bold" style={{ color: '#fbbf24' }}>{missingCount}</div>
-                  <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>en attente</p>
+                  <div className="font-display text-[26px] font-bold" style={{ color: lastWeekInfo.pct === 100 ? '#6ee7b7' : lastWeekInfo.pct >= 50 ? 'white' : '#fbbf24' }}>
+                    {lastWeekInfo.pct}%
+                  </div>
+                  <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>check-ins</p>
                 </>
-              )
-            ) : (
-              <>
-                <div className="font-display text-[26px] font-bold" style={{ color: lastWeekInfo.pct === 100 ? '#6ee7b7' : lastWeekInfo.pct >= 50 ? 'white' : '#fbbf24' }}>
-                  {lastWeekInfo.pct}%
-                </div>
-                <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>check-ins</p>
-              </>
-            )}
+              )}
+            </div>
           </div>
+
+          {/* Bouton rapport PDF intégré */}
+          {selectedOption !== 'all' && (
+            <div className="flex justify-end mt-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDownloadReport() }}
+                disabled={isDownloading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors disabled:opacity-50 active:scale-95"
+                style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}
+              >
+                {isDownloading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Download size={14} />
+                )}
+                {isDownloading ? (downloadStatus || 'Generation...') : 'Rapport PDF'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
