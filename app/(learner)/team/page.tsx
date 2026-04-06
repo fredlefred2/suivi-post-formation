@@ -103,14 +103,12 @@ export default async function TeamPage() {
     axeSubjectMap[axe.id] = axe.subject
   })
 
-  // ── Actions depuis lundi (semaine ISO) ──
+  // ── Actions des 7 derniers jours ──
   const now = new Date()
-  const dayOfWeekNow = now.getDay()
-  const diffToMonday = dayOfWeekNow === 0 ? 6 : dayOfWeekNow - 1
-  const thisMonday = new Date(now)
-  thisMonday.setHours(0, 0, 0, 0)
-  thisMonday.setDate(now.getDate() - diffToMonday)
-  const thisMondayStr = thisMonday.toISOString()
+  const sevenDaysAgo = new Date(now)
+  sevenDaysAgo.setDate(now.getDate() - 7)
+  sevenDaysAgo.setHours(0, 0, 0, 0)
+  const cutoffStr = sevenDaysAgo.toISOString()
 
   const allActions = axes.flatMap((axe) =>
     (axe.actions ?? []).map((a) => ({
@@ -125,7 +123,7 @@ export default async function TeamPage() {
 
   const totalActions = allActions.length
   const recentActions = allActions
-    .filter((a) => a.created_at >= thisMondayStr)
+    .filter((a) => a.created_at >= cutoffStr)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   // ── Checkins pour la météo ──
