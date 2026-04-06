@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { expectedCheckins, calculateStreak, getCheckinContext } from '@/lib/utils'
+import { expectedCheckins, calculateStreak, getCurrentWeek } from '@/lib/utils'
 import type { ActionFeedbackData } from '@/lib/types'
 import ApprenantsAccordionClient from './ApprenantsAccordionClient'
 
@@ -18,7 +18,7 @@ export default async function ApprenantsPage({
 }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const checkinCtx = getCheckinContext()
+  const { week: currentWeek, year: currentYear } = getCurrentWeek()
 
   // ── Groupes du formateur ─────────────────────────────────────────────────
   const { data: groups } = await supabase
@@ -270,8 +270,8 @@ export default async function ApprenantsPage({
     // ── Streak check-in : même calcul que le dashboard apprenant ──
     const checkinStreak = calculateStreak(
       learnerCheckins.map(c => ({ week_number: c.week_number, year: c.year })),
-      checkinCtx.checkinWeek,
-      checkinCtx.checkinYear
+      currentWeek,
+      currentYear
     )
 
     return {

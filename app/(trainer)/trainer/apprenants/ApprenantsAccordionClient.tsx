@@ -89,6 +89,7 @@ export default function ApprenantsAccordionClient({
   const [editAdvice, setEditAdvice] = useState('')
   const [tipLoading, setTipLoading] = useState<string | null>(null)
   const [addingTip, setAddingTip] = useState<string | null>(null) // axeId currently generating
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const expandedRef = useRef<HTMLDivElement>(null)
@@ -147,52 +148,69 @@ export default function ApprenantsAccordionClient({
     setEditAdvice(tip.advice ?? '')
   }
 
+  function showError(msg: string) {
+    setErrorMsg(msg)
+    setTimeout(() => setErrorMsg(null), 3000)
+  }
+
   async function saveTip(tipId: string) {
     setTipLoading(tipId)
     try {
-      await fetch('/api/tips/admin', {
+      const res = await fetch('/api/tips/admin', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tipId, content: editContent, advice: editAdvice }),
       })
+      if (!res.ok) throw new Error()
       setEditingTipId(null)
       router.refresh()
-    } catch { /* silently fail */ }
+    } catch {
+      showError('Erreur lors de la sauvegarde du tip')
+    }
     setTipLoading(null)
   }
 
   async function regenerateTip(tipId: string) {
     setTipLoading(tipId)
     try {
-      await fetch('/api/tips/admin', {
+      const res = await fetch('/api/tips/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'regenerate', tipId }),
       })
+      if (!res.ok) throw new Error()
       router.refresh()
-    } catch { /* silently fail */ }
+    } catch {
+      showError('Erreur lors de la régénération du tip')
+    }
     setTipLoading(null)
   }
 
   async function deleteTip(tipId: string) {
     setTipLoading(tipId)
     try {
-      await fetch(`/api/tips/admin?tipId=${tipId}`, { method: 'DELETE' })
+      const res = await fetch(`/api/tips/admin?tipId=${tipId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
       router.refresh()
-    } catch { /* silently fail */ }
+    } catch {
+      showError('Erreur lors de la suppression du tip')
+    }
     setTipLoading(null)
   }
 
   async function addTip(axeId: string, learnerId: string) {
     setAddingTip(axeId)
     try {
-      await fetch('/api/tips/admin', {
+      const res = await fetch('/api/tips/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'generate-next', axeId, learnerId }),
       })
+      if (!res.ok) throw new Error()
       router.refresh()
-    } catch { /* silently fail */ }
+    } catch {
+      showError('Erreur lors de la génération du tip')
+    }
     setAddingTip(null)
   }
 
@@ -618,6 +636,15 @@ export default function ApprenantsAccordionClient({
         <div className="text-center py-8" style={{ color: '#a0937c' }}>
           <p className="text-2xl mb-2">👥</p>
           <p className="text-sm">Aucun participant dans ce groupe</p>
+        </div>
+      )}
+      {/* ── Toast erreur ── */}
+      {errorMsg && (
+        <div
+          className="fixed bottom-20 left-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium text-white text-center shadow-lg"
+          style={{ background: '#e11d48' }}
+        >
+          {errorMsg}
         </div>
       )}
     </div>
