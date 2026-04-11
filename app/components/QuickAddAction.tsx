@@ -640,7 +640,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
 
       {levelUpInfo ? (
@@ -826,18 +826,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                   placeholder="Décris ce que tu as fait..."
                   autoFocus
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-2 h-7">
                   <button onClick={() => setShowCustom(false)}
                     className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
                     ← Retour
                   </button>
-                  {customText.trim() && (
-                    <button onClick={handleCustomAction}
-                      className="text-[12px] px-4 py-1.5 rounded-full font-semibold"
-                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-                      Envoyer
-                    </button>
-                  )}
+                  <button onClick={handleCustomAction}
+                    className={`text-[12px] px-4 py-1.5 rounded-full font-semibold transition-opacity ${customText.trim() ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    Envoyer
+                  </button>
                 </div>
               </div>
             )}
@@ -868,18 +866,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                   placeholder={whoDetailPlaceholder}
                   autoFocus
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-2 h-7">
                   <button onClick={handleWhoDetailSkip}
                     className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
                     Passer →
                   </button>
-                  {detailText.trim() && (
-                    <button onClick={handleWhoDetailSubmit}
-                      className="text-[12px] px-4 py-1.5 rounded-full font-semibold"
-                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-                      OK
-                    </button>
-                  )}
+                  <button onClick={handleWhoDetailSubmit}
+                    className={`text-[12px] px-4 py-1.5 rounded-full font-semibold transition-opacity ${detailText.trim() ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    OK
+                  </button>
                 </div>
               </div>
             )}
@@ -910,18 +906,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                   placeholder={whereDetailPlaceholder}
                   autoFocus
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-2 h-7">
                   <button onClick={handleWhereDetailSkip}
                     className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
                     Passer →
                   </button>
-                  {detailText.trim() && (
-                    <button onClick={handleWhereDetailSubmit}
-                      className="text-[12px] px-4 py-1.5 rounded-full font-semibold"
-                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-                      OK
-                    </button>
-                  )}
+                  <button onClick={handleWhereDetailSubmit}
+                    className={`text-[12px] px-4 py-1.5 rounded-full font-semibold transition-opacity ${detailText.trim() ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    OK
+                  </button>
                 </div>
               </div>
             )}
@@ -967,18 +961,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                   placeholder="Qu'as-tu observé comme résultat ?"
                   autoFocus
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-2 h-7">
                   <button onClick={() => setShowCustom(false)}
                     className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
                     ← Retour
                   </button>
-                  {customText.trim() && (
-                    <button onClick={handleCustomResult} disabled={isPending}
-                      className="text-[12px] px-4 py-1.5 rounded-full font-semibold disabled:opacity-40"
-                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-                      {isPending ? '...' : 'Envoyer'}
-                    </button>
-                  )}
+                  <button onClick={handleCustomResult} disabled={isPending}
+                    className={`text-[12px] px-4 py-1.5 rounded-full font-semibold transition-opacity disabled:opacity-40 ${customText.trim() ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    {isPending ? '...' : 'Envoyer'}
+                  </button>
                 </div>
               </div>
             )}
