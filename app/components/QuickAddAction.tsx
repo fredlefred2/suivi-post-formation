@@ -647,8 +647,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                   </button>
                 ))}
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] transition-all active:scale-[0.98]"
-                  style={{ background: 'transparent', border: '1.5px dashed #d0c8b8', color: '#a0937c' }}>
+                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
+                  style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#a0937c' }}>
                   ✏️ Autre chose...
                 </button>
               </div>
@@ -703,8 +703,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                   </button>
                 ))}
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] transition-all active:scale-[0.98]"
-                  style={{ background: 'transparent', border: '1.5px dashed #d0c8b8', color: '#a0937c' }}>
+                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
+                  style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#a0937c' }}>
                   ✏️ Autre chose...
                 </button>
               </div>
