@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from 'next/server'
  * POST /api/suggestions
  *
  * Deux modes :
- * - type:"actions" → génère 3 suggestions d'actions via Haiku
- * - type:"results" → génère 3 suggestions de résultats via Haiku
+ * - type:"actions" → génère 3 suggestions d'actions via Claude
+ * - type:"results" → génère 3 suggestions de résultats via Claude
+ *
+ * Utilise claude-sonnet-4-20250514 pour la qualité des suggestions.
  */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.CLAUDE_API_KEY
@@ -25,33 +27,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
     }
 
-    prompt = `Contexte : une appli de suivi post-formation professionnelle. L'apprenant clique pour déclarer une action qu'il a menée cette semaine. On lui propose 3 suggestions pour l'inspirer.
+    prompt = `Tu es coach en développement professionnel. Un apprenant suit une formation et travaille sur un axe de progrès précis. Tu dois lui suggérer 3 actions concrètes qu'il a pu réaliser CETTE SEMAINE, en lien DIRECT avec son axe.
 
-Son axe de progrès : "${axeSubject}"
-${axeDescription ? `Description de l'axe : "${axeDescription}"` : ''}
+═══ DONNÉES DE L'APPRENANT ═══
+Axe de progrès : "${axeSubject}"
+${axeDescription ? `Précision sur l'axe : "${axeDescription}"` : ''}
 ${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
 
-IMPORTANT : tes 3 suggestions DOIVENT être en lien DIRECT avec l'axe "${axeSubject}"${axeDescription ? ` (${axeDescription})` : ''}${groupTheme ? ` dans le contexte de la formation "${groupTheme}"` : ''}. Si l'axe parle de découverte client, les actions doivent concerner la découverte client. Si l'axe parle de prise de parole, les actions doivent concerner la prise de parole. JAMAIS d'actions génériques qui pourraient s'appliquer à n'importe quel axe.
+═══ CONSIGNE CRITIQUE ═══
+Tes suggestions DOIVENT être hyper-spécifiques à l'axe "${axeSubject}".
+${axeDescription ? `L'apprenant a précisé : "${axeDescription}" — utilise ces détails.` : ''}
+${groupTheme ? `La formation porte sur "${groupTheme}" — ancre tes suggestions dans ce contexte métier.` : ''}
 
-Génère 3 suggestions d'actions. Règles STRICTES :
+Si l'axe parle de SILENCES et PAUSES → les 3 actions doivent concerner des silences, des pauses, du ralentissement de débit. PAS autre chose.
+Si l'axe parle de PRÉPARATION → les 3 actions doivent concerner la préparation (intro, plan, conclusion). PAS autre chose.
+Si l'axe parle de GROUPES DIFFICILES → les 3 actions doivent concerner la gestion de publics compliqués. PAS autre chose.
+
+═══ FORMAT ═══
 - Chaque suggestion commence par "J'ai"
-- C'est une action PRÉCISE et SITUATIONNELLE qu'un professionnel a pu VRAIMENT faire cette semaine en lien DIRECT avec l'axe "${axeSubject}"${groupTheme ? ` et le thème "${groupTheme}"` : ''}
-- Un moment, un geste concret, un mot prononcé — pas un concept
+- C'est un geste PRÉCIS, SITUÉ dans le temps — on voit la scène
 - Max 55 caractères
-- Variées entre elles : une action facile/quotidienne, une qui demande un effort, une originale
-- Pas de jargon de formation, pas de noms de méthodes ou modèles
-- Langage naturel, oral, comme si la personne racontait à un collègue
+- Langage oral naturel (comme si la personne racontait à un collègue)
+- PAS de jargon, PAS de noms de méthodes
 
-MAUVAIS exemples (trop vagues, scolaires, passe-partout) :
-- "J'ai pratiqué l'écoute active" ❌ (concept, pas une action)
-- "J'ai mis en place une démarche" ❌ (vague)
-- "J'ai travaillé sur mon assertivité" ❌ (pas concret)
+EXEMPLES DE CE QU'IL NE FAUT PAS FAIRE :
+- "J'ai pratiqué l'écoute active" ❌ (concept abstrait)
+- "J'ai travaillé ma posture" ❌ (trop vague)
+- "J'ai mis en place une démarche" ❌ (creux)
 
-BONS exemples (on voit la scène, c'est spécifique) :
-- "J'ai laissé 5 secondes de silence après ma question" ✅
-- "J'ai dit non sans me justifier pendant 10 minutes" ✅
-- "J'ai reformulé en une phrase ce que mon client disait" ✅
-- "J'ai coupé mon téléphone pendant l'entretien" ✅
+EXEMPLES DE CE QU'IL FAUT FAIRE :
+- Pour un axe "silences/pauses" : "J'ai compté 3 secondes avant de reprendre" ✅
+- Pour un axe "préparation" : "J'ai écrit mon intro mot pour mot" ✅
+- Pour un axe "groupes difficiles" : "J'ai recadré un bavard sans m'énerver" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["J'ai...", "J'ai...", "J'ai..."]`
@@ -63,31 +70,33 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
     }
 
-    prompt = `Contexte : une appli de suivi post-formation professionnelle. L'apprenant vient de déclarer une action. On lui demande "Et alors, qu'est-ce que ça a donné ?" et on lui propose 3 résultats possibles.
+    prompt = `Tu es coach en développement professionnel. Un apprenant vient de déclarer une action précise. Tu dois lui suggérer 3 résultats qu'il a pu OBSERVER concrètement après cette action.
 
-Ce qu'il a fait : "${action}"
+═══ CE QU'IL A FAIT ═══
+Action : "${action}"
 Avec qui : "${who}"
 ${axeSubject ? `Son axe de progrès : "${axeSubject}"` : ''}
-${axeDescription ? `Description de l'axe : "${axeDescription}"` : ''}
+${axeDescription ? `Précision sur l'axe : "${axeDescription}"` : ''}
 ${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
 
-Génère 3 résultats observables SPÉCIFIQUES à cette situation précise. Règles STRICTES :
-- C'est ce que la personne a VU, SENTI ou OBTENU concrètement après avoir fait "${action}" avec "${who}"
-- Chaque résultat doit être IMPOSSIBLE à réutiliser pour une autre action — il doit coller à celle-ci
+═══ CONSIGNE CRITIQUE ═══
+Chaque résultat doit être LA CONSÉQUENCE DIRECTE de "${action}" avec "${who}".
+Le résultat doit être IMPOSSIBLE à réutiliser pour une autre action — il colle à celle-ci.
+
+═══ FORMAT ═══
+- C'est ce que la personne a VU, SENTI ou OBTENU
 - Max 60 caractères
-- Diversifie les angles : un sur la réaction de l'autre personne, un sur le ressenti de l'apprenant, un sur un effet concret/mesurable
-- Langage naturel, oral, vivant — on doit voir la scène
+- 3 angles : la réaction de l'autre / le ressenti de l'apprenant / un effet concret
+- Langage oral, vivant — on doit voir la scène
 
-MAUVAIS exemples (interchangeables, bateaux, creux) :
-- "Ça s'est bien passé" ❌
-- "L'échange a été constructif" ❌
-- "J'ai vu une amélioration" ❌
+EXEMPLES DE CE QU'IL NE FAUT PAS FAIRE :
+- "Ça s'est bien passé" ❌ (passe-partout)
+- "L'échange a été constructif" ❌ (creux)
 
-BONS exemples (on y est, c'est vivant) :
+EXEMPLES DE CE QU'IL FAUT FAIRE :
 - "Il a décroché les bras et s'est mis à parler" ✅
-- "Elle m'a dit « c'est la première fois qu'on me demande ça »" ✅
 - "On a bouclé en 20 min au lieu d'une heure" ✅
-- "J'étais moins stressé que d'habitude, ça m'a surpris" ✅
+- "J'étais moins stressé que d'habitude" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
@@ -102,14 +111,15 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
 
     if (!response.ok) {
-      console.error('[Suggestions] Claude API error:', response.status)
+      const errorText = await response.text()
+      console.error('[Suggestions] Claude API error:', response.status, errorText)
       return NextResponse.json({ error: 'Erreur API' }, { status: 502 })
     }
 
