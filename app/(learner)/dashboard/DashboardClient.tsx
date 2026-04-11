@@ -329,7 +329,7 @@ export default function DashboardClient({
 
         {/* Quick Add Action Modal */}
         <QuickAddAction
-          axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.completedCount }))}
+          axes={axes.map(a => ({ id: a.id, subject: a.subject, description: a.description, completedCount: a.completedCount }))}
           open={quickAddOpen}
           onClose={() => setQuickAddOpen(false)}
           onSuccess={() => router.refresh()}

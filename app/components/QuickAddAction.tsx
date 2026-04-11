@@ -9,6 +9,7 @@ import { useToast } from '@/app/components/Toast'
 type AxeOption = {
   id: string
   subject: string
+  description?: string | null
   completedCount: number
 }
 
@@ -362,17 +363,22 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setShowCustom(false)
     setCustomText('')
     // Charger les suggestions d'action via Haiku
-    fetchActionSuggestions(axe.subject, set)
+    fetchActionSuggestions(axe, set)
   }
 
-  async function fetchActionSuggestions(axeSubject: string, fallbackSet: SuggestionSet) {
+  async function fetchActionSuggestions(axe: AxeOption, fallbackSet: SuggestionSet) {
     setLoadingActions(true)
     setActionSuggestions([])
     try {
       const res = await fetch('/api/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'actions', axeSubject, groupTheme: groupTheme || undefined }),
+        body: JSON.stringify({
+          type: 'actions',
+          axeSubject: axe.subject,
+          axeDescription: axe.description || undefined,
+          groupTheme: groupTheme || undefined,
+        }),
       })
       if (res.ok) {
         const data = await res.json()
@@ -446,7 +452,13 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       const res = await fetch('/api/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, who, axeSubject: selectedAxe?.subject, groupTheme: groupTheme || undefined }),
+        body: JSON.stringify({
+          action,
+          who,
+          axeSubject: selectedAxe?.subject,
+          axeDescription: selectedAxe?.description || undefined,
+          groupTheme: groupTheme || undefined,
+        }),
       })
       if (res.ok) {
         const data = await res.json()

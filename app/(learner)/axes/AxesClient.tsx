@@ -636,7 +636,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
 
       {/* Quick Add Action Modal */}
       <QuickAddAction
-        axes={axes.map(a => ({ id: a.id, subject: a.subject, completedCount: a.actions.length }))}
+        axes={axes.map(a => ({ id: a.id, subject: a.subject, description: a.description, completedCount: a.actions.length }))}
         open={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
         onSuccess={(axeId) => {

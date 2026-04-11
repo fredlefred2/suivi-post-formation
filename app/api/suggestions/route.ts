@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
   if (type === 'actions') {
     // ── Suggestions d'actions ──
-    const { axeSubject, groupTheme } = body
+    const { axeSubject, axeDescription, groupTheme } = body
     if (!axeSubject) {
       return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
     }
@@ -28,7 +28,10 @@ export async function POST(request: NextRequest) {
     prompt = `Contexte : une appli de suivi post-formation professionnelle. L'apprenant clique pour déclarer une action qu'il a menée cette semaine. On lui propose 3 suggestions pour l'inspirer.
 
 Son axe de progrès : "${axeSubject}"
-${groupTheme ? `\nLe thème complet de sa formation : "${groupTheme}"\n\nC'est CRUCIAL : tes suggestions doivent être directement liées à ce thème de formation et à cet axe. Par exemple si la formation porte sur le management et l'axe sur la délégation, propose des actions de délégation managériale, pas des actions génériques.` : ''}
+${axeDescription ? `Description de l'axe : "${axeDescription}"` : ''}
+${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
+
+IMPORTANT : tes 3 suggestions DOIVENT être en lien DIRECT avec l'axe "${axeSubject}"${axeDescription ? ` (${axeDescription})` : ''}${groupTheme ? ` dans le contexte de la formation "${groupTheme}"` : ''}. Si l'axe parle de découverte client, les actions doivent concerner la découverte client. Si l'axe parle de prise de parole, les actions doivent concerner la prise de parole. JAMAIS d'actions génériques qui pourraient s'appliquer à n'importe quel axe.
 
 Génère 3 suggestions d'actions. Règles STRICTES :
 - Chaque suggestion commence par "J'ai"
@@ -55,7 +58,7 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 
   } else {
     // ── Suggestions de résultats ──
-    const { action, who, axeSubject, groupTheme } = body
+    const { action, who, axeSubject, axeDescription, groupTheme } = body
     if (!action || !who) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
     }
@@ -65,6 +68,7 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 Ce qu'il a fait : "${action}"
 Avec qui : "${who}"
 ${axeSubject ? `Son axe de progrès : "${axeSubject}"` : ''}
+${axeDescription ? `Description de l'axe : "${axeDescription}"` : ''}
 ${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
 
 Génère 3 résultats observables SPÉCIFIQUES à cette situation précise. Règles STRICTES :
