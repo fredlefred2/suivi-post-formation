@@ -41,7 +41,7 @@ ${axeDescription ? `Appuie-toi sur la précision donnée par l'apprenant : "${ax
 ${groupTheme ? `Ancre dans le contexte de la formation "${groupTheme}".` : ''}
 
 ═══ RÈGLE N°2 — CONCRET ═══
-Chaque suggestion décrit UN GESTE PRÉCIS, un moment réel, un mot prononcé. On doit VOIR LA SCÈNE. Pas un concept, pas un objectif, pas une intention.
+Chaque suggestion concerne une BONNE PRATIQUE PRÉCISE, liée au thème et à l'axe développé.
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Commence par "J'ai"
@@ -50,18 +50,12 @@ Chaque suggestion décrit UN GESTE PRÉCIS, un moment réel, un mot prononcé. O
 - Pas de jargon, pas de noms de méthodes ou modèles
 - Variété : une facile, une qui demande un effort, une originale
 
-═══ ANTI-EXEMPLES (à ne JAMAIS produire) ═══
-- "J'ai pratiqué l'écoute active" ❌ concept, pas une action
-- "J'ai travaillé ma posture" ❌ trop vague, aucune scène
-- "J'ai mis en place une démarche" ❌ creux, bureaucratique
-- "J'ai amélioré ma communication" ❌ intention, pas un geste
-
 ═══ BONS EXEMPLES (pour t'inspirer du NIVEAU de précision attendu) ═══
-- "J'ai laissé 5 sec de silence après ma question" ✅
-- "J'ai dit non sans me justifier" ✅
-- "J'ai reformulé en une phrase ce qu'il venait de dire" ✅
-- "J'ai coupé mon tel pendant l'entretien" ✅
-- "J'ai noté 3 points clés avant d'appeler" ✅
+- "J'ai travaillé mes silences" ✅
+- "J'ai réussi à dire non" ✅
+- "J'ai reformulé" ✅
+- "J'ai apporté des preuves concrètes" ✅
+- "J'ai exploité les données à ma disposition" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["J'ai...", "J'ai...", "J'ai..."]`
@@ -95,11 +89,10 @@ ${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
 
 ═══ BONS EXEMPLES (niveau de précision) ═══
 - "En réunion d'équipe" ✅
-- "Pendant un entretien client" ✅
-- "Lors d'une présentation en comité" ✅
+- "En RV client" ✅
+- "En prospection tél" ✅
+- "Face à des clients" ✅
 - "En brief du matin" ✅
-- "Au téléphone avec un prospect" ✅
-- "Face à un groupe en formation" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 4 strings :
 ["...", "...", "...", "..."]`
@@ -124,7 +117,7 @@ ${groupTheme ? `Formation : "${groupTheme}"` : ''}
 Chaque résultat doit être LA CONSÉQUENCE DIRECTE et VISIBLE de "${action}" dans le contexte "${context}". Si on change l'action ou le contexte, le résultat ne doit PLUS fonctionner.
 
 ═══ RÈGLE N°2 — ON VOIT LA SCÈNE ═══
-C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti) ou OBTENU (effet mesurable). Un résultat = un moment précis.
+C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti) ou OBTENU (effet mesurable).
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Max 60 caractères
@@ -132,18 +125,12 @@ C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti
 - Langage oral, vivant
 - Pas de jargon
 
-═══ ANTI-EXEMPLES ═══
-- "Ça s'est bien passé" ❌ passe-partout
-- "L'échange a été constructif" ❌ creux
-- "J'ai vu une amélioration" ❌ vague
-- "La communication était meilleure" ❌ générique
-
 ═══ BONS EXEMPLES (niveau de précision attendu) ═══
-- "Il a décroché les bras et s'est mis à parler" ✅
-- "Elle m'a dit « c'est la 1ère fois qu'on me demande ça »" ✅
-- "On a bouclé en 20 min au lieu d'une heure" ✅
-- "J'étais moins stressé que d'habitude, ça m'a surpris" ✅
-- "Il a souri et m'a posé une question en retour" ✅
+- "Il s'est plus exprimé que d'habitude" ✅
+- "On a bouclé plus rapidement que d'habitude" ✅
+- "J'ai obtenu plus d'informations que d'habitude" ✅
+- "L'échange a été plus constructif" ✅
+- "J'ai obtenu plus d'informations" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
