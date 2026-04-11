@@ -274,9 +274,29 @@ function pickRandom<T>(arr: T[], count: number): T[] {
   return shuffled.slice(0, count)
 }
 
+// ── Sous-questions conditionnelles ────────────────────────────
+
+const WHO_DETAILS: Record<string, { question: string; options: string[] }> = {
+  'Un client': {
+    question: 'Quel type de client ?',
+    options: ['Un client fidèle', 'Un nouveau client', 'Un client difficile', 'Un client important'],
+  },
+  'Un prospect': {
+    question: 'À quel stade ?',
+    options: ['Un premier contact', 'Un prospect en cours', 'Un prospect relancé'],
+  },
+}
+
+const WHERE_DETAILS: Record<string, { question: string; options: string[] }> = {
+  'En réunion': {
+    question: 'Quel type de réunion ?',
+    options: ['Réunion d\'équipe', 'Comité de direction', 'Réunion projet', 'Point hebdo'],
+  },
+}
+
 // ── Composant ──────────────────────────────────────────────────
 
-type ChatStep = 'axe' | 'action' | 'who' | 'where' | 'result' | 'confirm'
+type ChatStep = 'axe' | 'action' | 'who' | 'who-detail' | 'where' | 'where-detail' | 'result' | 'confirm'
 
 export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode, prefill }: Props) {
   const [step, setStep] = useState<ChatStep>('axe')
@@ -295,6 +315,12 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [resultSuggestions, setResultSuggestions] = useState<string[]>([])
   const [whoOptions, setWhoOptions] = useState<string[]>([])
   const [whereOptions, setWhereOptions] = useState<string[]>([])
+  const [whoBase, setWhoBase] = useState('')
+  const [whoDetailQuestion, setWhoDetailQuestion] = useState('')
+  const [whoDetailOpts, setWhoDetailOpts] = useState<string[]>([])
+  const [whereBase, setWhereBase] = useState('')
+  const [whereDetailQuestion, setWhereDetailQuestion] = useState('')
+  const [whereDetailOpts, setWhereDetailOpts] = useState<string[]>([])
   const { toast } = useToast()
 
   // Prefill depuis défi de la semaine (mode legacy)
@@ -335,6 +361,12 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setResultSuggestions([])
     setWhoOptions([])
     setWhereOptions([])
+    setWhoBase('')
+    setWhoDetailQuestion('')
+    setWhoDetailOpts([])
+    setWhereBase('')
+    setWhereDetailQuestion('')
+    setWhereDetailOpts([])
   }
 
   function handleClose() {
@@ -370,14 +402,46 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   }
 
   function handleSelectWho(who: string) {
-    setChosenWho(who)
+    setShowCustom(false)
+    setCustomText('')
+    const detail = WHO_DETAILS[who]
+    if (detail) {
+      setWhoBase(who)
+      setWhoDetailQuestion(detail.question)
+      setWhoDetailOpts(detail.options)
+      setStep('who-detail')
+    } else {
+      setWhoBase('')
+      setChosenWho(who)
+      setStep('where')
+    }
+  }
+
+  function handleSelectWhoDetail(detail: string) {
+    setChosenWho(detail)
     setShowCustom(false)
     setCustomText('')
     setStep('where')
   }
 
   function handleSelectWhere(where: string) {
-    setChosenWhere(where)
+    setShowCustom(false)
+    setCustomText('')
+    const detail = WHERE_DETAILS[where]
+    if (detail) {
+      setWhereBase(where)
+      setWhereDetailQuestion(detail.question)
+      setWhereDetailOpts(detail.options)
+      setStep('where-detail')
+    } else {
+      setWhereBase('')
+      setChosenWhere(where)
+      setStep('result')
+    }
+  }
+
+  function handleSelectWhereDetail(detail: string) {
+    setChosenWhere(detail)
     setShowCustom(false)
     setCustomText('')
     setStep('result')
@@ -400,10 +464,17 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   }
 
   function buildDescription(action: string, who: string, where: string, result: string): string {
-    // Construire "avec un client, en réunion"
-    const whoLower = who.toLowerCase().replace(/^(un |une )/, '')
-    const wherePart = where.toLowerCase().startsWith('en ') || where.toLowerCase().startsWith('au ') || where.toLowerCase().startsWith('par ') || where.toLowerCase().startsWith('sur ') || where.toLowerCase().startsWith('devant ') ? where.toLowerCase() : 'en ' + where.toLowerCase()
-    return `${action}, avec ${whoLower}, ${wherePart}. ${result}`
+    // "avec un client fidèle" / "avec mon manager"
+    const whoLower = who.toLowerCase()
+    const whoPart = whoLower.startsWith('un ') || whoLower.startsWith('une ') || whoLower.startsWith('mon ') || whoLower.startsWith('ma ') || whoLower.startsWith('l\'')
+      ? 'avec ' + whoLower
+      : 'avec ' + whoLower
+    // "en réunion d'équipe" / "au téléphone"
+    const whereLower = where.toLowerCase()
+    const wherePart = whereLower.startsWith('en ') || whereLower.startsWith('au ') || whereLower.startsWith('par ') || whereLower.startsWith('sur ') || whereLower.startsWith('devant ')
+      ? whereLower
+      : 'en ' + whereLower
+    return `${action}, ${whoPart}, ${wherePart}. ${result}`
   }
 
   function submitAction(action: string, who: string, where: string, result: string) {
@@ -482,8 +553,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setCustomText('')
     if (step === 'action') { setStep('axe'); setSelectedAxe(null) }
     else if (step === 'who') { setStep('action'); setChosenAction('') }
-    else if (step === 'where') { setStep('who'); setChosenWho('') }
-    else if (step === 'result') { setStep('where'); setChosenWhere('') }
+    else if (step === 'who-detail') { setStep('who'); setWhoBase(''); setWhoDetailOpts([]) }
+    else if (step === 'where') { setStep(whoBase ? 'who-detail' : 'who'); setChosenWho('') }
+    else if (step === 'where-detail') { setStep('where'); setWhereBase(''); setWhereDetailOpts([]) }
+    else if (step === 'result') { setStep(whereBase ? 'where-detail' : 'where'); setChosenWhere('') }
   }
 
   if (!open) return null
@@ -493,7 +566,9 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     axe: 'Hey ! Tu as agi sur quel axe ?',
     action: 'Top ! Raconte-moi, qu\'est-ce que tu as fait ?',
     who: 'Bien joué ! C\'était avec qui ?',
+    'who-detail': whoDetailQuestion,
     where: 'OK ! Et dans quel cadre ?',
+    'where-detail': whereDetailQuestion,
     result: 'Et alors, qu\'est-ce que ça a donné ?',
     confirm: '',
   }
@@ -618,7 +693,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             )}
 
             {/* Étape 2 répondue : action choisie */}
-            {chosenAction && (step === 'who' || step === 'where' || step === 'result') && (
+            {chosenAction && (step === 'who' || step === 'who-detail' || step === 'where' || step === 'where-detail' || step === 'result') && (
               <>
                 <CoachBubble text={coachMessages.action} />
                 <UserBubble text={chosenAction} />
@@ -626,17 +701,33 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             )}
 
             {/* Étape 3 répondue : avec qui */}
-            {chosenWho && (step === 'where' || step === 'result') && (
+            {(whoBase || chosenWho) && (step === 'who-detail' || step === 'where' || step === 'where-detail' || step === 'result') && (
               <>
-                <CoachBubble text={coachMessages.who} />
+                <CoachBubble text="Bien joué ! C'était avec qui ?" />
+                <UserBubble text={whoBase || chosenWho} />
+              </>
+            )}
+
+            {/* Étape 3b répondue : précision who */}
+            {whoBase && chosenWho && (step === 'where' || step === 'where-detail' || step === 'result') && (
+              <>
+                <CoachBubble text={whoDetailQuestion} />
                 <UserBubble text={chosenWho} />
               </>
             )}
 
             {/* Étape 4 répondue : dans quel cadre */}
-            {chosenWhere && step === 'result' && (
+            {(whereBase || chosenWhere) && (step === 'where-detail' || step === 'result') && (
               <>
-                <CoachBubble text={coachMessages.where} />
+                <CoachBubble text="OK ! Et dans quel cadre ?" />
+                <UserBubble text={whereBase || chosenWhere} />
+              </>
+            )}
+
+            {/* Étape 4b répondue : précision where */}
+            {whereBase && chosenWhere && step === 'result' && (
+              <>
+                <CoachBubble text={whereDetailQuestion} />
                 <UserBubble text={chosenWhere} />
               </>
             )}
@@ -722,11 +813,37 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </div>
             )}
 
+            {/* ── Étape 3b : Précision who ── */}
+            {step === 'who-detail' && (
+              <div className="pl-10 flex flex-wrap gap-2">
+                {whoDetailOpts.map((w, i) => (
+                  <button key={i} onClick={() => handleSelectWhoDetail(w)}
+                    className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all active:scale-95"
+                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
+                    {w}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* ── Étape 4 : Dans quel cadre ? ── */}
             {step === 'where' && (
               <div className="pl-10 flex flex-wrap gap-2">
                 {whereOptions.map((w, i) => (
                   <button key={i} onClick={() => handleSelectWhere(w)}
+                    className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all active:scale-95"
+                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
+                    {w}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── Étape 4b : Précision where ── */}
+            {step === 'where-detail' && (
+              <div className="pl-10 flex flex-wrap gap-2">
+                {whereDetailOpts.map((w, i) => (
+                  <button key={i} onClick={() => handleSelectWhereDetail(w)}
                     className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all active:scale-95"
                     style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
                     {w}
