@@ -461,13 +461,41 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
 
   if (!open) return null
 
-  // Titres de chat pour chaque étape
-  const chatTitles: Record<ChatStep, string> = {
-    axe: '💪 Sur quoi tu as agi ?',
-    action: '🎯 Qu\'est-ce que tu as fait ?',
-    context: '👤 C\'était dans quel contexte ?',
-    result: '✨ Qu\'as-tu observé ?',
+  // Messages du coach selon l'étape
+  const coachMessages: Record<ChatStep, string> = {
+    axe: 'Hey ! Tu as agi sur quel axe ?',
+    action: 'Top ! Raconte-moi, qu\'est-ce que tu as fait ?',
+    context: 'Bien joué ! C\'était dans quel contexte ?',
+    result: 'Et alors, qu\'est-ce que ça a donné ?',
     confirm: '',
+  }
+
+  // Bulle coach (alignée à gauche)
+  function CoachBubble({ text }: { text: string }) {
+    return (
+      <div className="flex gap-2.5 items-start animate-fade-in-up">
+        <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
+          style={{ background: '#1a1a2e' }}>
+          🎯
+        </div>
+        <div className="rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%] text-[14px]"
+          style={{ background: '#f0ebe0', color: '#1a1a2e' }}>
+          {text}
+        </div>
+      </div>
+    )
+  }
+
+  // Bulle réponse apprenant (alignée à droite)
+  function UserBubble({ text }: { text: string }) {
+    return (
+      <div className="flex justify-end animate-fade-in-up">
+        <div className="rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%] text-[14px] font-medium"
+          style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+          {text}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -528,152 +556,180 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           </div>
         </div>
       ) : (
-        /* Mode chatbot — flow en 4 étapes */
-        <div className="relative bg-white rounded-t-[28px] sm:rounded-[28px] shadow-xl w-full max-w-md mx-0 sm:mx-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-fade-in-up overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
+        /* Mode chatbot conversationnel */
+        <div className="relative bg-white rounded-t-[28px] sm:rounded-[28px] shadow-xl w-full max-w-md mx-0 sm:mx-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-fade-in-up overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
 
-          {/* Header chat-style */}
-          <div className="px-5 py-4 flex items-center gap-3" style={{ background: '#1a1a2e' }}>
-            {step !== 'axe' && (
-              <button onClick={goBack} className="text-white/60 active:text-white">
-                <ChevronLeft size={20} />
-              </button>
-            )}
-            <div className="flex-1">
-              <p className="text-white font-bold text-[15px]">{chatTitles[step]}</p>
-              {selectedAxe && step !== 'axe' && (
-                <p className="text-white/50 text-xs mt-0.5">{getDynamique(selectedAxe.completedCount).icon} {selectedAxe.subject}</p>
+          {/* Header compact */}
+          <div className="px-5 py-3 flex items-center justify-between" style={{ background: '#1a1a2e' }}>
+            <div className="flex items-center gap-2.5">
+              {step !== 'axe' && (
+                <button onClick={goBack} className="text-white/50 active:text-white">
+                  <ChevronLeft size={18} />
+                </button>
               )}
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[12px]"
+                style={{ background: '#fbbf24' }}>🎯</div>
+              <p className="text-white font-semibold text-[14px]">Nouvelle action</p>
             </div>
             <button onClick={handleClose} className="text-white/40 active:text-white">
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
 
-          <div className="p-5 space-y-3 max-h-[60vh] overflow-y-auto">
-            {/* ── Étape 1 : Choix de l'axe ── */}
-            {step === 'axe' && axes.map((axe) => {
-              const levelIdx = getCurrentLevelIndex(axe.completedCount)
-              const marker = getDynamique(axe.completedCount)
-              const borderColor = LEVEL_BORDER_COLORS[levelIdx] ?? LEVEL_BORDER_COLORS[0]
-              const bgColor = LEVEL_BG_COLORS[levelIdx] ?? LEVEL_BG_COLORS[0]
-              return (
-                <button
-                  key={axe.id}
-                  onClick={() => handleSelectAxe(axe)}
-                  className="w-full text-left p-4 rounded-xl transition-all active:scale-[0.98]"
-                  style={{ background: bgColor, border: `2px solid ${borderColor}` }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
-                      style={{ background: `linear-gradient(135deg, ${borderColor}, ${borderColor}dd)` }}>
-                      <span className="drop-shadow-sm">{marker.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 truncate">{axe.subject}</p>
-                      <p className="text-xs text-gray-500">{axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''} · {marker.label}</p>
-                    </div>
-                  </div>
-                </button>
-              )
-            })}
+          {/* Zone de chat */}
+          <div className="px-4 py-4 space-y-3 max-h-[65vh] overflow-y-auto" style={{ background: '#faf8f4' }}>
 
-            {/* ── Étape 2 : Qu'est-ce que tu as fait ? ── */}
-            {step === 'action' && !showCustom && (
+            {/* ── Historique des réponses précédentes ── */}
+
+            {/* Étape 1 répondue : axe choisi */}
+            {selectedAxe && step !== 'axe' && (
               <>
+                <CoachBubble text={coachMessages.axe} />
+                <UserBubble text={`${getDynamique(selectedAxe.completedCount).icon} ${selectedAxe.subject}`} />
+              </>
+            )}
+
+            {/* Étape 2 répondue : action choisie */}
+            {chosenAction && (step === 'context' || step === 'result') && (
+              <>
+                <CoachBubble text={coachMessages.action} />
+                <UserBubble text={chosenAction} />
+              </>
+            )}
+
+            {/* Étape 3 répondue : contexte choisi */}
+            {chosenContext && step === 'result' && (
+              <>
+                <CoachBubble text={coachMessages.context} />
+                <UserBubble text={chosenContext} />
+              </>
+            )}
+
+            {/* ── Question en cours ── */}
+            <CoachBubble text={coachMessages[step]} />
+
+            {/* ── Étape 1 : Choix de l'axe ── */}
+            {step === 'axe' && (
+              <div className="pl-10 space-y-2">
+                {axes.map((axe) => {
+                  const levelIdx = getCurrentLevelIndex(axe.completedCount)
+                  const marker = getDynamique(axe.completedCount)
+                  const borderColor = LEVEL_BORDER_COLORS[levelIdx] ?? LEVEL_BORDER_COLORS[0]
+                  const bgColor = LEVEL_BG_COLORS[levelIdx] ?? LEVEL_BG_COLORS[0]
+                  return (
+                    <button key={axe.id} onClick={() => handleSelectAxe(axe)}
+                      className="w-full text-left p-3 rounded-xl transition-all active:scale-[0.98]"
+                      style={{ background: bgColor, border: `2px solid ${borderColor}` }}>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-base shrink-0"
+                          style={{ background: `linear-gradient(135deg, ${borderColor}, ${borderColor}dd)` }}>
+                          <span className="drop-shadow-sm">{marker.icon}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-800 truncate text-[13px]">{axe.subject}</p>
+                          <p className="text-[11px] text-gray-500">{axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''} · {marker.label}</p>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* ── Étape 2 : Suggestions d'action ── */}
+            {step === 'action' && !showCustom && (
+              <div className="pl-10 space-y-2">
                 {actionSuggestions.map((s, i) => (
                   <button key={i} onClick={() => handleSelectAction(s)}
-                    className="w-full text-left px-4 py-3 rounded-xl text-[14px] font-medium transition-all active:scale-[0.98]"
-                    style={{ background: '#faf8f4', border: '1.5px solid #f0ebe0', color: '#1a1a2e' }}>
+                    className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
+                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
                     {s}
                   </button>
                 ))}
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all active:scale-[0.98]"
+                  className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] transition-all active:scale-[0.98]"
                   style={{ background: 'transparent', border: '1.5px dashed #d0c8b8', color: '#a0937c' }}>
                   ✏️ Autre chose...
                 </button>
-              </>
+              </div>
             )}
 
-            {/* ── Étape 2 bis : Saisie libre ── */}
+            {/* ── Étape 2 bis : Saisie libre action ── */}
             {step === 'action' && showCustom && (
-              <div className="space-y-3">
+              <div className="pl-10 space-y-2">
                 <textarea
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
-                  className="input w-full h-20 resize-none text-[14px]"
+                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] resize-none h-16 focus:outline-none focus:ring-2"
+                  style={{ border: '1.5px solid #e8e0d4', background: 'white' }}
                   placeholder="Décris ce que tu as fait..."
                   autoFocus
                 />
                 <div className="flex gap-2">
-                  <button onClick={() => setShowCustom(false)} className="btn-secondary flex-1 text-sm">← Retour</button>
+                  <button onClick={() => setShowCustom(false)}
+                    className="text-[12px] px-3 py-1.5 rounded-full" style={{ color: '#a0937c' }}>
+                    ← Retour
+                  </button>
                   <button onClick={handleCustomAction} disabled={!customText.trim()}
-                    className="btn-primary flex-1 text-sm disabled:opacity-50">Valider</button>
+                    className="text-[12px] px-4 py-1.5 rounded-full font-semibold disabled:opacity-40"
+                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    Envoyer
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* ── Étape 3 : Contexte ── */}
+            {/* ── Étape 3 : Contexte (pastilles) ── */}
             {step === 'context' && (
-              <>
-                {/* Rappel du choix */}
-                <div className="px-3 py-2 rounded-lg text-[12px] mb-1" style={{ background: '#fef3c7', color: '#92400e' }}>
-                  ✅ {chosenAction}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {contextOptions.map((ctx, i) => (
-                    <button key={i} onClick={() => handleSelectContext(ctx)}
-                      className="px-4 py-2.5 rounded-full text-[13px] font-semibold transition-all active:scale-95"
-                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-                      {ctx}
-                    </button>
-                  ))}
-                </div>
-              </>
+              <div className="pl-10 flex flex-wrap gap-2">
+                {contextOptions.map((ctx, i) => (
+                  <button key={i} onClick={() => handleSelectContext(ctx)}
+                    className="px-3.5 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    {ctx}
+                  </button>
+                ))}
+              </div>
             )}
 
             {/* ── Étape 4 : Résultat ── */}
             {step === 'result' && !showCustom && (
-              <>
-                {/* Rappel des choix */}
-                <div className="px-3 py-2 rounded-lg text-[12px] space-y-1" style={{ background: '#fef3c7', color: '#92400e' }}>
-                  <p>✅ {chosenAction}</p>
-                  <p>👤 {chosenContext}</p>
-                </div>
+              <div className="pl-10 space-y-2">
                 {resultSuggestions.map((s, i) => (
                   <button key={i} onClick={() => handleSelectResult(s)}
-                    className="w-full text-left px-4 py-3 rounded-xl text-[14px] font-medium transition-all active:scale-[0.98]"
-                    style={{ background: '#faf8f4', border: '1.5px solid #f0ebe0', color: '#1a1a2e' }}>
+                    className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
+                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
                     {s}
                   </button>
                 ))}
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all active:scale-[0.98]"
+                  className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] transition-all active:scale-[0.98]"
                   style={{ background: 'transparent', border: '1.5px dashed #d0c8b8', color: '#a0937c' }}>
                   ✏️ Autre chose...
                 </button>
-              </>
+              </div>
             )}
 
             {/* ── Étape 4 bis : Saisie libre résultat ── */}
             {step === 'result' && showCustom && (
-              <div className="space-y-3">
-                <div className="px-3 py-2 rounded-lg text-[12px] space-y-1" style={{ background: '#fef3c7', color: '#92400e' }}>
-                  <p>✅ {chosenAction}</p>
-                  <p>👤 {chosenContext}</p>
-                </div>
+              <div className="pl-10 space-y-2">
                 <textarea
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
-                  className="input w-full h-20 resize-none text-[14px]"
+                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] resize-none h-16 focus:outline-none focus:ring-2"
+                  style={{ border: '1.5px solid #e8e0d4', background: 'white' }}
                   placeholder="Qu'as-tu observé comme résultat ?"
                   autoFocus
                 />
                 <div className="flex gap-2">
-                  <button onClick={() => setShowCustom(false)} className="btn-secondary flex-1 text-sm">← Retour</button>
+                  <button onClick={() => setShowCustom(false)}
+                    className="text-[12px] px-3 py-1.5 rounded-full" style={{ color: '#a0937c' }}>
+                    ← Retour
+                  </button>
                   <button onClick={handleCustomResult} disabled={isPending || !customText.trim()}
-                    className="btn-primary flex-1 text-sm disabled:opacity-50">
-                    {isPending ? '...' : 'Valider'}
+                    className="text-[12px] px-4 py-1.5 rounded-full font-semibold disabled:opacity-40"
+                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    {isPending ? '...' : 'Envoyer'}
                   </button>
                 </div>
               </div>
