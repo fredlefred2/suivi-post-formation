@@ -87,6 +87,7 @@ export default async function DashboardPage() {
   // Rang dans le groupe
   let rank: number | null = null
   let groupSize: number | null = null
+  let groupTheme: string | null = null
   try {
     const { data: membership } = await admin
       .from('group_members')
@@ -96,6 +97,14 @@ export default async function DashboardPage() {
       .maybeSingle()
 
     if (membership) {
+      // Récupérer le thème du groupe
+      const { data: groupData } = await admin
+        .from('groups')
+        .select('theme')
+        .eq('id', membership.group_id)
+        .single()
+      groupTheme = groupData?.theme ?? null
+
       const { data: membersRaw } = await admin
         .from('group_members')
         .select('learner_id')
@@ -207,6 +216,7 @@ export default async function DashboardPage() {
         groupSize={groupSize}
         lastWeekActions={lastWeekActions}
         checkinIsOpen={checkinCtx.isOpen}
+        groupTheme={groupTheme}
         axesForCheckin={(axes ?? []).map(a => ({ id: a.id, initial_score: a.initial_score ?? 1 }))}
       />
     </OnboardingFlow>

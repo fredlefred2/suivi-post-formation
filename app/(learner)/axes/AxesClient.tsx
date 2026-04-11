@@ -33,7 +33,7 @@ function getActionPhaseBg(rank: number) {
   return ACTION_PHASE_COLORS[3]
 }
 
-export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string }) {
+export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, onboarding, userId, groupTheme }: { axes: AxeWithActions[], initialIndex?: number, feedbackMap?: Record<string, ActionFeedbackData>, onboarding?: string, userId?: string, groupTheme?: string | null }) {
   const router = useRouter()
   const { toast } = useToast()
   const { setIsOnboarding } = useOnboarding()
@@ -645,6 +645,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           setTimeout(() => setHighlightAxeId(null), 2000)
           router.refresh()
         }}
+        groupTheme={groupTheme}
       />
 
       {/* Modale d'édition d'axe */}

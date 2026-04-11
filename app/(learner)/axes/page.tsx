@@ -63,9 +63,26 @@ export default async function AxesPage({
     }
   })
 
+  // Récupérer le thème du groupe
+  let groupTheme: string | null = null
+  const { data: membership } = await admin
+    .from('group_members')
+    .select('group_id')
+    .eq('learner_id', user!.id)
+    .limit(1)
+    .maybeSingle()
+  if (membership) {
+    const { data: groupData } = await admin
+      .from('groups')
+      .select('theme')
+      .eq('id', membership.group_id)
+      .single()
+    groupTheme = groupData?.theme ?? null
+  }
+
   const initialIndex = searchParams.index !== undefined
     ? Math.max(0, parseInt(searchParams.index, 10) || 0)
     : 0
 
-  return <AxesClient key={initialIndex} axes={axes ?? []} initialIndex={initialIndex} feedbackMap={feedbackMap} onboarding={searchParams.onboarding} userId={user!.id} />
+  return <AxesClient key={initialIndex} axes={axes ?? []} initialIndex={initialIndex} feedbackMap={feedbackMap} onboarding={searchParams.onboarding} userId={user!.id} groupTheme={groupTheme} />
 }

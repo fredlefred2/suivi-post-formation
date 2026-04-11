@@ -45,6 +45,7 @@ type Props = {
   lastWeekActions: number
   checkinIsOpen: boolean
   axesForCheckin: { id: string; initial_score: number }[]
+  groupTheme: string | null
 }
 
 function getEncouragement(delta: number, streak: number): string {
@@ -81,6 +82,7 @@ export default function DashboardClient({
   lastWeekActions,
   checkinIsOpen,
   axesForCheckin,
+  groupTheme,
   onboardingStep,
 }: Props & { onboardingStep?: string }) {
   const router = useRouter()
@@ -331,6 +333,7 @@ export default function DashboardClient({
           open={quickAddOpen}
           onClose={() => setQuickAddOpen(false)}
           onSuccess={() => router.refresh()}
+          groupTheme={groupTheme}
         />
 
         {/* Quick Checkin Modal */}

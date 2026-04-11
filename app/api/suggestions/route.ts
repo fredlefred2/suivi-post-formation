@@ -25,59 +25,61 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
     }
 
-    prompt = `Contexte : une appli de suivi post-formation. L'apprenant clique pour déclarer une action qu'il a menée cette semaine. On lui propose 3 suggestions pour l'aider.
+    prompt = `Contexte : une appli de suivi post-formation professionnelle. L'apprenant clique pour déclarer une action qu'il a menée cette semaine. On lui propose 3 suggestions pour l'inspirer.
 
-Axe de progrès de l'apprenant : "${axeSubject}"
-${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
+Son axe de progrès : "${axeSubject}"
+${groupTheme ? `\nLe thème complet de sa formation : "${groupTheme}"\n\nC'est CRUCIAL : tes suggestions doivent être directement liées à ce thème de formation et à cet axe. Par exemple si la formation porte sur le management et l'axe sur la délégation, propose des actions de délégation managériale, pas des actions génériques.` : ''}
 
 Génère 3 suggestions d'actions. Règles STRICTES :
 - Chaque suggestion commence par "J'ai"
-- C'est une action PRÉCISE et SITUATIONNELLE : un moment, un geste, un mot, pas un concept
-- Max 50 caractères
-- Variées entre elles : une facile/quotidienne, une qui demande du courage, une originale
-- Pas de jargon de formation, pas de noms de méthodes
-- Langage naturel, comme si la personne racontait à un collègue
+- C'est une action PRÉCISE et SITUATIONNELLE qu'un professionnel a pu VRAIMENT faire cette semaine en lien DIRECT avec l'axe "${axeSubject}"${groupTheme ? ` et le thème "${groupTheme}"` : ''}
+- Un moment, un geste concret, un mot prononcé — pas un concept
+- Max 55 caractères
+- Variées entre elles : une action facile/quotidienne, une qui demande un effort, une originale
+- Pas de jargon de formation, pas de noms de méthodes ou modèles
+- Langage naturel, oral, comme si la personne racontait à un collègue
 
-MAUVAIS exemples (trop vagues, scolaires) :
-- "J'ai pratiqué l'écoute active" ❌
-- "J'ai mis en place une démarche collaborative" ❌
-- "J'ai travaillé sur mon assertivité" ❌
+MAUVAIS exemples (trop vagues, scolaires, passe-partout) :
+- "J'ai pratiqué l'écoute active" ❌ (concept, pas une action)
+- "J'ai mis en place une démarche" ❌ (vague)
+- "J'ai travaillé sur mon assertivité" ❌ (pas concret)
 
-BONS exemples (précis, vivants) :
-- "J'ai laissé un silence de 5 secondes après ma question" ✅
-- "J'ai dit non à mon chef sans me justifier 10 minutes" ✅
-- "J'ai reformulé en une phrase ce que mon client venait de dire" ✅
-- "J'ai coupé mon téléphone pendant un entretien" ✅
+BONS exemples (on voit la scène, c'est spécifique) :
+- "J'ai laissé 5 secondes de silence après ma question" ✅
+- "J'ai dit non sans me justifier pendant 10 minutes" ✅
+- "J'ai reformulé en une phrase ce que mon client disait" ✅
+- "J'ai coupé mon téléphone pendant l'entretien" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["J'ai...", "J'ai...", "J'ai..."]`
 
   } else {
     // ── Suggestions de résultats ──
-    const { action, who, axeSubject } = body
+    const { action, who, axeSubject, groupTheme } = body
     if (!action || !who) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
     }
 
-    prompt = `Contexte : une appli de suivi post-formation. L'apprenant vient de déclarer une action. On lui demande "Et alors, qu'est-ce que ça a donné ?" et on lui propose 3 résultats possibles.
+    prompt = `Contexte : une appli de suivi post-formation professionnelle. L'apprenant vient de déclarer une action. On lui demande "Et alors, qu'est-ce que ça a donné ?" et on lui propose 3 résultats possibles.
 
 Ce qu'il a fait : "${action}"
 Avec qui : "${who}"
-${axeSubject ? `Axe de progrès : "${axeSubject}"` : ''}
+${axeSubject ? `Son axe de progrès : "${axeSubject}"` : ''}
+${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
 
-Génère 3 résultats observables. Règles STRICTES :
-- C'est ce que la personne a VU, SENTI ou OBTENU concrètement
-- Spécifique à cette action et cet interlocuteur — pas interchangeable
+Génère 3 résultats observables SPÉCIFIQUES à cette situation précise. Règles STRICTES :
+- C'est ce que la personne a VU, SENTI ou OBTENU concrètement après avoir fait "${action}" avec "${who}"
+- Chaque résultat doit être IMPOSSIBLE à réutiliser pour une autre action — il doit coller à celle-ci
 - Max 60 caractères
-- Un résultat sur la réaction de l'autre, un sur le ressenti de l'apprenant, un sur la suite concrète
-- Langage naturel et oral, pas de langue de bois
+- Diversifie les angles : un sur la réaction de l'autre personne, un sur le ressenti de l'apprenant, un sur un effet concret/mesurable
+- Langage naturel, oral, vivant — on doit voir la scène
 
-MAUVAIS exemples (bateaux, interchangeables) :
+MAUVAIS exemples (interchangeables, bateaux, creux) :
 - "Ça s'est bien passé" ❌
 - "L'échange a été constructif" ❌
-- "J'ai vu une différence" ❌
+- "J'ai vu une amélioration" ❌
 
-BONS exemples (on voit la scène) :
+BONS exemples (on y est, c'est vivant) :
 - "Il a décroché les bras et s'est mis à parler" ✅
 - "Elle m'a dit « c'est la première fois qu'on me demande ça »" ✅
 - "On a bouclé en 20 min au lieu d'une heure" ✅

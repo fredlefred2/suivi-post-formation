@@ -19,6 +19,7 @@ type Props = {
   onSuccess?: (axeId: string, newCount: number) => void
   onboardingMode?: boolean
   prefill?: { content: string; axeId: string } | null
+  groupTheme?: string | null
 }
 
 const LEVEL_BORDER_COLORS: Record<number, string> = {
@@ -273,7 +274,7 @@ const WHO_PRECISION: Record<string, { question: string; placeholder: string }> =
 
 type ChatStep = 'axe' | 'action' | 'who' | 'who-detail' | 'result' | 'confirm'
 
-export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode, prefill }: Props) {
+export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode, prefill, groupTheme }: Props) {
   const [step, setStep] = useState<ChatStep>('axe')
   const [selectedAxe, setSelectedAxe] = useState<AxeOption | null>(null)
   const [chosenAction, setChosenAction] = useState('')
@@ -371,7 +372,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       const res = await fetch('/api/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'actions', axeSubject }),
+        body: JSON.stringify({ type: 'actions', axeSubject, groupTheme: groupTheme || undefined }),
       })
       if (res.ok) {
         const data = await res.json()
@@ -445,7 +446,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       const res = await fetch('/api/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, who, axeSubject: selectedAxe?.subject }),
+        body: JSON.stringify({ action, who, axeSubject: selectedAxe?.subject, groupTheme: groupTheme || undefined }),
       })
       if (res.ok) {
         const data = await res.json()
