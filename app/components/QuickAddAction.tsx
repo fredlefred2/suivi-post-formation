@@ -42,7 +42,8 @@ const LEVEL_BG_COLORS: Record<number, string> = {
 type SuggestionSet = {
   keywords: string[]
   actions: string[]
-  contexts: string[]
+  who: string[]
+  where: string[]
   results: string[]
 }
 
@@ -56,7 +57,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai creusé une réponse vague avec un « c'est-à-dire ? »",
       "J'ai pris des notes pour rester concentré sur l'échange",
     ],
-    contexts: ['Client', 'Collaborateur', 'Manager', 'Collègue', 'En réunion', 'En entretien'],
+    who: ['Un client', 'Un collaborateur', 'Mon manager', 'Un collègue', 'Un prospect'],
+    where: ['En réunion', 'En entretien', 'Au téléphone', 'En RDV', 'En visio', 'En informel'],
     results: [
       "Il/elle s'est ouvert(e) davantage",
       "J'ai obtenu une info que je n'avais pas",
@@ -74,7 +76,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai expliqué le pourquoi plutôt que le comment",
       "J'ai fait un point de suivi sans reprendre la main",
     ],
-    contexts: ['Collaborateur', 'Équipe', 'En réunion', 'Sur un projet', 'En entretien'],
+    who: ['Un collaborateur', 'Un membre de l\'équipe', 'Un collègue', 'Un alternant'],
+    where: ['En réunion', 'En entretien', 'Sur un projet', 'Au quotidien'],
     results: [
       "La personne a pris confiance",
       "Le résultat était à la hauteur",
@@ -92,7 +95,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai fait un retour dans l'heure plutôt que d'attendre",
       "J'ai séparé les faits de mon ressenti",
     ],
-    contexts: ['Collaborateur', 'Collègue', 'En réunion', 'En entretien', 'Par message', 'Manager'],
+    who: ['Un collaborateur', 'Un collègue', 'Mon manager', 'Un membre de l\'équipe'],
+    where: ['En entretien', 'En réunion', 'Par message', 'En one-to-one', 'En informel'],
     results: [
       "La personne a bien réagi",
       "Ça a ouvert une discussion constructive",
@@ -110,7 +114,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai proposé la vente au bon moment",
       "J'ai reformulé l'objection avant d'y répondre",
     ],
-    contexts: ['Client', 'Prospect', 'En RDV', 'Au téléphone', 'En visio', 'Par email'],
+    who: ['Un client', 'Un prospect', 'Un acheteur', 'Un décideur'],
+    where: ['En RDV', 'Au téléphone', 'En visio', 'Par email', 'En salon'],
     results: [
       "Le client a accepté",
       "J'ai maintenu ma marge",
@@ -128,7 +133,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai mis en avant un bénéfice plutôt qu'une caractéristique",
       "J'ai préparé 3 arguments clés avant mon RDV",
     ],
-    contexts: ['Client', 'Prospect', 'En présentation', 'En RDV', 'En réunion', 'Par email'],
+    who: ['Un client', 'Un prospect', 'Un décideur', 'Un interlocuteur'],
+    where: ['En présentation', 'En RDV', 'En réunion', 'Par email', 'Au téléphone'],
     results: [
       "Mon interlocuteur a été convaincu",
       "J'ai senti une adhésion immédiate",
@@ -146,7 +152,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai utilisé le DESC pour formuler ma demande",
       "J'ai identifié un jeu de triangle toxique et j'en suis sorti",
     ],
-    contexts: ['Collaborateur', 'Manager', 'Collègue', 'En réunion', 'En entretien', 'Client'],
+    who: ['Un collaborateur', 'Mon manager', 'Un collègue', 'Un client'],
+    where: ['En réunion', 'En entretien', 'En one-to-one', 'Par téléphone', 'En informel'],
     results: [
       "La situation s'est apaisée",
       "Mon interlocuteur a respecté ma position",
@@ -164,7 +171,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai éliminé un mot parasite de mon discours",
       "J'ai soigné mon accroche pour capter l'attention",
     ],
-    contexts: ['En réunion', 'En présentation', 'Devant l\'équipe', 'En comité', 'Face à un client', 'En visio'],
+    who: ['Mon équipe', 'Un groupe', 'Un client', 'Un comité', 'Mon manager'],
+    where: ['En réunion', 'En présentation', 'En comité de direction', 'En visio', 'Devant un public'],
     results: [
       "J'ai senti l'attention du public",
       "On m'a fait un retour positif",
@@ -182,7 +190,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai fait un point d'avancement structuré",
       "J'ai planifié ma semaine en bloquant du temps pour l'essentiel",
     ],
-    contexts: ['Avec l\'équipe', 'En entretien', 'Pour moi-même', 'En réunion', 'Avec mon manager'],
+    who: ['Un collaborateur', 'Mon équipe', 'Mon manager', 'Moi-même'],
+    where: ['En entretien', 'En réunion', 'Au quotidien', 'En point de suivi'],
     results: [
       "J'ai été plus efficace",
       "Le collaborateur savait exactement quoi faire",
@@ -200,7 +209,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai demandé son avis avant de décider",
       "J'ai donné du sens à une tâche ingrate",
     ],
-    contexts: ['Collaborateur', 'Équipe', 'En réunion', 'En one-to-one', 'En entretien'],
+    who: ['Un collaborateur', 'Un membre de l\'équipe', 'Mon équipe', 'Un collègue'],
+    where: ['En réunion', 'En one-to-one', 'En entretien', 'Au quotidien', 'En informel'],
     results: [
       "J'ai vu un regain d'énergie",
       "La personne s'est investie davantage",
@@ -218,7 +228,8 @@ const SUGGESTION_SETS: SuggestionSet[] = [
       "J'ai mis plus de convivialité avec un profil Influent",
       "J'ai donné plus de détails à un profil Consciencieux",
     ],
-    contexts: ['Collaborateur', 'Client', 'Manager', 'Collègue', 'En réunion', 'En entretien'],
+    who: ['Un collaborateur', 'Un client', 'Mon manager', 'Un collègue', 'Un prospect'],
+    where: ['En réunion', 'En entretien', 'En RDV', 'Au téléphone', 'En informel'],
     results: [
       "L'échange a été plus fluide",
       "J'ai senti que ça passait mieux",
@@ -239,7 +250,8 @@ const DEFAULT_SUGGESTIONS: SuggestionSet = {
     "J'ai pris du recul avant de réagir",
     "J'ai préparé un échange important",
   ],
-  contexts: ['Collaborateur', 'Client', 'Manager', 'Collègue', 'En réunion', 'En entretien'],
+  who: ['Un collaborateur', 'Un client', 'Mon manager', 'Un collègue'],
+  where: ['En réunion', 'En entretien', 'Au téléphone', 'Au quotidien', 'En informel'],
   results: [
     "Ça a bien fonctionné",
     "J'ai vu une différence",
@@ -264,13 +276,14 @@ function pickRandom<T>(arr: T[], count: number): T[] {
 
 // ── Composant ──────────────────────────────────────────────────
 
-type ChatStep = 'axe' | 'action' | 'context' | 'result' | 'confirm'
+type ChatStep = 'axe' | 'action' | 'who' | 'where' | 'result' | 'confirm'
 
 export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode, prefill }: Props) {
   const [step, setStep] = useState<ChatStep>('axe')
   const [selectedAxe, setSelectedAxe] = useState<AxeOption | null>(null)
   const [chosenAction, setChosenAction] = useState('')
-  const [chosenContext, setChosenContext] = useState('')
+  const [chosenWho, setChosenWho] = useState('')
+  const [chosenWhere, setChosenWhere] = useState('')
   const [chosenResult, setChosenResult] = useState('')
   const [customText, setCustomText] = useState('')
   const [showCustom, setShowCustom] = useState(false)
@@ -280,7 +293,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [confirmInfo, setConfirmInfo] = useState<{ message: string; nextIcon: string; nextLabel: string } | null>(null)
   const [actionSuggestions, setActionSuggestions] = useState<string[]>([])
   const [resultSuggestions, setResultSuggestions] = useState<string[]>([])
-  const [contextOptions, setContextOptions] = useState<string[]>([])
+  const [whoOptions, setWhoOptions] = useState<string[]>([])
+  const [whereOptions, setWhereOptions] = useState<string[]>([])
   const { toast } = useToast()
 
   // Prefill depuis défi de la semaine (mode legacy)
@@ -309,7 +323,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setStep('axe')
     setSelectedAxe(null)
     setChosenAction('')
-    setChosenContext('')
+    setChosenWho('')
+    setChosenWhere('')
     setChosenResult('')
     setCustomText('')
     setShowCustom(false)
@@ -318,7 +333,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setConfirmInfo(null)
     setActionSuggestions([])
     setResultSuggestions([])
-    setContextOptions([])
+    setWhoOptions([])
+    setWhereOptions([])
   }
 
   function handleClose() {
@@ -330,7 +346,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setSelectedAxe(axe)
     const set = findSuggestionSet(axe.subject)
     setActionSuggestions(pickRandom(set.actions, 3))
-    setContextOptions(set.contexts)
+    setWhoOptions(set.who)
+    setWhereOptions(set.where)
     setResultSuggestions(pickRandom(set.results, 3))
     setStep('action')
     setShowCustom(false)
@@ -341,7 +358,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setChosenAction(action)
     setShowCustom(false)
     setCustomText('')
-    setStep('context')
+    setStep('who')
   }
 
   function handleCustomAction() {
@@ -349,11 +366,18 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setChosenAction(customText.trim())
     setShowCustom(false)
     setCustomText('')
-    setStep('context')
+    setStep('who')
   }
 
-  function handleSelectContext(ctx: string) {
-    setChosenContext(ctx)
+  function handleSelectWho(who: string) {
+    setChosenWho(who)
+    setShowCustom(false)
+    setCustomText('')
+    setStep('where')
+  }
+
+  function handleSelectWhere(where: string) {
+    setChosenWhere(where)
     setShowCustom(false)
     setCustomText('')
     setStep('result')
@@ -363,8 +387,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setChosenResult(result)
     setShowCustom(false)
     setCustomText('')
-    // Soumettre directement
-    submitAction(chosenAction, chosenContext, result)
+    submitAction(chosenAction, chosenWho, chosenWhere, result)
   }
 
   function handleCustomResult() {
@@ -373,17 +396,20 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setChosenResult(result)
     setShowCustom(false)
     setCustomText('')
-    submitAction(chosenAction, chosenContext, result)
+    submitAction(chosenAction, chosenWho, chosenWhere, result)
   }
 
-  function buildDescription(action: string, context: string, result: string): string {
-    return `${action}, ${context.toLowerCase().startsWith('en ') || context.toLowerCase().startsWith('au ') || context.toLowerCase().startsWith('par ') || context.toLowerCase().startsWith('sur ') || context.toLowerCase().startsWith('pour ') || context.toLowerCase().startsWith('devant ') || context.toLowerCase().startsWith('face ') || context.toLowerCase().startsWith('avec ') ? context.toLowerCase() : 'avec ' + context.toLowerCase().replace(/^(un |une |le |la |les |mon |ma |mes )/, '')}. ${result}`
+  function buildDescription(action: string, who: string, where: string, result: string): string {
+    // Construire "avec un client, en réunion"
+    const whoLower = who.toLowerCase().replace(/^(un |une )/, '')
+    const wherePart = where.toLowerCase().startsWith('en ') || where.toLowerCase().startsWith('au ') || where.toLowerCase().startsWith('par ') || where.toLowerCase().startsWith('sur ') || where.toLowerCase().startsWith('devant ') ? where.toLowerCase() : 'en ' + where.toLowerCase()
+    return `${action}, avec ${whoLower}, ${wherePart}. ${result}`
   }
 
-  function submitAction(action: string, context: string, result: string) {
+  function submitAction(action: string, who: string, where: string, result: string) {
     if (!selectedAxe) return
 
-    const description = buildDescription(action, context, result)
+    const description = buildDescription(action, who, where, result)
 
     const fd = new FormData()
     fd.set('axe_id', selectedAxe.id)
@@ -455,8 +481,9 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setShowCustom(false)
     setCustomText('')
     if (step === 'action') { setStep('axe'); setSelectedAxe(null) }
-    else if (step === 'context') { setStep('action'); setChosenAction('') }
-    else if (step === 'result') { setStep('context'); setChosenContext('') }
+    else if (step === 'who') { setStep('action'); setChosenAction('') }
+    else if (step === 'where') { setStep('who'); setChosenWho('') }
+    else if (step === 'result') { setStep('where'); setChosenWhere('') }
   }
 
   if (!open) return null
@@ -465,7 +492,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const coachMessages: Record<ChatStep, string> = {
     axe: 'Hey ! Tu as agi sur quel axe ?',
     action: 'Top ! Raconte-moi, qu\'est-ce que tu as fait ?',
-    context: 'Bien joué ! C\'était dans quel contexte ?',
+    who: 'Bien joué ! C\'était avec qui ?',
+    where: 'OK ! Et dans quel cadre ?',
     result: 'Et alors, qu\'est-ce que ça a donné ?',
     confirm: '',
   }
@@ -590,18 +618,26 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             )}
 
             {/* Étape 2 répondue : action choisie */}
-            {chosenAction && (step === 'context' || step === 'result') && (
+            {chosenAction && (step === 'who' || step === 'where' || step === 'result') && (
               <>
                 <CoachBubble text={coachMessages.action} />
                 <UserBubble text={chosenAction} />
               </>
             )}
 
-            {/* Étape 3 répondue : contexte choisi */}
-            {chosenContext && step === 'result' && (
+            {/* Étape 3 répondue : avec qui */}
+            {chosenWho && (step === 'where' || step === 'result') && (
               <>
-                <CoachBubble text={coachMessages.context} />
-                <UserBubble text={chosenContext} />
+                <CoachBubble text={coachMessages.who} />
+                <UserBubble text={chosenWho} />
+              </>
+            )}
+
+            {/* Étape 4 répondue : dans quel cadre */}
+            {chosenWhere && step === 'result' && (
+              <>
+                <CoachBubble text={coachMessages.where} />
+                <UserBubble text={chosenWhere} />
               </>
             )}
 
@@ -643,7 +679,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
                   className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
                   style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#a0937c' }}>
-                  ✏️ Autre chose...
+                  Autre chose...
                 </button>
               </div>
             )}
@@ -673,14 +709,27 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </div>
             )}
 
-            {/* ── Étape 3 : Contexte ── */}
-            {step === 'context' && (
+            {/* ── Étape 3 : Avec qui ? ── */}
+            {step === 'who' && (
               <div className="pl-10 flex flex-wrap gap-2">
-                {contextOptions.map((ctx, i) => (
-                  <button key={i} onClick={() => handleSelectContext(ctx)}
+                {whoOptions.map((w, i) => (
+                  <button key={i} onClick={() => handleSelectWho(w)}
                     className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all active:scale-95"
                     style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                    {ctx}
+                    {w}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── Étape 4 : Dans quel cadre ? ── */}
+            {step === 'where' && (
+              <div className="pl-10 flex flex-wrap gap-2">
+                {whereOptions.map((w, i) => (
+                  <button key={i} onClick={() => handleSelectWhere(w)}
+                    className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all active:scale-95"
+                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
+                    {w}
                   </button>
                 ))}
               </div>
@@ -699,7 +748,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
                   className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
                   style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#a0937c' }}>
-                  ✏️ Autre chose...
+                  Autre chose...
                 </button>
               </div>
             )}
