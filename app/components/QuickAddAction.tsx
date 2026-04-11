@@ -274,24 +274,15 @@ function pickRandom<T>(arr: T[], count: number): T[] {
   return shuffled.slice(0, count)
 }
 
-// ── Sous-questions conditionnelles ────────────────────────────
+// ── Sous-questions conditionnelles (texte libre + skip) ───────
 
-const WHO_DETAILS: Record<string, { question: string; options: string[] }> = {
-  'Un client': {
-    question: 'Quel type de client ?',
-    options: ['Un client fidèle', 'Un nouveau client', 'Un client difficile', 'Un client important'],
-  },
-  'Un prospect': {
-    question: 'À quel stade ?',
-    options: ['Un premier contact', 'Un prospect en cours', 'Un prospect relancé'],
-  },
+const WHO_PRECISION: Record<string, { question: string; placeholder: string }> = {
+  'Un client': { question: 'Tu peux préciser qui ?', placeholder: 'Ex : Sophie, le directeur achats...' },
+  'Un prospect': { question: 'Tu peux préciser qui ?', placeholder: 'Ex : la société Duval, le contact web...' },
 }
 
-const WHERE_DETAILS: Record<string, { question: string; options: string[] }> = {
-  'En réunion': {
-    question: 'Quel type de réunion ?',
-    options: ['Réunion d\'équipe', 'Comité de direction', 'Réunion projet', 'Point hebdo'],
-  },
+const WHERE_PRECISION: Record<string, { question: string; placeholder: string }> = {
+  'En réunion': { question: 'Quel type de réunion ?', placeholder: 'Ex : réunion d\'équipe, comité de direction...' },
 }
 
 // ── Composant ──────────────────────────────────────────────────
@@ -318,10 +309,11 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [whereOptions, setWhereOptions] = useState<string[]>([])
   const [whoBase, setWhoBase] = useState('')
   const [whoDetailQuestion, setWhoDetailQuestion] = useState('')
-  const [whoDetailOpts, setWhoDetailOpts] = useState<string[]>([])
+  const [whoDetailPlaceholder, setWhoDetailPlaceholder] = useState('')
   const [whereBase, setWhereBase] = useState('')
   const [whereDetailQuestion, setWhereDetailQuestion] = useState('')
-  const [whereDetailOpts, setWhereDetailOpts] = useState<string[]>([])
+  const [whereDetailPlaceholder, setWhereDetailPlaceholder] = useState('')
+  const [detailText, setDetailText] = useState('')
   const { toast } = useToast()
 
   // Prefill depuis défi de la semaine (mode legacy)
@@ -365,10 +357,11 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setWhereOptions([])
     setWhoBase('')
     setWhoDetailQuestion('')
-    setWhoDetailOpts([])
+    setWhoDetailPlaceholder('')
     setWhereBase('')
     setWhereDetailQuestion('')
-    setWhereDetailOpts([])
+    setWhereDetailPlaceholder('')
+    setDetailText('')
   }
 
   function handleClose() {
@@ -405,11 +398,12 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   function handleSelectWho(who: string) {
     setShowCustom(false)
     setCustomText('')
-    const detail = WHO_DETAILS[who]
-    if (detail) {
+    const precision = WHO_PRECISION[who]
+    if (precision) {
       setWhoBase(who)
-      setWhoDetailQuestion(detail.question)
-      setWhoDetailOpts(detail.options)
+      setWhoDetailQuestion(precision.question)
+      setWhoDetailPlaceholder(precision.placeholder)
+      setDetailText('')
       setStep('who-detail')
     } else {
       setWhoBase('')
@@ -418,10 +412,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     }
   }
 
-  function handleSelectWhoDetail(detail: string) {
-    setChosenWho(detail)
-    setShowCustom(false)
-    setCustomText('')
+  function handleWhoDetailSubmit() {
+    const detail = detailText.trim()
+    setChosenWho(detail ? `${whoBase} (${detail})` : whoBase)
+    setDetailText('')
+    setStep('where')
+  }
+
+  function handleWhoDetailSkip() {
+    setChosenWho(whoBase)
+    setDetailText('')
     setStep('where')
   }
 
@@ -454,11 +454,12 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   function handleSelectWhere(where: string) {
     setShowCustom(false)
     setCustomText('')
-    const detail = WHERE_DETAILS[where]
-    if (detail) {
+    const precision = WHERE_PRECISION[where]
+    if (precision) {
       setWhereBase(where)
-      setWhereDetailQuestion(detail.question)
-      setWhereDetailOpts(detail.options)
+      setWhereDetailQuestion(precision.question)
+      setWhereDetailPlaceholder(precision.placeholder)
+      setDetailText('')
       setStep('where-detail')
     } else {
       setWhereBase('')
@@ -468,12 +469,20 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     }
   }
 
-  function handleSelectWhereDetail(detail: string) {
-    setChosenWhere(detail)
-    setShowCustom(false)
-    setCustomText('')
+  function handleWhereDetailSubmit() {
+    const detail = detailText.trim()
+    const finalWhere = detail || whereBase
+    setChosenWhere(finalWhere)
+    setDetailText('')
     setStep('result')
-    fetchResultSuggestions(chosenAction, chosenWho, detail)
+    fetchResultSuggestions(chosenAction, chosenWho, finalWhere)
+  }
+
+  function handleWhereDetailSkip() {
+    setChosenWhere(whereBase)
+    setDetailText('')
+    setStep('result')
+    fetchResultSuggestions(chosenAction, chosenWho, whereBase)
   }
 
   function handleSelectResult(result: string) {
@@ -582,9 +591,9 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setCustomText('')
     if (step === 'action') { setStep('axe'); setSelectedAxe(null) }
     else if (step === 'who') { setStep('action'); setChosenAction('') }
-    else if (step === 'who-detail') { setStep('who'); setWhoBase(''); setWhoDetailOpts([]) }
+    else if (step === 'who-detail') { setStep('who'); setWhoBase(''); setDetailText('') }
     else if (step === 'where') { setStep(whoBase ? 'who-detail' : 'who'); setChosenWho('') }
-    else if (step === 'where-detail') { setStep('where'); setWhereBase(''); setWhereDetailOpts([]) }
+    else if (step === 'where-detail') { setStep('where'); setWhereBase(''); setDetailText('') }
     else if (step === 'result') { setStep(whereBase ? 'where-detail' : 'where'); setChosenWhere('') }
   }
 
@@ -709,7 +718,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           </div>
 
           {/* Zone de chat */}
-          <div className="px-4 py-4 space-y-3 max-h-[65vh] overflow-y-auto" style={{ background: '#faf8f4' }}>
+          <div className="px-4 py-4 space-y-3 max-h-[65vh] min-h-[200px] overflow-y-auto" style={{ background: '#faf8f4' }}>
 
             {/* ── Historique des réponses précédentes ── */}
 
@@ -797,8 +806,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                   </button>
                 ))}
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
-                  style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#a0937c' }}>
+                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
+                  style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
                   Autre chose...
                 </button>
               </div>
@@ -807,24 +816,28 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {/* ── Étape 2 bis : Saisie libre action ── */}
             {step === 'action' && showCustom && (
               <div className="pl-10 space-y-2">
-                <textarea
+                <input
+                  type="text"
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
-                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] resize-none h-16 focus:outline-none focus:ring-2"
+                  onKeyDown={(e) => { if (e.key === 'Enter' && customText.trim()) { e.preventDefault(); handleCustomAction() } }}
+                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2"
                   style={{ border: '1.5px solid #e8e0d4', background: 'white' }}
                   placeholder="Décris ce que tu as fait..."
                   autoFocus
                 />
                 <div className="flex gap-2">
                   <button onClick={() => setShowCustom(false)}
-                    className="text-[12px] px-3 py-1.5 rounded-full" style={{ color: '#a0937c' }}>
+                    className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
                     ← Retour
                   </button>
-                  <button onClick={handleCustomAction} disabled={!customText.trim()}
-                    className="text-[12px] px-4 py-1.5 rounded-full font-semibold disabled:opacity-40"
-                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-                    Envoyer
-                  </button>
+                  {customText.trim() && (
+                    <button onClick={handleCustomAction}
+                      className="text-[12px] px-4 py-1.5 rounded-full font-semibold"
+                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                      Envoyer
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -842,16 +855,32 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </div>
             )}
 
-            {/* ── Étape 3b : Précision who ── */}
+            {/* ── Étape 3b : Précision who (texte libre + passer) ── */}
             {step === 'who-detail' && (
-              <div className="pl-10 flex flex-wrap gap-2">
-                {whoDetailOpts.map((w, i) => (
-                  <button key={i} onClick={() => handleSelectWhoDetail(w)}
-                    className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all active:scale-95"
-                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                    {w}
+              <div className="pl-10 space-y-2">
+                <input
+                  type="text"
+                  value={detailText}
+                  onChange={(e) => setDetailText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleWhoDetailSubmit() } }}
+                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2"
+                  style={{ border: '1.5px solid #e8e0d4', background: 'white' }}
+                  placeholder={whoDetailPlaceholder}
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button onClick={handleWhoDetailSkip}
+                    className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
+                    Passer →
                   </button>
-                ))}
+                  {detailText.trim() && (
+                    <button onClick={handleWhoDetailSubmit}
+                      className="text-[12px] px-4 py-1.5 rounded-full font-semibold"
+                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                      OK
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -868,16 +897,32 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </div>
             )}
 
-            {/* ── Étape 4b : Précision where ── */}
+            {/* ── Étape 4b : Précision where (texte libre + passer) ── */}
             {step === 'where-detail' && (
-              <div className="pl-10 flex flex-wrap gap-2">
-                {whereDetailOpts.map((w, i) => (
-                  <button key={i} onClick={() => handleSelectWhereDetail(w)}
-                    className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all active:scale-95"
-                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                    {w}
+              <div className="pl-10 space-y-2">
+                <input
+                  type="text"
+                  value={detailText}
+                  onChange={(e) => setDetailText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleWhereDetailSubmit() } }}
+                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2"
+                  style={{ border: '1.5px solid #e8e0d4', background: 'white' }}
+                  placeholder={whereDetailPlaceholder}
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button onClick={handleWhereDetailSkip}
+                    className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
+                    Passer →
                   </button>
-                ))}
+                  {detailText.trim() && (
+                    <button onClick={handleWhereDetailSubmit}
+                      className="text-[12px] px-4 py-1.5 rounded-full font-semibold"
+                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                      OK
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -902,34 +947,38 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                   </button>
                 ))}
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
-                  style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#a0937c' }}>
+                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
+                  style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
                   Autre chose...
                 </button>
               </div>
             )}
 
-            {/* ── Étape 4 bis : Saisie libre résultat ── */}
+            {/* ── Étape 5 bis : Saisie libre résultat ── */}
             {step === 'result' && showCustom && (
               <div className="pl-10 space-y-2">
-                <textarea
+                <input
+                  type="text"
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
-                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] resize-none h-16 focus:outline-none focus:ring-2"
+                  onKeyDown={(e) => { if (e.key === 'Enter' && customText.trim()) { e.preventDefault(); handleCustomResult() } }}
+                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2"
                   style={{ border: '1.5px solid #e8e0d4', background: 'white' }}
                   placeholder="Qu'as-tu observé comme résultat ?"
                   autoFocus
                 />
                 <div className="flex gap-2">
                   <button onClick={() => setShowCustom(false)}
-                    className="text-[12px] px-3 py-1.5 rounded-full" style={{ color: '#a0937c' }}>
+                    className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
                     ← Retour
                   </button>
-                  <button onClick={handleCustomResult} disabled={isPending || !customText.trim()}
-                    className="text-[12px] px-4 py-1.5 rounded-full font-semibold disabled:opacity-40"
-                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-                    {isPending ? '...' : 'Envoyer'}
-                  </button>
+                  {customText.trim() && (
+                    <button onClick={handleCustomResult} disabled={isPending}
+                      className="text-[12px] px-4 py-1.5 rounded-full font-semibold disabled:opacity-40"
+                      style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                      {isPending ? '...' : 'Envoyer'}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
