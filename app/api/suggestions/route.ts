@@ -27,38 +27,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
     }
 
-    prompt = `Tu es coach en développement professionnel. Un apprenant suit une formation et travaille sur un axe de progrès précis. Tu dois lui suggérer 3 actions concrètes qu'il a pu réaliser CETTE SEMAINE, en lien DIRECT avec son axe.
+    prompt = `Tu es coach terrain en développement professionnel. Un apprenant travaille sur un axe de progrès précis. Propose-lui 3 actions concrètes qu'il a pu faire CETTE SEMAINE.
 
-═══ DONNÉES DE L'APPRENANT ═══
+═══ DONNÉES ═══
 Axe de progrès : "${axeSubject}"
-${axeDescription ? `Précision sur l'axe : "${axeDescription}"` : ''}
-${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
+${axeDescription ? `Précision : "${axeDescription}"` : ''}
+${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
 
-═══ CONSIGNE CRITIQUE ═══
-Tes suggestions DOIVENT être hyper-spécifiques à l'axe "${axeSubject}".
-${axeDescription ? `L'apprenant a précisé : "${axeDescription}" — utilise ces détails.` : ''}
-${groupTheme ? `La formation porte sur "${groupTheme}" — ancre tes suggestions dans ce contexte métier.` : ''}
+═══ RÈGLE N°1 — PERTINENCE ═══
+Les 3 suggestions doivent être en lien DIRECT et EXCLUSIF avec l'axe "${axeSubject}". Lis l'axe mot par mot. Chaque suggestion doit ÉVIDEMMENT concerner ce sujet précis. Si quelqu'un lit la suggestion sans connaître l'axe, il doit pouvoir DEVINER de quel axe il s'agit.
+${axeDescription ? `Appuie-toi sur la précision donnée par l'apprenant : "${axeDescription}".` : ''}
+${groupTheme ? `Ancre dans le contexte de la formation "${groupTheme}".` : ''}
 
-Si l'axe parle de SILENCES et PAUSES → les 3 actions doivent concerner des silences, des pauses, du ralentissement de débit. PAS autre chose.
-Si l'axe parle de PRÉPARATION → les 3 actions doivent concerner la préparation (intro, plan, conclusion). PAS autre chose.
-Si l'axe parle de GROUPES DIFFICILES → les 3 actions doivent concerner la gestion de publics compliqués. PAS autre chose.
+═══ RÈGLE N°2 — CONCRET ═══
+Chaque suggestion décrit UN GESTE PRÉCIS, un moment réel, un mot prononcé. On doit VOIR LA SCÈNE. Pas un concept, pas un objectif, pas une intention.
 
-═══ FORMAT ═══
-- Chaque suggestion commence par "J'ai"
-- C'est un geste PRÉCIS, SITUÉ dans le temps — on voit la scène
+═══ RÈGLE N°3 — FORMAT ═══
+- Commence par "J'ai"
 - Max 55 caractères
-- Langage oral naturel (comme si la personne racontait à un collègue)
-- PAS de jargon, PAS de noms de méthodes
+- Langage oral, naturel — comme raconté à un collègue
+- Pas de jargon, pas de noms de méthodes ou modèles
+- Variété : une facile, une qui demande un effort, une originale
 
-EXEMPLES DE CE QU'IL NE FAUT PAS FAIRE :
-- "J'ai pratiqué l'écoute active" ❌ (concept abstrait)
-- "J'ai travaillé ma posture" ❌ (trop vague)
-- "J'ai mis en place une démarche" ❌ (creux)
+═══ ANTI-EXEMPLES (à ne JAMAIS produire) ═══
+- "J'ai pratiqué l'écoute active" ❌ concept, pas une action
+- "J'ai travaillé ma posture" ❌ trop vague, aucune scène
+- "J'ai mis en place une démarche" ❌ creux, bureaucratique
+- "J'ai amélioré ma communication" ❌ intention, pas un geste
 
-EXEMPLES DE CE QU'IL FAUT FAIRE :
-- Pour un axe "silences/pauses" : "J'ai compté 3 secondes avant de reprendre" ✅
-- Pour un axe "préparation" : "J'ai écrit mon intro mot pour mot" ✅
-- Pour un axe "groupes difficiles" : "J'ai recadré un bavard sans m'énerver" ✅
+═══ BONS EXEMPLES (pour t'inspirer du NIVEAU de précision attendu) ═══
+- "J'ai laissé 5 sec de silence après ma question" ✅
+- "J'ai dit non sans me justifier" ✅
+- "J'ai reformulé en une phrase ce qu'il venait de dire" ✅
+- "J'ai coupé mon tel pendant l'entretien" ✅
+- "J'ai noté 3 points clés avant d'appeler" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["J'ai...", "J'ai...", "J'ai..."]`
@@ -70,33 +72,39 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
     }
 
-    prompt = `Tu es coach en développement professionnel. Un apprenant vient de déclarer une action précise. Tu dois lui suggérer 3 résultats qu'il a pu OBSERVER concrètement après cette action.
+    prompt = `Tu es coach terrain. Un apprenant vient de déclarer une action. Propose 3 résultats qu'il a pu OBSERVER après.
 
 ═══ CE QU'IL A FAIT ═══
 Action : "${action}"
 Avec qui : "${who}"
-${axeSubject ? `Son axe de progrès : "${axeSubject}"` : ''}
-${axeDescription ? `Précision sur l'axe : "${axeDescription}"` : ''}
-${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
+${axeSubject ? `Axe de progrès : "${axeSubject}"` : ''}
+${axeDescription ? `Précision : "${axeDescription}"` : ''}
+${groupTheme ? `Formation : "${groupTheme}"` : ''}
 
-═══ CONSIGNE CRITIQUE ═══
-Chaque résultat doit être LA CONSÉQUENCE DIRECTE de "${action}" avec "${who}".
-Le résultat doit être IMPOSSIBLE à réutiliser pour une autre action — il colle à celle-ci.
+═══ RÈGLE N°1 — SPÉCIFICITÉ ═══
+Chaque résultat doit être LA CONSÉQUENCE DIRECTE et VISIBLE de "${action}" avec "${who}". Si on change l'action ou le "avec qui", le résultat ne doit PLUS fonctionner. C'est le test : est-ce que ce résultat colle UNIQUEMENT à cette situation ?
 
-═══ FORMAT ═══
-- C'est ce que la personne a VU, SENTI ou OBTENU
+═══ RÈGLE N°2 — ON VOIT LA SCÈNE ═══
+C'est ce que la personne a VU (réaction de l'autre), SENTI (son propre ressenti) ou OBTENU (effet mesurable). Un résultat = un moment précis.
+
+═══ RÈGLE N°3 — FORMAT ═══
 - Max 60 caractères
-- 3 angles : la réaction de l'autre / le ressenti de l'apprenant / un effet concret
-- Langage oral, vivant — on doit voir la scène
+- 3 angles différents : réaction de l'autre / ressenti perso / effet concret
+- Langage oral, vivant
+- Pas de jargon
 
-EXEMPLES DE CE QU'IL NE FAUT PAS FAIRE :
-- "Ça s'est bien passé" ❌ (passe-partout)
-- "L'échange a été constructif" ❌ (creux)
+═══ ANTI-EXEMPLES ═══
+- "Ça s'est bien passé" ❌ passe-partout
+- "L'échange a été constructif" ❌ creux
+- "J'ai vu une amélioration" ❌ vague
+- "La communication était meilleure" ❌ générique
 
-EXEMPLES DE CE QU'IL FAUT FAIRE :
+═══ BONS EXEMPLES (niveau de précision attendu) ═══
 - "Il a décroché les bras et s'est mis à parler" ✅
+- "Elle m'a dit « c'est la 1ère fois qu'on me demande ça »" ✅
 - "On a bouclé en 20 min au lieu d'une heure" ✅
-- "J'étais moins stressé que d'habitude" ✅
+- "J'étais moins stressé que d'habitude, ça m'a surpris" ✅
+- "Il a souri et m'a posé une question en retour" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
