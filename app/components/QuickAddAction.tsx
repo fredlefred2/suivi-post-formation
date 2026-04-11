@@ -612,22 +612,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {step === 'axe' && (
               <div className="pl-10 space-y-2">
                 {axes.map((axe) => {
-                  const levelIdx = getCurrentLevelIndex(axe.completedCount)
                   const marker = getDynamique(axe.completedCount)
-                  const borderColor = LEVEL_BORDER_COLORS[levelIdx] ?? LEVEL_BORDER_COLORS[0]
-                  const bgColor = LEVEL_BG_COLORS[levelIdx] ?? LEVEL_BG_COLORS[0]
                   return (
                     <button key={axe.id} onClick={() => handleSelectAxe(axe)}
-                      className="w-full text-left p-3 rounded-xl transition-all active:scale-[0.98]"
-                      style={{ background: bgColor, border: `2px solid ${borderColor}` }}>
+                      className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md transition-all active:scale-[0.98]"
+                      style={{ background: 'white', border: '1.5px solid #e8e0d4' }}>
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-base shrink-0"
-                          style={{ background: `linear-gradient(135deg, ${borderColor}, ${borderColor}dd)` }}>
-                          <span className="drop-shadow-sm">{marker.icon}</span>
-                        </div>
+                        <span className="text-lg shrink-0">{marker.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-800 truncate text-[13px]">{axe.subject}</p>
-                          <p className="text-[11px] text-gray-500">{axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''} · {marker.label}</p>
+                          <p className="font-semibold truncate text-[13px]" style={{ color: '#1a1a2e' }}>{axe.subject}</p>
+                          <p className="text-[11px]" style={{ color: '#a0937c' }}>{axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''} · {marker.label}</p>
                         </div>
                       </div>
                     </button>
@@ -679,13 +673,13 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </div>
             )}
 
-            {/* ── Étape 3 : Contexte (pastilles) ── */}
+            {/* ── Étape 3 : Contexte ── */}
             {step === 'context' && (
               <div className="pl-10 flex flex-wrap gap-2">
                 {contextOptions.map((ctx, i) => (
                   <button key={i} onClick={() => handleSelectContext(ctx)}
-                    className="px-3.5 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95"
-                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all active:scale-95"
+                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
                     {ctx}
                   </button>
                 ))}
