@@ -313,6 +313,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [confirmInfo, setConfirmInfo] = useState<{ message: string; nextIcon: string; nextLabel: string } | null>(null)
   const [actionSuggestions, setActionSuggestions] = useState<string[]>([])
   const [resultSuggestions, setResultSuggestions] = useState<string[]>([])
+  const [loadingResults, setLoadingResults] = useState(false)
   const [whoOptions, setWhoOptions] = useState<string[]>([])
   const [whereOptions, setWhereOptions] = useState<string[]>([])
   const [whoBase, setWhoBase] = useState('')
@@ -359,6 +360,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setConfirmInfo(null)
     setActionSuggestions([])
     setResultSuggestions([])
+    setLoadingResults(false)
     setWhoOptions([])
     setWhereOptions([])
     setWhoBase('')
@@ -380,7 +382,6 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setActionSuggestions(pickRandom(set.actions, 3))
     setWhoOptions(set.who)
     setWhereOptions(set.where)
-    setResultSuggestions(pickRandom(set.results, 3))
     setStep('action')
     setShowCustom(false)
     setCustomText('')
@@ -424,6 +425,32 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setStep('where')
   }
 
+  async function fetchResultSuggestions(action: string, who: string, where: string) {
+    setLoadingResults(true)
+    setResultSuggestions([])
+    try {
+      const res = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, who, where, axeSubject: selectedAxe?.subject }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.results?.length) {
+          setResultSuggestions(data.results)
+          setLoadingResults(false)
+          return
+        }
+      }
+    } catch (err) {
+      console.error('[Suggestions] fetch error:', err)
+    }
+    // Fallback : suggestions statiques si l'API échoue
+    const set = selectedAxe ? findSuggestionSet(selectedAxe.subject) : DEFAULT_SUGGESTIONS
+    setResultSuggestions(pickRandom(set.results, 3))
+    setLoadingResults(false)
+  }
+
   function handleSelectWhere(where: string) {
     setShowCustom(false)
     setCustomText('')
@@ -437,6 +464,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       setWhereBase('')
       setChosenWhere(where)
       setStep('result')
+      fetchResultSuggestions(chosenAction, chosenWho, where)
     }
   }
 
@@ -445,6 +473,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setShowCustom(false)
     setCustomText('')
     setStep('result')
+    fetchResultSuggestions(chosenAction, chosenWho, detail)
   }
 
   function handleSelectResult(result: string) {
@@ -852,13 +881,23 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </div>
             )}
 
-            {/* ── Étape 4 : Résultat ── */}
-            {step === 'result' && !showCustom && (
+            {/* ── Étape 5 : Résultat (suggestions IA) ── */}
+            {step === 'result' && !showCustom && loadingResults && (
+              <div className="pl-10">
+                <div className="flex gap-1.5 items-center px-3.5 py-2.5 text-[13px]" style={{ color: '#a0937c' }}>
+                  <span className="animate-bounce" style={{ animationDelay: '0ms' }}>·</span>
+                  <span className="animate-bounce" style={{ animationDelay: '150ms' }}>·</span>
+                  <span className="animate-bounce" style={{ animationDelay: '300ms' }}>·</span>
+                  <span className="ml-1.5">Je réfléchis...</span>
+                </div>
+              </div>
+            )}
+            {step === 'result' && !showCustom && !loadingResults && (
               <div className="pl-10 space-y-2">
                 {resultSuggestions.map((s, i) => (
                   <button key={i} onClick={() => handleSelectResult(s)}
-                    className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
-                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
+                    className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98] animate-fade-in-up"
+                    style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e', animationDelay: `${i * 100}ms` }}>
                     {s}
                   </button>
                 ))}
