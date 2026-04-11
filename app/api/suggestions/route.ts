@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
  * - type:"contexts" → 4 suggestions de contexte (adapté à l'axe + thème)
  * - type:"results"  → 3 suggestions de résultats
  *
- * Utilise claude-sonnet-4-20250514 pour la qualité.
+ * Sonnet pour actions/résultats (qualité), Haiku pour contextes (rapidité).
  */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.CLAUDE_API_KEY
@@ -149,6 +149,11 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
   }
 
+  // Haiku pour les contextes (rapide), Sonnet pour le reste (qualité)
+  const model = type === 'contexts'
+    ? 'claude-haiku-4-5-20241022'
+    : 'claude-sonnet-4-20250514'
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -158,7 +163,7 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model,
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }],
       }),
