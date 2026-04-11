@@ -45,6 +45,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [loadingContexts, setLoadingContexts] = useState(false)
   const [resultSuggestions, setResultSuggestions] = useState<string[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
   const chatRef = useRef<HTMLDivElement>(null)
 
@@ -94,6 +95,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingContexts(false)
     setResultSuggestions([])
     setLoadingResults(false)
+    setIsSubmitting(false)
   }
 
   function handleClose() {
@@ -253,6 +255,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   }
 
   function handleSelectResult(result: string) {
+    if (isSubmitting) return
     setChosenResult(result)
     setShowCustom(false)
     setCustomText('')
@@ -260,7 +263,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   }
 
   function handleCustomResult() {
-    if (!customText.trim()) return
+    if (isSubmitting || !customText.trim()) return
     const result = customText.trim()
     setChosenResult(result)
     setShowCustom(false)
@@ -274,7 +277,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   }
 
   function submitAction(action: string, context: string, result: string) {
-    if (!selectedAxe) return
+    if (!selectedAxe || isSubmitting) return
+    setIsSubmitting(true)
 
     const description = buildDescription(action, context, result)
 
@@ -612,7 +616,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {/* ── Étape 4 : Résultat ── */}
             {step === 'result' && !showCustom && loadingResults && <LoadingDots />}
             {step === 'result' && !showCustom && !loadingResults && (
-              <div className="pl-10 space-y-2">
+              <div className={`pl-10 space-y-2 ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}>
                 <SuggestionButtons items={resultSuggestions} onSelect={handleSelectResult} />
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
                   className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
