@@ -3,11 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 /**
  * POST /api/suggestions
  *
- * Deux modes :
- * - type:"actions" → génère 3 suggestions d'actions via Claude
- * - type:"results" → génère 3 suggestions de résultats via Claude
+ * Trois modes :
+ * - type:"actions"  → 3 suggestions d'actions
+ * - type:"contexts" → 4 suggestions de contexte (adapté à l'axe + thème)
+ * - type:"results"  → 3 suggestions de résultats
  *
- * Utilise claude-sonnet-4-20250514 pour la qualité des suggestions.
+ * Utilise claude-sonnet-4-20250514 pour la qualité.
  */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.CLAUDE_API_KEY
@@ -65,31 +66,69 @@ Chaque suggestion décrit UN GESTE PRÉCIS, un moment réel, un mot prononcé. O
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["J'ai...", "J'ai...", "J'ai..."]`
 
+  } else if (type === 'contexts') {
+    // ── Suggestions de contexte ──
+    const { axeSubject, axeDescription, groupTheme, action } = body
+    if (!axeSubject) {
+      return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
+    }
+
+    prompt = `Tu es coach terrain. Un apprenant vient de déclarer une action liée à son axe de progrès. On lui demande "C'était dans quel contexte ?". Propose 4 contextes réalistes et variés.
+
+═══ DONNÉES ═══
+Action déclarée : "${action || ''}"
+Axe de progrès : "${axeSubject}"
+${axeDescription ? `Précision : "${axeDescription}"` : ''}
+${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
+
+═══ RÈGLES ═══
+1. Chaque contexte doit être une SITUATION PROFESSIONNELLE concrète où cette action a pu se produire, en lien avec l'axe "${axeSubject}"${groupTheme ? ` et la formation "${groupTheme}"` : ''}.
+2. Court : max 30 caractères.
+3. C'est un LIEU ou un MOMENT professionnel — pas une personne.
+4. Varié : des situations différentes (réunion, entretien, présentation, terrain, appel, etc.)
+5. Adapté au métier et au contexte de formation de l'apprenant.
+
+═══ ANTI-EXEMPLES ═══
+- "Au travail" ❌ trop vague
+- "Dans un cadre professionnel" ❌ creux
+- "Lors d'un échange" ❌ générique
+
+═══ BONS EXEMPLES (niveau de précision) ═══
+- "En réunion d'équipe" ✅
+- "Pendant un entretien client" ✅
+- "Lors d'une présentation en comité" ✅
+- "En brief du matin" ✅
+- "Au téléphone avec un prospect" ✅
+- "Face à un groupe en formation" ✅
+
+Réponds UNIQUEMENT avec un tableau JSON de 4 strings :
+["...", "...", "...", "..."]`
+
   } else {
     // ── Suggestions de résultats ──
-    const { action, who, axeSubject, axeDescription, groupTheme } = body
-    if (!action || !who) {
+    const { action, context, axeSubject, axeDescription, groupTheme } = body
+    if (!action || !context) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
     }
 
-    prompt = `Tu es coach terrain. Un apprenant vient de déclarer une action. Propose 3 résultats qu'il a pu OBSERVER après.
+    prompt = `Tu es coach terrain. Un apprenant vient de déclarer une action dans un contexte précis. Propose 3 résultats qu'il a pu OBSERVER après.
 
 ═══ CE QU'IL A FAIT ═══
 Action : "${action}"
-Avec qui : "${who}"
+Contexte : "${context}"
 ${axeSubject ? `Axe de progrès : "${axeSubject}"` : ''}
 ${axeDescription ? `Précision : "${axeDescription}"` : ''}
 ${groupTheme ? `Formation : "${groupTheme}"` : ''}
 
 ═══ RÈGLE N°1 — SPÉCIFICITÉ ═══
-Chaque résultat doit être LA CONSÉQUENCE DIRECTE et VISIBLE de "${action}" avec "${who}". Si on change l'action ou le "avec qui", le résultat ne doit PLUS fonctionner. C'est le test : est-ce que ce résultat colle UNIQUEMENT à cette situation ?
+Chaque résultat doit être LA CONSÉQUENCE DIRECTE et VISIBLE de "${action}" dans le contexte "${context}". Si on change l'action ou le contexte, le résultat ne doit PLUS fonctionner.
 
 ═══ RÈGLE N°2 — ON VOIT LA SCÈNE ═══
-C'est ce que la personne a VU (réaction de l'autre), SENTI (son propre ressenti) ou OBTENU (effet mesurable). Un résultat = un moment précis.
+C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti) ou OBTENU (effet mesurable). Un résultat = un moment précis.
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Max 60 caractères
-- 3 angles différents : réaction de l'autre / ressenti perso / effet concret
+- 3 angles différents : réaction des autres / ressenti perso / effet concret
 - Langage oral, vivant
 - Pas de jargon
 
@@ -141,7 +180,7 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
     }
 
     const items: string[] = JSON.parse(jsonMatch[0])
-    return NextResponse.json({ results: items.slice(0, 3) })
+    return NextResponse.json({ results: items })
   } catch (err) {
     console.error('[Suggestions] Error:', err)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
