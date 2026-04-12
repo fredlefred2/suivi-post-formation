@@ -23,6 +23,36 @@ type Props = {
   groupTheme?: string | null
 }
 
+// ── Messages valorisants ───────────────────────────────────────
+
+const FIRST_ACTION_MESSAGES = [
+  { text: "Première action déclarée, c'est le premier pas qui compte !", emoji: '🌱' },
+  { text: "C'est parti ! Tu viens de poser la première brique", emoji: '💪' },
+  { text: "Le plus dur c'est de se lancer… et tu l'as fait !", emoji: '🚀' },
+]
+
+const VALORISANT_MESSAGES = [
+  { text: "C'est en osant sur le terrain qu'on progresse", emoji: '💪' },
+  { text: "Une bonne pratique de plus ancrée dans ton quotidien", emoji: '🌱' },
+  { text: "Tu fais partie de ceux qui appliquent, pas juste ceux qui apprennent", emoji: '🔥' },
+  { text: "Chaque mise en pratique renforce tes réflexes", emoji: '🎯' },
+  { text: "La théorie prend vie quand on passe à l'action", emoji: '⚡' },
+  { text: "Action après action, tu ancres de nouvelles habitudes", emoji: '🧱' },
+  { text: "Bravo, tu passes à l'action ! C'est ça qui fait la différence", emoji: '👏' },
+  { text: "Ce que tu viens de faire, c'est du développement concret", emoji: '📈' },
+  { text: "Encore une mise en pratique, tu construis ta progression", emoji: '🏗️' },
+  { text: "Tu transformes la formation en réflexes terrain", emoji: '🎯' },
+  { text: "Chaque action déclarée, c'est un pas de plus", emoji: '👣' },
+  { text: "Continue comme ça, l'important c'est la régularité", emoji: '🔄' },
+]
+
+function getValorisantMessage(actionCount: number): { text: string; emoji: string } {
+  if (actionCount === 1) {
+    return FIRST_ACTION_MESSAGES[Math.floor(Math.random() * FIRST_ACTION_MESSAGES.length)]
+  }
+  return VALORISANT_MESSAGES[Math.floor(Math.random() * VALORISANT_MESSAGES.length)]
+}
+
 // ── Composant ──────────────────────────────────────────────────
 
 // Flow : Axe → Contexte → Précision contexte → Action → Résultat
@@ -48,6 +78,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [resultSuggestions, setResultSuggestions] = useState<string[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [valorisantMsg, setValorisantMsg] = useState<{ text: string; emoji: string } | null>(null)
   const { toast } = useToast()
   const chatRef = useRef<HTMLDivElement>(null)
 
@@ -99,6 +130,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setResultSuggestions([])
     setLoadingResults(false)
     setIsSubmitting(false)
+    setValorisantMsg(null)
   }
 
   function handleClose() {
@@ -307,6 +339,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       if (res?.error) return
 
       const newCount = oldCount + 1
+      const msg = getValorisantMessage(newCount)
+      setValorisantMsg(msg)
 
       const oldLevel = getCurrentLevelIndex(oldCount)
       const newLevel = getCurrentLevelIndex(newCount)
@@ -317,7 +351,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           setLevelUpInfo(null)
           handleClose()
           onSuccess?.(selectedAxe.id, newCount)
-        }, 2500)
+        }, 3500)
       } else {
         const next = getNextLevel(newCount)
         setConfirmInfo(next ? {
@@ -331,7 +365,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           setConfirmInfo(null)
           handleClose()
           onSuccess?.(selectedAxe.id, newCount)
-        }, 2500)
+        }, 3500)
       }
     })
   }
@@ -347,17 +381,19 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       const res = await createAction(fd)
       if (res?.error) return
       const newCount = oldCount + 1
+      const msg = getValorisantMessage(newCount)
+      setValorisantMsg(msg)
       const oldLevel = getCurrentLevelIndex(oldCount)
       const newLevel = getCurrentLevelIndex(newCount)
       if (newLevel > oldLevel) {
         const level = getCurrentLevel(newCount)
         setLevelUpInfo(level)
-        setTimeout(() => { setLevelUpInfo(null); handleClose(); onSuccess?.(selectedAxe.id, newCount) }, 2500)
+        setTimeout(() => { setLevelUpInfo(null); handleClose(); onSuccess?.(selectedAxe.id, newCount) }, 3500)
       } else {
         const next = getNextLevel(newCount)
         setConfirmInfo(next ? { message: `Encore ${next.delta} action${next.delta > 1 ? 's' : ''} pour`, nextIcon: next.icon, nextLabel: next.label } : null)
         setShowConfirm(true)
-        setTimeout(() => { setShowConfirm(false); setConfirmInfo(null); handleClose(); onSuccess?.(selectedAxe.id, newCount) }, 2500)
+        setTimeout(() => { setShowConfirm(false); setConfirmInfo(null); handleClose(); onSuccess?.(selectedAxe.id, newCount) }, 3500)
       }
     })
   }
@@ -490,13 +526,22 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           <div className="animate-level-up-text">
             <p className="text-xl font-bold mb-1" style={{ color: '#1a1a2e' }}>Niveau {levelUpInfo.label}</p>
             <p className="text-lg font-semibold" style={{ color: '#a0937c' }}>débloqué !</p>
-            <p className="text-sm mt-3" style={{ color: '#a0937c' }}>Continue comme ça 💪</p>
+            {valorisantMsg && (
+              <p className="text-sm mt-3 italic" style={{ color: '#a0937c' }}>
+                {valorisantMsg.emoji} {valorisantMsg.text}
+              </p>
+            )}
           </div>
         </div>
       ) : showConfirm ? (
         <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-auto p-8 text-center" style={{ border: '2px solid #f0ebe0' }}>
-          <div className="text-7xl mb-4">✅</div>
+          <div className="text-5xl mb-3">{valorisantMsg?.emoji || '✅'}</div>
           <p className="text-xl font-bold mb-1" style={{ color: '#1a1a2e' }}>Action ajoutée !</p>
+          {valorisantMsg && (
+            <p className="text-[13px] italic mt-1 px-2" style={{ color: '#a0937c' }}>
+              {valorisantMsg.text}
+            </p>
+          )}
           {confirmInfo ? (
             <div className="mt-3">
               <p className="text-sm text-gray-500">{confirmInfo.message}</p>
