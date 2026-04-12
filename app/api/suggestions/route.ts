@@ -85,6 +85,7 @@ ${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
 1. Chaque contexte doit être une SITUATION PROFESSIONNELLE concrète où cette action a pu se produire, en lien avec l'axe "${axeSubject}"${groupTheme ? ` et la formation "${groupTheme}"` : ''}.
 2. Court : max 30 caractères.
 3. C'est un MOMENT professionnel adapté à la situation du type : réunion, réunion équipe, RDV Négo, RDV client, échange téléphonique, Visio, entretien 1:1, Prospection, échange informel
+4. Pas de nom ou de marque
 5. Adapté au métier et au contexte de formation de l'apprenant.
 
 ═══ ANTI-EXEMPLES ═══
