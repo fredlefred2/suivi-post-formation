@@ -588,7 +588,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
                   className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
                   style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                  Autre chose...
+                  Non, c'est autre chose...
                 </button>
               </div>
             )}
@@ -602,7 +602,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
                   className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
                   style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                  Autre chose...
+                  Non, c'est autre chose...
                 </button>
               </div>
             )}
@@ -616,7 +616,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 <button onClick={() => { setShowCustom(true); setCustomText('') }}
                   className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
                   style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                  Autre chose...
+                  Non, c'est autre chose...
                 </button>
               </div>
             )}
