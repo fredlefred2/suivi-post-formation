@@ -4,11 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
  * POST /api/suggestions
  *
  * Trois modes :
- * - type:"actions"  → 3 suggestions d'actions
- * - type:"contexts" → 4 suggestions de contexte (adapté à l'axe + thème)
- * - type:"results"  → 3 suggestions de résultats
+ * - type:"contexts" → 4 suggestions de contexte (étape 2)
+ * - type:"actions"  → 3 suggestions d'actions (étape 3)
+ * - type:"results"  → 3 suggestions de résultats (étape 4)
  *
- * Sonnet pour actions/résultats (qualité), Haiku pour contextes (rapidité).
+ * Flow : Axe → Contexte → Action → Résultat
+ * Sonnet pour tout.
  */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.CLAUDE_API_KEY
@@ -21,72 +22,29 @@ export async function POST(request: NextRequest) {
 
   let prompt: string
 
-  if (type === 'actions') {
-    // ── Suggestions d'actions ──
-    const { axeSubject, axeDescription, groupTheme, context } = body
-    if (!axeSubject) {
-      return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
-    }
-
-    prompt = `Tu es coach terrain en développement professionnel. Un apprenant travaille sur un axe de progrès précis. Propose-lui 3 actions concrètes qu'il a pu faire CETTE SEMAINE.
-
-═══ DONNÉES ═══
-Axe de progrès : "${axeSubject}"
-${axeDescription ? `Précision : "${axeDescription}"` : ''}
-${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
-${context ? `Contexte déclaré : "${context}"` : ''}
-
-═══ RÈGLE N°1 — PERTINENCE ═══
-Les 3 suggestions doivent être en lien DIRECT et EXCLUSIF avec l'axe "${axeSubject}". Lis l'axe mot par mot. Chaque suggestion doit ÉVIDEMMENT concerner ce sujet précis. Si quelqu'un lit la suggestion sans connaître l'axe, il doit pouvoir DEVINER de quel axe il s'agit.
-${axeDescription ? `Appuie-toi sur la précision donnée par l'apprenant : "${axeDescription}".` : ''}
-${groupTheme ? `Ancre dans le contexte de la formation "${groupTheme}".` : ''}
-${context ? `L'apprenant a déclaré que c'était "${context}" — adapte les suggestions à cette situation.` : ''}
-
-═══ RÈGLE N°2 — CONCRET ═══
-Chaque suggestion décrit UNE action ou une attitude, un moment réel, en lien avec les bonnes pratiques liées au thème de la formation et à l'axe de l'apprenant. Pas un concept, pas un objectif, pas une intention. N'intègre pas de notion de temps (minutes, secondes, etc ...), ni de chiffres (3 questions, 2 objections, ...), ni de prénom
-
-═══ RÈGLE N°3 — FORMAT ═══
-- Commence par "J'ai"
-- Max 55 caractères
-- Langage oral, naturel — comme raconté à un collègue
-- Pas de jargon, pas de noms de méthodes ou modèles
-- Variété : une facile, une qui demande un effort, une originale
-
-═══ ANTI-EXEMPLES (à ne JAMAIS produire) ═══
-- "J'ai pratiqué l'écoute active" ❌ concept, pas une action
-- "J'ai travaillé ma posture" ❌ trop vague, aucune scène
-- "J'ai mis en place une démarche" ❌ creux, bureaucratique
-- "J'ai amélioré ma communication" ❌ intention, pas un geste
-
-═══ BONS EXEMPLES (pour t'inspirer du NIVEAU de précision attendu) ═══
-- "J'ai laissé du silence après ma question" ✅
-- "J'ai dit non sans me justifier" ✅
-- "J'ai reformulé ce qu'il venait de dire" ✅
-- "J'ai coupé mon tel pendant l'entretien" ✅
-- "J'ai noté les points clés avant d'appeler" ✅
-
-Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
-["J'ai...", "J'ai...", "J'ai..."]`
-
-  } else if (type === 'contexts') {
-    // ── Suggestions de contexte ──
+  if (type === 'contexts') {
+    // ── Suggestions de contexte (étape 2) ──
     const { axeSubject, axeDescription, groupTheme } = body
     if (!axeSubject) {
       return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
     }
 
-    prompt = `Tu es coach terrain. Un apprenant travaille sur un axe de progrès. On lui demande "C'était dans quel contexte ?". Propose 4 contextes réalistes et variés.
+    prompt = `Tu es coach dans YAPLUKA, une application mobile de suivi post-formation professionnelle. Après une formation en présentiel, les apprenants utilisent l'appli chaque semaine pour déclarer les bonnes pratiques qu'ils ont mises en œuvre sur le terrain.
 
-═══ DONNÉES ═══
+L'apprenant est en train de déclarer une nouvelle action via un chat guidé. Il a choisi son axe de progrès. On lui demande maintenant "C'était dans quel contexte ?". Tu dois lui proposer 4 contextes professionnels réalistes et variés.
+
+L'objectif : lui faciliter la saisie en lui proposant des situations qu'il reconnaît immédiatement, pour qu'il n'ait pas à réfléchir ni à taper.
+
+═══ DONNÉES DE L'APPRENANT ═══
 Axe de progrès : "${axeSubject}"
-${axeDescription ? `Précision : "${axeDescription}"` : ''}
-${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
+${axeDescription ? `Précision sur l'axe : "${axeDescription}"` : ''}
+${groupTheme ? `Thème de la formation suivie : "${groupTheme}"` : ''}
 
 ═══ RÈGLES ═══
-1. Chaque contexte doit être une SITUATION PROFESSIONNELLE concrète où cette action a pu se produire, en lien avec l'axe "${axeSubject}"${groupTheme ? ` et la formation "${groupTheme}"` : ''}.
+1. Chaque contexte doit être une SITUATION PROFESSIONNELLE concrète où une bonne pratique liée à l'axe "${axeSubject}"${groupTheme ? ` et à la formation "${groupTheme}"` : ''} a pu être mise en œuvre.
 2. Court : max 30 caractères.
-3. C'est un MOMENT professionnel adapté à la situation du type : réunion, réunion équipe, RDV Négo, RDV client, échange téléphonique, Visio, entretien 1:1, Prospection, échange informel
-4. Pas de nom ou de marque
+3. C'est un MOMENT professionnel du type : réunion, réunion équipe, RDV Négo, RDV client, échange téléphonique, Visio, entretien 1:1, Prospection, échange informel
+4. Pas de prénom, pas de nom, pas de marque.
 5. Adapté au métier et au contexte de formation de l'apprenant.
 
 ═══ ANTI-EXEMPLES ═══
@@ -94,7 +52,7 @@ ${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
 - "Dans un cadre professionnel" ❌ creux
 - "Lors d'un échange" ❌ générique
 
-═══ BONS EXEMPLES (niveau de précision) ═══
+═══ BONS EXEMPLES ═══
 - "En réunion d'équipe" ✅
 - "Pendant un RDV client" ✅
 - "Lors d'une présentation" ✅
@@ -105,33 +63,86 @@ ${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
 Réponds UNIQUEMENT avec un tableau JSON de 4 strings :
 ["...", "...", "...", "..."]`
 
+  } else if (type === 'actions') {
+    // ── Suggestions d'actions (étape 3) ──
+    const { axeSubject, axeDescription, groupTheme, context } = body
+    if (!axeSubject) {
+      return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
+    }
+
+    prompt = `Tu es coach dans YAPLUKA, une application mobile de suivi post-formation professionnelle. Après une formation en présentiel, les apprenants utilisent l'appli chaque semaine pour déclarer les bonnes pratiques qu'ils ont mises en œuvre sur le terrain.
+
+L'apprenant est en train de déclarer une nouvelle action via un chat guidé. Il a choisi son axe de progrès et son contexte. On lui demande maintenant "Qu'est-ce que tu as fait ?". Tu dois lui proposer 3 actions concrètes.
+
+L'objectif : l'encourager en lui montrant des bonnes pratiques qu'il reconnaît, simplifier sa saisie, et l'aider à clarifier ce qu'il a fait concrètement.
+
+═══ DONNÉES DE L'APPRENANT ═══
+Axe de progrès : "${axeSubject}"
+${axeDescription ? `Précision sur l'axe : "${axeDescription}"` : ''}
+${groupTheme ? `Thème de la formation suivie : "${groupTheme}"` : ''}
+${context ? `Contexte déclaré : "${context}"` : ''}
+
+═══ RÈGLE N°1 — PERTINENCE ═══
+Les 3 suggestions doivent être des BONNES PRATIQUES liées au thème de la formation "${groupTheme || ''}" et à l'axe "${axeSubject}". C'est le thème + l'axe + la précision + le contexte qui déterminent les suggestions. Si quelqu'un lit la suggestion sans connaître l'axe, il doit pouvoir DEVINER de quel axe il s'agit.
+${axeDescription ? `Appuie-toi sur la précision donnée par l'apprenant : "${axeDescription}".` : ''}
+${context ? `L'apprenant a déclaré que c'était "${context}" — adapte les suggestions à cette situation.` : ''}
+
+═══ RÈGLE N°2 — CONCRET ═══
+Chaque suggestion décrit UNE action ou une attitude, un moment réel, en lien avec les bonnes pratiques liées au thème de la formation et à l'axe de l'apprenant. Pas un concept, pas un objectif, pas une intention. Pas de notion de temps (minutes, secondes), pas de chiffres (3 questions, 2 objections), pas de prénom, pas de marque.
+
+═══ RÈGLE N°3 — FORMAT ═══
+- Commence par "J'ai"
+- Max 55 caractères
+- Langage oral, naturel — comme raconté à un collègue
+- Pas de jargon, pas de noms de méthodes ou modèles
+- Variété : une facile, une qui demande un effort, une originale
+
+═══ ANTI-EXEMPLES ═══
+- "J'ai pratiqué l'écoute active" ❌ concept, pas une action
+- "J'ai travaillé ma posture" ❌ trop vague
+- "J'ai mis en place une démarche" ❌ creux, bureaucratique
+- "J'ai amélioré ma communication" ❌ intention, pas un geste
+
+═══ BONS EXEMPLES ═══
+- "J'ai laissé du silence après ma question" ✅
+- "J'ai dit non sans me justifier" ✅
+- "J'ai reformulé ce qu'il venait de dire" ✅
+- "J'ai coupé mon tel pendant l'entretien" ✅
+- "J'ai noté les points clés avant d'appeler" ✅
+
+Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
+["J'ai...", "J'ai...", "J'ai..."]`
+
   } else {
-    // ── Suggestions de résultats ──
+    // ── Suggestions de résultats (étape 4) ──
     const { action, context, axeSubject, axeDescription, groupTheme } = body
     if (!action || !context) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
     }
 
-    prompt = `Tu es coach terrain. Un apprenant vient de déclarer une action dans un contexte précis. Propose 3 résultats qu'il a pu OBSERVER après.
+    prompt = `Tu es coach dans YAPLUKA, une application mobile de suivi post-formation professionnelle. Après une formation en présentiel, les apprenants utilisent l'appli chaque semaine pour déclarer les bonnes pratiques qu'ils ont mises en œuvre sur le terrain.
 
-═══ CE QU'IL A FAIT ═══
-Action : "${action}"
+L'apprenant est en train de déclarer une nouvelle action via un chat guidé. Il a choisi son axe, son contexte et son action. On lui demande maintenant "Qu'est-ce que ça a donné ?". Tu dois lui proposer 3 résultats qu'il a pu observer.
+
+L'objectif : l'aider à prendre conscience des effets positifs de sa mise en pratique, l'encourager à continuer, et simplifier sa saisie.
+
+═══ DONNÉES DE L'APPRENANT ═══
+Action déclarée : "${action}"
 Contexte : "${context}"
 ${axeSubject ? `Axe de progrès : "${axeSubject}"` : ''}
-${axeDescription ? `Précision : "${axeDescription}"` : ''}
-${groupTheme ? `Formation : "${groupTheme}"` : ''}
+${axeDescription ? `Précision sur l'axe : "${axeDescription}"` : ''}
+${groupTheme ? `Thème de la formation : "${groupTheme}"` : ''}
 
 ═══ RÈGLE N°1 — SPÉCIFICITÉ ═══
-Chaque résultat doit être LA CONSÉQUENCE DIRECTE et VISIBLE de "${action}" dans le contexte "${context}". Si on change l'action ou le contexte, le résultat ne doit PLUS fonctionner.
+Chaque résultat doit être un EFFET BÉNÉFIQUE de la mise en œuvre de "${action}" dans le contexte "${context}", en lien avec l'axe "${axeSubject || ''}" et la formation "${groupTheme || ''}". C'est les 5 données réunies (thème + axe + précision + contexte + action) qui déterminent les résultats. Si on change l'action ou le contexte, le résultat ne doit PLUS fonctionner.
 
 ═══ RÈGLE N°2 ═══
-C'est ce que la personne a observé (réaction des autres), ressenti (son propre ressenti) ou OBTENU (effet mesurable). Ces éléments seront des potentiels effets bénéfiques issus des bonnes pratiques vues en formation, et mises en oeuvre par l'apprenant (ce qu'il t'a déclaré comme action).
+C'est ce que la personne a observé (réaction des autres), ressenti (son propre ressenti) ou obtenu (effet mesurable). Ces éléments sont des effets bénéfiques issus des bonnes pratiques vues en formation, et mises en œuvre par l'apprenant. Pas de geste/regard/moue d'un interlocuteur, pas de prénom, pas de marque, pas de timing précis (minutes, secondes).
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Max 60 caractères
 - 3 angles différents : réaction des autres / ressenti perso / résultat obtenu
 - Langage oral, vivant
-- Pas de descriptif ultra précis genre "il a légèrement souri et pris une inspiration en levant sa main", pas de prénom, pas de marque
 - Pas de jargon
 
 ═══ ANTI-EXEMPLES ═══
@@ -140,7 +151,7 @@ C'est ce que la personne a observé (réaction des autres), ressenti (son propre
 - "J'ai vu une amélioration" ❌ vague
 - "La communication était meilleure" ❌ générique
 
-═══ BONS EXEMPLES (niveau de précision attendu) ═══
+═══ BONS EXEMPLES ═══
 - "Plus d'ouverture et d'informations reçues" ✅
 - "On a bouclé plus rapidement" ✅
 - "J'étais moins stressé que d'habitude" ✅
@@ -152,7 +163,6 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
   }
 
-  // Sonnet pour tout — qualité avant tout
   const model = 'claude-sonnet-4-20250514'
 
   try {
