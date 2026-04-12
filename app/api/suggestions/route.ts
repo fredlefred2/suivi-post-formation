@@ -149,10 +149,8 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
   }
 
-  // Haiku pour les contextes (rapide), Sonnet pour le reste (qualité)
-  const model = type === 'contexts'
-    ? 'claude-haiku-4-5-20241022'
-    : 'claude-sonnet-4-20250514'
+  // Sonnet pour tout — qualité avant tout
+  const model = 'claude-sonnet-4-20250514'
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
