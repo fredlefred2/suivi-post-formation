@@ -84,8 +84,7 @@ ${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
 ═══ RÈGLES ═══
 1. Chaque contexte doit être une SITUATION PROFESSIONNELLE concrète où cette action a pu se produire, en lien avec l'axe "${axeSubject}"${groupTheme ? ` et la formation "${groupTheme}"` : ''}.
 2. Court : max 30 caractères.
-3. C'est un LIEU ou un MOMENT professionnel — pas une personne.
-4. Varié : des situations différentes (réunion, entretien, présentation, terrain, appel, etc.)
+3. C'est un MOMENT professionnel adapté à la situation du type : réunion, réunion équipe, RDV Négo, RDV client, échange téléphonique, Visio, entretien 1:1, Prospection, échange informel
 5. Adapté au métier et au contexte de formation de l'apprenant.
 
 ═══ ANTI-EXEMPLES ═══
@@ -95,10 +94,11 @@ ${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
 
 ═══ BONS EXEMPLES (niveau de précision) ═══
 - "En réunion d'équipe" ✅
-- "En RV client" ✅
-- "En prospection tél" ✅
-- "Face à des clients" ✅
+- "Pendant un RDV client" ✅
+- "Lors d'une présentation" ✅
 - "En brief du matin" ✅
+- "Au téléphone avec un prospect" ✅
+- "Face à un groupe" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 4 strings :
 ["...", "...", "...", "..."]`
