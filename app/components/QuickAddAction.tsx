@@ -108,9 +108,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setStep('action')
     setShowCustom(false)
     setCustomText('')
-    // Charger actions + contextes EN PARALLÈLE (contextes prêts quand on en aura besoin)
     fetchActionSuggestions(axe)
-    prefetchContextSuggestions(axe)
   }
 
   async function fetchActionSuggestions(axe: AxeOption) {
@@ -147,8 +145,25 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingActions(false)
   }
 
-  // Pré-chargement des contextes dès la sélection de l'axe (en parallèle des actions)
-  async function prefetchContextSuggestions(axe: AxeOption) {
+  function handleSelectAction(action: string) {
+    setChosenAction(action)
+    setShowCustom(false)
+    setCustomText('')
+    setStep('context')
+    fetchContextSuggestions(action)
+  }
+
+  function handleCustomAction() {
+    if (!customText.trim()) return
+    const action = customText.trim()
+    setChosenAction(action)
+    setShowCustom(false)
+    setCustomText('')
+    setStep('context')
+    fetchContextSuggestions(action)
+  }
+
+  async function fetchContextSuggestions(action: string) {
     setLoadingContexts(true)
     setContextSuggestions([])
     try {
@@ -157,9 +172,9 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'contexts',
-          action: '',
-          axeSubject: axe.subject,
-          axeDescription: axe.description || undefined,
+          action,
+          axeSubject: selectedAxe?.subject,
+          axeDescription: selectedAxe?.description || undefined,
           groupTheme: groupTheme || undefined,
         }),
       })
@@ -172,7 +187,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
         }
       }
     } catch (err) {
-      console.error('[Suggestions] prefetch contexts error:', err)
+      console.error('[Suggestions] fetch contexts error:', err)
     }
     // Fallback statique
     setContextSuggestions([
@@ -182,24 +197,6 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       'En présentation',
     ])
     setLoadingContexts(false)
-  }
-
-  function handleSelectAction(action: string) {
-    setChosenAction(action)
-    setShowCustom(false)
-    setCustomText('')
-    setStep('context')
-    // Contextes déjà pré-chargés — pas besoin de fetch
-  }
-
-  function handleCustomAction() {
-    if (!customText.trim()) return
-    const action = customText.trim()
-    setChosenAction(action)
-    setShowCustom(false)
-    setCustomText('')
-    setStep('context')
-    // Contextes déjà pré-chargés
   }
 
   function handleSelectContext(ctx: string) {
