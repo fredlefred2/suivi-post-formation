@@ -336,11 +336,11 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     }
   }, [open, onboardingMode, prefill])
 
-  // Pré-fetch contextes pendant l'intro (séparé pour ne pas relancer l'intro)
+  // Pré-fetch contextes — une seule fois par ouverture (même ref que l'intro)
   useEffect(() => {
-    if (open && !onboardingMode && !prefill) {
-      contextCache.current.clear()
+    if (open && !onboardingMode && !prefill && contextCache.current.size === 0) {
       axes.forEach(axe => {
+        if (contextCache.current.has(axe.id)) return
         fetch('/api/suggestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -360,7 +360,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           .catch(() => {})
       })
     }
-  }, [open, onboardingMode, prefill, axes, groupTheme])
+    if (!open) {
+      contextCache.current.clear()
+    }
+  }, [open])
 
   // Prefill depuis défi de la semaine (mode legacy)
   useEffect(() => {

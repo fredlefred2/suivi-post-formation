@@ -163,10 +163,7 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
   }
 
-  // Haiku pour les contextes (rapide, suffisant), Sonnet pour actions/résultats (qualité)
-  const model = type === 'contexts'
-    ? 'claude-3-5-haiku-20241022'
-    : 'claude-sonnet-4-20250514'
+  const model = 'claude-sonnet-4-20250514'
   const max_tokens = type === 'contexts' ? 150 : 300
 
   try {
