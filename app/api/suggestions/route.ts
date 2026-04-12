@@ -43,7 +43,7 @@ ${groupTheme ? `Ancre dans le contexte de la formation "${groupTheme}".` : ''}
 ${context ? `L'apprenant a déclaré que c'était "${context}" — adapte les suggestions à cette situation.` : ''}
 
 ═══ RÈGLE N°2 — CONCRET ═══
-Chaque suggestion décrit UN GESTE PRÉCIS, un moment réel, un mot prononcé. On doit VOIR LA SCÈNE. Pas un concept, pas un objectif, pas une intention. N'intègre pas de notion de temps (minutes, secondes, etc ...), ni de chiffres (3 questions, 2 objections, ...)
+Chaque suggestion décrit UNE action ou une attitude, un moment réel, en lien avec les bonnes pratiques liées au thème de la formation et à l'axe de l'apprenant. Pas un concept, pas un objectif, pas une intention. N'intègre pas de notion de temps (minutes, secondes, etc ...), ni de chiffres (3 questions, 2 objections, ...)
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Commence par "J'ai"
@@ -131,7 +131,7 @@ C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti
 - Max 60 caractères
 - 3 angles différents : réaction des autres / ressenti perso / effet concret
 - Langage oral, vivant
-- Pas de descriptif ultra précis genre "il a légèrement souri et pris une inspiration en levant sa main"
+- Pas de descriptif ultra précis genre "il a légèrement souri et pris une inspiration en levant sa main", pas de prénom, pas de marque
 - Pas de jargon
 
 ═══ ANTI-EXEMPLES ═══
