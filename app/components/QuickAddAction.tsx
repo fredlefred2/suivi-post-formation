@@ -419,10 +419,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     confirm: '',
   }
 
-  // Bulle coach (alignée à gauche)
-  function CoachBubble({ text }: { text: string }) {
+  // Est-ce qu'on est en train de charger les suggestions pour l'étape courante ?
+  const isLoadingStep =
+    (step === 'context' && loadingContexts) ||
+    (step === 'action' && loadingActions) ||
+    (step === 'result' && loadingResults)
+
+  // Bulle coach (alignée à gauche) — avec animation
+  function CoachBubble({ text, animate = false }: { text: string; animate?: boolean }) {
     return (
-      <div className="flex gap-2.5 items-start">
+      <div className={`flex gap-2.5 items-start ${animate ? 'chat-bubble-in' : ''}`}>
         <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
           style={{ background: '#1a1a2e' }}>
           🎯
@@ -435,10 +441,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     )
   }
 
-  // Bulle réponse apprenant (alignée à droite)
+  // Bulle réponse apprenant (alignée à droite) — avec animation
   function UserBubble({ text }: { text: string }) {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-end chat-bubble-in">
         <div className="rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%] text-[14px] font-medium"
           style={{ background: '#1a1a2e', color: '#fbbf24' }}>
           {text}
@@ -447,15 +453,20 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     )
   }
 
-  // Indicateur de chargement
-  function LoadingDots() {
+  // Indicateur "en train d'écrire" (avatar + dots pulsants)
+  function TypingIndicator() {
     return (
-      <div className="pl-10">
-        <div className="flex gap-1.5 items-center px-3.5 py-2.5 text-[13px]" style={{ color: '#a0937c' }}>
-          <span className="animate-bounce" style={{ animationDelay: '0ms' }}>·</span>
-          <span className="animate-bounce" style={{ animationDelay: '150ms' }}>·</span>
-          <span className="animate-bounce" style={{ animationDelay: '300ms' }}>·</span>
-          <span className="ml-1.5">Je réfléchis...</span>
+      <div className="flex gap-2.5 items-start chat-bubble-in">
+        <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
+          style={{ background: '#1a1a2e' }}>
+          🎯
+        </div>
+        <div className="rounded-2xl rounded-tl-md px-4 py-3 flex items-center gap-1"
+          style={{ background: '#f0ebe0' }}>
+          <span className="typing-dot" />
+          <span className="typing-dot" />
+          <span className="typing-dot" />
+          <span className="ml-2 text-[12px]" style={{ color: '#a0937c' }}>en train d&apos;écrire</span>
         </div>
       </div>
     )
@@ -632,12 +643,15 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </>
             )}
 
-            {/* ── Question en cours ── */}
-            <CoachBubble text={coachMessages[step]} />
+            {/* ── Typing indicator pendant le chargement API ── */}
+            {isLoadingStep && <TypingIndicator />}
+
+            {/* ── Question en cours (masquée pendant le chargement) ── */}
+            {!isLoadingStep && <CoachBubble text={coachMessages[step]} animate />}
 
             {/* ── Étape 1 : Choix de l'axe ── */}
             {step === 'axe' && (
-              <div className="pl-10 space-y-2">
+              <div className="pl-10 space-y-2 chat-options-in">
                 {axes.map((axe) => {
                   const marker = getDynamique(axe.completedCount)
                   return (
@@ -658,9 +672,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             )}
 
             {/* ── Étape 2 : Contexte ── */}
-            {step === 'context' && !showCustom && loadingContexts && <LoadingDots />}
             {step === 'context' && !showCustom && !loadingContexts && (
-              <div className="pl-10 space-y-2">
+              <div className="pl-10 space-y-2 chat-options-in">
                 <SuggestionButtons items={contextSuggestions} onSelect={handleSelectContext} />
                 <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
@@ -669,7 +682,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
 
             {/* ── Étape 2b : Précision contexte (texte libre + skip) ── */}
             {step === 'context-detail' && (
-              <div className="pl-10 space-y-2">
+              <div className="pl-10 space-y-2 chat-bubble-in">
                 <input
                   type="text"
                   value={contextDetail}
@@ -695,9 +708,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             )}
 
             {/* ── Étape 3 : Suggestions d'action ── */}
-            {step === 'action' && !showCustom && loadingActions && <LoadingDots />}
             {step === 'action' && !showCustom && !loadingActions && (
-              <div className="pl-10 space-y-2">
+              <div className="pl-10 space-y-2 chat-options-in">
                 <SuggestionButtons items={actionSuggestions} onSelect={handleSelectAction} />
                 <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
@@ -705,9 +717,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {step === 'action' && <CustomInput placeholder="Décris ce que tu as fait..." onSubmit={handleCustomAction} />}
 
             {/* ── Étape 4 : Résultat ── */}
-            {step === 'result' && !showCustom && loadingResults && <LoadingDots />}
             {step === 'result' && !showCustom && !loadingResults && (
-              <div className={`pl-10 space-y-2 ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className={`pl-10 space-y-2 chat-options-in ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}>
                 <SuggestionButtons items={resultSuggestions} onSelect={handleSelectResult} />
                 <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
