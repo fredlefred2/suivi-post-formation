@@ -142,6 +142,50 @@ function checkNonsense(text: string): string | null {
 
 // ── Sous-composants (hors du composant principal pour éviter les re-renders) ──
 
+// Étincelles de confirmation (particules dorées + étoiles)
+function SparkleParticles() {
+  const dots = [
+    { sx: -40, sy: -50 }, { sx: 40, sy: -50 },
+    { sx: -55, sy: -5 }, { sx: 55, sy: -5 },
+    { sx: -35, sy: 35 }, { sx: 35, sy: 35 },
+    { sx: 0, sy: -60 }, { sx: 0, sy: 45 },
+    { sx: -50, sy: -30 }, { sx: 50, sy: -30 },
+  ]
+  const stars = [
+    { sx: -30, sy: -55, d: 100 }, { sx: 45, sy: -35, d: 150 },
+    { sx: -50, sy: 15, d: 200 }, { sx: 35, sy: 40, d: 50 },
+    { sx: -20, sy: 50, d: 250 }, { sx: 55, sy: 10, d: 300 },
+  ]
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {dots.map((p, i) => (
+        <span key={`d${i}`} className="sparkle-particle"
+          style={{ '--sx': `${p.sx}px`, '--sy': `${p.sy}px`, animationDelay: `${i * 50}ms` } as React.CSSProperties} />
+      ))}
+      {stars.map((p, i) => (
+        <span key={`s${i}`} className="sparkle-star"
+          style={{ '--sx': `${p.sx}px`, '--sy': `${p.sy}px`, animationDelay: `${p.d}ms` } as React.CSSProperties} />
+      ))}
+    </div>
+  )
+}
+
+// Animation d'intro (flash doré + emoji + texte)
+function IntroAnimation() {
+  return (
+    <div className="relative flex flex-col items-center justify-center" style={{ height: '200px' }}>
+      <div className="intro-flash" />
+      <div className="intro-emoji text-6xl relative z-10">🎯</div>
+      <p className="intro-text text-lg font-bold mt-3 relative z-10" style={{ color: '#1a1a2e' }}>
+        C&apos;est parti !
+      </p>
+      <p className="intro-text text-sm mt-1 relative z-10" style={{ color: '#a0937c', animationDelay: '0.7s' }}>
+        Raconte-moi ce que tu as fait
+      </p>
+    </div>
+  )
+}
+
 // Bulle coach (alignée à gauche)
 function CoachBubble({ text, animate = false }: { text: string; animate?: boolean }) {
   return (
@@ -243,6 +287,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [valorisantMsg, setValorisantMsg] = useState<{ text: string; emoji: string } | null>(null)
   const [stepMessages, setStepMessages] = useState<Partial<Record<ChatStep, string>>>({})
   const [rejectMsg, setRejectMsg] = useState<string | null>(null)
+  const [showIntro, setShowIntro] = useState(false)
   const { toast } = useToast()
   const chatRef = useRef<HTMLDivElement>(null)
 
@@ -252,6 +297,15 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
       chatRef.current.scrollTop = chatRef.current.scrollHeight
     }
   }, [step, loadingContexts, loadingActions, loadingResults, contextSuggestions, actionSuggestions, resultSuggestions, showCustom, rejectMsg])
+
+  // Animation d'intro au lancement (sauf onboarding/prefill)
+  useEffect(() => {
+    if (open && !onboardingMode && !prefill) {
+      setShowIntro(true)
+      const timer = setTimeout(() => setShowIntro(false), 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [open, onboardingMode, prefill])
 
   // Prefill depuis défi de la semaine (mode legacy)
   useEffect(() => {
@@ -297,6 +351,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setValorisantMsg(null)
     setStepMessages({})
     setRejectMsg(null)
+    setShowIntro(false)
   }
 
   function handleClose() {
@@ -643,8 +698,14 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
 
-      {levelUpInfo ? (
+      {/* ── Animation d'intro (flash doré) ── */}
+      {showIntro ? (
+        <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-auto overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
+          <IntroAnimation />
+        </div>
+      ) : levelUpInfo ? (
         <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-auto p-8 text-center" style={{ border: '2px solid #f0ebe0' }}>
+          <SparkleParticles />
           <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
           <div className="animate-level-up-text">
             <p className="text-xl font-bold mb-1" style={{ color: '#1a1a2e' }}>Niveau {levelUpInfo.label}</p>
@@ -658,6 +719,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
         </div>
       ) : showConfirm ? (
         <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-auto p-8 text-center" style={{ border: '2px solid #f0ebe0' }}>
+          <SparkleParticles />
           <div className="text-5xl mb-3">{valorisantMsg?.emoji || '✅'}</div>
           <p className="text-xl font-bold mb-1" style={{ color: '#1a1a2e' }}>Action ajoutée !</p>
           {valorisantMsg && (
