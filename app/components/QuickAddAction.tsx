@@ -25,13 +25,14 @@ type Props = {
 
 // ── Composant ──────────────────────────────────────────────────
 
-type ChatStep = 'axe' | 'action' | 'context' | 'result' | 'confirm'
+// Flow : Axe → Contexte → Action → Résultat
+type ChatStep = 'axe' | 'context' | 'action' | 'result' | 'confirm'
 
 export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode, prefill, groupTheme }: Props) {
   const [step, setStep] = useState<ChatStep>('axe')
   const [selectedAxe, setSelectedAxe] = useState<AxeOption | null>(null)
-  const [chosenAction, setChosenAction] = useState('')
   const [chosenContext, setChosenContext] = useState('')
+  const [chosenAction, setChosenAction] = useState('')
   const [chosenResult, setChosenResult] = useState('')
   const [customText, setCustomText] = useState('')
   const [showCustom, setShowCustom] = useState(false)
@@ -39,10 +40,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [levelUpInfo, setLevelUpInfo] = useState<{ icon: string; label: string } | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
   const [confirmInfo, setConfirmInfo] = useState<{ message: string; nextIcon: string; nextLabel: string } | null>(null)
-  const [actionSuggestions, setActionSuggestions] = useState<string[]>([])
-  const [loadingActions, setLoadingActions] = useState(false)
   const [contextSuggestions, setContextSuggestions] = useState<string[]>([])
   const [loadingContexts, setLoadingContexts] = useState(false)
+  const [actionSuggestions, setActionSuggestions] = useState<string[]>([])
+  const [loadingActions, setLoadingActions] = useState(false)
   const [resultSuggestions, setResultSuggestions] = useState<string[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,7 +55,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight
     }
-  }, [step, loadingResults, loadingContexts, resultSuggestions, contextSuggestions, showCustom])
+  }, [step, loadingContexts, loadingActions, loadingResults, contextSuggestions, actionSuggestions, resultSuggestions, showCustom])
 
   // Prefill depuis défi de la semaine (mode legacy)
   useEffect(() => {
@@ -81,18 +82,18 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   function reset() {
     setStep('axe')
     setSelectedAxe(null)
-    setChosenAction('')
     setChosenContext('')
+    setChosenAction('')
     setChosenResult('')
     setCustomText('')
     setShowCustom(false)
     setLevelUpInfo(null)
     setShowConfirm(false)
     setConfirmInfo(null)
-    setActionSuggestions([])
-    setLoadingActions(false)
     setContextSuggestions([])
     setLoadingContexts(false)
+    setActionSuggestions([])
+    setLoadingActions(false)
     setResultSuggestions([])
     setLoadingResults(false)
     setIsSubmitting(false)
@@ -103,67 +104,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     onClose()
   }
 
+  // ── Étape 1 : Axe → charge les contextes ──
   function handleSelectAxe(axe: AxeOption) {
     setSelectedAxe(axe)
-    setStep('action')
-    setShowCustom(false)
-    setCustomText('')
-    fetchActionSuggestions(axe)
-  }
-
-  async function fetchActionSuggestions(axe: AxeOption) {
-    setLoadingActions(true)
-    setActionSuggestions([])
-    try {
-      const res = await fetch('/api/suggestions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'actions',
-          axeSubject: axe.subject,
-          axeDescription: axe.description || undefined,
-          groupTheme: groupTheme || undefined,
-        }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        if (data.results?.length) {
-          setActionSuggestions(data.results)
-          setLoadingActions(false)
-          return
-        }
-      }
-    } catch (err) {
-      console.error('[Suggestions] fetch actions error:', err)
-    }
-    // Fallback statique minimal
-    setActionSuggestions([
-      "J'ai testé une nouvelle approche",
-      "J'ai osé faire différemment",
-      "J'ai pris du recul avant de réagir",
-    ])
-    setLoadingActions(false)
-  }
-
-  function handleSelectAction(action: string) {
-    setChosenAction(action)
-    setShowCustom(false)
-    setCustomText('')
     setStep('context')
-    fetchContextSuggestions(action)
-  }
-
-  function handleCustomAction() {
-    if (!customText.trim()) return
-    const action = customText.trim()
-    setChosenAction(action)
     setShowCustom(false)
     setCustomText('')
-    setStep('context')
-    fetchContextSuggestions(action)
+    fetchContextSuggestions(axe)
   }
 
-  async function fetchContextSuggestions(action: string) {
+  async function fetchContextSuggestions(axe: AxeOption) {
     setLoadingContexts(true)
     setContextSuggestions([])
     try {
@@ -172,9 +122,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'contexts',
-          action,
-          axeSubject: selectedAxe?.subject,
-          axeDescription: selectedAxe?.description || undefined,
+          axeSubject: axe.subject,
+          axeDescription: axe.description || undefined,
           groupTheme: groupTheme || undefined,
         }),
       })
@@ -189,22 +138,17 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     } catch (err) {
       console.error('[Suggestions] fetch contexts error:', err)
     }
-    // Fallback statique
-    setContextSuggestions([
-      'En réunion',
-      'En entretien',
-      'Au téléphone',
-      'En présentation',
-    ])
+    setContextSuggestions(['En réunion', 'En entretien', 'Au téléphone', 'En présentation'])
     setLoadingContexts(false)
   }
 
+  // ── Étape 2 : Contexte → charge les actions ──
   function handleSelectContext(ctx: string) {
     setChosenContext(ctx)
     setShowCustom(false)
     setCustomText('')
-    setStep('result')
-    fetchResultSuggestions(chosenAction, ctx)
+    setStep('action')
+    fetchActionSuggestions(ctx)
   }
 
   function handleCustomContext() {
@@ -213,11 +157,64 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setChosenContext(ctx)
     setShowCustom(false)
     setCustomText('')
-    setStep('result')
-    fetchResultSuggestions(chosenAction, ctx)
+    setStep('action')
+    fetchActionSuggestions(ctx)
   }
 
-  async function fetchResultSuggestions(action: string, context: string) {
+  async function fetchActionSuggestions(context: string) {
+    setLoadingActions(true)
+    setActionSuggestions([])
+    try {
+      const res = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'actions',
+          context,
+          axeSubject: selectedAxe?.subject,
+          axeDescription: selectedAxe?.description || undefined,
+          groupTheme: groupTheme || undefined,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.results?.length) {
+          setActionSuggestions(data.results)
+          setLoadingActions(false)
+          return
+        }
+      }
+    } catch (err) {
+      console.error('[Suggestions] fetch actions error:', err)
+    }
+    setActionSuggestions([
+      "J'ai testé une nouvelle approche",
+      "J'ai osé faire différemment",
+      "J'ai pris du recul avant de réagir",
+    ])
+    setLoadingActions(false)
+  }
+
+  // ── Étape 3 : Action → charge les résultats ──
+  function handleSelectAction(action: string) {
+    setChosenAction(action)
+    setShowCustom(false)
+    setCustomText('')
+    setStep('result')
+    fetchResultSuggestions(action)
+  }
+
+  function handleCustomAction() {
+    if (!customText.trim()) return
+    const action = customText.trim()
+    setChosenAction(action)
+    setShowCustom(false)
+    setCustomText('')
+    setStep('result')
+    fetchResultSuggestions(action)
+  }
+
+  async function fetchResultSuggestions(action: string) {
     setLoadingResults(true)
     setResultSuggestions([])
     try {
@@ -226,7 +223,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action,
-          context,
+          context: chosenContext,
           axeSubject: selectedAxe?.subject,
           axeDescription: selectedAxe?.description || undefined,
           groupTheme: groupTheme || undefined,
@@ -243,7 +240,6 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     } catch (err) {
       console.error('[Suggestions] fetch results error:', err)
     }
-    // Fallback statique
     setResultSuggestions([
       "Ça a bien fonctionné",
       "J'ai vu une différence",
@@ -252,6 +248,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingResults(false)
   }
 
+  // ── Étape 4 : Résultat → soumission ──
   function handleSelectResult(result: string) {
     if (isSubmitting) return
     setChosenResult(result)
@@ -349,9 +346,9 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   function goBack() {
     setShowCustom(false)
     setCustomText('')
-    if (step === 'action') { setStep('axe'); setSelectedAxe(null) }
-    else if (step === 'context') { setStep('action'); setChosenAction('') }
-    else if (step === 'result') { setStep('context'); setChosenContext('') }
+    if (step === 'context') { setStep('axe'); setSelectedAxe(null) }
+    else if (step === 'action') { setStep('context'); setChosenContext('') }
+    else if (step === 'result') { setStep('action'); setChosenAction('') }
   }
 
   if (!open) return null
@@ -359,8 +356,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   // Messages du coach selon l'étape
   const coachMessages: Record<ChatStep, string> = {
     axe: 'Hey ! Tu as agi sur quel axe ?',
-    action: 'Top ! Raconte-moi, qu\'est-ce que tu as fait ?',
     context: 'C\'était dans quel contexte ?',
+    action: 'Top ! Qu\'est-ce que tu as fait ?',
     result: 'Et alors, qu\'est-ce que ça a donné ?',
     confirm: '',
   }
@@ -542,19 +539,19 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </>
             )}
 
-            {/* Étape 2 répondue : action choisie */}
-            {chosenAction && (step === 'context' || step === 'result') && (
-              <>
-                <CoachBubble text={coachMessages.action} />
-                <UserBubble text={chosenAction} />
-              </>
-            )}
-
-            {/* Étape 3 répondue : contexte choisi */}
-            {chosenContext && step === 'result' && (
+            {/* Étape 2 répondue : contexte choisi */}
+            {chosenContext && (step === 'action' || step === 'result') && (
               <>
                 <CoachBubble text={coachMessages.context} />
                 <UserBubble text={chosenContext} />
+              </>
+            )}
+
+            {/* Étape 3 répondue : action choisie */}
+            {chosenAction && step === 'result' && (
+              <>
+                <CoachBubble text={coachMessages.action} />
+                <UserBubble text={chosenAction} />
               </>
             )}
 
@@ -583,21 +580,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </div>
             )}
 
-            {/* ── Étape 2 : Suggestions d'action ── */}
-            {step === 'action' && !showCustom && loadingActions && <LoadingDots />}
-            {step === 'action' && !showCustom && !loadingActions && (
-              <div className="pl-10 space-y-2">
-                <SuggestionButtons items={actionSuggestions} onSelect={handleSelectAction} />
-                <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
-                  style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                  Autre chose...
-                </button>
-              </div>
-            )}
-            {step === 'action' && <CustomInput placeholder="Décris ce que tu as fait..." onSubmit={handleCustomAction} />}
-
-            {/* ── Étape 3 : Contexte ── */}
+            {/* ── Étape 2 : Contexte ── */}
             {step === 'context' && !showCustom && loadingContexts && <LoadingDots />}
             {step === 'context' && !showCustom && !loadingContexts && (
               <div className="pl-10 space-y-2">
@@ -610,6 +593,20 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               </div>
             )}
             {step === 'context' && <CustomInput placeholder="Décris le contexte..." onSubmit={handleCustomContext} />}
+
+            {/* ── Étape 3 : Suggestions d'action ── */}
+            {step === 'action' && !showCustom && loadingActions && <LoadingDots />}
+            {step === 'action' && !showCustom && !loadingActions && (
+              <div className="pl-10 space-y-2">
+                <SuggestionButtons items={actionSuggestions} onSelect={handleSelectAction} />
+                <button onClick={() => { setShowCustom(true); setCustomText('') }}
+                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
+                  style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
+                  Autre chose...
+                </button>
+              </div>
+            )}
+            {step === 'action' && <CustomInput placeholder="Décris ce que tu as fait..." onSubmit={handleCustomAction} />}
 
             {/* ── Étape 4 : Résultat ── */}
             {step === 'result' && !showCustom && loadingResults && <LoadingDots />}

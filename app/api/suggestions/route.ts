@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   if (type === 'actions') {
     // ── Suggestions d'actions ──
-    const { axeSubject, axeDescription, groupTheme } = body
+    const { axeSubject, axeDescription, groupTheme, context } = body
     if (!axeSubject) {
       return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
     }
@@ -34,11 +34,13 @@ export async function POST(request: NextRequest) {
 Axe de progrès : "${axeSubject}"
 ${axeDescription ? `Précision : "${axeDescription}"` : ''}
 ${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
+${context ? `Contexte déclaré : "${context}"` : ''}
 
 ═══ RÈGLE N°1 — PERTINENCE ═══
 Les 3 suggestions doivent être en lien DIRECT et EXCLUSIF avec l'axe "${axeSubject}". Lis l'axe mot par mot. Chaque suggestion doit ÉVIDEMMENT concerner ce sujet précis. Si quelqu'un lit la suggestion sans connaître l'axe, il doit pouvoir DEVINER de quel axe il s'agit.
 ${axeDescription ? `Appuie-toi sur la précision donnée par l'apprenant : "${axeDescription}".` : ''}
 ${groupTheme ? `Ancre dans le contexte de la formation "${groupTheme}".` : ''}
+${context ? `L'apprenant a déclaré que c'était "${context}" — adapte les suggestions à cette situation.` : ''}
 
 ═══ RÈGLE N°2 — CONCRET ═══
 Chaque suggestion décrit UN GESTE PRÉCIS, un moment réel, un mot prononcé. On doit VOIR LA SCÈNE. Pas un concept, pas un objectif, pas une intention. N'intègre pas de notion de temps (minutes, secondes, etc ...), ni de chiffres (3 questions, 2 objections, ...)
@@ -68,15 +70,14 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 
   } else if (type === 'contexts') {
     // ── Suggestions de contexte ──
-    const { axeSubject, axeDescription, groupTheme, action } = body
+    const { axeSubject, axeDescription, groupTheme } = body
     if (!axeSubject) {
       return NextResponse.json({ error: 'axeSubject manquant' }, { status: 400 })
     }
 
-    prompt = `Tu es coach terrain. Un apprenant vient de déclarer une action liée à son axe de progrès. On lui demande "C'était dans quel contexte ?". Propose 4 contextes réalistes et variés.
+    prompt = `Tu es coach terrain. Un apprenant travaille sur un axe de progrès. On lui demande "C'était dans quel contexte ?". Propose 4 contextes réalistes et variés.
 
 ═══ DONNÉES ═══
-Action déclarée : "${action || ''}"
 Axe de progrès : "${axeSubject}"
 ${axeDescription ? `Précision : "${axeDescription}"` : ''}
 ${groupTheme ? `Formation suivie : "${groupTheme}"` : ''}
