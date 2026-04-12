@@ -43,7 +43,7 @@ ${groupTheme ? `Ancre dans le contexte de la formation "${groupTheme}".` : ''}
 ${context ? `L'apprenant a déclaré que c'était "${context}" — adapte les suggestions à cette situation.` : ''}
 
 ═══ RÈGLE N°2 — CONCRET ═══
-Chaque suggestion décrit UNE action ou une attitude, un moment réel, en lien avec les bonnes pratiques liées au thème de la formation et à l'axe de l'apprenant. Pas un concept, pas un objectif, pas une intention. N'intègre pas de notion de temps (minutes, secondes, etc ...), ni de chiffres (3 questions, 2 objections, ...)
+Chaque suggestion décrit UNE action ou une attitude, un moment réel, en lien avec les bonnes pratiques liées au thème de la formation et à l'axe de l'apprenant. Pas un concept, pas un objectif, pas une intention. N'intègre pas de notion de temps (minutes, secondes, etc ...), ni de chiffres (3 questions, 2 objections, ...), ni de prénom
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Commence par "J'ai"
