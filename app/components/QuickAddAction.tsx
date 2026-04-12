@@ -310,6 +310,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const { toast } = useToast()
   const chatRef = useRef<HTMLDivElement>(null)
   const contextCache = useRef<Map<string, string[]>>(new Map())
+  const introShown = useRef(false)
 
   // Auto-scroll vers le bas quand le step change
   useEffect(() => {
@@ -318,12 +319,22 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     }
   }, [step, loadingContexts, loadingActions, loadingResults, contextSuggestions, actionSuggestions, resultSuggestions, showCustom, rejectMsg])
 
-  // Animation d'intro au lancement + pré-fetch contextes (sauf onboarding/prefill)
+  // Animation d'intro — une seule fois par ouverture du modal
   useEffect(() => {
-    if (open && !onboardingMode && !prefill) {
+    if (open && !onboardingMode && !prefill && !introShown.current) {
+      introShown.current = true
       setShowIntro(true)
       const timer = setTimeout(() => setShowIntro(false), 1500)
-      // Pré-fetch des contextes pour tous les axes pendant l'intro
+      return () => clearTimeout(timer)
+    }
+    if (!open) {
+      introShown.current = false
+    }
+  }, [open, onboardingMode, prefill])
+
+  // Pré-fetch contextes pendant l'intro (séparé pour ne pas relancer l'intro)
+  useEffect(() => {
+    if (open && !onboardingMode && !prefill) {
       contextCache.current.clear()
       axes.forEach(axe => {
         fetch('/api/suggestions', {
@@ -344,7 +355,6 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           })
           .catch(() => {})
       })
-      return () => clearTimeout(timer)
     }
   }, [open, onboardingMode, prefill, axes, groupTheme])
 
