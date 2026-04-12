@@ -129,6 +129,7 @@ C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti
 - Max 60 caractères
 - 3 angles différents : réaction des autres / ressenti perso / effet concret
 - Langage oral, vivant
+- Pas de descriptif ultra précis genre "il a légèrement souri et pris une inspiration en levant sa main"
 - Pas de jargon
 
 ═══ ANTI-EXEMPLES ═══
