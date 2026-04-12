@@ -53,6 +53,93 @@ function getValorisantMessage(actionCount: number): { text: string; emoji: strin
   return VALORISANT_MESSAGES[Math.floor(Math.random() * VALORISANT_MESSAGES.length)]
 }
 
+// ── Helpers chatbot ───────────────────────────────────────────
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function truncate(s: string, max = 30): string {
+  return s.length > max ? s.slice(0, max).trim() + '…' : s
+}
+
+// Messages par défaut (fallback)
+const DEFAULT_MESSAGES: Record<string, string> = {
+  axe: 'Hey ! Tu as agi sur quel axe ?',
+  context: 'C\'était dans quel contexte ?',
+  'context-detail': 'Tu peux préciser ?',
+  action: 'Top ! Qu\'est-ce que tu as fait ?',
+  result: 'Et alors, qu\'est-ce que ça a donné ?',
+  confirm: '',
+}
+
+// Messages contextuels : le coach réagit au choix précédent
+function contextualMessage(toStep: string, data: { axe?: string; context?: string; action?: string }): string {
+  switch (toStep) {
+    case 'context': {
+      const a = truncate(data.axe || '')
+      return pickRandom([
+        `${a}, super choix ! C'était dans quel contexte ?`,
+        `Ah, ${a} ! Dis-moi, c'était dans quelle situation ?`,
+        `Ok, ${a} 👍 C'était dans quel contexte ?`,
+        `${a}, j'aime bien ! C'était où ?`,
+      ])
+    }
+    case 'context-detail': {
+      const c = truncate(data.context || '')
+      return pickRandom([
+        `${c}, d'accord ! Tu veux préciser un peu ?`,
+        `${c} 👍 Tu peux me donner un détail ?`,
+        `Ok, ${c} ! Une petite précision ?`,
+      ])
+    }
+    case 'action':
+      return pickRandom([
+        'Bien noté ! Concrètement, qu\'est-ce que tu as fait ?',
+        'Ok je vois le tableau 👍 Qu\'est-ce que tu as fait ?',
+        'Super, c\'est clair ! Qu\'est-ce que tu as fait exactement ?',
+        'Parfait ! Raconte-moi ce que tu as fait',
+      ])
+    case 'result': {
+      const act = truncate(data.action || '', 40)
+      return pickRandom([
+        `"${act}" — bien joué 💪 Qu'est-ce que ça a donné ?`,
+        `${act}, c'est du concret ça ! Qu'est-ce que ça a donné ?`,
+        `Ah super, ${act} ! Et le résultat ?`,
+        `${act}, j'adore ! Qu'est-ce que ça a donné ?`,
+      ])
+    }
+    default:
+      return DEFAULT_MESSAGES[toStep] || ''
+  }
+}
+
+// ── Détection bêtises ─────────────────────────────────────────
+
+const VULGAR_WORDS = ['caca', 'pipi', 'merde', 'putain', 'connard', 'connasse', 'bite', 'couille', 'nique', 'fuck', 'shit', 'prout', 'enculé', 'pute', 'salop', 'chier', 'foutre']
+const JOKE_WORDS = ['test', 'azerty', 'qwerty', 'rien', 'lol', 'haha', 'blabla', 'toto', 'xxx', 'zzz', 'asdf', 'aaa', 'bbb', 'jjj', 'oui', 'non', 'ok']
+
+const REJECT_MESSAGES = [
+  "😄 Hmm… c'est pas tout à fait ce qu'on a vu en formation ! Allez, pour de vrai ?",
+  "🤔 Original ! Mais sérieusement, dis-moi ?",
+  "😏 Hmm, t'en as pas une autre ?",
+  "😄 Ok, je fais comme si j'avais rien lu… Essaie encore !",
+  "🤨 Sérieusement ? Allez, je t'écoute !",
+  "😅 J'ai failli y croire ! Allez, pour de vrai cette fois",
+  "😄 Haha ok… mais non. Essaie encore !",
+]
+
+function checkNonsense(text: string): string | null {
+  const lower = text.toLowerCase().trim()
+  if (lower.length < 3) return pickRandom(REJECT_MESSAGES)
+  if (/^(.)\1+$/i.test(lower)) return pickRandom(REJECT_MESSAGES)
+  if (/^\d+$/.test(lower)) return pickRandom(REJECT_MESSAGES)
+  if (VULGAR_WORDS.some(w => lower.includes(w))) return pickRandom(REJECT_MESSAGES)
+  if (JOKE_WORDS.some(w => lower === w)) return pickRandom(REJECT_MESSAGES)
+  if (lower.length > 4 && !/[aeiouyàâéèêëïîôùûü]/i.test(lower)) return pickRandom(REJECT_MESSAGES)
+  return null
+}
+
 // ── Sous-composants (hors du composant principal pour éviter les re-renders) ──
 
 // Bulle coach (alignée à gauche)
@@ -154,6 +241,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [loadingResults, setLoadingResults] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [valorisantMsg, setValorisantMsg] = useState<{ text: string; emoji: string } | null>(null)
+  const [stepMessages, setStepMessages] = useState<Partial<Record<ChatStep, string>>>({})
+  const [rejectMsg, setRejectMsg] = useState<string | null>(null)
   const { toast } = useToast()
   const chatRef = useRef<HTMLDivElement>(null)
 
@@ -162,7 +251,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight
     }
-  }, [step, loadingContexts, loadingActions, loadingResults, contextSuggestions, actionSuggestions, resultSuggestions, showCustom])
+  }, [step, loadingContexts, loadingActions, loadingResults, contextSuggestions, actionSuggestions, resultSuggestions, showCustom, rejectMsg])
 
   // Prefill depuis défi de la semaine (mode legacy)
   useEffect(() => {
@@ -206,6 +295,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingResults(false)
     setIsSubmitting(false)
     setValorisantMsg(null)
+    setStepMessages({})
+    setRejectMsg(null)
   }
 
   function handleClose() {
@@ -216,9 +307,11 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   // ── Étape 1 : Axe → charge les contextes ──
   function handleSelectAxe(axe: AxeOption) {
     setSelectedAxe(axe)
+    setStepMessages(prev => ({ ...prev, context: contextualMessage('context', { axe: axe.subject }) }))
     setStep('context')
     setShowCustom(false)
     setCustomText('')
+    setRejectMsg(null)
     fetchContextSuggestions(axe)
   }
 
@@ -254,18 +347,24 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   // ── Étape 2 : Contexte → précision texte libre ──
   function handleSelectContext(ctx: string) {
     setChosenContext(ctx)
+    setStepMessages(prev => ({ ...prev, 'context-detail': contextualMessage('context-detail', { context: ctx }) }))
     setShowCustom(false)
     setCustomText('')
     setContextDetail('')
+    setRejectMsg(null)
     setStep('context-detail')
   }
 
   function handleCustomContext() {
     if (!customText.trim()) return
     const ctx = customText.trim()
+    const nonsense = checkNonsense(ctx)
+    if (nonsense) { setRejectMsg(nonsense); setCustomText(''); return }
     setChosenContext(ctx)
+    setStepMessages(prev => ({ ...prev, action: contextualMessage('action', {}) }))
     setShowCustom(false)
     setCustomText('')
+    setRejectMsg(null)
     // Pas besoin de précision si c'est déjà du texte libre
     setStep('action')
     fetchActionSuggestions(ctx, '')
@@ -277,12 +376,16 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     const fullContext = detail ? `${chosenContext} (${detail})` : chosenContext
     setChosenContext(fullContext)
     setContextDetail('')
+    setStepMessages(prev => ({ ...prev, action: contextualMessage('action', {}) }))
+    setRejectMsg(null)
     setStep('action')
     fetchActionSuggestions(fullContext, '')
   }
 
   function handleContextDetailSkip() {
     setContextDetail('')
+    setStepMessages(prev => ({ ...prev, action: contextualMessage('action', {}) }))
+    setRejectMsg(null)
     setStep('action')
     fetchActionSuggestions(chosenContext, '')
   }
@@ -324,8 +427,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
 
   function handleSelectAction(action: string) {
     setChosenAction(action)
+    setStepMessages(prev => ({ ...prev, result: contextualMessage('result', { action }) }))
     setShowCustom(false)
     setCustomText('')
+    setRejectMsg(null)
     setStep('result')
     fetchResultSuggestions(action)
   }
@@ -333,9 +438,13 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   function handleCustomAction() {
     if (!customText.trim()) return
     const action = customText.trim()
+    const nonsense = checkNonsense(action)
+    if (nonsense) { setRejectMsg(nonsense); setCustomText(''); return }
     setChosenAction(action)
+    setStepMessages(prev => ({ ...prev, result: contextualMessage('result', { action }) }))
     setShowCustom(false)
     setCustomText('')
+    setRejectMsg(null)
     setStep('result')
     fetchResultSuggestions(action)
   }
@@ -386,9 +495,12 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   function handleCustomResult() {
     if (isSubmitting || !customText.trim()) return
     const result = customText.trim()
+    const nonsense = checkNonsense(result)
+    if (nonsense) { setRejectMsg(nonsense); setCustomText(''); return }
     setChosenResult(result)
     setShowCustom(false)
     setCustomText('')
+    setRejectMsg(null)
     submitAction(chosenAction, chosenContext, result)
   }
 
@@ -476,6 +588,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   function goBack() {
     setShowCustom(false)
     setCustomText('')
+    setRejectMsg(null)
     if (step === 'context') { setStep('axe'); setSelectedAxe(null) }
     else if (step === 'context-detail') { setStep('context'); setChosenContext(''); setContextDetail('') }
     else if (step === 'action') { setStep('context'); setChosenContext(''); setContextDetail('') }
@@ -484,15 +597,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
 
   if (!open) return null
 
-  // Messages du coach selon l'étape
-  const coachMessages: Record<ChatStep, string> = {
-    axe: 'Hey ! Tu as agi sur quel axe ?',
-    context: 'C\'était dans quel contexte ?',
-    'context-detail': 'Tu peux préciser ?',
-    action: 'Top ! Qu\'est-ce que tu as fait ?',
-    result: 'Et alors, qu\'est-ce que ça a donné ?',
-    confirm: '',
-  }
+  // Message du coach pour une étape (contextuel si dispo, sinon défaut)
+  const getMsg = (s: ChatStep) => stepMessages[s] || DEFAULT_MESSAGES[s] || ''
 
   // Est-ce qu'on est en train de charger les suggestions pour l'étape courante ?
   const isLoadingStep =
@@ -504,11 +610,13 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   function renderCustomInput(placeholder: string, onSubmit: () => void) {
     if (!showCustom) return null
     return (
-      <div className="pl-10 space-y-2">
+      <>
+        {rejectMsg && <CoachBubble text={rejectMsg} animate />}
+        <div className="pl-10 space-y-2">
         <input
           type="text"
           value={customText}
-          onChange={(e) => setCustomText(e.target.value)}
+          onChange={(e) => { setCustomText(e.target.value); if (rejectMsg) setRejectMsg(null) }}
           onKeyDown={(e) => { if (e.key === 'Enter' && customText.trim()) { e.preventDefault(); onSubmit() } }}
           className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2"
           style={{ border: '1.5px solid #e8e0d4', background: 'white' }}
@@ -527,6 +635,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           </button>
         </div>
       </div>
+      </>
     )
   }
 
@@ -625,7 +734,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {/* Étape 1 répondue : axe choisi */}
             {selectedAxe && step !== 'axe' && (
               <>
-                <CoachBubble text={coachMessages.axe} />
+                <CoachBubble text={getMsg('axe')} />
                 <UserBubble text={`${getDynamique(selectedAxe.completedCount).icon} ${selectedAxe.subject}`} />
               </>
             )}
@@ -633,7 +742,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {/* Étape 2 répondue : contexte choisi */}
             {chosenContext && (step === 'context-detail' || step === 'action' || step === 'result') && (
               <>
-                <CoachBubble text={coachMessages.context} />
+                <CoachBubble text={getMsg('context')} />
                 <UserBubble text={chosenContext} />
               </>
             )}
@@ -641,7 +750,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {/* Étape 3 répondue : action choisie */}
             {chosenAction && step === 'result' && (
               <>
-                <CoachBubble text={coachMessages.action} />
+                <CoachBubble text={getMsg('action')} />
                 <UserBubble text={chosenAction} />
               </>
             )}
@@ -650,7 +759,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {isLoadingStep && <TypingIndicator />}
 
             {/* ── Question en cours (masquée pendant le chargement) ── */}
-            {!isLoadingStep && <CoachBubble text={coachMessages[step]} animate />}
+            {!isLoadingStep && <CoachBubble text={getMsg(step)} animate />}
 
             {/* ── Étape 1 : Choix de l'axe ── */}
             {step === 'axe' && (
