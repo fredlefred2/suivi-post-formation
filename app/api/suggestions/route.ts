@@ -123,7 +123,7 @@ ${groupTheme ? `Formation : "${groupTheme}"` : ''}
 Chaque résultat doit être LA CONSÉQUENCE DIRECTE et VISIBLE de "${action}" dans le contexte "${context}". Si on change l'action ou le contexte, le résultat ne doit PLUS fonctionner.
 
 ═══ RÈGLE N°2 — ON VOIT LA SCÈNE ═══
-C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti) ou OBTENU (effet mesurable).
+C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti) ou OBTENU (effet mesurable). Un résultat = un moment précis.
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Max 60 caractères
@@ -131,12 +131,19 @@ C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti
 - Langage oral, vivant
 - Pas de jargon
 
+═══ ANTI-EXEMPLES ═══
+- "Ça s'est bien passé" ❌ passe-partout
+- "L'échange a été constructif" ❌ creux
+- "J'ai vu une amélioration" ❌ vague
+- "La communication était meilleure" ❌ générique
+
 ═══ BONS EXEMPLES (niveau de précision attendu) ═══
-- "Il s'est plus exprimé que d'habitude" ✅
-- "On a bouclé plus rapidement que d'habitude" ✅
-- "J'ai obtenu plus d'informations que d'habitude" ✅
-- "L'échange a été plus constructif" ✅
-- "J'ai obtenu plus d'informations" ✅
+- "Il s'est mis à parler" ✅
+- "On a bouclé plus rapidement" ✅
+- "J'étais moins stressé que d'habitude" ✅
+- "Il m'a posé une question en retour" ✅
+- "Il a accepté ma proposition" ✅
+- "Il a réagi positivement" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
