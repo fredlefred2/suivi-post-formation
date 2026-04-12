@@ -25,13 +25,14 @@ type Props = {
 
 // ── Composant ──────────────────────────────────────────────────
 
-// Flow : Axe → Contexte → Action → Résultat
-type ChatStep = 'axe' | 'context' | 'action' | 'result' | 'confirm'
+// Flow : Axe → Contexte → Précision contexte → Action → Résultat
+type ChatStep = 'axe' | 'context' | 'context-detail' | 'action' | 'result' | 'confirm'
 
 export default function QuickAddAction({ axes, open, onClose, onSuccess, onboardingMode, prefill, groupTheme }: Props) {
   const [step, setStep] = useState<ChatStep>('axe')
   const [selectedAxe, setSelectedAxe] = useState<AxeOption | null>(null)
   const [chosenContext, setChosenContext] = useState('')
+  const [contextDetail, setContextDetail] = useState('')
   const [chosenAction, setChosenAction] = useState('')
   const [chosenResult, setChosenResult] = useState('')
   const [customText, setCustomText] = useState('')
@@ -83,6 +84,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setStep('axe')
     setSelectedAxe(null)
     setChosenContext('')
+    setContextDetail('')
     setChosenAction('')
     setChosenResult('')
     setCustomText('')
@@ -142,13 +144,13 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingContexts(false)
   }
 
-  // ── Étape 2 : Contexte → charge les actions ──
+  // ── Étape 2 : Contexte → précision texte libre ──
   function handleSelectContext(ctx: string) {
     setChosenContext(ctx)
     setShowCustom(false)
     setCustomText('')
-    setStep('action')
-    fetchActionSuggestions(ctx)
+    setContextDetail('')
+    setStep('context-detail')
   }
 
   function handleCustomContext() {
@@ -157,11 +159,29 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setChosenContext(ctx)
     setShowCustom(false)
     setCustomText('')
+    // Pas besoin de précision si c'est déjà du texte libre
     setStep('action')
-    fetchActionSuggestions(ctx)
+    fetchActionSuggestions(ctx, '')
   }
 
-  async function fetchActionSuggestions(context: string) {
+  // ── Étape 2b : Précision contexte → charge les actions ──
+  function handleContextDetailSubmit() {
+    const detail = contextDetail.trim()
+    const fullContext = detail ? `${chosenContext} (${detail})` : chosenContext
+    setChosenContext(fullContext)
+    setContextDetail('')
+    setStep('action')
+    fetchActionSuggestions(fullContext, '')
+  }
+
+  function handleContextDetailSkip() {
+    setContextDetail('')
+    setStep('action')
+    fetchActionSuggestions(chosenContext, '')
+  }
+
+  // ── Étape 3 : Action ──
+  async function fetchActionSuggestions(context: string, _unused: string) {
     setLoadingActions(true)
     setActionSuggestions([])
     try {
@@ -195,7 +215,6 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingActions(false)
   }
 
-  // ── Étape 3 : Action → charge les résultats ──
   function handleSelectAction(action: string) {
     setChosenAction(action)
     setShowCustom(false)
@@ -214,6 +233,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     fetchResultSuggestions(action)
   }
 
+  // ── Étape 4 : Résultat ──
   async function fetchResultSuggestions(action: string) {
     setLoadingResults(true)
     setResultSuggestions([])
@@ -248,7 +268,6 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingResults(false)
   }
 
-  // ── Étape 4 : Résultat → soumission ──
   function handleSelectResult(result: string) {
     if (isSubmitting) return
     setChosenResult(result)
@@ -347,7 +366,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setShowCustom(false)
     setCustomText('')
     if (step === 'context') { setStep('axe'); setSelectedAxe(null) }
-    else if (step === 'action') { setStep('context'); setChosenContext('') }
+    else if (step === 'context-detail') { setStep('context'); setChosenContext(''); setContextDetail('') }
+    else if (step === 'action') { setStep('context'); setChosenContext(''); setContextDetail('') }
     else if (step === 'result') { setStep('action'); setChosenAction('') }
   }
 
@@ -357,6 +377,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const coachMessages: Record<ChatStep, string> = {
     axe: 'Hey ! Tu as agi sur quel axe ?',
     context: 'C\'était dans quel contexte ?',
+    'context-detail': 'Tu peux préciser ?',
     action: 'Top ! Qu\'est-ce que tu as fait ?',
     result: 'Et alors, qu\'est-ce que ça a donné ?',
     confirm: '',
@@ -419,7 +440,18 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     )
   }
 
-  // Bouton "Autre chose..." + saisie libre
+  // Bouton "Non, c'est autre chose..." bien visible
+  function OtherButton({ onClick }: { onClick: () => void }) {
+    return (
+      <button onClick={onClick}
+        className="w-full text-center px-3.5 py-3 rounded-2xl rounded-tl-md text-[13px] font-bold transition-all active:scale-[0.98]"
+        style={{ background: '#1a1a2e', border: '2px solid #1a1a2e', color: '#fbbf24' }}>
+        ✏️ Non, c&apos;est autre chose...
+      </button>
+    )
+  }
+
+  // Saisie libre
   function CustomInput({ placeholder, onSubmit }: { placeholder: string; onSubmit: () => void }) {
     return showCustom ? (
       <div className="pl-10 space-y-2">
@@ -540,7 +572,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             )}
 
             {/* Étape 2 répondue : contexte choisi */}
-            {chosenContext && (step === 'action' || step === 'result') && (
+            {chosenContext && (step === 'context-detail' || step === 'action' || step === 'result') && (
               <>
                 <CoachBubble text={coachMessages.context} />
                 <UserBubble text={chosenContext} />
@@ -585,25 +617,44 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {step === 'context' && !showCustom && !loadingContexts && (
               <div className="pl-10 space-y-2">
                 <SuggestionButtons items={contextSuggestions} onSelect={handleSelectContext} />
-                <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
-                  style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                  Non, c'est autre chose...
-                </button>
+                <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
             )}
             {step === 'context' && <CustomInput placeholder="Décris le contexte..." onSubmit={handleCustomContext} />}
+
+            {/* ── Étape 2b : Précision contexte (texte libre + skip) ── */}
+            {step === 'context-detail' && (
+              <div className="pl-10 space-y-2">
+                <input
+                  type="text"
+                  value={contextDetail}
+                  onChange={(e) => setContextDetail(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleContextDetailSubmit() } }}
+                  className="w-full rounded-2xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2"
+                  style={{ border: '1.5px solid #e8e0d4', background: 'white' }}
+                  placeholder="Ex : avec le directeur achats, pour le projet X..."
+                  autoFocus
+                />
+                <div className="flex gap-2 h-7">
+                  <button onClick={handleContextDetailSkip}
+                    className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ color: '#a0937c' }}>
+                    Passer →
+                  </button>
+                  <button onClick={handleContextDetailSubmit}
+                    className={`text-[12px] px-4 py-1.5 rounded-full font-semibold transition-opacity ${contextDetail.trim() ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                    OK
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* ── Étape 3 : Suggestions d'action ── */}
             {step === 'action' && !showCustom && loadingActions && <LoadingDots />}
             {step === 'action' && !showCustom && !loadingActions && (
               <div className="pl-10 space-y-2">
                 <SuggestionButtons items={actionSuggestions} onSelect={handleSelectAction} />
-                <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
-                  style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                  Non, c'est autre chose...
-                </button>
+                <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
             )}
             {step === 'action' && <CustomInput placeholder="Décris ce que tu as fait..." onSubmit={handleCustomAction} />}
@@ -613,11 +664,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {step === 'result' && !showCustom && !loadingResults && (
               <div className={`pl-10 space-y-2 ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}>
                 <SuggestionButtons items={resultSuggestions} onSelect={handleSelectResult} />
-                <button onClick={() => { setShowCustom(true); setCustomText('') }}
-                  className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] font-medium transition-all active:scale-[0.98]"
-                  style={{ background: '#f0ebe0', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-                  Non, c'est autre chose...
-                </button>
+                <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
             )}
             {step === 'result' && (
