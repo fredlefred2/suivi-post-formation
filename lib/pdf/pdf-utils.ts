@@ -35,11 +35,11 @@ export const COLORS = {
 
 // ── Échelle de dynamique ──
 export const DYNAMIQUE_SCALE = [
-  { label: 'Veille', icon: '~', color: [100, 116, 139] as const },          // slate
-  { label: 'Impulsion', icon: '>', color: [14, 165, 233] as const },      // sky
-  { label: 'Rythme', icon: '>>', color: [16, 185, 129] as const },        // emerald
-  { label: 'Intensité', icon: '>>>', color: [249, 115, 22] as const },    // orange
-  { label: 'Propulsion', icon: '!', color: [225, 29, 72] as const },      // rose
+  { label: 'Intention', icon: '~', color: [100, 116, 139] as const },       // slate
+  { label: 'Essai', icon: '>', color: [14, 165, 233] as const },           // sky
+  { label: 'Habitude', icon: '>>', color: [16, 185, 129] as const },       // emerald
+  { label: 'Réflexe', icon: '>>>', color: [249, 115, 22] as const },      // orange
+  { label: 'Maîtrise', icon: '!', color: [225, 29, 72] as const },        // rose
 ]
 
 export function getDynamiqueForCount(avgPerWeek: number) {
@@ -54,8 +54,8 @@ export function getDynamiqueForCount(avgPerWeek: number) {
 export function getDynamiqueForActions(count: number) {
   if (count === 0) return { level: 0, ...DYNAMIQUE_SCALE[0] }
   if (count <= 2) return { level: 1, ...DYNAMIQUE_SCALE[1] }
-  if (count <= 5) return { level: 2, ...DYNAMIQUE_SCALE[2] }
-  if (count <= 8) return { level: 3, ...DYNAMIQUE_SCALE[3] }
+  if (count <= 4) return { level: 2, ...DYNAMIQUE_SCALE[2] }
+  if (count <= 6) return { level: 3, ...DYNAMIQUE_SCALE[3] }
   return { level: 4, ...DYNAMIQUE_SCALE[4] }
 }
 
@@ -334,7 +334,7 @@ export function drawDynamiqueGauge(doc: jsPDF, x: number, y: number, level: numb
 // Jauge avec marqueurs texte en dessous (comme la barre de progression de l'app)
 export function drawDynamiqueGaugeWithMarkers(doc: jsPDF, x: number, y: number, totalW: number, level: number) {
   const segH = 7
-  const markerLabels = ['Veille', 'Impulsion', 'Rythme', 'Intensité', 'Propulsion']
+  const markerLabels = ['Intention', 'Essai', 'Habitude', 'Réflexe', 'Maîtrise']
   const segW = (totalW - 4 * 2) / 5
 
   // Segments

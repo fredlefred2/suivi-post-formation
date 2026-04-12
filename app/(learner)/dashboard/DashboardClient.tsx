@@ -58,11 +58,11 @@ function getEncouragement(delta: number, streak: number): string {
 // Couleurs de barre par niveau — warm palette
 const LEVEL_BAR_COLORS = ['#94a3b8', '#38bdf8', '#10b981', '#f59e0b', '#fb7185']
 const LEVEL_BAR_GRADIENTS = [
-  'linear-gradient(90deg, #94a3b8, #cbd5e1)', // slate — Veille
-  'linear-gradient(90deg, #0284c7, #38bdf8)', // sky — Impulsion
-  'linear-gradient(90deg, #059669, #10b981)',  // green — Rythme
-  'linear-gradient(90deg, #d97706, #f59e0b)',  // amber — Intensité
-  'linear-gradient(90deg, #e11d48, #fb7185)',  // rose — Propulsion
+  'linear-gradient(90deg, #94a3b8, #cbd5e1)', // slate — Intention
+  'linear-gradient(90deg, #0284c7, #38bdf8)', // sky — Essai
+  'linear-gradient(90deg, #059669, #10b981)',  // green — Habitude
+  'linear-gradient(90deg, #d97706, #f59e0b)',  // amber — Réflexe
+  'linear-gradient(90deg, #e11d48, #fb7185)',  // rose — Maîtrise
 ]
 
 export default function DashboardClient({

@@ -56,18 +56,18 @@ const C = {
 }
 
 const LEVELS = [
-  { label: 'Veille', color: C.slate, bg: '#f1f5f9' },
-  { label: 'Impulsion', color: C.sky, bg: '#f0f9ff' },
-  { label: 'Rythme', color: C.emerald, bg: '#ecfdf5' },
-  { label: 'Intensité', color: C.orange, bg: '#fff7ed' },
-  { label: 'Propulsion', color: C.rose, bg: '#fff1f2' },
+  { label: 'Intention', color: C.slate, bg: '#f1f5f9' },
+  { label: 'Essai', color: C.sky, bg: '#f0f9ff' },
+  { label: 'Habitude', color: C.emerald, bg: '#ecfdf5' },
+  { label: 'Réflexe', color: C.orange, bg: '#fff7ed' },
+  { label: 'Maîtrise', color: C.rose, bg: '#fff1f2' },
 ]
 
 function getLevelForActions(count: number) {
   if (count === 0) return { level: 0, ...LEVELS[0] }
   if (count <= 2) return { level: 1, ...LEVELS[1] }
-  if (count <= 5) return { level: 2, ...LEVELS[2] }
-  if (count <= 8) return { level: 3, ...LEVELS[3] }
+  if (count <= 4) return { level: 2, ...LEVELS[2] }
+  if (count <= 6) return { level: 3, ...LEVELS[3] }
   return { level: 4, ...LEVELS[4] }
 }
 

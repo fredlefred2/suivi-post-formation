@@ -15,8 +15,8 @@ import {
 
 function getActionPhaseBg(rank: number) {
   if (rank <= 2) return 'bg-sky-100'
-  if (rank <= 5) return 'bg-emerald-100'
-  if (rank <= 8) return 'bg-orange-100'
+  if (rank <= 4) return 'bg-emerald-100'
+  if (rank <= 6) return 'bg-orange-100'
   return 'bg-rose-100'
 }
 

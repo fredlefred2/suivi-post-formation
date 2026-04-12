@@ -37,7 +37,7 @@ const TYPE_ICONS: Record<NotificationType, string> = {
   action_liked: '❤️',
   action_commented: '💬',
   action_added: '💪',
-  level_up: '🥁',
+  level_up: '⚡',
   ranking_passed: '📊',
   weekly_recap: '📊',
   checkin_reminder: '📋',

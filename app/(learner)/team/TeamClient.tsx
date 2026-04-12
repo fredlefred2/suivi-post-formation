@@ -6,11 +6,11 @@ import type { ActionFeedbackData } from '@/lib/types'
 import { useCountUp } from '@/lib/useCountUp'
 
 function getDynamiqueForCount(count: number) {
-  if (count === 0) return { icon: '⚪', level: 0, label: 'Veille' }
-  if (count <= 2) return { icon: '👣', level: 1, label: 'Impulsion' }
-  if (count <= 5) return { icon: '🥁', level: 2, label: 'Rythme' }
-  if (count <= 8) return { icon: '🔥', level: 3, label: 'Intensité' }
-  return { icon: '🚀', level: 4, label: 'Propulsion' }
+  if (count === 0) return { icon: '💡', level: 0, label: 'Intention' }
+  if (count <= 2) return { icon: '🧪', level: 1, label: 'Essai' }
+  if (count <= 4) return { icon: '🔄', level: 2, label: 'Habitude' }
+  if (count <= 6) return { icon: '⚡', level: 3, label: 'Réflexe' }
+  return { icon: '👑', level: 4, label: 'Maîtrise' }
 }
 
 const AVATAR_BG_COLORS: Record<number, string> = {

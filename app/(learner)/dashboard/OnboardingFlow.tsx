@@ -566,11 +566,11 @@ export default function OnboardingFlow({
               {/* Piste de progression colorée */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, position: 'relative' }}>
                 {[
-                  { icon: '⚪', label: 'Veille', color: '#7c3aed', bg: '#ede9fe' },
-                  { icon: '👣', label: 'Impulsion', color: '#0ea5e9', bg: '#e0f2fe' },
-                  { icon: '🥁', label: 'Rythme', color: '#10b981', bg: '#d1fae5' },
-                  { icon: '🔥', label: 'Intensité', color: '#f97316', bg: '#ffedd5' },
-                  { icon: '🚀', label: 'Propulsion', color: '#ec4899', bg: '#fce7f3' },
+                  { icon: '💡', label: 'Intention', color: '#7c3aed', bg: '#ede9fe' },
+                  { icon: '🧪', label: 'Essai', color: '#0ea5e9', bg: '#e0f2fe' },
+                  { icon: '🔄', label: 'Habitude', color: '#10b981', bg: '#d1fae5' },
+                  { icon: '⚡', label: 'Réflexe', color: '#f97316', bg: '#ffedd5' },
+                  { icon: '👑', label: 'Maîtrise', color: '#ec4899', bg: '#fce7f3' },
                 ].map((level, i) => (
                   <div key={level.label} style={{ display: 'flex', alignItems: 'center' }}>
                     {i > 0 && (
@@ -578,11 +578,11 @@ export default function OnboardingFlow({
                         width: 16,
                         height: 3,
                         background: `linear-gradient(90deg, ${[
-                          { icon: '⚪', label: 'Veille', color: '#7c3aed', bg: '#ede9fe' },
-                          { icon: '👣', label: 'Impulsion', color: '#0ea5e9', bg: '#e0f2fe' },
-                          { icon: '🥁', label: 'Rythme', color: '#10b981', bg: '#d1fae5' },
-                          { icon: '🔥', label: 'Intensité', color: '#f97316', bg: '#ffedd5' },
-                          { icon: '🚀', label: 'Propulsion', color: '#ec4899', bg: '#fce7f3' },
+                          { icon: '💡', label: 'Intention', color: '#7c3aed', bg: '#ede9fe' },
+                          { icon: '🧪', label: 'Essai', color: '#0ea5e9', bg: '#e0f2fe' },
+                          { icon: '🔄', label: 'Habitude', color: '#10b981', bg: '#d1fae5' },
+                          { icon: '⚡', label: 'Réflexe', color: '#f97316', bg: '#ffedd5' },
+                          { icon: '👑', label: 'Maîtrise', color: '#ec4899', bg: '#fce7f3' },
                         ][i - 1].color}, ${level.color})`,
                         borderRadius: 2,
                       }} />

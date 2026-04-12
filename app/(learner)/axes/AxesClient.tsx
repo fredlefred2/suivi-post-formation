@@ -21,15 +21,15 @@ function formatDate(dateStr: string) {
 const emptyFeedback: ActionFeedbackData = { likes_count: 0, comments_count: 0, liked_by_me: false, likers: [], comments: [] }
 
 const ACTION_PHASE_COLORS = [
-  'bg-sky-100',      // rank 1-2 → Impulsion
-  'bg-emerald-100',  // rank 3-5 → Rythme
-  'bg-orange-100',   // rank 6-8 → Intensité
-  'bg-rose-100',     // rank 9+  → Propulsion
+  'bg-sky-100',      // rank 1-2 → Essai
+  'bg-emerald-100',  // rank 3-4 → Habitude
+  'bg-orange-100',   // rank 5-6 → Réflexe
+  'bg-rose-100',     // rank 7+  → Maîtrise
 ] as const
 function getActionPhaseBg(rank: number) {
   if (rank <= 2) return ACTION_PHASE_COLORS[0]
-  if (rank <= 5) return ACTION_PHASE_COLORS[1]
-  if (rank <= 8) return ACTION_PHASE_COLORS[2]
+  if (rank <= 4) return ACTION_PHASE_COLORS[1]
+  if (rank <= 6) return ACTION_PHASE_COLORS[2]
   return ACTION_PHASE_COLORS[3]
 }
 

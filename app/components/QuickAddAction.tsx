@@ -59,6 +59,31 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
+// Fetch avec timeout (fallback automatique si API lente/down)
+const API_TIMEOUT = 8000
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = API_TIMEOUT): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Fallbacks statiques par type
+const FALLBACK_CONTEXTS = ['En réunion', 'En entretien', 'Au téléphone', 'En présentation']
+const FALLBACK_ACTIONS = [
+  "J'ai testé une nouvelle approche",
+  "J'ai osé faire différemment",
+  "J'ai pris du recul avant de réagir",
+]
+const FALLBACK_RESULTS = [
+  "Ça a bien fonctionné",
+  "J'ai vu une différence",
+  "C'était encourageant",
+]
+
 function truncate(s: string, max = 30): string {
   return s.length > max ? s.slice(0, max).trim() + '…' : s
 }
@@ -189,6 +214,65 @@ function SparkleParticles() {
   )
 }
 
+// Célébration level-up spectaculaire (plein écran navy + confettis + halo)
+function LevelUpCelebration({ icon, label, message }: { icon: string; label: string; message?: { text: string; emoji: string } | null }) {
+  // Confettis multicolores
+  const confettiColors = ['#fbbf24', '#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#3b82f6', '#ef4444', '#06b6d4']
+  const confetti = Array.from({ length: 30 }, (_, i) => ({
+    left: Math.random() * 100,
+    color: confettiColors[i % confettiColors.length],
+    delay: 0.3 + Math.random() * 0.8,
+    dur: 1.5 + Math.random() * 1.5,
+    fall: 150 + Math.random() * 200,
+    rot: 180 + Math.random() * 540,
+    size: 5 + Math.random() * 6,
+  }))
+
+  return (
+    <div className="levelup-bg flex flex-col items-center justify-center relative overflow-hidden"
+      style={{ height: '340px', borderRadius: 28 }}>
+
+      {/* Confettis */}
+      {confetti.map((c, i) => (
+        <div key={i} className="levelup-confetti"
+          style={{
+            left: `${c.left}%`, top: '15%',
+            background: c.color,
+            width: c.size, height: c.size,
+            '--delay': `${c.delay}s`, '--dur': `${c.dur}s`,
+            '--fall': `${c.fall}px`, '--rot': `${c.rot}deg`,
+          } as React.CSSProperties} />
+      ))}
+
+      {/* Rayons lumineux */}
+      <div className="levelup-rays" />
+
+      {/* Halo + anneaux + icône */}
+      <div className="relative flex items-center justify-center" style={{ width: 180, height: 180 }}>
+        <div className="levelup-halo" />
+        <div className="levelup-ring" />
+        <div className="levelup-ring-2" />
+        <div className="levelup-icon relative z-10" style={{ fontSize: 80, lineHeight: 1 }}>
+          {icon}
+        </div>
+      </div>
+
+      {/* Texte */}
+      <p className="levelup-label text-2xl font-extrabold mt-2 relative z-10" style={{ color: '#fbbf24' }}>
+        {label}
+      </p>
+      <p className="levelup-sub text-base font-semibold mt-0.5 relative z-10" style={{ color: 'rgba(255,255,255,0.7)' }}>
+        Niveau débloqué !
+      </p>
+      {message && (
+        <p className="levelup-msg text-sm mt-3 italic px-8 text-center relative z-10" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          {message.emoji} {message.text}
+        </p>
+      )}
+    </div>
+  )
+}
+
 // Splash screen d'intro (fond navy + filigrane + gros emoji + texte)
 function IntroAnimation() {
   return (
@@ -225,8 +309,24 @@ function CoachBubble({ text, animate = false }: { text: string; animate?: boolea
   )
 }
 
-// Bulle réponse apprenant (alignée à droite)
-function UserBubble({ text }: { text: string }) {
+// Bulle réponse apprenant (alignée à droite) — cliquable si onTap fourni
+function UserBubble({ text, onTap }: { text: string; onTap?: () => void }) {
+  if (onTap) {
+    return (
+      <div className="flex justify-end items-center gap-1.5 group">
+        <button onClick={onTap}
+          className="text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+          style={{ color: '#a0937c' }}>
+          modifier ✎
+        </button>
+        <button onClick={onTap}
+          className="rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%] text-[14px] font-medium text-left active:scale-[0.98] transition-transform"
+          style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+          {text}
+        </button>
+      </div>
+    )
+  }
   return (
     <div className="flex justify-end chat-bubble-in">
       <div className="rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%] text-[14px] font-medium"
@@ -341,7 +441,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     if (open && !onboardingMode && !prefill && contextCache.current.size === 0) {
       axes.forEach(axe => {
         if (contextCache.current.has(axe.id)) return
-        fetch('/api/suggestions', {
+        fetchWithTimeout('/api/suggestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -438,7 +538,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingContexts(true)
     setContextSuggestions([])
     try {
-      const res = await fetch('/api/suggestions', {
+      const res = await fetchWithTimeout('/api/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -460,7 +560,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     } catch (err) {
       console.error('[Suggestions] fetch contexts error:', err)
     }
-    setContextSuggestions(['En réunion', 'En entretien', 'Au téléphone', 'En présentation'])
+    setContextSuggestions(FALLBACK_CONTEXTS)
     setLoadingContexts(false)
   }
 
@@ -515,7 +615,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingActions(true)
     setActionSuggestions([])
     try {
-      const res = await fetch('/api/suggestions', {
+      const res = await fetchWithTimeout('/api/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -537,11 +637,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     } catch (err) {
       console.error('[Suggestions] fetch actions error:', err)
     }
-    setActionSuggestions([
-      "J'ai testé une nouvelle approche",
-      "J'ai osé faire différemment",
-      "J'ai pris du recul avant de réagir",
-    ])
+    setActionSuggestions(FALLBACK_ACTIONS)
     setLoadingActions(false)
   }
 
@@ -574,7 +670,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setLoadingResults(true)
     setResultSuggestions([])
     try {
-      const res = await fetch('/api/suggestions', {
+      const res = await fetchWithTimeout('/api/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -596,11 +692,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     } catch (err) {
       console.error('[Suggestions] fetch results error:', err)
     }
-    setResultSuggestions([
-      "Ça a bien fonctionné",
-      "J'ai vu une différence",
-      "C'était encourageant",
-    ])
+    setResultSuggestions(FALLBACK_RESULTS)
     setLoadingResults(false)
   }
 
@@ -709,10 +801,49 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     setShowCustom(false)
     setCustomText('')
     setRejectMsg(null)
-    if (step === 'context') { setStep('axe'); setSelectedAxe(null) }
+    if (step === 'context') { goBackToAxe() }
     else if (step === 'context-detail') { setStep('context'); setChosenContext(''); setContextDetail('') }
     else if (step === 'action') { setStep('context'); setChosenContext(''); setContextDetail('') }
-    else if (step === 'result') { setStep('action'); setChosenAction('') }
+    else if (step === 'result') { goBackToAction() }
+  }
+
+  // Retour à l'étape Axe (depuis n'importe quelle étape)
+  function goBackToAxe() {
+    setShowCustom(false); setCustomText(''); setRejectMsg(null)
+    setSelectedAxe(null)
+    setChosenContext(''); setContextDetail('')
+    setChosenAction(''); setChosenResult('')
+    setContextSuggestions([]); setActionSuggestions([]); setResultSuggestions([])
+    setStepMessages({})
+    setStep('axe')
+  }
+
+  // Retour à l'étape Contexte (depuis action ou result)
+  function goBackToContext() {
+    setShowCustom(false); setCustomText(''); setRejectMsg(null)
+    setChosenContext(''); setContextDetail('')
+    setChosenAction(''); setChosenResult('')
+    setActionSuggestions([]); setResultSuggestions([])
+    // On garde contextSuggestions — pas besoin de re-fetcher
+    setStepMessages(prev => {
+      const next = { ...prev }
+      delete next['context-detail']; delete next['action']; delete next['result']
+      return next
+    })
+    setStep('context')
+  }
+
+  // Retour à l'étape Action (depuis result)
+  function goBackToAction() {
+    setShowCustom(false); setCustomText(''); setRejectMsg(null)
+    setChosenAction(''); setChosenResult('')
+    setResultSuggestions([])
+    // On garde actionSuggestions — pas besoin de re-fetcher
+    setStepMessages(prev => {
+      const next = { ...prev }; delete next['result']
+      return next
+    })
+    setStep('action')
   }
 
   if (!open) return null
@@ -769,18 +900,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           <IntroAnimation />
         </div>
       ) : levelUpInfo ? (
-        <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-auto p-8 text-center" style={{ border: '2px solid #f0ebe0' }}>
-          <SparkleParticles />
-          <div className="text-7xl animate-level-up mb-4">{levelUpInfo.icon}</div>
-          <div className="animate-level-up-text">
-            <p className="text-xl font-bold mb-1" style={{ color: '#1a1a2e' }}>Niveau {levelUpInfo.label}</p>
-            <p className="text-lg font-semibold" style={{ color: '#a0937c' }}>débloqué !</p>
-            {valorisantMsg && (
-              <p className="text-sm mt-3 italic" style={{ color: '#a0937c' }}>
-                {valorisantMsg.emoji} {valorisantMsg.text}
-              </p>
-            )}
-          </div>
+        <div className="relative w-full max-w-sm mx-auto overflow-hidden shadow-2xl" style={{ borderRadius: 28 }}>
+          <LevelUpCelebration icon={levelUpInfo.icon} label={levelUpInfo.label} message={valorisantMsg} />
         </div>
       ) : showConfirm ? (
         <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-auto p-8 text-center" style={{ border: '2px solid #f0ebe0' }}>
@@ -798,7 +919,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
               <p className="text-2xl mt-1">{confirmInfo.nextIcon} <span className="text-lg font-semibold text-gray-500">{confirmInfo.nextLabel}</span></p>
             </div>
           ) : (
-            <p className="text-lg font-semibold text-gray-500 mt-1">Niveau max atteint ! 🚀</p>
+            <p className="text-lg font-semibold text-gray-500 mt-1">Maîtrise atteinte ! 👑</p>
           )}
         </div>
       ) : (onboardingMode || prefill) && step === 'confirm' ? (
@@ -856,13 +977,13 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           {/* Zone de chat — hauteur fixe pour éviter le tressautement */}
           <div ref={chatRef} className="px-4 py-4 space-y-3 overflow-y-auto" style={{ background: '#faf8f4', height: '50vh', maxHeight: '400px' }}>
 
-            {/* ── Historique des réponses précédentes ── */}
+            {/* ── Historique des réponses précédentes (cliquables pour modifier) ── */}
 
             {/* Étape 1 répondue : axe choisi */}
             {selectedAxe && step !== 'axe' && (
               <>
                 <CoachBubble text={getMsg('axe')} />
-                <UserBubble text={`${getDynamique(selectedAxe.completedCount).icon} ${selectedAxe.subject}`} />
+                <UserBubble text={`${getDynamique(selectedAxe.completedCount).icon} ${selectedAxe.subject}`} onTap={goBackToAxe} />
               </>
             )}
 
@@ -870,7 +991,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {chosenContext && (step === 'context-detail' || step === 'action' || step === 'result') && (
               <>
                 <CoachBubble text={getMsg('context')} />
-                <UserBubble text={chosenContext} />
+                <UserBubble text={chosenContext} onTap={goBackToContext} />
               </>
             )}
 
@@ -878,7 +999,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             {chosenAction && step === 'result' && (
               <>
                 <CoachBubble text={getMsg('action')} />
-                <UserBubble text={chosenAction} />
+                <UserBubble text={chosenAction} onTap={goBackToAction} />
               </>
             )}
 
