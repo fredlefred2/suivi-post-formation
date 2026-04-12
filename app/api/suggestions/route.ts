@@ -41,7 +41,7 @@ ${axeDescription ? `Appuie-toi sur la précision donnée par l'apprenant : "${ax
 ${groupTheme ? `Ancre dans le contexte de la formation "${groupTheme}".` : ''}
 
 ═══ RÈGLE N°2 — CONCRET ═══
-Chaque suggestion concerne une BONNE PRATIQUE PRÉCISE, liée au thème et à l'axe développé.
+Chaque suggestion décrit UN GESTE PRÉCIS, un moment réel, un mot prononcé. On doit VOIR LA SCÈNE. Pas un concept, pas un objectif, pas une intention. N'intègre pas de notion de temps (minutes, secondes, etc ...), ni de chiffres (3 questions, 2 objections, ...)
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Commence par "J'ai"
@@ -50,12 +50,18 @@ Chaque suggestion concerne une BONNE PRATIQUE PRÉCISE, liée au thème et à l'
 - Pas de jargon, pas de noms de méthodes ou modèles
 - Variété : une facile, une qui demande un effort, une originale
 
+═══ ANTI-EXEMPLES (à ne JAMAIS produire) ═══
+- "J'ai pratiqué l'écoute active" ❌ concept, pas une action
+- "J'ai travaillé ma posture" ❌ trop vague, aucune scène
+- "J'ai mis en place une démarche" ❌ creux, bureaucratique
+- "J'ai amélioré ma communication" ❌ intention, pas un geste
+
 ═══ BONS EXEMPLES (pour t'inspirer du NIVEAU de précision attendu) ═══
-- "J'ai travaillé mes silences" ✅
-- "J'ai réussi à dire non" ✅
-- "J'ai reformulé" ✅
-- "J'ai apporté des preuves concrètes" ✅
-- "J'ai exploité les données à ma disposition" ✅
+- "J'ai laissé du silence après ma question" ✅
+- "J'ai dit non sans me justifier" ✅
+- "J'ai reformulé ce qu'il venait de dire" ✅
+- "J'ai coupé mon tel pendant l'entretien" ✅
+- "J'ai noté les points clés avant d'appeler" ✅
 
 Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["J'ai...", "J'ai...", "J'ai..."]`
