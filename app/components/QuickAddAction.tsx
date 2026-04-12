@@ -142,26 +142,45 @@ function checkNonsense(text: string): string | null {
 
 // ── Sous-composants (hors du composant principal pour éviter les re-renders) ──
 
-// Étincelles de confirmation (particules dorées + étoiles)
+// Feu d'artifice de confirmation (2 vagues de particules + étoiles + ring)
 function SparkleParticles() {
-  const dots = [
-    { sx: -40, sy: -50 }, { sx: 40, sy: -50 },
-    { sx: -55, sy: -5 }, { sx: 55, sy: -5 },
-    { sx: -35, sy: 35 }, { sx: 35, sy: 35 },
-    { sx: 0, sy: -60 }, { sx: 0, sy: 45 },
-    { sx: -50, sy: -30 }, { sx: 50, sy: -30 },
+  // Vague 1 : burst immédiat
+  const wave1 = [
+    { sx: -60, sy: -70 }, { sx: 60, sy: -70 },
+    { sx: -80, sy: -10 }, { sx: 80, sy: -10 },
+    { sx: -50, sy: 50 }, { sx: 50, sy: 50 },
+    { sx: 0, sy: -85 }, { sx: 0, sy: 60 },
+    { sx: -70, sy: -40 }, { sx: 70, sy: -40 },
+    { sx: -40, sy: 65 }, { sx: 40, sy: -80 },
+  ]
+  // Vague 2 : retardée, plus large
+  const wave2 = [
+    { sx: -45, sy: -90 }, { sx: 45, sy: -90 },
+    { sx: -90, sy: 20 }, { sx: 90, sy: 20 },
+    { sx: -65, sy: 55 }, { sx: 65, sy: -55 },
+    { sx: 25, sy: 70 }, { sx: -25, sy: -75 },
   ]
   const stars = [
-    { sx: -30, sy: -55, d: 100 }, { sx: 45, sy: -35, d: 150 },
-    { sx: -50, sy: 15, d: 200 }, { sx: 35, sy: 40, d: 50 },
-    { sx: -20, sy: 50, d: 250 }, { sx: 55, sy: 10, d: 300 },
+    { sx: -50, sy: -75, d: 80 }, { sx: 65, sy: -50, d: 130 },
+    { sx: -70, sy: 25, d: 180 }, { sx: 50, sy: 55, d: 50 },
+    { sx: -30, sy: 70, d: 230 }, { sx: 75, sy: 10, d: 280 },
+    { sx: 0, sy: -90, d: 160 }, { sx: -80, sy: -20, d: 320 },
   ]
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {dots.map((p, i) => (
-        <span key={`d${i}`} className="sparkle-particle"
-          style={{ '--sx': `${p.sx}px`, '--sy': `${p.sy}px`, animationDelay: `${i * 50}ms` } as React.CSSProperties} />
+      {/* Ring doré qui explose */}
+      <div className="confirm-ring" />
+      {/* Vague 1 */}
+      {wave1.map((p, i) => (
+        <span key={`w1${i}`} className="sparkle-particle"
+          style={{ '--sx': `${p.sx}px`, '--sy': `${p.sy}px`, animationDelay: `${i * 40}ms` } as React.CSSProperties} />
       ))}
+      {/* Vague 2 (retardée) */}
+      {wave2.map((p, i) => (
+        <span key={`w2${i}`} className="sparkle-particle sparkle-particle-sm"
+          style={{ '--sx': `${p.sx}px`, '--sy': `${p.sy}px`, animationDelay: `${300 + i * 50}ms` } as React.CSSProperties} />
+      ))}
+      {/* Étoiles */}
       {stars.map((p, i) => (
         <span key={`s${i}`} className="sparkle-star"
           style={{ '--sx': `${p.sx}px`, '--sy': `${p.sy}px`, animationDelay: `${p.d}ms` } as React.CSSProperties} />
@@ -175,7 +194,7 @@ function IntroAnimation() {
   return (
     <div className="relative flex flex-col items-center justify-center" style={{ height: '200px' }}>
       <div className="intro-flash" />
-      <div className="intro-emoji text-6xl relative z-10">🎯</div>
+      <div className="intro-emoji text-6xl relative z-10">⚡</div>
       <p className="intro-text text-lg font-bold mt-3 relative z-10" style={{ color: '#1a1a2e' }}>
         C&apos;est parti !
       </p>
@@ -192,7 +211,7 @@ function CoachBubble({ text, animate = false }: { text: string; animate?: boolea
     <div className={`flex gap-2.5 items-start ${animate ? 'chat-bubble-in' : ''}`}>
       <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
         style={{ background: '#1a1a2e' }}>
-        🎯
+        ✨
       </div>
       <div className="rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%] text-[14px]"
         style={{ background: '#f0ebe0', color: '#1a1a2e' }}>
@@ -220,7 +239,7 @@ function TypingIndicator() {
     <div className="flex gap-2.5 items-start chat-bubble-in">
       <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
         style={{ background: '#1a1a2e' }}>
-        🎯
+        ✨
       </div>
       <div className="rounded-2xl rounded-tl-md px-4 py-3 flex items-center gap-1"
         style={{ background: '#f0ebe0' }}>
@@ -290,6 +309,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   const [showIntro, setShowIntro] = useState(false)
   const { toast } = useToast()
   const chatRef = useRef<HTMLDivElement>(null)
+  const contextCache = useRef<Map<string, string[]>>(new Map())
 
   // Auto-scroll vers le bas quand le step change
   useEffect(() => {
@@ -298,14 +318,35 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     }
   }, [step, loadingContexts, loadingActions, loadingResults, contextSuggestions, actionSuggestions, resultSuggestions, showCustom, rejectMsg])
 
-  // Animation d'intro au lancement (sauf onboarding/prefill)
+  // Animation d'intro au lancement + pré-fetch contextes (sauf onboarding/prefill)
   useEffect(() => {
     if (open && !onboardingMode && !prefill) {
       setShowIntro(true)
       const timer = setTimeout(() => setShowIntro(false), 1500)
+      // Pré-fetch des contextes pour tous les axes pendant l'intro
+      contextCache.current.clear()
+      axes.forEach(axe => {
+        fetch('/api/suggestions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'contexts',
+            axeSubject: axe.subject,
+            axeDescription: axe.description || undefined,
+            groupTheme: groupTheme || undefined,
+          }),
+        })
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data?.results?.length) {
+              contextCache.current.set(axe.id, data.results)
+            }
+          })
+          .catch(() => {})
+      })
       return () => clearTimeout(timer)
     }
-  }, [open, onboardingMode, prefill])
+  }, [open, onboardingMode, prefill, axes, groupTheme])
 
   // Prefill depuis défi de la semaine (mode legacy)
   useEffect(() => {
@@ -371,6 +412,12 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
   }
 
   async function fetchContextSuggestions(axe: AxeOption) {
+    // Vérifie le cache pré-chargé pendant l'intro
+    const cached = contextCache.current.get(axe.id)
+    if (cached?.length) {
+      setContextSuggestions(cached)
+      return
+    }
     setLoadingContexts(true)
     setContextSuggestions([])
     try {
@@ -388,6 +435,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
         const data = await res.json()
         if (data.results?.length) {
           setContextSuggestions(data.results)
+          contextCache.current.set(axe.id, data.results)
           setLoadingContexts(false)
           return
         }
@@ -780,7 +828,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 </button>
               )}
               <div className="w-7 h-7 rounded-full flex items-center justify-center text-[12px]"
-                style={{ background: '#fbbf24' }}>🎯</div>
+                style={{ background: '#fbbf24' }}>✨</div>
               <p className="text-white font-semibold text-[14px]">Nouvelle action</p>
             </div>
             <button onClick={handleClose} className="text-white/40 active:text-white">
