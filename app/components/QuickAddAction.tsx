@@ -53,6 +53,81 @@ function getValorisantMessage(actionCount: number): { text: string; emoji: strin
   return VALORISANT_MESSAGES[Math.floor(Math.random() * VALORISANT_MESSAGES.length)]
 }
 
+// ── Sous-composants (hors du composant principal pour éviter les re-renders) ──
+
+// Bulle coach (alignée à gauche)
+function CoachBubble({ text, animate = false }: { text: string; animate?: boolean }) {
+  return (
+    <div className={`flex gap-2.5 items-start ${animate ? 'chat-bubble-in' : ''}`}>
+      <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
+        style={{ background: '#1a1a2e' }}>
+        🎯
+      </div>
+      <div className="rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%] text-[14px]"
+        style={{ background: '#f0ebe0', color: '#1a1a2e' }}>
+        {text}
+      </div>
+    </div>
+  )
+}
+
+// Bulle réponse apprenant (alignée à droite)
+function UserBubble({ text }: { text: string }) {
+  return (
+    <div className="flex justify-end chat-bubble-in">
+      <div className="rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%] text-[14px] font-medium"
+        style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+        {text}
+      </div>
+    </div>
+  )
+}
+
+// Indicateur "en train d'écrire" (avatar + dots pulsants)
+function TypingIndicator() {
+  return (
+    <div className="flex gap-2.5 items-start chat-bubble-in">
+      <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
+        style={{ background: '#1a1a2e' }}>
+        🎯
+      </div>
+      <div className="rounded-2xl rounded-tl-md px-4 py-3 flex items-center gap-1"
+        style={{ background: '#f0ebe0' }}>
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+        <span className="ml-2 text-[12px]" style={{ color: '#a0937c' }}>en train d&apos;écrire</span>
+      </div>
+    </div>
+  )
+}
+
+// Boutons de suggestion
+function SuggestionButtons({ items, onSelect }: { items: string[]; onSelect: (s: string) => void }) {
+  return (
+    <>
+      {items.map((s, i) => (
+        <button key={i} onClick={() => onSelect(s)}
+          className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
+          style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
+          {s}
+        </button>
+      ))}
+    </>
+  )
+}
+
+// Bouton "Non, c'est autre chose..." bien visible
+function OtherButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button onClick={onClick}
+      className="w-full text-center px-3.5 py-3 rounded-2xl rounded-tl-md text-[13px] font-bold transition-all active:scale-[0.98]"
+      style={{ background: '#1a1a2e', border: '2px solid #1a1a2e', color: '#fbbf24' }}>
+      ✏️ Non, c&apos;est autre chose...
+    </button>
+  )
+}
+
 // ── Composant ──────────────────────────────────────────────────
 
 // Flow : Axe → Contexte → Précision contexte → Action → Résultat
@@ -425,82 +500,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     (step === 'action' && loadingActions) ||
     (step === 'result' && loadingResults)
 
-  // Bulle coach (alignée à gauche) — avec animation
-  function CoachBubble({ text, animate = false }: { text: string; animate?: boolean }) {
+  // Rendu inline de la saisie libre (pas un sous-composant pour éviter les re-mount)
+  function renderCustomInput(placeholder: string, onSubmit: () => void) {
+    if (!showCustom) return null
     return (
-      <div className={`flex gap-2.5 items-start ${animate ? 'chat-bubble-in' : ''}`}>
-        <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
-          style={{ background: '#1a1a2e' }}>
-          🎯
-        </div>
-        <div className="rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%] text-[14px]"
-          style={{ background: '#f0ebe0', color: '#1a1a2e' }}>
-          {text}
-        </div>
-      </div>
-    )
-  }
-
-  // Bulle réponse apprenant (alignée à droite) — avec animation
-  function UserBubble({ text }: { text: string }) {
-    return (
-      <div className="flex justify-end chat-bubble-in">
-        <div className="rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%] text-[14px] font-medium"
-          style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-          {text}
-        </div>
-      </div>
-    )
-  }
-
-  // Indicateur "en train d'écrire" (avatar + dots pulsants)
-  function TypingIndicator() {
-    return (
-      <div className="flex gap-2.5 items-start chat-bubble-in">
-        <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[14px]"
-          style={{ background: '#1a1a2e' }}>
-          🎯
-        </div>
-        <div className="rounded-2xl rounded-tl-md px-4 py-3 flex items-center gap-1"
-          style={{ background: '#f0ebe0' }}>
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-          <span className="ml-2 text-[12px]" style={{ color: '#a0937c' }}>en train d&apos;écrire</span>
-        </div>
-      </div>
-    )
-  }
-
-  // Boutons de suggestion
-  function SuggestionButtons({ items, onSelect }: { items: string[]; onSelect: (s: string) => void }) {
-    return (
-      <>
-        {items.map((s, i) => (
-          <button key={i} onClick={() => onSelect(s)}
-            className="w-full text-left px-3.5 py-2.5 rounded-2xl rounded-tl-md text-[13px] transition-all active:scale-[0.98]"
-            style={{ background: 'white', border: '1.5px solid #e8e0d4', color: '#1a1a2e' }}>
-            {s}
-          </button>
-        ))}
-      </>
-    )
-  }
-
-  // Bouton "Non, c'est autre chose..." bien visible
-  function OtherButton({ onClick }: { onClick: () => void }) {
-    return (
-      <button onClick={onClick}
-        className="w-full text-center px-3.5 py-3 rounded-2xl rounded-tl-md text-[13px] font-bold transition-all active:scale-[0.98]"
-        style={{ background: '#1a1a2e', border: '2px solid #1a1a2e', color: '#fbbf24' }}>
-        ✏️ Non, c&apos;est autre chose...
-      </button>
-    )
-  }
-
-  // Saisie libre
-  function CustomInput({ placeholder, onSubmit }: { placeholder: string; onSubmit: () => void }) {
-    return showCustom ? (
       <div className="pl-10 space-y-2">
         <input
           type="text"
@@ -524,7 +527,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
           </button>
         </div>
       </div>
-    ) : null
+    )
   }
 
   return (
@@ -678,7 +681,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
             )}
-            {step === 'context' && <CustomInput placeholder="Décris le contexte..." onSubmit={handleCustomContext} />}
+            {step === 'context' && renderCustomInput('Décris le contexte...', handleCustomContext)}
 
             {/* ── Étape 2b : Précision contexte (texte libre + skip) ── */}
             {step === 'context-detail' && (
@@ -714,7 +717,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
             )}
-            {step === 'action' && <CustomInput placeholder="Décris ce que tu as fait..." onSubmit={handleCustomAction} />}
+            {step === 'action' && renderCustomInput('Décris ce que tu as fait...', handleCustomAction)}
 
             {/* ── Étape 4 : Résultat ── */}
             {step === 'result' && !showCustom && !loadingResults && (
@@ -723,9 +726,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
                 <OtherButton onClick={() => { setShowCustom(true); setCustomText('') }} />
               </div>
             )}
-            {step === 'result' && (
-              <CustomInput placeholder="Qu'as-tu observé comme résultat ?" onSubmit={handleCustomResult} />
-            )}
+            {step === 'result' && renderCustomInput('Qu\'as-tu observé comme résultat ?', handleCustomResult)}
           </div>
         </div>
       )}
