@@ -163,7 +163,11 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
 ["...", "...", "..."]`
   }
 
-  const model = 'claude-sonnet-4-20250514'
+  // Haiku pour les contextes (rapide, suffisant), Sonnet pour actions/résultats (qualité)
+  const model = type === 'contexts'
+    ? 'claude-haiku-4-20250414'
+    : 'claude-sonnet-4-20250514'
+  const max_tokens = type === 'contexts' ? 150 : 300
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -175,7 +179,7 @@ Réponds UNIQUEMENT avec un tableau JSON de 3 strings :
       },
       body: JSON.stringify({
         model,
-        max_tokens: 300,
+        max_tokens,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
