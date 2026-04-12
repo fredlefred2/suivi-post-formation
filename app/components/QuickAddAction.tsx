@@ -189,16 +189,20 @@ function SparkleParticles() {
   )
 }
 
-// Animation d'intro (flash doré + emoji + texte)
+// Splash screen d'intro (fond navy + filigrane + gros emoji + texte)
 function IntroAnimation() {
   return (
-    <div className="relative flex flex-col items-center justify-center" style={{ height: '200px' }}>
-      <div className="intro-flash" />
-      <div className="intro-emoji text-6xl relative z-10">⚡</div>
-      <p className="intro-text text-lg font-bold mt-3 relative z-10" style={{ color: '#1a1a2e' }}>
+    <div className="intro-bg flex flex-col items-center justify-center" style={{ height: '280px' }}>
+      {/* Glow doré derrière l'emoji */}
+      <div className="relative flex items-center justify-center">
+        <div className="intro-glow" />
+        <div className="intro-emoji relative z-10" style={{ fontSize: '80px', lineHeight: 1 }}>⚡</div>
+      </div>
+      {/* Texte */}
+      <p className="intro-text text-xl font-extrabold mt-4 relative z-10" style={{ color: '#fbbf24' }}>
         C&apos;est parti !
       </p>
-      <p className="intro-text text-sm mt-1 relative z-10" style={{ color: '#a0937c', animationDelay: '0.7s' }}>
+      <p className="intro-subtext text-sm mt-1.5 relative z-10" style={{ color: 'rgba(255,255,255,0.5)' }}>
         Raconte-moi ce que tu as fait
       </p>
     </div>
@@ -756,9 +760,9 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
     <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
 
-      {/* ── Animation d'intro (flash doré) ── */}
+      {/* ── Splash screen d'intro ── */}
       {showIntro ? (
-        <div className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-xs mx-auto overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
+        <div className="relative rounded-[28px] shadow-2xl w-full max-w-sm mx-auto overflow-hidden">
           <IntroAnimation />
         </div>
       ) : levelUpInfo ? (
