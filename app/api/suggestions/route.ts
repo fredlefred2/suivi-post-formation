@@ -124,12 +124,12 @@ ${groupTheme ? `Formation : "${groupTheme}"` : ''}
 ═══ RÈGLE N°1 — SPÉCIFICITÉ ═══
 Chaque résultat doit être LA CONSÉQUENCE DIRECTE et VISIBLE de "${action}" dans le contexte "${context}". Si on change l'action ou le contexte, le résultat ne doit PLUS fonctionner.
 
-═══ RÈGLE N°2 — ON VOIT LA SCÈNE ═══
-C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti) ou OBTENU (effet mesurable). Un résultat = un moment précis.
+═══ RÈGLE N°2 ═══
+C'est ce que la personne a observé (réaction des autres), ressenti (son propre ressenti) ou OBTENU (effet mesurable). Ces éléments seront des potentiels effets bénéfiques issus des bonnes pratiques vues en formation, et mises en oeuvre par l'apprenant (ce qu'il t'a déclaré comme action).
 
 ═══ RÈGLE N°3 — FORMAT ═══
 - Max 60 caractères
-- 3 angles différents : réaction des autres / ressenti perso / effet concret
+- 3 angles différents : réaction des autres / ressenti perso / résultat obtenu
 - Langage oral, vivant
 - Pas de descriptif ultra précis genre "il a légèrement souri et pris une inspiration en levant sa main", pas de prénom, pas de marque
 - Pas de jargon
@@ -141,10 +141,10 @@ C'est ce que la personne a VU (réaction des autres), SENTI (son propre ressenti
 - "La communication était meilleure" ❌ générique
 
 ═══ BONS EXEMPLES (niveau de précision attendu) ═══
-- "Il s'est mis à parler" ✅
+- "Plus d'ouverture et d'informations reçues" ✅
 - "On a bouclé plus rapidement" ✅
 - "J'étais moins stressé que d'habitude" ✅
-- "Il m'a posé une question en retour" ✅
+- "Il m'a posé des questions" ✅
 - "Il a accepté ma proposition" ✅
 - "Il a réagi positivement" ✅
 
