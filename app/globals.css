@@ -563,12 +563,12 @@
   }
 
   /* ──────── DashboardIcons — pulse sur icône "active" ──────── */
-  @keyframes icon-card-pulse {
-    0%, 100% { box-shadow: 0 4px 14px rgba(251,191,36,0.2); }
-    50% { box-shadow: 0 4px 22px rgba(251,191,36,0.45); }
+  @keyframes icon-tile-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
   }
-  .icon-card-pulse {
-    animation: icon-card-pulse 2.5s ease-in-out infinite;
+  .icon-tile-pulse {
+    animation: icon-tile-pulse 2.2s ease-in-out infinite;
   }
 
   /* ──────── Prompt plein écran — confetti qui tombe ──────── */

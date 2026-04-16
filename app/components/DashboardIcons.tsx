@@ -1,5 +1,6 @@
 'use client'
 
+import { Zap, ClipboardCheck, Gift, Brain, type LucideIcon } from 'lucide-react'
 import { getNextLevel } from '@/lib/axeHelpers'
 
 type AxeInfo = { id: string; completedCount: number }
@@ -18,7 +19,7 @@ type Props = {
 }
 
 /**
- * Les 4 icônes permanentes du dashboard apprenant.
+ * Les 4 icônes permanentes du dashboard apprenant — style iOS gradient.
  * Remplace le bouton "Nouvelle Action", le bandeau check-in, le bandeau coach.
  */
 export default function DashboardIcons({
@@ -43,50 +44,65 @@ export default function DashboardIcons({
     ? `→ ${axeClosestToNext.next!.delta} pour ${axeClosestToNext.next!.icon}`
     : axes.length > 0
       ? '👑 Tout au max !'
-      : 'Déclare ta 1ère action'
+      : '1ère action !'
 
   // Sous-texte check-in
   const checkinSubtext = checkinDone
     ? 'Fait ✓'
     : checkinAvailable
       ? 'Disponible !'
-      : 'Dispo vendredi'
+      : 'Dès vendredi'
 
   return (
     <div className="grid grid-cols-4 gap-2">
-      <IconCard
-        icon="⚡"
+      {/* ⚡ J'AI AGI */}
+      <IconTile
+        Icon={Zap}
         label="J'ai agi !"
         subtext={actionSubtext}
         subtextColor="#10b981"
+        gradient="linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)"
+        shadowColor="rgba(251,191,36,0.45)"
         hasAction={axes.length > 0}
         onClick={onAction}
       />
-      <IconCard
-        icon="📋"
+
+      {/* 📋 CHECK-IN */}
+      <IconTile
+        Icon={ClipboardCheck}
         label="Check-in"
         subtext={checkinSubtext}
         subtextColor={checkinAvailable ? '#10b981' : '#a0937c'}
+        gradient="linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)"
+        shadowColor="rgba(20,184,166,0.4)"
         streakBadge={streak >= 1 ? streak : undefined}
         hasAction={checkinAvailable}
         disabled={!checkinAvailable && !checkinDone}
         onClick={onCheckin}
       />
-      <IconCard
-        icon="🎁"
+
+      {/* 🎁 COACH */}
+      <IconTile
+        Icon={Gift}
         label="Coach"
-        subtext={tipAvailable ? 'Nouveau tip !' : 'Rien pour l\'instant'}
+        subtext={tipAvailable ? 'Nouveau tip !' : 'En attente'}
         subtextColor={tipAvailable ? '#10b981' : '#a0937c'}
+        gradient="linear-gradient(135deg, #312e81 0%, #1a1a2e 100%)"
+        shadowColor="rgba(26,26,46,0.4)"
         notificationBadge={tipAvailable}
         hasAction={tipAvailable}
         disabled={!tipAvailable}
         onClick={onCoach}
       />
-      <IconCard
-        icon="❓"
+
+      {/* 🧠 QUIZ */}
+      <IconTile
+        Icon={Brain}
         label="Quiz"
-        subtext={quizAvailable ? 'Nouveau quiz !' : 'Bientôt !'}
+        subtext={quizAvailable ? 'Nouveau quiz !' : 'Bientôt'}
         subtextColor={quizAvailable ? '#10b981' : '#a0937c'}
+        gradient="linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)"
+        shadowColor="rgba(168,85,247,0.4)"
         hasAction={quizAvailable}
         disabled={!quizAvailable}
         onClick={onQuiz}
@@ -95,21 +111,25 @@ export default function DashboardIcons({
   )
 }
 
-function IconCard({
-  icon,
+function IconTile({
+  Icon,
   label,
   subtext,
   subtextColor,
+  gradient,
+  shadowColor,
   streakBadge,
   notificationBadge,
   hasAction,
   disabled,
   onClick,
 }: {
-  icon: string
+  Icon: LucideIcon
   label: string
   subtext: string
   subtextColor: string
+  gradient: string
+  shadowColor: string
   streakBadge?: number
   notificationBadge?: boolean
   hasAction?: boolean
@@ -120,42 +140,53 @@ function IconCard({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`relative rounded-2xl p-3 text-center transition-all active:scale-95 ${
-        hasAction ? 'icon-card-pulse' : ''
-      } ${disabled ? 'opacity-45 pointer-events-none' : ''}`}
-      style={{
-        background: 'white',
-        border: hasAction ? '2px solid #fbbf24' : '2px solid #f0ebe0',
-        boxShadow: hasAction ? '0 4px 14px rgba(251,191,36,0.2)' : '0 2px 8px rgba(0,0,0,0.04)',
-      }}
+      className={`flex flex-col items-center gap-1.5 py-1 ${disabled ? 'opacity-55 pointer-events-none' : ''}`}
     >
-      {/* Badge notification rouge */}
-      {notificationBadge && (
-        <span
-          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 border-2 border-white flex items-center justify-center"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-white" />
-        </span>
-      )}
+      {/* Carré gradient */}
+      <div
+        className={`relative w-[60px] h-[60px] rounded-[18px] flex items-center justify-center transition-transform active:scale-90 ${
+          hasAction ? 'icon-tile-pulse' : ''
+        }`}
+        style={{
+          background: gradient,
+          boxShadow: hasAction ? `0 6px 18px ${shadowColor}` : `0 4px 12px ${shadowColor}`,
+        }}
+      >
+        <Icon size={26} strokeWidth={2.2} className="text-white" />
 
-      {/* Icône */}
-      <div className="text-[28px] leading-none mb-1">{icon}</div>
+        {/* Badge notification rouge */}
+        {notificationBadge && (
+          <span
+            className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full bg-red-500 border-[3px]"
+            style={{ borderColor: '#faf8f4' }}
+          />
+        )}
+
+        {/* Badge streak (check-in) */}
+        {streakBadge !== undefined && streakBadge >= 1 && (
+          <span
+            className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-lg text-[10px] font-extrabold leading-none"
+            style={{
+              background: '#f97316',
+              color: 'white',
+              border: '2px solid #faf8f4',
+            }}
+          >
+            🔥{streakBadge}
+          </span>
+        )}
+      </div>
 
       {/* Label */}
-      <div className="text-[11px] font-bold" style={{ color: '#1a1a2e' }}>
+      <div className="text-[11px] font-bold leading-tight text-center" style={{ color: '#1a1a2e' }}>
         {label}
       </div>
 
-      {/* Streak badge (check-in) */}
-      {streakBadge !== undefined && streakBadge >= 1 && (
-        <div className="flex items-center justify-center gap-0.5 mt-1 text-[11px] font-extrabold"
-          style={{ color: '#f97316' }}>
-          🔥 {streakBadge}
-        </div>
-      )}
-
       {/* Sous-texte */}
-      <div className="text-[9px] mt-1 font-medium truncate" style={{ color: subtextColor }}>
+      <div
+        className="text-[9px] font-semibold leading-none text-center truncate max-w-full px-1"
+        style={{ color: subtextColor }}
+      >
         {subtext}
       </div>
     </button>
