@@ -72,12 +72,12 @@ export default function DashboardIcons({
         Icon={ClipboardCheck}
         label="Check-in"
         subtext={checkinSubtext}
-        subtextColor={checkinAvailable ? '#10b981' : '#a0937c'}
+        subtextColor={checkinAvailable && !checkinDone ? '#10b981' : '#a0937c'}
         gradient="linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)"
         shadowColor="rgba(20,184,166,0.4)"
         streakBadge={streak >= 1 ? streak : undefined}
-        hasAction={checkinAvailable}
-        disabled={!checkinAvailable && !checkinDone}
+        hasAction={checkinAvailable && !checkinDone}
+        disabled={checkinDone || !checkinAvailable}
         onClick={onCheckin}
       />
 

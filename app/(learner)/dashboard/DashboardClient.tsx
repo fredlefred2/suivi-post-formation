@@ -12,12 +12,6 @@ import DashboardIcons from '@/app/components/DashboardIcons'
 import OpenAppPrompt from '@/app/components/OpenAppPrompt'
 import { useRouter } from 'next/navigation'
 
-const WEATHER_ICONS: Record<string, string> = {
-  sunny: '☀️',
-  cloudy: '⛅',
-  stormy: '⛈️',
-}
-
 type AxeItem = {
   id: string
   index: number
@@ -48,13 +42,6 @@ type Props = {
   checkinIsOpen: boolean
   axesForCheckin: { id: string; initial_score: number }[]
   groupTheme: string | null
-}
-
-function getEncouragement(delta: number, streak: number): string {
-  if (streak >= 3) return 'Tu es sur une lancée !'
-  if (delta >= 3) return 'Semaine productive !'
-  if (delta >= 1) return 'Bon début, continue !'
-  return "C'est le moment de s'y mettre !"
 }
 
 // Couleurs de barre par niveau — warm palette
@@ -91,6 +78,7 @@ export default function DashboardClient({
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
   const [tipAvailable, setTipAvailable] = useState(false)
+  const [forceCoach, setForceCoach] = useState(false)
 
   // Fetch si un tip est dispo (pour la pastille 🎁 et l'orchestrateur)
   useEffect(() => {
@@ -108,69 +96,42 @@ export default function DashboardClient({
   const doneCount = stepsData.filter((s) => s.done).length
   const pct = Math.round((doneCount / stepsData.length) * 100)
 
-  // Message d'encouragement
-  const encouragement = getEncouragement(deltaActionsThisWeek, streak)
 
   return (
     <TipProvider>
       <div className="space-y-3 pb-20 sm:pb-4">
 
-        {/* ── 1. Header navy — Cream & Warm ── */}
+        {/* ── 1. Header navy compact — Option A ── */}
         <div
-          className="rounded-[28px] p-5 relative overflow-hidden"
+          className="rounded-[22px] px-[18px] py-[14px] relative overflow-hidden"
           data-onboarding="checkin-area"
           style={{ background: '#1a1a2e' }}
         >
           {/* Cercle décoratif amber */}
-          <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
+          <div className="absolute -top-4 -right-3 w-[70px] h-[70px] rounded-full" style={{ background: 'rgba(251,191,36,0.12)' }} />
 
-          {/* Ligne 1 : Bonjour + dernière météo */}
-          <div className="relative flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-[22px] font-extrabold text-white">Bonjour {firstName} 👋</h1>
-              <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{encouragement}</p>
-            </div>
-            {weatherHistory.length > 0 && (
-              <Link href="/checkin" className="flex flex-col items-center">
-                <span className="text-3xl drop-shadow-lg">
-                  {WEATHER_ICONS[weatherHistory[weatherHistory.length - 1]] ?? '❓'}
-                </span>
-                <span className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>ma météo</span>
-              </Link>
-            )}
-          </div>
-
-          {/* Stats en 3 colonnes */}
-          <div className="relative grid grid-cols-3 gap-2">
-            {/* Cette semaine */}
-            <Link href="/axes" className="rounded-2xl py-3 px-2 text-center transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div className="font-display text-[26px] font-bold" style={{ color: deltaActionsThisWeek > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
-                {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
-              </div>
-              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>cette sem.</p>
-            </Link>
-
-            {/* Total actions */}
-            <Link href="/axes" className="rounded-2xl py-3 px-2 text-center transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div className="font-display text-[26px] font-bold text-white">{animatedActions}</div>
-              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>actions</p>
+          <div className="relative">
+            <h1 className="text-[16px] font-extrabold text-white leading-tight">Salut {firstName} 👋</h1>
+            <p className="text-[12px] mt-1 font-semibold flex items-center flex-wrap gap-x-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              💪 <span style={{ color: '#fbbf24' }} className="font-extrabold">{animatedActions}</span> actions
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}> · </span>
+              {deltaActionsThisWeek >= 0 ? (
+                <>
+                  <span style={{ color: deltaActionsThisWeek > 0 ? '#fbbf24' : 'rgba(255,255,255,0.7)' }} className="font-extrabold">
+                    {deltaActionsThisWeek > 0 ? `+${animatedDelta}` : '0'}
+                  </span>
+                  <span>cette sem.</span>
+                </>
+              ) : null}
               {rank && rank <= 3 && groupSize && groupSize > 1 && (
-                <p className="text-[10px] font-bold mt-0.5" style={{ color: '#fbbf24' }}>
-                  {rank === 1 ? '1er' : rank === 2 ? '2e' : '3e'} du groupe
-                </p>
+                <>
+                  <span style={{ color: 'rgba(255,255,255,0.3)' }}> · </span>
+                  🏆 <span style={{ color: '#fbbf24' }} className="font-extrabold">
+                    {rank === 1 ? '1er' : rank === 2 ? '2e' : '3e'}
+                  </span>
+                </>
               )}
-            </Link>
-
-            {/* Check-ins + streak */}
-            <Link href="/checkin" className="rounded-2xl py-3 px-2 text-center transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div className="font-display text-[26px] font-bold text-white">{totalCheckins}</div>
-              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>check-ins</p>
-              {streak >= 2 && (
-                <p className="text-[10px] font-bold mt-0.5" style={{ color: '#fbbf24' }}>
-                  🔥 {streak} sem.
-                </p>
-              )}
-            </Link>
+            </p>
           </div>
         </div>
 
@@ -185,14 +146,7 @@ export default function DashboardClient({
             quizAvailable={false}
             onAction={() => setQuickAddOpen(true)}
             onCheckin={() => setQuickCheckinOpen(true)}
-            onCoach={() => {
-              // Forcer la réapparition de la fenêtre cadeau
-              fetch('/api/prompt-dismiss', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ promptType: 'tip' }),
-              }).then(() => window.location.reload())
-            }}
+            onCoach={() => setForceCoach(true)}
             onQuiz={() => { /* Phase 2 */ }}
           />
         )}
@@ -329,8 +283,11 @@ export default function DashboardClient({
           checkinDone={checkinDone}
           checkinWeekLabel={checkinWeekLabel}
           streak={streak}
+          forceCoach={forceCoach}
           onOpenCheckin={() => setQuickCheckinOpen(true)}
           onOpenQuickAdd={() => setQuickAddOpen(true)}
+          onTipRead={() => setTipAvailable(false)}
+          onForceCoachConsumed={() => setForceCoach(false)}
         />
       </div>
     </TipProvider>

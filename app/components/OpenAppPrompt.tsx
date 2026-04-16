@@ -12,10 +12,14 @@ type Props = {
   checkinDone: boolean
   checkinWeekLabel: string
   streak: number
+  // Contrôle : forcer l'affichage du coach (quand user clique sur l'icône)
+  forceCoach?: boolean
   // Callbacks pour ouvrir les modales correspondantes
   onOpenCheckin: () => void
   onOpenQuickAdd: () => void
   onOpenQuiz?: () => void
+  onTipRead?: () => void  // Quand user marque le tip lu
+  onForceCoachConsumed?: () => void  // Reset forceCoach après affichage
 }
 
 /**
@@ -35,14 +39,34 @@ export default function OpenAppPrompt({
   checkinDone,
   checkinWeekLabel,
   streak,
+  forceCoach,
   onOpenCheckin,
   onOpenQuickAdd,
   onOpenQuiz,
+  onTipRead,
+  onForceCoachConsumed,
 }: Props) {
   const [activePrompt, setActivePrompt] = useState<PromptType | null>(null)
   const [tipData, setTipData] = useState<any>(null)
   const [daysSince, setDaysSince] = useState(0)
   const didCheck = useRef(false)
+
+  // Déclenchement manuel quand user clique l'icône Coach
+  useEffect(() => {
+    if (!forceCoach) return
+    async function fetchAndShow() {
+      try {
+        const res = await fetch('/api/tips').then(r => r.ok ? r.json() : { tip: null })
+        if (res.tip) {
+          setTipData(res.tip)
+          setActivePrompt('tip')
+        }
+      } finally {
+        onForceCoachConsumed?.()
+      }
+    }
+    fetchAndShow()
+  }, [forceCoach, onForceCoachConsumed])
 
   useEffect(() => {
     // Ne check qu'une fois par montage du composant (une fois par ouverture d'appli)
@@ -138,17 +162,22 @@ export default function OpenAppPrompt({
         open={activePrompt === 'tip'}
         tip={tipData}
         onRead={async () => {
-          // Marquer le tip comme "acted" pour ne plus le re-afficher
+          // Marquer le tip comme "acted" — bloquant pour éviter la réapparition
           if (tipData) {
             try {
-              await fetch('/api/tips', {
+              const res = await fetch('/api/tips', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ tipId: tipData.id, acted: true }),
               })
-            } catch {}
+              if (!res.ok) console.error('[OpenAppPrompt] PATCH tip failed:', res.status)
+            } catch (err) {
+              console.error('[OpenAppPrompt] PATCH tip error:', err)
+            }
           }
+          setTipData(null)  // Clear local cache
           close()
+          onTipRead?.()     // Notifier le parent pour reset tipAvailable
         }}
         onSkip={() => { close(); markSkipped('tip') }}
       />
