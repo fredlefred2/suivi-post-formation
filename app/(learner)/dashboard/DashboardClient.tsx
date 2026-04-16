@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { AlertCircle, Plus } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
 import { MARKERS, getCurrentLevelIndex, getProgress } from '@/lib/axeHelpers'
 import QuickAddAction from '@/app/components/QuickAddAction'
 import QuickCheckin from '@/app/components/QuickCheckin'
-import { TipProvider, AxeTipBadge } from '@/app/components/WeeklyChallenge'
+import { TipProvider } from '@/app/components/WeeklyChallenge'
+import DashboardIcons from '@/app/components/DashboardIcons'
+import OpenAppPrompt from '@/app/components/OpenAppPrompt'
 import { useRouter } from 'next/navigation'
 
 const WEATHER_ICONS: Record<string, string> = {
@@ -88,6 +90,15 @@ export default function DashboardClient({
   const router = useRouter()
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
+  const [tipAvailable, setTipAvailable] = useState(false)
+
+  // Fetch si un tip est dispo (pour la pastille 🎁 et l'orchestrateur)
+  useEffect(() => {
+    fetch('/api/tips')
+      .then(r => r.ok ? r.json() : { tip: null })
+      .then(data => setTipAvailable(!!data?.tip))
+      .catch(() => {})
+  }, [])
 
   // Compteurs animes
   const animatedActions = useCountUp(totalActions)
@@ -96,10 +107,6 @@ export default function DashboardClient({
   // Barre de progression onboarding
   const doneCount = stepsData.filter((s) => s.done).length
   const pct = Math.round((doneCount / stepsData.length) * 100)
-
-  // Recap hebdo visible lundi/mardi (jour 1-2)
-  const dayOfWeek = new Date().getDay()
-  const showRecap = (dayOfWeek === 1 || dayOfWeek === 2) && lastWeekActions > 0
 
   // Message d'encouragement
   const encouragement = getEncouragement(deltaActionsThisWeek, streak)
@@ -167,28 +174,27 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* ── 2. Check-in compact 1 ligne ── */}
-        {!checkinDone && (
-          <button
-            onClick={() => setQuickCheckinOpen(true)}
-            className="w-full rounded-[18px] px-4 py-3 flex items-center gap-3 bg-white text-left active:scale-[0.98] transition-transform"
-            style={{ border: '2px solid #f0ebe0' }}
-          >
-            <span className="text-base">⚡</span>
-            <p className="font-semibold text-[13px] flex-1 truncate" style={{ color: '#92400e' }}>Check-in en attente · {checkinWeekLabel}</p>
-            <span className="btn-navy text-xs shrink-0 py-1.5 px-4 rounded-xl">Faire</span>
-          </button>
-        )}
-
-        {/* Recap semaine derniere (lundi/mardi) */}
-        {showRecap && (
-          <div className="rounded-[18px] px-4 py-3 flex items-center gap-3 bg-white" style={{ border: '2px solid #f0ebe0' }}>
-            <span className="text-sm">📊</span>
-            <p className="text-xs" style={{ color: '#1a1a2e' }}>
-              <span className="font-bold">Sem. dernière :</span> +{lastWeekActions} action{lastWeekActions > 1 ? 's' : ''}
-              {streak > 1 && <span> · 🔥 {streak} sem.</span>}
-            </p>
-          </div>
+        {/* ── 2. Les 4 icônes permanentes ── */}
+        {axes.length > 0 && (
+          <DashboardIcons
+            axes={axes.map(a => ({ id: a.id, completedCount: a.completedCount }))}
+            streak={streak}
+            checkinAvailable={checkinIsOpen}
+            checkinDone={checkinDone}
+            tipAvailable={tipAvailable}
+            quizAvailable={false}
+            onAction={() => setQuickAddOpen(true)}
+            onCheckin={() => setQuickCheckinOpen(true)}
+            onCoach={() => {
+              // Forcer la réapparition de la fenêtre cadeau
+              fetch('/api/prompt-dismiss', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ promptType: 'tip' }),
+              }).then(() => window.location.reload())
+            }}
+            onQuiz={() => { /* Phase 2 */ }}
+          />
         )}
 
         {/* Barre de progression onboarding */}
@@ -212,34 +218,6 @@ export default function DashboardClient({
               ))}
             </div>
           </div>
-        )}
-
-        {/* ── 3. Bouton Nouvelle Action ── */}
-        {axes.length > 0 && (
-          <button
-            data-onboarding="fab-action"
-            onClick={() => setQuickAddOpen(true)}
-            className="w-full flex flex-col items-center justify-center gap-0.5 py-4 rounded-[18px] active:scale-[0.97] transition-transform"
-            style={{
-              background: '#fbbf24',
-              color: '#1a1a2e',
-              boxShadow: '0 4px 20px rgba(251, 191, 36, 0.3)',
-            }}
-          >
-            <span className="flex items-center gap-2 text-[15px] font-bold">
-              <Plus size={20} strokeWidth={2.5} />
-              Nouvelle action
-            </span>
-            {deltaActionsThisWeek > 0 ? (
-              <span className="text-[11px]" style={{ color: 'rgba(26,26,46,0.6)' }}>
-                Tu en as fait {deltaActionsThisWeek} cette semaine
-              </span>
-            ) : (
-              <span className="text-[11px]" style={{ color: 'rgba(26,26,46,0.6)' }}>
-                Lance-toi, 1 action suffit !
-              </span>
-            )}
-          </button>
         )}
 
         {/* ── Empty state ── */}
@@ -318,8 +296,6 @@ export default function DashboardClient({
                       </span>
                     </div>
 
-                    {/* ── Tip intégré dans la carte de l'axe ── */}
-                    <AxeTipBadge axeId={axe.id} />
                   </div>
                 </Link>
               )
@@ -344,6 +320,17 @@ export default function DashboardClient({
           open={quickCheckinOpen}
           onClose={() => setQuickCheckinOpen(false)}
           onSuccess={() => router.refresh()}
+        />
+
+        {/* Orchestrateur des fenêtres plein écran à l'ouverture */}
+        <OpenAppPrompt
+          firstName={firstName}
+          checkinAvailable={checkinIsOpen}
+          checkinDone={checkinDone}
+          checkinWeekLabel={checkinWeekLabel}
+          streak={streak}
+          onOpenCheckin={() => setQuickCheckinOpen(true)}
+          onOpenQuickAdd={() => setQuickAddOpen(true)}
         />
       </div>
     </TipProvider>
