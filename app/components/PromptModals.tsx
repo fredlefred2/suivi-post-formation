@@ -235,60 +235,21 @@ export function CoachGiftPrompt({ open, tip, onRead, onSkip }: CoachGiftPromptPr
               </>
             )}
 
-            {/* L'ampoule SVG */}
-            <svg
-              viewBox="0 0 100 120"
-              className={`relative z-10 ${opened ? 'bulb-filament' : 'bulb-idle'}`}
-              style={{ width: 120, height: 144 }}
+            {/* L'ampoule — emoji 💡, désaturée + translucide quand éteinte */}
+            <div
+              className={`relative z-10 leading-none select-none ${opened ? 'bulb-filament' : 'bulb-idle'}`}
+              style={{
+                fontSize: 140,
+                filter: opened
+                  ? 'drop-shadow(0 0 18px rgba(251,191,36,0.85)) drop-shadow(0 0 40px rgba(251,191,36,0.5)) saturate(1.2)'
+                  : 'grayscale(0.7) brightness(0.75) contrast(0.9)',
+                opacity: opened ? 1 : 0.55,
+                transition: 'filter 0.4s ease-out, opacity 0.4s ease-out',
+              }}
+              aria-hidden
             >
-              {/* Base / culot de l'ampoule */}
-              <rect x="38" y="88" width="24" height="8" rx="2"
-                fill={opened ? '#78716c' : '#52525b'}/>
-              <rect x="35" y="96" width="30" height="6" rx="1"
-                fill={opened ? '#a8a29e' : '#71717a'}/>
-              <rect x="38" y="102" width="24" height="5" rx="1"
-                fill={opened ? '#78716c' : '#52525b'}/>
-              <path d="M 42 107 L 58 107 L 54 116 L 46 116 Z"
-                fill={opened ? '#a8a29e' : '#71717a'}/>
-
-              {/* Verre de l'ampoule */}
-              <path
-                d="M 30 45 Q 30 15 50 15 Q 70 15 70 45 Q 70 65 60 75 Q 58 80 60 88 L 40 88 Q 42 80 40 75 Q 30 65 30 45 Z"
-                fill={opened ? 'rgba(254, 243, 199, 0.9)' : 'rgba(148, 163, 184, 0.25)'}
-                stroke={opened ? '#fbbf24' : '#64748b'}
-                strokeWidth="2"
-              />
-
-              {/* Glow intérieur si allumée */}
-              {opened && (
-                <circle
-                  cx="50" cy="45" r="20"
-                  fill="url(#bulbGlow)"
-                />
-              )}
-
-              {/* Filament — allumé */}
-              {opened ? (
-                <g stroke="#fbbf24" strokeWidth="2" fill="none" strokeLinecap="round">
-                  <path d="M 44 60 Q 46 45 50 50 Q 54 55 56 40 Q 54 50 50 50 Q 46 50 44 60 Z" fill="#fef3c7" />
-                  <line x1="42" y1="72" x2="44" y2="65" />
-                  <line x1="58" y1="72" x2="56" y2="65" />
-                </g>
-              ) : (
-                <g stroke="#94a3b8" strokeWidth="1.5" fill="none" strokeLinecap="round">
-                  <path d="M 44 60 Q 46 45 50 50 Q 54 55 56 40" />
-                  <line x1="42" y1="72" x2="44" y2="65" />
-                  <line x1="58" y1="72" x2="56" y2="65" />
-                </g>
-              )}
-
-              <defs>
-                <radialGradient id="bulbGlow">
-                  <stop offset="0%" stopColor="rgba(254, 240, 138, 0.8)" />
-                  <stop offset="100%" stopColor="rgba(251, 191, 36, 0)" />
-                </radialGradient>
-              </defs>
-            </svg>
+              💡
+            </div>
           </div>
 
           <p
