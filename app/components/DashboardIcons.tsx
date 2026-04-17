@@ -72,7 +72,7 @@ export default function DashboardIcons({
         onClick={onAction}
       />
 
-      {/* 📋 CHECK-IN */}
+      {/* 📋 CHECK-IN — toujours cliquable (neuf OU historique) */}
       <IconTile
         Icon={ClipboardCheck}
         label="Check-in"
@@ -82,21 +82,19 @@ export default function DashboardIcons({
         shadowColor="rgba(20,184,166,0.4)"
         streakBadge={streak >= 1 ? streak : undefined}
         hasAction={checkinAvailable && !checkinDone}
-        disabled={checkinDone || !checkinAvailable}
         onClick={onCheckin}
       />
 
-      {/* 🎁 COACH */}
+      {/* 🎁 COACH — toujours cliquable (nouveau tip OU historique) */}
       <IconTile
         Icon={Gift}
         label="Coach"
-        subtext={tipAvailable ? 'Nouveau tip !' : 'Rien de neuf'}
+        subtext={tipAvailable ? 'Nouveau tip !' : 'Voir historique'}
         subtextColor={tipAvailable ? '#10b981' : '#a0937c'}
         gradient="linear-gradient(135deg, #312e81 0%, #1a1a2e 100%)"
         shadowColor="rgba(26,26,46,0.4)"
         notificationBadge={tipAvailable}
         hasAction={tipAvailable}
-        disabled={!tipAvailable}
         onClick={onCoach}
       />
 

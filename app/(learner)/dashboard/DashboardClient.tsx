@@ -10,6 +10,7 @@ import { TipProvider } from '@/app/components/WeeklyChallenge'
 import DashboardIcons from '@/app/components/DashboardIcons'
 import OpenAppPrompt from '@/app/components/OpenAppPrompt'
 import AxeRing from '@/app/components/AxeRing'
+import { CheckinHistoryModal, CoachHistoryModal } from '@/app/components/HistoryModals'
 import { useRouter } from 'next/navigation'
 
 type AxeItem = {
@@ -70,6 +71,8 @@ export default function DashboardClient({
   const [tipAvailable, setTipAvailable] = useState(false)
   const [forceCoach, setForceCoach] = useState(false)
   const [messagesUnread, setMessagesUnread] = useState(0)
+  const [checkinHistoryOpen, setCheckinHistoryOpen] = useState(false)
+  const [coachHistoryOpen, setCoachHistoryOpen] = useState(false)
 
   // Fetch si un tip est dispo (pour la pastille 🎁 et l'orchestrateur)
   useEffect(() => {
@@ -162,8 +165,16 @@ export default function DashboardClient({
               tipAvailable={tipAvailable}
               messagesUnread={messagesUnread}
               onAction={() => setQuickAddOpen(true)}
-              onCheckin={() => setQuickCheckinOpen(true)}
-              onCoach={() => setForceCoach(true)}
+              onCheckin={() => {
+                // Si check-in neuf à faire → formulaire ; sinon → historique
+                if (checkinIsOpen && !checkinDone) setQuickCheckinOpen(true)
+                else setCheckinHistoryOpen(true)
+              }}
+              onCoach={() => {
+                // Si nouveau tip → fenêtre cadeau ; sinon → historique
+                if (tipAvailable) setForceCoach(true)
+                else setCoachHistoryOpen(true)
+              }}
               onMessages={() => window.dispatchEvent(new Event('open-messages'))}
             />
           </div>
@@ -244,6 +255,20 @@ export default function DashboardClient({
           open={quickCheckinOpen}
           onClose={() => setQuickCheckinOpen(false)}
           onSuccess={() => router.refresh()}
+        />
+
+        {/* Modale historique check-ins (si clic quand rien de neuf) */}
+        <CheckinHistoryModal
+          open={checkinHistoryOpen}
+          onClose={() => setCheckinHistoryOpen(false)}
+          isOffPeriod={!checkinIsOpen}
+          streak={streak}
+        />
+
+        {/* Modale historique conseils coach (si clic quand rien de neuf) */}
+        <CoachHistoryModal
+          open={coachHistoryOpen}
+          onClose={() => setCoachHistoryOpen(false)}
         />
 
         {/* Orchestrateur des fenêtres plein écran à l'ouverture */}
