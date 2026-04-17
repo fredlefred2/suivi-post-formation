@@ -11,10 +11,12 @@ function PromptOverlay({
   children,
   gradient,
   onClose,
+  hideClose = false,
 }: {
   children: React.ReactNode
   gradient: string
   onClose: () => void
+  hideClose?: boolean
 }) {
   // Bloquer le scroll derrière l'overlay
   useEffect(() => {
@@ -28,18 +30,20 @@ function PromptOverlay({
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center prompt-fade-in"
       style={{ background: gradient }}
     >
-      <button
-        onClick={onClose}
-        aria-label="Fermer"
-        className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-        style={{
-          background: 'rgba(255,255,255,0.15)',
-          color: 'white',
-          top: 'max(16px, env(safe-area-inset-top))',
-        }}
-      >
-        <X size={18} />
-      </button>
+      {!hideClose && (
+        <button
+          onClick={onClose}
+          aria-label="Fermer"
+          className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+          style={{
+            background: 'rgba(255,255,255,0.15)',
+            color: 'white',
+            top: 'max(16px, env(safe-area-inset-top))',
+          }}
+        >
+          <X size={18} />
+        </button>
+      )}
       {children}
     </div>
   )
@@ -177,6 +181,7 @@ export function CoachGiftPrompt({ open, tip, onRead, onSkip }: CoachGiftPromptPr
     <PromptOverlay
       gradient="linear-gradient(180deg, #1a1a2e 0%, #0f0f1e 100%)"
       onClose={onSkip}
+      hideClose
     >
       {!showTip ? (
         <>
@@ -256,7 +261,7 @@ export function CoachGiftPrompt({ open, tip, onRead, onSkip }: CoachGiftPromptPr
             className="text-lg font-extrabold mb-1 text-center transition-colors"
             style={{ color: opened ? '#fbbf24' : 'rgba(255,255,255,0.5)' }}
           >
-            {opened ? 'Lumière !' : 'Ton coach a une idée'}
+            {opened ? 'Lumière !' : 'Ton coach, un conseil !'}
           </p>
           <p className="text-white/50 text-sm text-center px-8">
             {opened ? 'Ton conseil arrive...' : 'Touche l\'ampoule pour l\'allumer'}
