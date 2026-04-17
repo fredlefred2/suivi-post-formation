@@ -180,67 +180,125 @@ export function CoachGiftPrompt({ open, tip, onRead, onSkip }: CoachGiftPromptPr
     >
       {!showTip ? (
         <>
-          {/* Cadeau à ouvrir */}
+          {/* Ampoule — éteinte puis allumée au clic */}
           <div
             onClick={handleOpenGift}
-            className={`relative mb-6 cursor-pointer ${!opened ? 'gift-bounce' : ''}`}
-            style={{ width: 200, height: 200 }}
+            className="relative mb-8 cursor-pointer flex items-center justify-center"
+            style={{ width: 220, height: 220 }}
           >
-            {/* Boîte body */}
-            <div
-              className="absolute bottom-0 left-5 rounded-2xl"
-              style={{
-                width: 160,
-                height: 120,
-                background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-                boxShadow: '0 8px 32px rgba(251,191,36,0.3)',
-              }}
-            />
-            {/* Ruban vertical */}
-            <div
-              className="absolute bottom-0"
-              style={{
-                width: 20, height: 120,
-                left: 90,
-                background: '#ef4444',
-              }}
-            />
-            {/* Ruban horizontal */}
-            <div
-              className="absolute"
-              style={{
-                width: 160, height: 20,
-                bottom: 50, left: 20,
-                background: '#ef4444',
-              }}
-            />
-            {/* Couvercle */}
-            <div
-              className={opened ? 'gift-lid-opened' : ''}
-              style={{
-                position: 'absolute',
-                bottom: 110,
-                left: 10,
-                width: 180,
-                height: 40,
-                background: 'linear-gradient(135deg, #d97706, #f59e0b)',
-                borderRadius: '12px 12px 4px 4px',
-              }}
-            />
-            {/* Nœud */}
-            <div
-              className="absolute top-0 left-1/2 -translate-x-1/2 z-10"
-              style={{ fontSize: 40 }}
+            {/* Halo doré (visible quand allumée) */}
+            {opened && (
+              <>
+                <div
+                  className="absolute rounded-full bulb-halo"
+                  style={{
+                    width: 220, height: 220,
+                    background: 'radial-gradient(circle, rgba(251,191,36,0.6) 0%, rgba(251,191,36,0) 70%)',
+                  }}
+                />
+                {/* Second halo décalé pour effet pulse continu */}
+                <div
+                  className="absolute rounded-full bulb-halo"
+                  style={{
+                    width: 220, height: 220,
+                    background: 'radial-gradient(circle, rgba(251,191,36,0.4) 0%, rgba(251,191,36,0) 70%)',
+                    animationDelay: '0.75s',
+                  }}
+                />
+                {/* Flash d'allumage */}
+                <div
+                  className="absolute rounded-full bulb-flash"
+                  style={{
+                    width: 100, height: 100,
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(251,191,36,0) 70%)',
+                  }}
+                />
+                {/* Rayons rotatifs */}
+                <div
+                  className="absolute rounded-full bulb-rays"
+                  style={{
+                    width: 280, height: 280,
+                    background: `conic-gradient(
+                      from 0deg,
+                      transparent 0deg, rgba(251,191,36,0.25) 10deg, transparent 20deg,
+                      transparent 45deg, rgba(251,191,36,0.2) 55deg, transparent 65deg,
+                      transparent 90deg, rgba(251,191,36,0.25) 100deg, transparent 110deg,
+                      transparent 135deg, rgba(251,191,36,0.2) 145deg, transparent 155deg,
+                      transparent 180deg, rgba(251,191,36,0.25) 190deg, transparent 200deg,
+                      transparent 225deg, rgba(251,191,36,0.2) 235deg, transparent 245deg,
+                      transparent 270deg, rgba(251,191,36,0.25) 280deg, transparent 290deg,
+                      transparent 315deg, rgba(251,191,36,0.2) 325deg, transparent 335deg,
+                      transparent 360deg
+                    )`,
+                  }}
+                />
+              </>
+            )}
+
+            {/* L'ampoule SVG */}
+            <svg
+              viewBox="0 0 100 120"
+              className={`relative z-10 ${opened ? 'bulb-filament' : 'bulb-idle'}`}
+              style={{ width: 120, height: 144 }}
             >
-              🎀
-            </div>
+              {/* Base / culot de l'ampoule */}
+              <rect x="38" y="88" width="24" height="8" rx="2"
+                fill={opened ? '#78716c' : '#52525b'}/>
+              <rect x="35" y="96" width="30" height="6" rx="1"
+                fill={opened ? '#a8a29e' : '#71717a'}/>
+              <rect x="38" y="102" width="24" height="5" rx="1"
+                fill={opened ? '#78716c' : '#52525b'}/>
+              <path d="M 42 107 L 58 107 L 54 116 L 46 116 Z"
+                fill={opened ? '#a8a29e' : '#71717a'}/>
+
+              {/* Verre de l'ampoule */}
+              <path
+                d="M 30 45 Q 30 15 50 15 Q 70 15 70 45 Q 70 65 60 75 Q 58 80 60 88 L 40 88 Q 42 80 40 75 Q 30 65 30 45 Z"
+                fill={opened ? 'rgba(254, 243, 199, 0.9)' : 'rgba(148, 163, 184, 0.25)'}
+                stroke={opened ? '#fbbf24' : '#64748b'}
+                strokeWidth="2"
+              />
+
+              {/* Glow intérieur si allumée */}
+              {opened && (
+                <circle
+                  cx="50" cy="45" r="20"
+                  fill="url(#bulbGlow)"
+                />
+              )}
+
+              {/* Filament — allumé */}
+              {opened ? (
+                <g stroke="#fbbf24" strokeWidth="2" fill="none" strokeLinecap="round">
+                  <path d="M 44 60 Q 46 45 50 50 Q 54 55 56 40 Q 54 50 50 50 Q 46 50 44 60 Z" fill="#fef3c7" />
+                  <line x1="42" y1="72" x2="44" y2="65" />
+                  <line x1="58" y1="72" x2="56" y2="65" />
+                </g>
+              ) : (
+                <g stroke="#94a3b8" strokeWidth="1.5" fill="none" strokeLinecap="round">
+                  <path d="M 44 60 Q 46 45 50 50 Q 54 55 56 40" />
+                  <line x1="42" y1="72" x2="44" y2="65" />
+                  <line x1="58" y1="72" x2="56" y2="65" />
+                </g>
+              )}
+
+              <defs>
+                <radialGradient id="bulbGlow">
+                  <stop offset="0%" stopColor="rgba(254, 240, 138, 0.8)" />
+                  <stop offset="100%" stopColor="rgba(251, 191, 36, 0)" />
+                </radialGradient>
+              </defs>
+            </svg>
           </div>
 
-          <p className="text-amber-400 text-lg font-extrabold mb-1 text-center">
-            Ton coach a un message !
+          <p
+            className="text-lg font-extrabold mb-1 text-center transition-colors"
+            style={{ color: opened ? '#fbbf24' : 'rgba(255,255,255,0.5)' }}
+          >
+            {opened ? 'Lumière !' : 'Ton coach a une idée'}
           </p>
           <p className="text-white/50 text-sm text-center px-8">
-            Touche le cadeau pour découvrir
+            {opened ? 'Ton conseil arrive...' : 'Touche l\'ampoule pour l\'allumer'}
           </p>
         </>
       ) : (

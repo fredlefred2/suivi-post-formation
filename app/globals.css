@@ -610,4 +610,62 @@
   .gift-bounce {
     animation: gift-bounce 1.2s ease-in-out infinite;
   }
+
+  /* ──────── Ampoule — état éteint (oscille doucement) ──────── */
+  @keyframes bulb-idle {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-6px) rotate(2deg); }
+  }
+  .bulb-idle {
+    animation: bulb-idle 2s ease-in-out infinite;
+  }
+
+  /* ──────── Ampoule — allumage progressif ──────── */
+  @keyframes bulb-glow-in {
+    0% { opacity: 0; transform: scale(0); }
+    60% { opacity: 1; transform: scale(1.15); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .bulb-glow {
+    animation: bulb-glow-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* ──────── Ampoule — halo pulsant ──────── */
+  @keyframes bulb-halo-pulse {
+    0% { opacity: 0; transform: scale(0.4); }
+    40% { opacity: 0.9; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.8); }
+  }
+  .bulb-halo {
+    animation: bulb-halo-pulse 1.5s ease-out infinite;
+  }
+
+  /* ──────── Ampoule — rayons qui tournent ──────── */
+  @keyframes bulb-rays-spin {
+    0% { transform: rotate(0deg); opacity: 0; }
+    20% { opacity: 0.6; }
+    100% { transform: rotate(180deg); opacity: 0; }
+  }
+  .bulb-rays {
+    animation: bulb-rays-spin 2.5s linear infinite;
+  }
+
+  /* ──────── Ampoule — filament scintille ──────── */
+  @keyframes bulb-filament-shine {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.4); }
+  }
+  .bulb-filament {
+    animation: bulb-filament-shine 1.8s ease-in-out infinite;
+  }
+
+  /* ──────── Ampoule — flash au clic ──────── */
+  @keyframes bulb-flash {
+    0% { opacity: 0; transform: scale(0); }
+    30% { opacity: 1; transform: scale(3); }
+    100% { opacity: 0; transform: scale(4); }
+  }
+  .bulb-flash {
+    animation: bulb-flash 0.8s ease-out forwards;
+  }
 }

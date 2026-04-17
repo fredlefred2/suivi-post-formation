@@ -1,6 +1,6 @@
 'use client'
 
-import { Zap, ClipboardCheck, Gift, MessageSquare, type LucideIcon } from 'lucide-react'
+import { Zap, ClipboardCheck, Lightbulb, MessageSquare, type LucideIcon } from 'lucide-react'
 import { getNextLevel } from '@/lib/axeHelpers'
 
 type AxeInfo = { id: string; completedCount: number }
@@ -85,11 +85,11 @@ export default function DashboardIcons({
         onClick={onCheckin}
       />
 
-      {/* 🎁 COACH — toujours cliquable (nouveau tip OU historique) */}
+      {/* 💡 COACH — toujours cliquable (nouveau tip OU historique) */}
       <IconTile
-        Icon={Gift}
+        Icon={Lightbulb}
         label="Coach"
-        subtext={tipAvailable ? 'Nouveau tip !' : 'Voir historique'}
+        subtext={tipAvailable ? 'Nouvelle idée !' : 'Voir historique'}
         subtextColor={tipAvailable ? '#10b981' : '#a0937c'}
         gradient="linear-gradient(135deg, #312e81 0%, #1a1a2e 100%)"
         shadowColor="rgba(26,26,46,0.4)"
