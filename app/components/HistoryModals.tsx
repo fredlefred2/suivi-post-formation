@@ -213,26 +213,53 @@ type TipItem = {
   advice: string | null
   week_number: number
   acted: boolean
-  axe?: { subject: string }
+  sent?: boolean
+  created_at?: string
+  axe?: { subject: string } | { subject: string }[]
+  axeSubject?: string
+}
+
+// Supabase peut renvoyer la relation en objet ou en array selon la config — on normalise
+function normalizeAxeSubject(axe: TipItem['axe']): string | undefined {
+  if (!axe) return undefined
+  if (Array.isArray(axe)) return axe[0]?.subject
+  return axe.subject
 }
 
 export function CoachHistoryModal({ open, onClose }: Props) {
   const [tips, setTips] = useState<TipItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
     setLoading(true)
+    setError(null)
     fetch('/api/tips/learner')
-      .then(r => r.ok ? r.json() : { tips: [] })
+      .then(r => {
+        if (!r.ok) throw new Error(`API ${r.status}`)
+        return r.json()
+      })
       .then(data => {
-        // Ne garder que les tips envoyés, trier par semaine récente d'abord
-        const sent = ((data.tips ?? []) as (TipItem & { sent?: boolean })[])
-          .filter(t => t.sent === true)
-          .sort((a, b) => b.week_number - a.week_number)
+        // Ne garder que les tips envoyés (check permissif : true ou truthy)
+        const raw = (data.tips ?? []) as TipItem[]
+        const sent = raw
+          .filter(t => t.sent !== false)  // garde true, undefined, null (plus permissif)
+          .map(t => ({ ...t, axeSubject: normalizeAxeSubject(t.axe) }))
+          .sort((a, b) => {
+            // Trie par date de création (récent d'abord), sinon par week_number
+            if (a.created_at && b.created_at) {
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            }
+            return b.week_number - a.week_number
+          })
         setTips(sent)
       })
-      .catch(() => setTips([]))
+      .catch(err => {
+        console.error('[CoachHistoryModal] fetch error:', err)
+        setError('Impossible de charger tes conseils')
+        setTips([])
+      })
       .finally(() => setLoading(false))
   }, [open])
 
@@ -251,8 +278,19 @@ export function CoachHistoryModal({ open, onClose }: Props) {
         <p className="text-center text-white/50 text-sm py-10">Chargement...</p>
       )}
 
-      {/* Empty state */}
-      {!loading && tips.length === 0 && (
+      {/* Erreur de chargement */}
+      {!loading && error && (
+        <div className="text-center text-white py-10">
+          <div className="text-4xl mb-3">⚠️</div>
+          <p className="text-sm font-bold mb-1">{error}</p>
+          <p className="text-xs text-white/50 px-6">
+            Vérifie ta connexion et réessaie dans un instant
+          </p>
+        </div>
+      )}
+
+      {/* Empty state (aucun tip reçu) */}
+      {!loading && !error && tips.length === 0 && (
         <div className="text-center text-white py-10">
           <div className="text-5xl mb-3">📬</div>
           <p className="text-lg font-bold mb-1">
@@ -265,7 +303,7 @@ export function CoachHistoryModal({ open, onClose }: Props) {
       )}
 
       {/* Dernier tip */}
-      {!loading && latest && (
+      {!loading && !error && latest && (
         <div
           className="rounded-2xl p-4 mb-4 text-white"
           style={{ background: 'rgba(255,255,255,0.08)', borderLeft: '3px solid #fbbf24' }}
@@ -273,9 +311,9 @@ export function CoachHistoryModal({ open, onClose }: Props) {
           <p className="text-[10px] font-extrabold tracking-wider uppercase mb-2" style={{ color: '#fbbf24' }}>
             ✓ Dernier conseil
           </p>
-          {latest.axe?.subject && (
+          {latest.axeSubject && (
             <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: 'rgba(251,191,36,0.8)' }}>
-              ✨ {latest.axe.subject}
+              ✨ {latest.axeSubject}
             </p>
           )}
           <p className="text-[14px] font-bold leading-snug mb-2">{latest.content}</p>
@@ -291,10 +329,10 @@ export function CoachHistoryModal({ open, onClose }: Props) {
       )}
 
       {/* Historique */}
-      {!loading && older.length > 0 && (
+      {!loading && !error && older.length > 0 && (
         <>
           <p className="text-[10px] font-extrabold tracking-wider uppercase mb-2 px-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Historique
+            Historique ({older.length})
           </p>
           {older.map(tip => (
             <div
@@ -311,9 +349,9 @@ export function CoachHistoryModal({ open, onClose }: Props) {
                   ✓
                 </span>
               )}
-              {tip.axe?.subject && (
+              {tip.axeSubject && (
                 <p className="text-[9px] font-bold uppercase tracking-wide mb-1 pr-6" style={{ color: '#fbbf24' }}>
-                  {tip.axe.subject}
+                  {tip.axeSubject}
                 </p>
               )}
               <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>

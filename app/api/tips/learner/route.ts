@@ -9,9 +9,8 @@ export async function GET() {
 
   const { data: tips } = await supabaseAdmin
     .from('tips')
-    .select('id, axe_id, week_number, content, advice, sent, acted, axe:axes(subject)')
+    .select('id, axe_id, week_number, content, advice, sent, acted, created_at, axe:axes(subject)')
     .eq('learner_id', user.id)
-    .order('axe_id')
     .order('week_number', { ascending: false })
 
   return NextResponse.json({ tips: tips || [] })
