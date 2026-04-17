@@ -56,12 +56,24 @@ export default function MessageIcon(props: Props) {
       if (document.visibilityState === 'visible') fetchUnread()
     }
     const handleMessagesRead = () => fetchUnread()
+    // Permet d'ouvrir l'overlay messages depuis ailleurs (ex: icône Messages du dashboard)
+    const handleOpenMessages = () => {
+      setOpen(true)
+      try {
+        navigator.serviceWorker?.ready.then(reg => {
+          reg.getNotifications().then(notifs => notifs.forEach(n => n.close()))
+        })
+        if ('clearAppBadge' in navigator) navigator.clearAppBadge?.()
+      } catch { /* silencieux */ }
+    }
     document.addEventListener('visibilitychange', handleVisibility)
     window.addEventListener('messages-read', handleMessagesRead)
+    window.addEventListener('open-messages', handleOpenMessages)
     return () => {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibility)
       window.removeEventListener('messages-read', handleMessagesRead)
+      window.removeEventListener('open-messages', handleOpenMessages)
     }
   }, [fetchUnread])
 

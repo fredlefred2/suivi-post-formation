@@ -1,6 +1,6 @@
 'use client'
 
-import { Zap, ClipboardCheck, Gift, Brain, type LucideIcon } from 'lucide-react'
+import { Zap, ClipboardCheck, Gift, MessageSquare, type LucideIcon } from 'lucide-react'
 import { getNextLevel } from '@/lib/axeHelpers'
 
 type AxeInfo = { id: string; completedCount: number }
@@ -11,11 +11,11 @@ type Props = {
   checkinAvailable: boolean      // ven-lun + pas encore fait
   checkinDone: boolean
   tipAvailable: boolean          // tip non lu
-  quizAvailable: boolean         // phase 2, false pour l'instant
+  messagesUnread: number         // nombre de messages non lus
   onAction: () => void
   onCheckin: () => void
   onCoach: () => void
-  onQuiz: () => void
+  onMessages: () => void
 }
 
 /**
@@ -28,11 +28,11 @@ export default function DashboardIcons({
   checkinAvailable,
   checkinDone,
   tipAvailable,
-  quizAvailable,
+  messagesUnread,
   onAction,
   onCheckin,
   onCoach,
-  onQuiz,
+  onMessages,
 }: Props) {
   // Sous-texte dynamique "J'ai agi" : prochain palier sur l'axe le plus avancé
   const axeClosestToNext = axes
@@ -52,6 +52,11 @@ export default function DashboardIcons({
     : checkinAvailable
       ? 'Disponible !'
       : 'Dès vendredi'
+
+  // Sous-texte messages
+  const messagesSubtext = messagesUnread > 0
+    ? `${messagesUnread} non lu${messagesUnread > 1 ? 's' : ''}`
+    : 'Tout lu ✓'
 
   return (
     <div className="grid grid-cols-4 gap-2">
@@ -85,7 +90,7 @@ export default function DashboardIcons({
       <IconTile
         Icon={Gift}
         label="Coach"
-        subtext={tipAvailable ? 'Nouveau tip !' : 'En attente'}
+        subtext={tipAvailable ? 'Nouveau tip !' : 'Rien de neuf'}
         subtextColor={tipAvailable ? '#10b981' : '#a0937c'}
         gradient="linear-gradient(135deg, #312e81 0%, #1a1a2e 100%)"
         shadowColor="rgba(26,26,46,0.4)"
@@ -95,17 +100,18 @@ export default function DashboardIcons({
         onClick={onCoach}
       />
 
-      {/* 🧠 QUIZ */}
+      {/* 💬 MESSAGES */}
       <IconTile
-        Icon={Brain}
-        label="Quiz"
-        subtext={quizAvailable ? 'Nouveau quiz !' : 'Bientôt'}
-        subtextColor={quizAvailable ? '#10b981' : '#a0937c'}
-        gradient="linear-gradient(135deg, #a855f7 0%, #6d28d9 100%)"
-        shadowColor="rgba(168,85,247,0.4)"
-        hasAction={quizAvailable}
-        disabled={!quizAvailable}
-        onClick={onQuiz}
+        Icon={MessageSquare}
+        label="Messages"
+        subtext={messagesSubtext}
+        subtextColor={messagesUnread > 0 ? '#10b981' : '#a0937c'}
+        gradient="linear-gradient(135deg, #fb7185 0%, #e11d48 100%)"
+        shadowColor="rgba(251,113,133,0.4)"
+        notificationBadge={messagesUnread > 0}
+        notificationCount={messagesUnread > 0 ? messagesUnread : undefined}
+        hasAction={messagesUnread > 0}
+        onClick={onMessages}
       />
     </div>
   )
@@ -120,6 +126,7 @@ function IconTile({
   shadowColor,
   streakBadge,
   notificationBadge,
+  notificationCount,
   hasAction,
   disabled,
   onClick,
@@ -132,6 +139,7 @@ function IconTile({
   shadowColor: string
   streakBadge?: number
   notificationBadge?: boolean
+  notificationCount?: number
   hasAction?: boolean
   disabled?: boolean
   onClick: () => void
@@ -154,12 +162,14 @@ function IconTile({
       >
         <Icon size={26} strokeWidth={2.2} className="text-white" />
 
-        {/* Badge notification rouge */}
+        {/* Badge notification rouge (avec ou sans compteur) */}
         {notificationBadge && (
           <span
-            className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full bg-red-500 border-[3px]"
+            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-red-500 border-[3px] flex items-center justify-center px-1 text-[10px] font-extrabold text-white leading-none"
             style={{ borderColor: '#faf8f4' }}
-          />
+          >
+            {notificationCount && notificationCount > 0 ? notificationCount : null}
+          </span>
         )}
 
         {/* Badge streak (check-in) */}

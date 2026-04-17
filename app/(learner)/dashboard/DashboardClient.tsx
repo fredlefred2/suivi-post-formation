@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { AlertCircle } from 'lucide-react'
 import { useCountUp } from '@/lib/useCountUp'
-import { MARKERS, getCurrentLevelIndex, getProgress } from '@/lib/axeHelpers'
 import QuickAddAction from '@/app/components/QuickAddAction'
 import QuickCheckin from '@/app/components/QuickCheckin'
 import { TipProvider } from '@/app/components/WeeklyChallenge'
 import DashboardIcons from '@/app/components/DashboardIcons'
 import OpenAppPrompt from '@/app/components/OpenAppPrompt'
+import AxeRing from '@/app/components/AxeRing'
 import { useRouter } from 'next/navigation'
 
 type AxeItem = {
@@ -44,16 +44,6 @@ type Props = {
   groupTheme: string | null
 }
 
-// Couleurs de barre par niveau — warm palette
-const LEVEL_BAR_COLORS = ['#94a3b8', '#38bdf8', '#10b981', '#f59e0b', '#fb7185']
-const LEVEL_BAR_GRADIENTS = [
-  'linear-gradient(90deg, #94a3b8, #cbd5e1)', // slate — Intention
-  'linear-gradient(90deg, #0284c7, #38bdf8)', // sky — Essai
-  'linear-gradient(90deg, #059669, #10b981)',  // green — Habitude
-  'linear-gradient(90deg, #d97706, #f59e0b)',  // amber — Réflexe
-  'linear-gradient(90deg, #e11d48, #fb7185)',  // rose — Maîtrise
-]
-
 export default function DashboardClient({
   firstName,
   checkinDone,
@@ -79,6 +69,7 @@ export default function DashboardClient({
   const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
   const [tipAvailable, setTipAvailable] = useState(false)
   const [forceCoach, setForceCoach] = useState(false)
+  const [messagesUnread, setMessagesUnread] = useState(0)
 
   // Fetch si un tip est dispo (pour la pastille 🎁 et l'orchestrateur)
   useEffect(() => {
@@ -86,6 +77,21 @@ export default function DashboardClient({
       .then(r => r.ok ? r.json() : { tip: null })
       .then(data => setTipAvailable(!!data?.tip))
       .catch(() => {})
+  }, [])
+
+  // Fetch nombre de messages non lus (pour la pastille 💬)
+  useEffect(() => {
+    const fetchUnread = () => {
+      fetch('/api/messages/unread')
+        .then(r => r.ok ? r.json() : { count: 0 })
+        .then(data => setMessagesUnread(data?.count ?? 0))
+        .catch(() => {})
+    }
+    fetchUnread()
+    // Se rafraîchit quand l'utilisateur a lu ses messages (event émis par MessagesClient)
+    const handleRead = () => fetchUnread()
+    window.addEventListener('messages-read', handleRead)
+    return () => window.removeEventListener('messages-read', handleRead)
   }, [])
 
   // Compteurs animes
@@ -135,20 +141,32 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* ── 2. Les 4 icônes permanentes ── */}
+        {/* ── 2. Carte "À faire aujourd'hui" avec les 4 icônes ── */}
         {axes.length > 0 && (
-          <DashboardIcons
-            axes={axes.map(a => ({ id: a.id, completedCount: a.completedCount }))}
-            streak={streak}
-            checkinAvailable={checkinIsOpen}
-            checkinDone={checkinDone}
-            tipAvailable={tipAvailable}
-            quizAvailable={false}
-            onAction={() => setQuickAddOpen(true)}
-            onCheckin={() => setQuickCheckinOpen(true)}
-            onCoach={() => setForceCoach(true)}
-            onQuiz={() => { /* Phase 2 */ }}
-          />
+          <div
+            className="rounded-[22px] px-3 py-3.5"
+            style={{
+              background: 'white',
+              border: '2px solid #f0ebe0',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
+            }}
+          >
+            <p className="text-[11px] font-extrabold tracking-wider uppercase mb-2.5 pl-1 flex items-center gap-1.5" style={{ color: '#1a1a2e' }}>
+              <span>⚡</span> À faire aujourd&apos;hui
+            </p>
+            <DashboardIcons
+              axes={axes.map(a => ({ id: a.id, completedCount: a.completedCount }))}
+              streak={streak}
+              checkinAvailable={checkinIsOpen}
+              checkinDone={checkinDone}
+              tipAvailable={tipAvailable}
+              messagesUnread={messagesUnread}
+              onAction={() => setQuickAddOpen(true)}
+              onCheckin={() => setQuickCheckinOpen(true)}
+              onCoach={() => setForceCoach(true)}
+              onMessages={() => window.dispatchEvent(new Event('open-messages'))}
+            />
+          </div>
         )}
 
         {/* Barre de progression onboarding */}
@@ -183,11 +201,11 @@ export default function DashboardClient({
           </Link>
         )}
 
-        {/* ── 4. Axes — cartes blanches bordure warm ── */}
+        {/* ── 3. Mes axes (format hybride : cercle + texte) ── */}
         {axes.length > 0 && (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h2 className="section-title">Mes axes de progrès</h2>
+              <h2 className="section-title">Mes axes</h2>
               {axesCount < 3 && (
                 <Link href="/axes" className="text-xs font-bold hover:underline" style={{ color: '#92400e' }}>
                   + Ajouter
@@ -195,65 +213,17 @@ export default function DashboardClient({
               )}
             </div>
 
-            {axes.map((axe) => {
-              const levelIdx = getCurrentLevelIndex(axe.completedCount)
-              const progress = getProgress(axe.completedCount)
-              const currentMarker = MARKERS[levelIdx]
-
-              return (
-                <Link
-                  key={axe.id}
-                  href={`/axes?index=${axe.index}`}
-                  {...(axe.index === 0 ? { 'data-onboarding': 'progression' } : {})}
-                  className="block bg-white rounded-[22px] overflow-hidden transition-all hover:shadow-warm-hover"
-                  style={{ border: '2px solid #f0ebe0' }}
-                >
-                  <div className="p-4">
-                    {/* Titre avec numéro navy */}
-                    <div className="flex items-start gap-2.5">
-                      <span className="axe-num">{axe.index + 1}</span>
-                      <p className="font-bold text-sm leading-snug line-clamp-2 flex-1" style={{ color: '#1a1a2e' }}>
-                        {axe.subject}
-                      </p>
-                    </div>
-
-                    {/* Barre de progression */}
-                    <div className="flex items-center gap-2.5 mt-3.5">
-                      <div className="bar-bg">
-                        <div
-                          className="bar-fill transition-all duration-700"
-                          style={{
-                            width: `${progress}%`,
-                            background: LEVEL_BAR_GRADIENTS[levelIdx] ?? LEVEL_BAR_GRADIENTS[0],
-                          }}
-                        />
-                      </div>
-                      <span className="text-[11px] font-bold whitespace-nowrap" style={{ color: '#1a1a2e' }}>
-                        {axe.dyn.icon} {axe.dyn.label}
-                      </span>
-                    </div>
-
-                    {/* Meta : compteur + likes/comments */}
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-[11px]" style={{ color: '#a0937c' }}>
-                        {axe.completedCount} action{axe.completedCount !== 1 ? 's' : ''}
-                        {axe.completedCount === 0 && (
-                          <span className="font-semibold" style={{ color: '#92400e' }}> · commence !</span>
-                        )}
-                        {axe.completedCount > 0 && axe.completedCount < 9 && (
-                          <span className="font-semibold" style={{ color: '#92400e' }}> · encore {axe.dyn.delta} pour {MARKERS[levelIdx + 1]?.icon}</span>
-                        )}
-                      </span>
-                      <span className="text-[11px] flex items-center gap-1">
-                        {axe.likesCount > 0 && <span className="font-semibold" style={{ color: '#e11d48' }}>❤️ {axe.likesCount}</span>}
-                        {axe.commentsCount > 0 && <span className="font-semibold" style={{ color: '#a0937c' }}>💬 {axe.commentsCount}</span>}
-                      </span>
-                    </div>
-
-                  </div>
-                </Link>
-              )
-            })}
+            {axes.map((axe) => (
+              <AxeRing
+                key={axe.id}
+                axeId={axe.id}
+                axeIndex={axe.index}
+                subject={axe.subject}
+                completedCount={axe.completedCount}
+                likesCount={axe.likesCount}
+                commentsCount={axe.commentsCount}
+              />
+            ))}
           </div>
         )}
 

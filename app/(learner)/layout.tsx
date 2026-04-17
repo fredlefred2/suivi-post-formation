@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { LayoutDashboard, Target, ClipboardCheck, Users, Sparkles } from 'lucide-react'
+import { LayoutDashboard, Target, Users } from 'lucide-react'
 import LogoutButton from '@/app/components/LogoutButton'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
@@ -16,8 +16,6 @@ import InstallPrompt from '@/app/components/InstallPrompt'
 const navItems = [
   { href: '/dashboard', label: 'Accueil', icon: LayoutDashboard, iconName: 'LayoutDashboard' },
   { href: '/axes', label: 'Actions', icon: Target, iconName: 'Target' },
-  { href: '/coaching', label: 'Coach', icon: Sparkles, iconName: 'Sparkles' },
-  { href: '/checkin', label: 'Check-in', icon: ClipboardCheck, iconName: 'ClipboardCheck' },
   { href: '/team', label: 'Team', icon: Users, iconName: 'Users' },
 ]
 

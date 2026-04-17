@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
 import {
   X,
-  LayoutDashboard, Target, ClipboardCheck,
+  LayoutDashboard, Target,
   GraduationCap, Users,
 } from 'lucide-react'
 import { useOnboarding } from '@/lib/onboarding-context'
@@ -14,7 +14,6 @@ import { useOnboarding } from '@/lib/onboarding-context'
 const learnerNavItems = [
   { href: '/dashboard',  label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/axes',       label: 'Mes actions',      icon: Target           },
-  { href: '/checkin',    label: 'Check-in',          icon: ClipboardCheck   },
   { href: '/team',       label: 'Team',              icon: Users            },
 ]
 
