@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { getCurrentWeek, calculateStreak, getCheckinContext } from '@/lib/utils'
+import { getCurrentWeek, calculateStreak, getCheckinContext, parisCalendarDaysBetween } from '@/lib/utils'
 import { getDynamique } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
 import OnboardingFlow from './OnboardingFlow'
@@ -81,11 +81,10 @@ export default async function DashboardPage() {
       }
     : null
 
-  // Last action stale (>= 10 jours)
+  // Last action stale (>= 10 jours calendaires en fuseau Paris)
   let initialLastAction: { daysSince: number; isStale: boolean } | null = null
   if (lastActionRow?.created_at) {
-    const lastDate = new Date(lastActionRow.created_at)
-    const daysSince = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
+    const daysSince = parisCalendarDaysBetween(lastActionRow.created_at)
     initialLastAction = { daysSince, isStale: daysSince >= 10 }
   }
 

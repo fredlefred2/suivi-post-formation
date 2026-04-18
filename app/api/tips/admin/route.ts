@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+/**
+ * Vérifie qu'un formateur gère bien le groupe auquel appartient un apprenant donné.
+ * Renvoie true uniquement si l'apprenant est membre d'au moins un groupe
+ * dont trainer_id === trainerId. Blinde les routes admin contre le cross-tenant.
+ */
+async function trainerOwnsLearner(trainerId: string, learnerId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from('group_members')
+    .select('group_id, groups!inner(trainer_id)')
+    .eq('learner_id', learnerId)
+    .eq('groups.trainer_id', trainerId)
+    .limit(1)
+    .maybeSingle()
+  return !!data
+}
+
+/**
+ * Variante pour les opérations sur un tip existant : on remonte au learner_id
+ * du tip puis on vérifie l'appartenance au groupe du formateur.
+ */
+async function trainerOwnsTip(trainerId: string, tipId: string): Promise<boolean> {
+  const { data: tip } = await supabaseAdmin
+    .from('tips')
+    .select('learner_id')
+    .eq('id', tipId)
+    .maybeSingle()
+  if (!tip) return false
+  return trainerOwnsLearner(trainerId, tip.learner_id)
+}
+
 // GET : récupérer tous les tips d'un groupe (pour le formateur)
 export async function GET(request: NextRequest) {
   const supabase = createClient()
@@ -68,6 +98,11 @@ export async function PUT(request: NextRequest) {
   const { tipId, content, advice } = await request.json()
   if (!tipId || !content) return NextResponse.json({ error: 'tipId et content requis' }, { status: 400 })
 
+  // AuthZ : le formateur doit gérer le groupe du learner rattaché au tip
+  if (!(await trainerOwnsTip(user.id, tipId))) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
+
   const updateData: Record<string, string> = { content: content.trim() }
   if (advice !== undefined) updateData.advice = (advice || '').trim()
 
@@ -93,6 +128,11 @@ export async function POST(request: NextRequest) {
 
   // ── generate-next : generer le prochain tip pour un axe ───────
   if (action === 'generate-next' && axeId && learnerId) {
+    // AuthZ : le formateur doit gérer le groupe de cet apprenant
+    if (!(await trainerOwnsLearner(user.id, learnerId))) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
     const ctx = await gatherLearnerContext(learnerId, axeId)
     if (!ctx) return NextResponse.json({ error: 'Contexte introuvable' }, { status: 404 })
 
@@ -108,6 +148,11 @@ export async function POST(request: NextRequest) {
 
   // ── regenerate : regenerer un tip existant ────────────────────
   if (action === 'regenerate' && tipId) {
+    // AuthZ : le formateur doit gérer le groupe du learner rattaché au tip
+    if (!(await trainerOwnsTip(user.id, tipId))) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
     // Recuperer le tip pour connaitre l'axe et l'apprenant
     const { data: currentTip } = await supabaseAdmin
       .from('tips')
@@ -141,6 +186,11 @@ export async function DELETE(request: NextRequest) {
 
   const tipId = request.nextUrl.searchParams.get('tipId')
   if (!tipId) return NextResponse.json({ error: 'tipId requis' }, { status: 400 })
+
+  // AuthZ : le formateur doit gérer le groupe du learner rattaché au tip
+  if (!(await trainerOwnsTip(user.id, tipId))) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
 
   const { error } = await supabaseAdmin.from('tips').delete().eq('id', tipId)
   if (error) return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

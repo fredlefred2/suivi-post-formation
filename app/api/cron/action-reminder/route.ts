@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { secondFridayAfter } from '@/lib/utils'
+import { secondFridayAfter, parisCalendarDaysBetween } from '@/lib/utils'
 import { sendNotification } from '@/lib/send-notification'
 
 // Route protégée — appelée par Vercel Cron (lundi 9h)
@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
 
   const now = new Date()
   const THRESHOLD_DAYS = 10
-  const thresholdDate = new Date(now.getTime() - THRESHOLD_DAYS * 24 * 60 * 60 * 1000)
 
   // Récupérer tous les apprenants éligibles (onboarding terminé)
   const { data: allLearners } = await supabase
@@ -35,31 +34,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Aucun apprenant éligible', sent: 0 })
   }
 
-  // Pour chaque apprenant, vérifier la date de sa dernière action
-  const toRemind: Array<{ id: string; first_name: string; daysSince: number }> = []
+  // 1 seule requête pour toutes les dernières actions (remplace le N+1 historique).
+  // On récupère toutes les actions des apprenants éligibles triées par date DESC,
+  // puis on garde la plus récente par apprenant client-side.
+  const eligibleIds = eligibleLearners.map((l) => l.id)
+  const { data: allActions } = await supabase
+    .from('actions')
+    .select('learner_id, created_at')
+    .in('learner_id', eligibleIds)
+    .order('created_at', { ascending: false })
 
-  for (const learner of eligibleLearners) {
-    const { data: lastAction } = await supabase
-      .from('actions')
-      .select('created_at')
-      .eq('learner_id', learner.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (!lastAction) {
-      // Jamais d'action : on pourrait relancer mais on skip pour ne pas spammer les nouveaux
-      continue
+  const lastActionByLearner = new Map<string, string>()
+  for (const a of allActions ?? []) {
+    if (!lastActionByLearner.has(a.learner_id)) {
+      lastActionByLearner.set(a.learner_id, a.created_at)
     }
+  }
 
-    const lastDate = new Date(lastAction.created_at)
-    if (lastDate < thresholdDate) {
-      const daysSince = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
-      toRemind.push({
-        id: learner.id,
-        first_name: learner.first_name,
-        daysSince,
-      })
+  // Filtrer ceux qui n'ont rien fait depuis THRESHOLD_DAYS jours calendaires (Paris)
+  const toRemind: Array<{ id: string; first_name: string; daysSince: number }> = []
+  for (const learner of eligibleLearners) {
+    const lastAt = lastActionByLearner.get(learner.id)
+    if (!lastAt) continue // jamais d'action : on skip pour ne pas spammer les nouveaux
+    const daysSince = parisCalendarDaysBetween(lastAt, now)
+    if (daysSince >= THRESHOLD_DAYS) {
+      toRemind.push({ id: learner.id, first_name: learner.first_name, daysSince })
     }
   }
 
@@ -67,22 +66,24 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Tous les apprenants sont actifs', sent: 0 })
   }
 
-  // Envoyer une notification push à chaque apprenant inactif
-  let sent = 0
-  for (const learner of toRemind) {
-    try {
-      await sendNotification({
+  // Envoi des push en parallèle (Promise.allSettled pour pas casser sur un échec)
+  const results = await Promise.allSettled(
+    toRemind.map((learner) =>
+      sendNotification({
         userId: learner.id,
-        type: 'action_added', // Réutilise un type existant (pas besoin de créer un nouveau type)
+        type: 'action_added',
         title: `👀 Coucou ${learner.first_name} !`,
         body: `Ça fait ${learner.daysSince} jours qu'on ne s'est pas vus... T'as tenté un truc qu'on pourrait noter ?`,
         url: '/dashboard',
       })
-      sent++
-    } catch (err) {
-      console.error(`[action-reminder] Erreur push pour ${learner.id}:`, err)
+    )
+  )
+  const sent = results.filter((r) => r.status === 'fulfilled').length
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      console.error(`[action-reminder] Erreur push pour ${toRemind[i].id}:`, r.reason)
     }
-  }
+  })
 
   return NextResponse.json({
     message: `Relances push envoyées`,

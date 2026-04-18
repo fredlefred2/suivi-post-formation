@@ -219,6 +219,36 @@ export function calculateStreak(
 }
 
 /**
+ * Nombre de jours calendaires écoulés entre `from` et `to`, calculé
+ * dans le fuseau Europe/Paris (les apprenants sont en France).
+ *
+ * Différent de `Math.floor((to - from) / 86400000)` qui compte des
+ * tranches de 24h glissantes et peut sous-compter d'un jour selon
+ * l'heure exacte des deux dates.
+ *
+ * Exemple : action hier à 23h Paris, on vérifie à 9h aujourd'hui
+ *   - Math.floor(elapsed ms / 86400000) = 0 (faux : c'est "hier")
+ *   - parisCalendarDaysBetween = 1 ✓
+ */
+export function parisCalendarDaysBetween(
+  from: Date | string,
+  to: Date | string = new Date()
+): number {
+  const f = typeof from === 'string' ? new Date(from) : from
+  const t = typeof to === 'string' ? new Date(to) : to
+  const fmt = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  })
+  const get = (d: Date, type: string) => Number(
+    fmt.formatToParts(d).find((p) => p.type === type)!.value
+  )
+  const fUtc = Date.UTC(get(f, 'year'), get(f, 'month') - 1, get(f, 'day'))
+  const tUtc = Date.UTC(get(t, 'year'), get(t, 'month') - 1, get(t, 'day'))
+  return Math.floor((tUtc - fUtc) / (24 * 3600 * 1000))
+}
+
+/**
  * Retourne la date du 2e vendredi suivant une date d'inscription.
  */
 export function secondFridayAfter(createdAt: string): Date {
