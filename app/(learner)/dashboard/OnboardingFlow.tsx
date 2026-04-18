@@ -8,30 +8,29 @@ import { useOnboarding } from '@/lib/onboarding-context'
 import CoachMark from '@/app/components/CoachMark'
 import { updateAxeFast } from '@/app/(learner)/axes/actions'
 
-// All step IDs in order (10 steps, axes 2-3 skippable)
+// All step IDs in order — 12 étapes pour l'interface v1.29
+// (axes 2-3 skippable, étape 6 = vue d'ensemble dashboard, 7-10 = tour des 4 icônes,
+// 11-12 = tour des 2 onglets du bas)
 const ALL_STEPS = [
-  'welcome',       // 1. Bienvenue
-  'axis-1',        // 2. Crée ton 1er axe (obligatoire)
-  'axis-2',        // 3. Crée ton 2e axe (optionnel)
-  'axis-3',        // 4. Crée ton 3e axe (optionnel)
-  'progression',   // 5. Ta dynamique de progression (coach mark sur carte axe)
-  'add-action',    // 6. Ajouter une action (coach mark sur bouton pleine largeur)
-  'feedback-info', // 7. Likes & commentaires (coach mark centré)
-  'delete-info',   // 8. Modifier & supprimer (coach mark centré)
-  'checkin',       // 9. Le check-in hebdomadaire (coach mark)
-  'menu-tour',     // 10. Ton espace YAPLUKA (coach marks séquentiels)
+  'welcome',         // 1. Bienvenue
+  'axis-1',          // 2. Crée ton 1er axe (obligatoire)
+  'axis-2',          // 3. Crée ton 2e axe (optionnel)
+  'axis-3',          // 4. Crée ton 3e axe (optionnel)
+  'progression',     // 5. Ta dynamique de progression (5 niveaux)
+  'dashboard-tour',  // 6. Vue rapide du dashboard (carte "À faire aujourd'hui")
+  'icon-action',     // 7. Icône ⚡ J'ai agi
+  'icon-checkin',    // 8. Icône 📋 Check-in
+  'icon-coach',      // 9. Icône 💡 Coach
+  'icon-messages',   // 10. Icône 💬 Messagerie
+  'tab-actions',     // 11. Onglet 🎯 Actions (menu bas)
+  'tab-team',        // 12. Onglet 👥 Team (menu bas)
 ] as const
 
 type StepId = (typeof ALL_STEPS)[number]
 
-// Menu tour — single screen listing all sections
-const MENU_SECTIONS = [
-  { icon: '📊', label: 'Accueil', desc: 'Ta progression, tes actions et ta météo.' },
-  { icon: '🎯', label: 'Actions', desc: 'Tes axes de progrès et toutes tes actions.' },
-  { icon: '✨', label: 'Coach', desc: 'Rappels de formation et conseils pratiques.' },
-  { icon: '📋', label: 'Check-in', desc: 'Ton bilan hebdo : météo, réussites, difficultés.' },
-  { icon: '👥', label: 'Team', desc: 'Les actions de tes coéquipiers à encourager !' },
-]
+// Anciens marqueurs d'étape (v1.28) conservés uniquement dans la logique
+// de migration : si un apprenant a stored['menu-tour'] === true, on considère
+// son onboarding v1.28 comme terminé et on marque les 12 nouvelles étapes acked.
 
 type Props = {
   userId: string
@@ -67,7 +66,24 @@ export default function OnboardingFlow({
 
   useEffect(() => {
     const stored = getOnboardingAck(userId)
-    const isOnboardingDone = stored['menu-tour'] === true
+
+    // Un apprenant a terminé son onboarding si :
+    //   - il a la marque finale v1.29 (tab-team), OU
+    //   - il a l'ancienne marque (menu-tour) de l'onboarding v1.28 → on migre
+    const hasNewMarker = stored['tab-team'] === true
+    const hasLegacyMarker = stored['menu-tour'] === true
+    const isOnboardingDone = hasNewMarker || hasLegacyMarker
+
+    // Migration : si l'apprenant avait terminé l'ancien onboarding, on
+    // considère toutes les nouvelles étapes comme déjà faites
+    if (hasLegacyMarker && !hasNewMarker) {
+      for (const step of ALL_STEPS) {
+        if (!stored[step]) {
+          stored[step] = true
+          acknowledgeStep(step, userId)
+        }
+      }
+    }
 
     // Check for active onboarding session
     const sessionKey = `onboarding_session_${userId}`
@@ -90,7 +106,11 @@ export default function OnboardingFlow({
 
     // Users with actions → auto-complete from progression onwards
     if (totalActions >= 1) {
-      const autoSteps: StepId[] = ['progression', 'add-action', 'feedback-info', 'delete-info', 'checkin', 'menu-tour']
+      const autoSteps: StepId[] = [
+        'progression', 'dashboard-tour',
+        'icon-action', 'icon-checkin', 'icon-coach', 'icon-messages',
+        'tab-actions', 'tab-team',
+      ]
       for (const step of autoSteps) {
         if (!stored[step]) {
           stored[step] = true
@@ -190,7 +210,8 @@ export default function OnboardingFlow({
   const isActive = mounted && activeStep !== null
 
   // Onboarding done but 0 axes → needs axis block
-  const onboardingDone = mounted && ack['menu-tour'] === true
+  // (tab-team = marque v1.29 ; menu-tour = marque legacy conservée pour compat)
+  const onboardingDone = mounted && (ack['tab-team'] === true || ack['menu-tour'] === true)
   const needsAxisBlock = mounted && axesCount === 0 && onboardingDone
 
   // Sync onboarding state to context (disables nav menus)
@@ -616,179 +637,137 @@ export default function OnboardingFlow({
     )
   }
 
-  // Step 6: Add action — spotlight on full-width button
-  if (activeStep === 'add-action') {
+  // Step 6: Vue rapide du dashboard (coach mark centré sur la carte "À faire aujourd'hui")
+  if (activeStep === 'dashboard-tour') {
     return (
       <>
         {children}
         <CoachMark
-          targetSelector='[data-onboarding="fab-action"]'
+          targetSelector='[data-onboarding="tasks-card"]'
           stepLabel={stepLabel}
-          icon="➕"
-          title="Enregistre tes actions"
-          description="Appuie sur « Nouvelle action » pour enregistrer ce que tu mets en pratique au quotidien. Tu choisis l'axe concerné, tu décris ce que tu as fait, et c'est comptabilisé ! Plus tu en ajoutes, plus ta carte d'axe monte en couleur."
+          icon="🏠"
+          title="Voici ton tableau de bord"
+          description="En haut : 4 raccourcis pour tes gestes du jour. En bas : tes axes en cercles qui se remplissent à mesure que tu progresses. On va faire le tour !"
           ctaLabel="Compris !"
-          onCta={() => acknowledge('add-action')}
-          onBack={() => goBack('add-action')}
+          onCta={() => acknowledge('dashboard-tour')}
+          onBack={() => goBack('dashboard-tour')}
         />
       </>
     )
   }
 
-  // Step 7: Feedback — informational bubble (centered, no target)
-  if (activeStep === 'feedback-info') {
+  // Step 7: Icône ⚡ J'ai agi (spotlight)
+  if (activeStep === 'icon-action') {
     return (
       <>
         {children}
         <CoachMark
+          targetSelector='[data-onboarding="icon-action"]'
           stepLabel={stepLabel}
-          icon="❤️"
-          title="Likes & commentaires"
-          description="Ton formateur et tes coéquipiers peuvent liker ❤️ et commenter 💬 tes actions pour t'encourager. Et toi aussi, tu peux liker et commenter les actions des autres dans l'onglet Team !"
-          extra={
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 24,
-              marginTop: 8,
-              marginBottom: 4,
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: 28 }}>❤️</span>
-                <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Liker</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: 28 }}>💬</span>
-                <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Commenter</p>
-              </div>
-            </div>
-          }
+          icon="⚡"
+          title="Enregistre ce que tu fais"
+          description="Pour noter ce que tu mets en pratique au quotidien. Chaque action remplit ton anneau d'axe."
           ctaLabel="Compris !"
-          onCta={() => acknowledge('feedback-info')}
-          onBack={() => goBack('feedback-info')}
+          onCta={() => acknowledge('icon-action')}
+          onBack={() => goBack('icon-action')}
         />
       </>
     )
   }
 
-  // Step 8: Delete — informational bubble (centered, no target)
-  if (activeStep === 'delete-info') {
+  // Step 8: Icône 📋 Check-in (spotlight)
+  if (activeStep === 'icon-checkin') {
     return (
       <>
         {children}
         <CoachMark
-          stepLabel={stepLabel}
-          icon="✏️"
-          title="Modifier & supprimer"
-          description="Depuis l'écran « Mes actions », tu peux à tout moment :"
-          extra={
-            <div style={{ marginTop: 6, marginBottom: 4, textAlign: 'left' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: 18 }}>✏️</span>
-                <span style={{ fontSize: 13, color: '#6b7280' }}><strong>Modifier</strong> le texte d&apos;une action</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 18 }}>🗑️</span>
-                <span style={{ fontSize: 13, color: '#6b7280' }}><strong>Supprimer</strong> une action si besoin</span>
-              </div>
-            </div>
-          }
-          ctaLabel="Compris !"
-          onCta={() => acknowledge('delete-info')}
-          onBack={() => goBack('delete-info')}
-        />
-      </>
-    )
-  }
-
-  // Step 9: Check-in — informational bubble with alert banner mockup
-  if (activeStep === 'checkin') {
-    return (
-      <>
-        {children}
-        <CoachMark
+          targetSelector='[data-onboarding="icon-checkin"]'
           stepLabel={stepLabel}
           icon="📋"
-          title="Le check-in hebdomadaire"
-          description="Chaque vendredi, un bandeau apparaîtra pour te rappeler de faire ton check-in. On te demandera :"
-          extra={
-            <div style={{ marginTop: 8, marginBottom: 6 }}>
-              {/* Ce qu'on demande */}
-              <div style={{ textAlign: 'left', marginBottom: 10 }}>
-                {[
-                  { icon: '🌤️', text: 'Ta météo de la semaine (ça roule, mitigé, difficile)' },
-                  { icon: '✅', text: 'Tes réussites et avancées' },
-                  { icon: '⚡', text: 'Tes difficultés rencontrées' },
-                ].map((item) => (
-                  <div key={item.icon} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 14, flexShrink: 0 }}>{item.icon}</span>
-                    <span style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.4 }}>{item.text}</span>
-                  </div>
-                ))}
-              </div>
-              {/* Mockup du bandeau alerte */}
-              <div style={{
-                background: '#fffbeb',
-                border: '1px solid #fcd34d',
-                borderRadius: 12,
-                padding: '10px 14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-              }}>
-                <span style={{ fontSize: 16, color: '#d97706' }}>⚠️</span>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#78350f', margin: 0 }}>Check-in en attente</p>
-                  <p style={{ fontSize: 11, color: '#92400e', margin: 0 }}>Semaine du 10 au 16 mars</p>
-                </div>
-                <span style={{
-                  background: '#fbbf24',
-                  color: '#1a1a2e',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  padding: '4px 10px',
-                  borderRadius: 8,
-                }}>Faire</span>
-              </div>
-            </div>
-          }
-          ctaLabel="Ok, compris !"
-          onCta={() => acknowledge('checkin')}
-          onBack={() => goBack('checkin')}
+          title="Ton check-in du vendredi"
+          description="Ton bilan hebdo en 2 minutes : météo, réussites, difficultés. Le 🔥 compte tes semaines d'affilée."
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('icon-checkin')}
+          onBack={() => goBack('icon-checkin')}
         />
       </>
     )
   }
 
-  // Step 10: Menu tour — single screen listing all sections
-  if (activeStep === 'menu-tour') {
+  // Step 9: Icône 💡 Coach (spotlight)
+  if (activeStep === 'icon-coach') {
     return (
       <>
         {children}
         <CoachMark
+          targetSelector='[data-onboarding="icon-coach"]'
           stepLabel={stepLabel}
-          icon="📱"
-          title="Ton espace YAPLUKA"
-          description="Voici tout ce que tu trouveras dans le menu en bas :"
-          extra={
-            <div style={{ marginTop: 8, marginBottom: 4 }}>
-              {MENU_SECTIONS.map((section) => (
-                <div key={section.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{section.icon}</span>
-                  <div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#1f2937' }}>{section.label}</span>
-                    <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 4 }}>— {section.desc}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          }
-          ctaLabel="C'est parti !"
+          icon="💡"
+          title="Ton coach"
+          description="Régulièrement, un conseil personnalisé et une reco d'action."
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('icon-coach')}
+          onBack={() => goBack('icon-coach')}
+        />
+      </>
+    )
+  }
+
+  // Step 10: Icône 💬 Messagerie (spotlight)
+  if (activeStep === 'icon-messages') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          targetSelector='[data-onboarding="icon-messages"]'
+          stepLabel={stepLabel}
+          icon="💬"
+          title="Échange avec ton formateur"
+          description="Une messagerie privée, directement avec lui."
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('icon-messages')}
+          onBack={() => goBack('icon-messages')}
+        />
+      </>
+    )
+  }
+
+  // Step 11: Onglet 🎯 Actions dans le menu du bas (spotlight)
+  if (activeStep === 'tab-actions') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          targetSelector='[data-onboarding="nav-actions"]'
+          stepLabel={stepLabel}
+          icon="🎯"
+          title="L'onglet Actions"
+          description="Toutes tes actions passées, triées par axe. Ton formateur et tes coéquipiers peuvent les liker ❤️ et commenter 💬."
+          ctaLabel="Compris !"
+          onCta={() => acknowledge('tab-actions')}
+          onBack={() => goBack('tab-actions')}
+        />
+      </>
+    )
+  }
+
+  // Step 12: Onglet 👥 Team dans le menu du bas (dernière étape — marque la fin)
+  if (activeStep === 'tab-team') {
+    return (
+      <>
+        {children}
+        <CoachMark
+          targetSelector='[data-onboarding="nav-team"]'
+          stepLabel={stepLabel}
+          icon="👥"
+          title="L'onglet Team"
+          description="Les actions de tes coéquipiers. Like ❤️ et commente 💬 pour les encourager."
+          ctaLabel="C'est parti ! 🚀"
           onCta={() => {
-            acknowledge('menu-tour')
+            acknowledge('tab-team')
             sessionStorage.removeItem(`onboarding_session_${userId}`)
           }}
-          onBack={() => goBack('menu-tour')}
+          onBack={() => goBack('tab-team')}
         />
       </>
     )

@@ -155,6 +155,7 @@ export default function DashboardClient({
         {axes.length > 0 && (
           <div
             className="rounded-[22px] px-3 py-3.5"
+            data-onboarding="tasks-card"
             style={{
               background: 'white',
               border: '2px solid #f0ebe0',

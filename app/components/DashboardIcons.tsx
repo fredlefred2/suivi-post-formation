@@ -43,6 +43,7 @@ export default function DashboardIcons({
         shadowColor="rgba(251,191,36,0.45)"
         hasAction={axes.length > 0}
         onClick={onAction}
+        onboardingId="icon-action"
       />
 
       {/* 📋 CHECK-IN — toujours cliquable (neuf OU historique) */}
@@ -54,6 +55,7 @@ export default function DashboardIcons({
         streakBadge={streak >= 1 ? streak : undefined}
         hasAction={checkinAvailable && !checkinDone}
         onClick={onCheckin}
+        onboardingId="icon-checkin"
       />
 
       {/* 💡 COACH — toujours cliquable (nouveau tip OU historique) */}
@@ -65,6 +67,7 @@ export default function DashboardIcons({
         notificationBadge={tipAvailable}
         hasAction={tipAvailable}
         onClick={onCoach}
+        onboardingId="icon-coach"
       />
 
       {/* 💬 MESSAGES */}
@@ -77,6 +80,7 @@ export default function DashboardIcons({
         notificationCount={messagesUnread > 0 ? messagesUnread : undefined}
         hasAction={messagesUnread > 0}
         onClick={onMessages}
+        onboardingId="icon-messages"
       />
     </div>
   )
@@ -93,6 +97,7 @@ function IconTile({
   hasAction,
   disabled,
   onClick,
+  onboardingId,
 }: {
   Icon: LucideIcon
   label: string
@@ -104,11 +109,13 @@ function IconTile({
   hasAction?: boolean
   disabled?: boolean
   onClick: () => void
+  onboardingId?: string
 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      data-onboarding={onboardingId}
       className={`flex flex-col items-center gap-1.5 py-1 ${disabled ? 'opacity-55 pointer-events-none' : ''}`}
     >
       {/* Carré gradient */}
