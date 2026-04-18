@@ -57,10 +57,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Tous les participants ont fait leur check-in', sent: 0 })
   }
 
-  // Envoyer une notification push à chaque apprenant
-  let sent = 0
-  for (const learner of toRemind) {
-    try {
+  // Envoi des push en parallèle avec re-vérification juste avant — évite
+  // d'envoyer un rappel à un apprenant qui vient de valider son check-in
+  // pendant que ce cron tournait.
+  const results = await Promise.allSettled(
+    toRemind.map(async (learner) => {
+      const { data: justChecked } = await supabase
+        .from('checkins')
+        .select('id')
+        .eq('learner_id', learner.id)
+        .eq('week_number', currentWeek)
+        .eq('year', currentYear)
+        .maybeSingle()
+
+      if (justChecked) return { skipped: true }
+
       await sendNotification({
         userId: learner.id,
         type: 'checkin_reminder',
@@ -68,15 +79,25 @@ export async function GET(request: NextRequest) {
         body: `${learner.first_name}, c'est le moment de faire le point sur ta semaine. 2 minutes suffisent !`,
         url: '/checkin',
       })
-      sent++
-    } catch (err) {
-      console.error(`Erreur push pour ${learner.id}:`, err)
+      return { skipped: false }
+    })
+  )
+
+  let sent = 0
+  let skipped = 0
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      if (r.value.skipped) skipped++
+      else sent++
+    } else {
+      console.error(`Erreur push pour ${toRemind[i].id}:`, r.reason)
     }
-  }
+  })
 
   return NextResponse.json({
     message: `Rappels push envoyés`,
     sent,
+    skipped,
     total: toRemind.length,
   })
 }

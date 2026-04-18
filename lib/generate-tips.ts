@@ -269,40 +269,54 @@ Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
       return null
     }
 
-    // Annuler tout autre next_scheduled pour cet apprenant
+    // Protection : ne JAMAIS écraser un tip déjà envoyé (sent=true).
+    // On vérifie avant tout si le slot (axe_id, week_number) est occupé par un tip sent.
+    const { data: slotOccupant } = await supabaseAdmin
+      .from('tips')
+      .select('id, sent')
+      .eq('axe_id', ctx.axeId)
+      .eq('week_number', weekNumber)
+      .maybeSingle()
+
+    if (slotOccupant?.sent) {
+      console.error('[Tips] Slot déjà occupé par un tip envoyé — on annule')
+      return null
+    }
+
+    // Upsert atomique : si un tip non envoyé existe déjà sur (axe_id, week_number),
+    // il est remplacé en une seule opération DB. Sinon, insertion simple.
+    // Plus de risque de "delete réussi, insert échoué" qui perdrait le tip.
+    const { data: inserted, error } = await supabaseAdmin
+      .from('tips')
+      .upsert(
+        {
+          axe_id: ctx.axeId,
+          learner_id: ctx.learnerId,
+          week_number: weekNumber,
+          content,
+          advice,
+          sent: false,
+          acted: false,
+          next_scheduled: true,
+        },
+        { onConflict: 'axe_id,week_number' }
+      )
+      .select('id')
+      .single()
+
+    if (error || !inserted) {
+      console.error('[Tips] Erreur upsert:', error?.message)
+      return null
+    }
+
+    // Une fois le nouveau tip en sécurité, on peut nettoyer les AUTRES
+    // next_scheduled pour cet apprenant (non critique — best-effort)
     await supabaseAdmin
       .from('tips')
       .update({ next_scheduled: false })
       .eq('learner_id', ctx.learnerId)
       .eq('next_scheduled', true)
-
-    // Supprimer un eventuel tip non envoye sur le meme axe+semaine
-    // (contrainte unique axe_id+week_number, tips batch pourraient occuper le slot)
-    await supabaseAdmin
-      .from('tips')
-      .delete()
-      .eq('axe_id', ctx.axeId)
-      .eq('week_number', weekNumber)
-      .eq('sent', false)
-
-    // Inserer le tip
-    const { data: inserted, error } = await supabaseAdmin
-      .from('tips')
-      .insert({
-        axe_id: ctx.axeId,
-        learner_id: ctx.learnerId,
-        week_number: weekNumber,
-        content,
-        advice,
-        next_scheduled: true,
-      })
-      .select('id')
-      .single()
-
-    if (error) {
-      console.error('[Tips] Erreur insertion:', error.message)
-      return null
-    }
+      .neq('id', inserted.id)
 
     console.log(`[Tips] Tip genere pour learner ${ctx.learnerId.slice(0, 8)} / axe ${ctx.axeId.slice(0, 8)} (S.${weekNumber})`)
     return { id: inserted.id, content, advice }

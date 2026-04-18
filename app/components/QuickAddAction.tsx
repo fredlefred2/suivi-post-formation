@@ -771,7 +771,10 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
 
   // Mode legacy pour onboarding et prefill
   function handleLegacySubmit() {
-    if (!selectedAxe || !chosenAction.trim()) return
+    // Verrou anti-double-clic — isSubmitting bascule IMMÉDIATEMENT au premier tap,
+    // sans attendre le render de isPending (qui prend ~50ms et laisse passer 2-3 taps rapides)
+    if (!selectedAxe || !chosenAction.trim() || isSubmitting) return
+    setIsSubmitting(true)
     const fd = new FormData()
     fd.set('axe_id', selectedAxe.id)
     fd.set('description', chosenAction.trim())
@@ -948,8 +951,8 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
             required
           />
           <div className="flex gap-3 mt-4">
-            <button onClick={handleLegacySubmit} disabled={isPending || !chosenAction.trim()} className="btn-primary flex-1 disabled:opacity-50">
-              {isPending ? 'Enregistrement...' : 'Valider ✓'}
+            <button onClick={handleLegacySubmit} disabled={isPending || isSubmitting || !chosenAction.trim()} className="btn-primary flex-1 disabled:opacity-50">
+              {(isPending || isSubmitting) ? 'Enregistrement...' : 'Valider ✓'}
             </button>
           </div>
         </div>
