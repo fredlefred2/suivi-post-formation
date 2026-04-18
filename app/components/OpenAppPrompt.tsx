@@ -1,9 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { CheckinPrompt, CoachGiftPrompt, ActionPrompt, QuizPrompt } from './PromptModals'
 
 type PromptType = 'checkin' | 'tip' | 'action' | 'quiz'
+
+type InitialTip = {
+  id: string
+  content: string
+  advice: string | null
+  axe_subject?: string
+} | null
 
 type Props = {
   firstName: string
@@ -14,6 +21,10 @@ type Props = {
   streak: number
   // Contrôle : forcer l'affichage du coach (quand user clique sur l'icône)
   forceCoach?: boolean
+  // Données précalculées server-side — zéro fetch client au mount
+  initialTip: InitialTip
+  initialLastAction: { daysSince: number; isStale: boolean } | null
+  initialDismissals: Record<string, string>
   // Callbacks pour ouvrir les modales correspondantes
   onOpenCheckin: () => void
   onOpenQuickAdd: () => void
@@ -40,100 +51,37 @@ export default function OpenAppPrompt({
   checkinWeekLabel,
   streak,
   forceCoach,
+  initialTip,
+  initialLastAction,
+  initialDismissals,
   onOpenCheckin,
   onOpenQuickAdd,
   onOpenQuiz,
   onTipRead,
   onForceCoachConsumed,
 }: Props) {
-  const [activePrompt, setActivePrompt] = useState<PromptType | null>(null)
-  const [tipData, setTipData] = useState<any>(null)
-  const [daysSince, setDaysSince] = useState(0)
-  const didCheck = useRef(false)
+  // Calcul synchrone de l'actif à l'ouverture — pas de fetch, pas de setTimeout
+  const initialActive = computeInitialPrompt({
+    checkinAvailable,
+    checkinDone,
+    tip: initialTip,
+    lastAction: initialLastAction,
+    dismissals: initialDismissals,
+  })
+
+  const [activePrompt, setActivePrompt] = useState<PromptType | null>(initialActive.prompt)
+  const [tipData, setTipData] = useState<InitialTip>(initialActive.prompt === 'tip' ? initialTip : null)
+  const [daysSince] = useState(initialActive.daysSince)
 
   // Déclenchement manuel quand user clique l'icône Coach
   useEffect(() => {
     if (!forceCoach) return
-    async function fetchAndShow() {
-      try {
-        const res = await fetch('/api/tips').then(r => r.ok ? r.json() : { tip: null })
-        if (res.tip) {
-          setTipData(res.tip)
-          setActivePrompt('tip')
-        }
-      } finally {
-        onForceCoachConsumed?.()
-      }
+    if (initialTip) {
+      setTipData(initialTip)
+      setActivePrompt('tip')
     }
-    fetchAndShow()
-  }, [forceCoach, onForceCoachConsumed])
-
-  useEffect(() => {
-    // Ne check qu'une fois par montage du composant (une fois par ouverture d'appli)
-    if (didCheck.current) return
-    didCheck.current = true
-
-    async function checkPriorities() {
-      try {
-        // Récupère les skips en parallèle avec les autres vérifs
-        const [dismissalsRes, tipRes, lastActionRes] = await Promise.all([
-          fetch('/api/prompt-dismiss').then(r => r.ok ? r.json() : { dismissals: {} }),
-          fetch('/api/tips').then(r => r.ok ? r.json() : { tip: null }),
-          fetch('/api/last-action').then(r => r.ok ? r.json() : null),
-        ])
-
-        const dismissals: Record<string, string> = dismissalsRes.dismissals || {}
-        const tip = tipRes.tip
-        const lastAction = lastActionRes
-
-        // ── 1. Check-in : ven/sam/dim/lun + pas fait ──
-        if (checkinAvailable && !checkinDone) {
-          // Pas de skip blocking — on ré-affiche à chaque ouverture (urgent)
-          setActivePrompt('checkin')
-          return
-        }
-
-        // ── 2. Tip non lu ──
-        if (tip) {
-          const skipped = dismissals.tip
-          if (!skipped || !isSameDay(skipped)) {
-            setTipData(tip)
-            setActivePrompt('tip')
-            return
-          }
-        }
-
-        // ── 3. Pas d'action depuis 10j ──
-        if (lastAction?.isStale) {
-          const skipped = dismissals.action
-          // Reprend si pas skip OU skip d'hier ou avant
-          if (!skipped || !isSameDay(skipped)) {
-            setDaysSince(lastAction.daysSince || 10)
-            setActivePrompt('action')
-            return
-          }
-        }
-
-        // ── 4. Quiz (Phase 2, désactivé pour l'instant) ──
-        // const quizAvailable = false
-        // if (quizAvailable) {
-        //   const skipped = dismissals.quiz
-        //   if (!skipped || !isSameWeek(skipped)) {
-        //     setActivePrompt('quiz')
-        //     return
-        //   }
-        // }
-
-        // Rien à afficher
-      } catch (err) {
-        console.error('[OpenAppPrompt] check failed:', err)
-      }
-    }
-
-    // Petit délai pour laisser le dashboard finir son premier rendu
-    const t = setTimeout(checkPriorities, 600)
-    return () => clearTimeout(t)
-  }, [checkinAvailable, checkinDone])
+    onForceCoachConsumed?.()
+  }, [forceCoach, initialTip, onForceCoachConsumed])
 
   async function markSkipped(type: PromptType) {
     try {
@@ -205,4 +153,46 @@ function isSameDay(iso: string): boolean {
   return d.getFullYear() === now.getFullYear()
     && d.getMonth() === now.getMonth()
     && d.getDate() === now.getDate()
+}
+
+/**
+ * Applique la priorité (check-in > tip > relance 10j > quiz) à partir
+ * des données déjà résolues côté serveur. Exécuté une fois au mount.
+ */
+function computeInitialPrompt({
+  checkinAvailable,
+  checkinDone,
+  tip,
+  lastAction,
+  dismissals,
+}: {
+  checkinAvailable: boolean
+  checkinDone: boolean
+  tip: InitialTip
+  lastAction: { daysSince: number; isStale: boolean } | null
+  dismissals: Record<string, string>
+}): { prompt: PromptType | null; daysSince: number } {
+  // 1. Check-in urgent (pas de skip bloquant)
+  if (checkinAvailable && !checkinDone) {
+    return { prompt: 'checkin', daysSince: 0 }
+  }
+
+  // 2. Tip non lu (skip bloque 1 journée)
+  if (tip) {
+    const skipped = dismissals.tip
+    if (!skipped || !isSameDay(skipped)) {
+      return { prompt: 'tip', daysSince: 0 }
+    }
+  }
+
+  // 3. Relance action 10 jours (skip bloque 1 journée)
+  if (lastAction?.isStale) {
+    const skipped = dismissals.action
+    if (!skipped || !isSameDay(skipped)) {
+      return { prompt: 'action', daysSince: lastAction.daysSince || 10 }
+    }
+  }
+
+  // 4. Quiz — Phase 2, désactivé
+  return { prompt: null, daysSince: 0 }
 }

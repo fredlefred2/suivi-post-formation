@@ -19,6 +19,10 @@ export default async function DashboardPage() {
     { data: axes },
     { data: checkinForTargetWeek },
     { data: allCheckins },
+    { data: currentTip },
+    { count: messagesUnread },
+    { data: lastActionRow },
+    { data: dismissalsRaw },
   ] = await Promise.all([
     supabase.from('profiles').select('first_name, created_at').eq('id', user!.id).single(),
     supabase.from('axes')
@@ -35,7 +39,61 @@ export default async function DashboardPage() {
       .select('id, weather, week_number, year, created_at')
       .eq('learner_id', user!.id)
       .order('created_at', { ascending: true }),
+    // Tip non lu le plus récent (pastille 💡 + CoachGiftPrompt)
+    supabase.from('tips')
+      .select('id, content, advice, week_number, acted, axe_id, axe:axes(subject)')
+      .eq('learner_id', user!.id)
+      .eq('sent', true)
+      .eq('acted', false)
+      .order('week_number', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Nombre de messages non lus (pastille 💬)
+    supabase.from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('receiver_id', user!.id)
+      .eq('is_read', false),
+    // Dernière action de l'apprenant (pour la relance 10j)
+    supabase.from('actions')
+      .select('created_at')
+      .eq('learner_id', user!.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Skips des prompts plein écran
+    supabase.from('prompt_dismissals')
+      .select('prompt_type, skipped_at')
+      .eq('learner_id', user!.id),
   ])
+
+  // ── Normalisation pour OpenAppPrompt ──────────────────────────────────
+  // Supabase peut renvoyer axe en objet ou en tableau — on aplatit
+  const tipAxeRaw = currentTip ? (currentTip as { axe?: unknown }).axe : null
+  const tipAxeSubject = Array.isArray(tipAxeRaw)
+    ? (tipAxeRaw[0] as { subject?: string } | undefined)?.subject
+    : (tipAxeRaw as { subject?: string } | null)?.subject
+  const initialTip = currentTip
+    ? {
+        id: (currentTip as { id: string }).id,
+        content: (currentTip as { content: string }).content,
+        advice: (currentTip as { advice: string | null }).advice ?? null,
+        axe_subject: tipAxeSubject ?? undefined,
+      }
+    : null
+
+  // Last action stale (>= 10 jours)
+  let initialLastAction: { daysSince: number; isStale: boolean } | null = null
+  if (lastActionRow?.created_at) {
+    const lastDate = new Date(lastActionRow.created_at)
+    const daysSince = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
+    initialLastAction = { daysSince, isStale: daysSince >= 10 }
+  }
+
+  // Dismissals en Record<promptType, isoString>
+  const initialDismissals: Record<string, string> = {}
+  for (const row of dismissalsRaw ?? []) {
+    initialDismissals[(row as { prompt_type: string }).prompt_type] = (row as { skipped_at: string }).skipped_at
+  }
 
   // Check-in affiché seulement si fenêtre ouverte (ven→lun) ET pas encore fait
   const checkinDone = !checkinCtx.isOpen || !!checkinForTargetWeek
@@ -218,6 +276,10 @@ export default async function DashboardPage() {
         checkinIsOpen={checkinCtx.isOpen}
         groupTheme={groupTheme}
         axesForCheckin={(axes ?? []).map(a => ({ id: a.id, initial_score: a.initial_score ?? 1 }))}
+        initialTip={initialTip}
+        initialMessagesUnread={messagesUnread ?? 0}
+        initialLastAction={initialLastAction}
+        initialDismissals={initialDismissals}
       />
     </OnboardingFlow>
   )

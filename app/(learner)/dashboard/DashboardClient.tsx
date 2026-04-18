@@ -25,6 +25,13 @@ type AxeItem = {
   lastAction: { description: string; date: string } | null
 }
 
+type InitialTip = {
+  id: string
+  content: string
+  advice: string | null
+  axe_subject?: string
+} | null
+
 type Props = {
   firstName: string
   checkinDone: boolean
@@ -43,6 +50,11 @@ type Props = {
   checkinIsOpen: boolean
   axesForCheckin: { id: string; initial_score: number }[]
   groupTheme: string | null
+  // Données orchestrateur précalculées server-side (zéro latence client)
+  initialTip: InitialTip
+  initialMessagesUnread: number
+  initialLastAction: { daysSince: number; isStale: boolean } | null
+  initialDismissals: Record<string, string>
 }
 
 export default function DashboardClient({
@@ -63,26 +75,23 @@ export default function DashboardClient({
   checkinIsOpen,
   axesForCheckin,
   groupTheme,
+  initialTip,
+  initialMessagesUnread,
+  initialLastAction,
+  initialDismissals,
   onboardingStep,
 }: Props & { onboardingStep?: string }) {
   const router = useRouter()
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
-  const [tipAvailable, setTipAvailable] = useState(false)
+  const [tipAvailable, setTipAvailable] = useState(!!initialTip)
   const [forceCoach, setForceCoach] = useState(false)
-  const [messagesUnread, setMessagesUnread] = useState(0)
+  const [messagesUnread, setMessagesUnread] = useState(initialMessagesUnread)
   const [checkinHistoryOpen, setCheckinHistoryOpen] = useState(false)
   const [coachHistoryOpen, setCoachHistoryOpen] = useState(false)
 
-  // Fetch si un tip est dispo (pour la pastille 🎁 et l'orchestrateur)
-  useEffect(() => {
-    fetch('/api/tips')
-      .then(r => r.ok ? r.json() : { tip: null })
-      .then(data => setTipAvailable(!!data?.tip))
-      .catch(() => {})
-  }, [])
-
-  // Fetch nombre de messages non lus (pour la pastille 💬)
+  // Rafraîchit le compteur de messages non lus quand l'utilisateur les lit
+  // (event émis par MessagesClient) — le 1er chargement vient déjà des props
   useEffect(() => {
     const fetchUnread = () => {
       fetch('/api/messages/unread')
@@ -90,8 +99,6 @@ export default function DashboardClient({
         .then(data => setMessagesUnread(data?.count ?? 0))
         .catch(() => {})
     }
-    fetchUnread()
-    // Se rafraîchit quand l'utilisateur a lu ses messages (event émis par MessagesClient)
     const handleRead = () => fetchUnread()
     window.addEventListener('messages-read', handleRead)
     return () => window.removeEventListener('messages-read', handleRead)
@@ -279,6 +286,9 @@ export default function DashboardClient({
           checkinWeekLabel={checkinWeekLabel}
           streak={streak}
           forceCoach={forceCoach}
+          initialTip={initialTip}
+          initialLastAction={initialLastAction}
+          initialDismissals={initialDismissals}
           onOpenCheckin={() => setQuickCheckinOpen(true)}
           onOpenQuickAdd={() => setQuickAddOpen(true)}
           onTipRead={() => setTipAvailable(false)}
