@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { getOnboardingAck, acknowledgeStep } from '@/lib/onboarding'
 import { useOnboarding } from '@/lib/onboarding-context'
 import CoachMark from '@/app/components/CoachMark'
@@ -376,194 +375,145 @@ export default function OnboardingFlow({
   // FULL-SCREEN MODAL STEPS (1-4: welcome + axes)
   // ═══════════════════════════════════════════════════
 
-  // ── Step 1: Welcome ──
+  // ── Step 1: Welcome — plein écran navy (v1.29) ──
   if (activeStep === 'welcome') {
     return (
-      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
-        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
-          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-            <span className="text-xs font-semibold text-[#1a1a2e]">Étape {stepLabel}</span>
-            {renderDots(stepIndex)}
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
-            <Image src="/yapluka-symbol.png" alt="YAPLUKA" width={48} height={45} className="drop-shadow-md" />
-            <h2 className="text-lg font-bold text-gray-800">Bienvenue {firstName} !</h2>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              YAPLUKA t&apos;accompagne pour transformer ta formation en actions concrètes. On te guide en 3 minutes !
-            </p>
-            <div className="flex flex-col gap-2 text-left max-w-xs mx-auto mt-3">
-              {[
-                { n: '1', text: <>Définis tes <strong>axes</strong> de progrès</> },
-                { n: '2', text: <>Découvre ta <strong>dynamique</strong> de progression</> },
-                { n: '3', text: <>Comprends le <strong>check-in</strong> hebdomadaire</> },
-              ].map((s) => (
-                <div key={s.n} className="flex items-center gap-3 text-sm">
-                  <span className="w-7 h-7 rounded-full bg-[#fffbeb] text-[#1a1a2e] font-bold text-xs flex items-center justify-center shrink-0">{s.n}</span>
-                  <span className="text-gray-600">{s.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="pt-3 pb-1 text-center shrink-0">
-            <Link
-              href="/axes?onboarding=create"
-              onClick={() => acknowledge('welcome')}
-              className="btn-primary"
-            >
-              C&apos;est parti !
-            </Link>
-          </div>
-        </div>
+      <div
+        className="fixed inset-0 z-40 flex flex-col items-center justify-center px-6 text-center"
+        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1e 100%)' }}
+      >
+        <span className="absolute top-[max(20px,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 text-[11px] font-semibold text-white/60 tracking-wider uppercase">
+          Étape {stepLabel}
+        </span>
+        <div className="text-[72px] leading-none mb-4">👋</div>
+        <h1 className="text-[26px] font-extrabold text-white leading-tight mb-3">
+          Salut {firstName},<br />bienvenue sur YAPLUKA !
+        </h1>
+        <p className="text-[14px] text-white/70 leading-relaxed mb-8 max-w-xs">
+          On va t&apos;aider à ancrer ce que tu as vu en formation, en quelques étapes. C&apos;est parti pour 2 minutes.
+        </p>
+        <Link
+          href="/axes?onboarding=create"
+          onClick={() => acknowledge('welcome')}
+          className="px-8 py-3.5 rounded-2xl font-extrabold text-[15px] active:scale-95 transition-transform"
+          style={{ background: '#fbbf24', color: '#1a1a2e' }}
+        >
+          C&apos;est parti !
+        </Link>
       </div>
     )
   }
 
-  // ── Step 2: Axis 1 (obligatoire) ──
-  if (activeStep === 'axis-1') {
+  // ── Steps 2-4 : coach marks centrés sur le dashboard visible derrière ──
+  // Pattern : dashboard en arrière-plan + overlay sombre + bulle blanche centrée
+  if (activeStep === 'axis-1' || activeStep === 'axis-2' || activeStep === 'axis-3') {
+    const config = {
+      'axis-1': {
+        bravo: null,
+        title: 'Crée ton 1er axe de progrès',
+        description: "Un axe, c'est un domaine que tu veux améliorer suite à ta formation. Tu en auras 3 au total.",
+        exampleLabel: 'Exemple :',
+        example: '« Déléguer efficacement »',
+        exampleHint: 'Difficulté : Moyen',
+        ctaLabel: 'Créer mon 1er axe',
+        secondaryLabel: '← Retour',
+        onSecondary: () => {
+          const stored = getOnboardingAck(userId)
+          delete stored['welcome']
+          localStorage.setItem(`onboarding_${userId}`, JSON.stringify(stored))
+          setAck((a) => { const n = { ...a }; delete n['welcome']; return n })
+        },
+      },
+      'axis-2': {
+        bravo: '🎉 Bravo, ton 1er axe est créé !',
+        title: 'Crée ton 2e axe',
+        description: 'Excellent début ! Continue sur ta lancée, ou fais-le plus tard.',
+        exampleLabel: 'Idée :',
+        example: '« Mieux communiquer en réunion »',
+        exampleHint: null,
+        ctaLabel: 'Créer mon 2e axe',
+        secondaryLabel: 'Plus tard →',
+        onSecondary: skipAxis2,
+        tertiaryLabel: '← Modifier mon axe',
+        onTertiary: openEditLastAxe,
+      },
+      'axis-3': {
+        bravo: '🎉 Super, 2 axes déjà définis !',
+        title: 'Crée ton 3e et dernier axe',
+        description: "Plus qu'un axe et tu auras posé toutes les bases de ta progression !",
+        exampleLabel: 'Idée :',
+        example: '« Gérer mon temps et mes priorités »',
+        exampleHint: null,
+        ctaLabel: 'Créer mon 3e axe',
+        secondaryLabel: 'Plus tard →',
+        onSecondary: skipAxis3,
+        tertiaryLabel: '← Modifier mes axes',
+        onTertiary: openEditLastAxe,
+      },
+    }[activeStep as 'axis-1' | 'axis-2' | 'axis-3']
+
+    const c = config as typeof config & {
+      tertiaryLabel?: string
+      onTertiary?: () => void
+    }
+
     return (
-      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
-        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
-          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-            <span className="text-xs font-semibold text-[#1a1a2e]">Étape {stepLabel}</span>
-            {renderDots(stepIndex)}
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
-            <div className="text-4xl">🎯</div>
-            <h2 className="text-lg font-bold text-gray-800">Crée ton 1er axe de progrès</h2>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Un axe représente un domaine que tu souhaites améliorer suite à ta formation.
-            </p>
-            <div className="bg-[#fffbeb] rounded-xl p-3 mt-3 text-left text-sm text-[#1a1a2e]">
-              <p className="font-medium mb-1">Exemple d&apos;axe :</p>
-              <p className="text-[#1a1a2e]">&laquo; Déléguer efficacement &raquo; — Difficulté : Intermédiaire</p>
+      <>
+        {children}
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center px-4 prompt-fade-in"
+          style={{ background: 'rgba(0,0,0,0.55)' }}
+        >
+          <div
+            className="bg-white rounded-[22px] p-5 max-w-sm w-full"
+            style={{ boxShadow: '0 12px 48px rgba(0,0,0,0.3)' }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold text-[#1a1a2e] tracking-wider uppercase">Étape {stepLabel}</span>
+              {renderDots(stepIndex)}
             </div>
-          </div>
 
-          <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
-            <Link href="/axes?onboarding=create" className="btn-primary">
-              Créer mon 1er axe
-            </Link>
-            <div>
-              <button
-                onClick={() => {
-                  // Retour à welcome : un-ack welcome
-                  const stored = getOnboardingAck(userId)
-                  delete stored['welcome']
-                  localStorage.setItem(`onboarding_${userId}`, JSON.stringify(stored))
-                  setAck((a) => { const n = { ...a }; delete n['welcome']; return n })
-                }}
-                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
+            {c.bravo && (
+              <div className="rounded-xl px-3 py-2 text-center text-[12px] font-bold mb-3"
+                   style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}>
+                {c.bravo}
+              </div>
+            )}
+
+            <div className="text-center">
+              <div className="text-[40px] leading-none mb-2">🎯</div>
+              <h2 className="text-[17px] font-extrabold text-[#1a1a2e] mb-2">{c.title}</h2>
+              <p className="text-[13px] text-gray-600 leading-relaxed mb-3">{c.description}</p>
+
+              <div className="rounded-xl p-3 text-left mb-4" style={{ background: '#fffbeb' }}>
+                <p className="text-[12px] font-bold mb-1" style={{ color: '#92400e' }}>{c.exampleLabel}</p>
+                <p className="text-[13px]" style={{ color: '#1a1a2e' }}>{c.example}</p>
+                {c.exampleHint && (
+                  <p className="text-[11px] mt-0.5" style={{ color: '#92400e', opacity: 0.8 }}>{c.exampleHint}</p>
+                )}
+              </div>
+
+              <Link
+                href="/axes?onboarding=create"
+                className="block w-full py-3 rounded-xl font-extrabold text-[15px] active:scale-95 transition-transform mb-2"
+                style={{ background: '#fbbf24', color: '#1a1a2e' }}
               >
-                ← Retour
-              </button>
+                {c.ctaLabel}
+              </Link>
+              <div className="flex items-center justify-center gap-4 pt-1">
+                {c.tertiaryLabel && c.onTertiary && (
+                  <button onClick={c.onTertiary} className="text-[13px] text-gray-500 underline">
+                    {c.tertiaryLabel}
+                  </button>
+                )}
+                <button onClick={c.onSecondary} className="text-[13px] text-gray-500 underline">
+                  {c.secondaryLabel}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    )
-  }
-
-  // ── Step 3: Axis 2 (optionnel, skippable) ──
-  if (activeStep === 'axis-2') {
-    return (
-      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
-        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
-          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-            <span className="text-xs font-semibold text-[#1a1a2e]">Étape {stepLabel}</span>
-            {renderDots(stepIndex)}
-          </div>
-
-          {/* Bravo banner */}
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 mb-2 text-center shrink-0">
-            <p className="text-sm font-semibold text-emerald-700">🎉 Bravo ! Ton 1er axe est créé !</p>
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
-            <div className="text-4xl">🎯</div>
-            <h2 className="text-lg font-bold text-gray-800">Crée ton 2e axe</h2>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Excellent début ! Continue sur ta lancée. Tu peux aussi le faire plus tard.
-            </p>
-            <div className="bg-[#fffbeb] rounded-xl p-3 mt-3 text-left text-sm text-[#1a1a2e]">
-              <p className="font-medium mb-1">Idée d&apos;axe :</p>
-              <p className="text-[#1a1a2e]">&laquo; Mieux communiquer en réunion &raquo;</p>
-            </div>
-          </div>
-
-          <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
-            <Link href="/axes?onboarding=create" className="btn-primary">
-              Créer mon 2e axe
-            </Link>
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={openEditLastAxe}
-                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
-              >
-                ← Modifier mon axe
-              </button>
-              <button
-                onClick={skipAxis2}
-                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
-              >
-                Plus tard →
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Step 4: Axis 3 (optionnel, skippable) ──
-  if (activeStep === 'axis-3') {
-    return (
-      <div className="fixed inset-x-0 top-14 bottom-0 z-20 bg-gray-50 overflow-hidden flex flex-col p-3 sm:ml-48">
-        <div className="card !p-4 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
-          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
-            <span className="text-xs font-semibold text-[#1a1a2e]">Étape {stepLabel}</span>
-            {renderDots(stepIndex)}
-          </div>
-
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 mb-2 text-center shrink-0">
-            <p className="text-sm font-semibold text-emerald-700">🎉 Super ! 2 axes déjà définis !</p>
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 overflow-y-auto px-1">
-            <div className="text-4xl">🎯</div>
-            <h2 className="text-lg font-bold text-gray-800">Crée ton 3e et dernier axe</h2>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Plus qu&apos;un axe et tu auras posé toutes les bases de ta progression ! Tu peux aussi le faire plus tard.
-            </p>
-            <div className="bg-[#fffbeb] rounded-xl p-3 mt-3 text-left text-sm text-[#1a1a2e]">
-              <p className="font-medium mb-1">Idée d&apos;axe :</p>
-              <p className="text-[#1a1a2e]">&laquo; Gérer mon temps et mes priorités &raquo;</p>
-            </div>
-          </div>
-
-          <div className="pt-3 pb-1 text-center shrink-0 space-y-2">
-            <Link href="/axes?onboarding=create" className="btn-primary">
-              Créer mon 3e axe
-            </Link>
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={openEditLastAxe}
-                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
-              >
-                ← Modifier mes axes
-              </button>
-              <button
-                onClick={skipAxis3}
-                className="text-sm text-gray-500 hover:text-gray-600 underline transition-colors"
-              >
-                Plus tard →
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      </>
     )
   }
 
@@ -733,12 +683,13 @@ export default function OnboardingFlow({
   }
 
   // Step 11: Onglet 🎯 Actions dans le menu du bas (spotlight)
+  // Note : l'onglet a href="/axes" donc son data-onboarding est "nav-axes"
   if (activeStep === 'tab-actions') {
     return (
       <>
         {children}
         <CoachMark
-          targetSelector='[data-onboarding="nav-actions"]'
+          targetSelector='[data-onboarding="nav-axes"]'
           stepLabel={stepLabel}
           icon="🎯"
           title="L'onglet Actions"
