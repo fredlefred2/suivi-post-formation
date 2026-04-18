@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       const result = await generatePersonalizedTip(ctx, weekNumber)
       if (result) {
         generated++
-        console.log(`[PreGen] Tip genere pour ${ctx.firstName} / "${targetAxe.subject}"`)
+        console.log(`[PreGen] Tip genere pour learner ${learnerId.slice(0, 8)} / axe ${targetAxe.id.slice(0, 8)}`)
       } else {
         errors.push(`Echec generation pour ${learnerId}`)
       }

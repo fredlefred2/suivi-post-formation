@@ -304,7 +304,7 @@ Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
       return null
     }
 
-    console.log(`[Tips] Tip personnalise genere pour ${ctx.firstName} / axe ${ctx.axeSubject} (S.${weekNumber})`)
+    console.log(`[Tips] Tip genere pour learner ${ctx.learnerId.slice(0, 8)} / axe ${ctx.axeId.slice(0, 8)} (S.${weekNumber})`)
     return { id: inserted.id, content, advice }
   } catch (err) {
     console.error('[Tips] Erreur generation personnalisee:', err)
