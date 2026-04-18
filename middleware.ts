@@ -1,6 +1,19 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Construit un NextResponse.redirect qui embarque les cookies fraîchement
+ * rafraîchis par Supabase. Sans ça, le nouveau token est perdu côté navigateur
+ * et la navigation suivante repart avec un cookie périmé → redirect vers /login.
+ */
+function redirectWithCookies(url: URL, source: NextResponse): NextResponse {
+  const response = NextResponse.redirect(url)
+  source.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie)
+  })
+  return response
+}
+
 export async function middleware(request: NextRequest) {
   // Sans variables Supabase configurées, laisser passer toutes les requêtes
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -28,11 +41,21 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
   // Fichiers statiques PWA — ne jamais intercepter
   if (pathname === '/sw.js' || pathname === '/manifest.json' || pathname === '/api/manifest') {
+    return supabaseResponse
+  }
+
+  // Récupérer l'utilisateur (tolérant : si l'appel échoue, on laisse passer
+  // et on laisse la page faire sa propre vérif plutôt que rediriger à tort)
+  let user: { id: string } | null = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch (err) {
+    console.error('[middleware] auth.getUser failed — letting request pass:', err)
     return supabaseResponse
   }
 
@@ -42,30 +65,37 @@ export async function middleware(request: NextRequest) {
 
   // Rediriger vers login si non connecté
   if (!user && !isPublic && !pathname.startsWith('/api')) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return redirectWithCookies(new URL('/login', request.url), supabaseResponse)
   }
 
   if (user) {
-    // Récupérer le rôle
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    const role = profile?.role
+    // Récupérer le rôle (tolérant : si l'appel échoue, on ne redirige pas —
+    // le layout de la page fera sa propre vérif de rôle)
+    let role: string | undefined
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (error) throw error
+      role = profile?.role
+    } catch (err) {
+      console.error('[middleware] profile.select failed — letting request pass:', err)
+      return supabaseResponse
+    }
 
     // Rediriger depuis les pages auth si déjà connecté
     if (isPublic) {
       if (role === 'trainer') {
-        return NextResponse.redirect(new URL('/trainer/dashboard', request.url))
+        return redirectWithCookies(new URL('/trainer/dashboard', request.url), supabaseResponse)
       }
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      return redirectWithCookies(new URL('/dashboard', request.url), supabaseResponse)
     }
 
     // Protéger les routes formateur
     if (pathname.startsWith('/trainer') && role !== 'trainer') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      return redirectWithCookies(new URL('/dashboard', request.url), supabaseResponse)
     }
 
     // Rediriger les formateurs hors de leurs pages
@@ -74,7 +104,7 @@ export async function middleware(request: NextRequest) {
       !pathname.startsWith('/api') &&
       role === 'trainer'
     ) {
-      return NextResponse.redirect(new URL('/trainer/dashboard', request.url))
+      return redirectWithCookies(new URL('/trainer/dashboard', request.url), supabaseResponse)
     }
   }
 
