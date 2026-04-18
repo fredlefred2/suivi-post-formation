@@ -20,3 +20,6 @@ out/
 npm-debug.log*
 .vercel
 .env*.local
+
+# Maquettes HTML — prototypage UI hors code principal
+maquette-*.html
