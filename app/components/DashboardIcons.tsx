@@ -1,7 +1,6 @@
 'use client'
 
 import { Zap, ClipboardCheck, Lightbulb, MessageSquare, type LucideIcon } from 'lucide-react'
-import { getNextLevel } from '@/lib/axeHelpers'
 
 type AxeInfo = { id: string; completedCount: number }
 
@@ -34,38 +33,12 @@ export default function DashboardIcons({
   onCoach,
   onMessages,
 }: Props) {
-  // Sous-texte dynamique "J'ai agi" : prochain palier sur l'axe le plus avancé
-  const axeClosestToNext = axes
-    .map(a => ({ count: a.completedCount, next: getNextLevel(a.completedCount) }))
-    .filter(x => x.next !== null)
-    .sort((a, b) => (a.next!.delta - b.next!.delta))[0]
-
-  const actionSubtext = axeClosestToNext
-    ? `→ ${axeClosestToNext.next!.delta} pour ${axeClosestToNext.next!.icon}`
-    : axes.length > 0
-      ? '👑 Tout au max !'
-      : '1ère action !'
-
-  // Sous-texte check-in
-  const checkinSubtext = checkinDone
-    ? 'Fait ✓'
-    : checkinAvailable
-      ? 'Disponible !'
-      : 'Dès vendredi'
-
-  // Sous-texte messages
-  const messagesSubtext = messagesUnread > 0
-    ? `${messagesUnread} non lu${messagesUnread > 1 ? 's' : ''}`
-    : 'Tout lu ✓'
-
   return (
     <div className="grid grid-cols-4 gap-2">
       {/* ⚡ J'AI AGI */}
       <IconTile
         Icon={Zap}
         label="J'ai agi !"
-        subtext={actionSubtext}
-        subtextColor="#10b981"
         gradient="linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)"
         shadowColor="rgba(251,191,36,0.45)"
         hasAction={axes.length > 0}
@@ -76,8 +49,6 @@ export default function DashboardIcons({
       <IconTile
         Icon={ClipboardCheck}
         label="Check-in"
-        subtext={checkinSubtext}
-        subtextColor={checkinAvailable && !checkinDone ? '#10b981' : '#a0937c'}
         gradient="linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)"
         shadowColor="rgba(20,184,166,0.4)"
         streakBadge={streak >= 1 ? streak : undefined}
@@ -89,8 +60,6 @@ export default function DashboardIcons({
       <IconTile
         Icon={Lightbulb}
         label="Coach"
-        subtext={tipAvailable ? 'Nouvelle idée !' : 'Voir historique'}
-        subtextColor={tipAvailable ? '#10b981' : '#a0937c'}
         gradient="linear-gradient(135deg, #312e81 0%, #1a1a2e 100%)"
         shadowColor="rgba(26,26,46,0.4)"
         notificationBadge={tipAvailable}
@@ -102,8 +71,6 @@ export default function DashboardIcons({
       <IconTile
         Icon={MessageSquare}
         label="Messages"
-        subtext={messagesSubtext}
-        subtextColor={messagesUnread > 0 ? '#10b981' : '#a0937c'}
         gradient="linear-gradient(135deg, #fb7185 0%, #e11d48 100%)"
         shadowColor="rgba(251,113,133,0.4)"
         notificationBadge={messagesUnread > 0}
@@ -118,8 +85,6 @@ export default function DashboardIcons({
 function IconTile({
   Icon,
   label,
-  subtext,
-  subtextColor,
   gradient,
   shadowColor,
   streakBadge,
@@ -131,8 +96,6 @@ function IconTile({
 }: {
   Icon: LucideIcon
   label: string
-  subtext: string
-  subtextColor: string
   gradient: string
   shadowColor: string
   streakBadge?: number
@@ -188,14 +151,6 @@ function IconTile({
       {/* Label */}
       <div className="text-[11px] font-bold leading-tight text-center" style={{ color: '#1a1a2e' }}>
         {label}
-      </div>
-
-      {/* Sous-texte */}
-      <div
-        className="text-[9px] font-semibold leading-none text-center truncate max-w-full px-1"
-        style={{ color: subtextColor }}
-      >
-        {subtext}
       </div>
     </button>
   )
