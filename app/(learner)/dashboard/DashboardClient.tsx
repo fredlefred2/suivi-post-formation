@@ -11,6 +11,7 @@ import DashboardIcons from '@/app/components/DashboardIcons'
 import OpenAppPrompt from '@/app/components/OpenAppPrompt'
 import AxeRing from '@/app/components/AxeRing'
 import { CheckinHistoryModal, CoachHistoryModal } from '@/app/components/HistoryModals'
+import { useOnboarding } from '@/lib/onboarding-context'
 import { useRouter } from 'next/navigation'
 
 type AxeItem = {
@@ -82,6 +83,7 @@ export default function DashboardClient({
   onboardingStep,
 }: Props & { onboardingStep?: string }) {
   const router = useRouter()
+  const { isOnboarding } = useOnboarding()
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [quickCheckinOpen, setQuickCheckinOpen] = useState(false)
   const [tipAvailable, setTipAvailable] = useState(!!initialTip)
@@ -279,22 +281,26 @@ export default function DashboardClient({
           onClose={() => setCoachHistoryOpen(false)}
         />
 
-        {/* Orchestrateur des fenêtres plein écran à l'ouverture */}
-        <OpenAppPrompt
-          firstName={firstName}
-          checkinAvailable={checkinIsOpen}
-          checkinDone={checkinDone}
-          checkinWeekLabel={checkinWeekLabel}
-          streak={streak}
-          forceCoach={forceCoach}
-          initialTip={initialTip}
-          initialLastAction={initialLastAction}
-          initialDismissals={initialDismissals}
-          onOpenCheckin={() => setQuickCheckinOpen(true)}
-          onOpenQuickAdd={() => setQuickAddOpen(true)}
-          onTipRead={() => setTipAvailable(false)}
-          onForceCoachConsumed={() => setForceCoach(false)}
-        />
+        {/* Orchestrateur des fenêtres plein écran à l'ouverture.
+            Supprimé pendant l'onboarding pour éviter que le check-in ou
+            le tip coach ne pop par-dessus le tutoriel. */}
+        {!isOnboarding && (
+          <OpenAppPrompt
+            firstName={firstName}
+            checkinAvailable={checkinIsOpen}
+            checkinDone={checkinDone}
+            checkinWeekLabel={checkinWeekLabel}
+            streak={streak}
+            forceCoach={forceCoach}
+            initialTip={initialTip}
+            initialLastAction={initialLastAction}
+            initialDismissals={initialDismissals}
+            onOpenCheckin={() => setQuickCheckinOpen(true)}
+            onOpenQuickAdd={() => setQuickAddOpen(true)}
+            onTipRead={() => setTipAvailable(false)}
+            onForceCoachConsumed={() => setForceCoach(false)}
+          />
+        )}
       </div>
     </TipProvider>
   )
