@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { getCurrentWeek, calculateStreak, getCheckinContext, parisCalendarDaysBetween } from '@/lib/utils'
+import { getCurrentWeek, calculateStreak, getCheckinContext, parisCalendarDaysBetween, isEligibleForAlerts } from '@/lib/utils'
 import { getDynamique } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
 import OnboardingFlow from './OnboardingFlow'
@@ -94,8 +94,14 @@ export default async function DashboardPage() {
     initialDismissals[(row as { prompt_type: string }).prompt_type] = (row as { skipped_at: string }).skipped_at
   }
 
+  // Règle métier : le check-in n'est proposé qu'aux apprenants inscrits
+  // depuis au moins 5 jours calendaires. Évite qu'un apprenant qui s'inscrit
+  // un jeudi soir soit harcelé avec un check-in dès le vendredi matin.
+  const learnerEligible = profile?.created_at ? isEligibleForAlerts(profile.created_at) : false
+  const checkinWindowOpen = checkinCtx.isOpen && learnerEligible
+
   // Check-in affiché seulement si fenêtre ouverte (ven→lun) ET pas encore fait
-  const checkinDone = !checkinCtx.isOpen || !!checkinForTargetWeek
+  const checkinDone = !checkinWindowOpen || !!checkinForTargetWeek
   const totalCheckins = allCheckins?.length ?? 0
   // Total actions menées
   const totalCompletedActions = axes?.reduce((acc, axe) => {
@@ -272,7 +278,7 @@ export default async function DashboardPage() {
         rank={rank}
         groupSize={groupSize}
         lastWeekActions={lastWeekActions}
-        checkinIsOpen={checkinCtx.isOpen}
+        checkinIsOpen={checkinWindowOpen}
         groupTheme={groupTheme}
         axesForCheckin={(axes ?? []).map(a => ({ id: a.id, initial_score: a.initial_score ?? 1 }))}
         initialTip={initialTip}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { secondFridayAfter } from '@/lib/utils'
+import { isEligibleForAlerts } from '@/lib/utils'
 import { sendNotification } from '@/lib/send-notification'
 
 // Route protégée par un secret — appelée par Vercel Cron chaque vendredi à 9h
@@ -32,10 +32,10 @@ export async function GET(request: NextRequest) {
     .select('id, first_name, last_name, created_at')
     .eq('role', 'learner')
 
-  const learners = (allLearners ?? []).filter((l) => {
-    const firstEligible = secondFridayAfter(l.created_at)
-    return now >= firstEligible
-  })
+  // Règle métier : apprenant inscrit depuis au moins 5 jours
+  const learners = (allLearners ?? []).filter((l) =>
+    isEligibleForAlerts(l.created_at)
+  )
 
   if (!learners || learners.length === 0) {
     return NextResponse.json({ message: 'Aucun participant éligible', sent: 0 })

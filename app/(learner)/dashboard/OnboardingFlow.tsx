@@ -376,6 +376,8 @@ export default function OnboardingFlow({
   // ═══════════════════════════════════════════════════
 
   // ── Step 1: Welcome — plein écran navy (v1.29) ──
+  // Le bouton valide seulement welcome et reste sur /dashboard. C'est l'étape
+  // suivante (axis-1) qui proposera la redirection vers /axes.
   if (activeStep === 'welcome') {
     return (
       <div
@@ -392,14 +394,13 @@ export default function OnboardingFlow({
         <p className="text-[14px] text-white/70 leading-relaxed mb-8 max-w-xs">
           On va t&apos;aider à ancrer ce que tu as vu en formation, en quelques étapes. C&apos;est parti pour 2 minutes.
         </p>
-        <Link
-          href="/axes?onboarding=create"
+        <button
           onClick={() => acknowledge('welcome')}
           className="px-8 py-3.5 rounded-2xl font-extrabold text-[15px] active:scale-95 transition-transform"
           style={{ background: '#fbbf24', color: '#1a1a2e' }}
         >
           C&apos;est parti !
-        </Link>
+        </button>
       </div>
     )
   }

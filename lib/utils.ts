@@ -249,15 +249,18 @@ export function parisCalendarDaysBetween(
 }
 
 /**
- * Retourne la date du 2e vendredi suivant une date d'inscription.
+ * Un apprenant est éligible aux alertes (check-in, relance, etc.)
+ * dès qu'il est inscrit depuis au moins 5 jours calendaires (Paris).
+ *
+ * Règle :
+ *   - Inscrit un jeudi → pas de check-in le lendemain (vendredi)
+ *   - Inscrit un vendredi ou dimanche → pas de check-in à remplir cette
+ *     fenêtre ven-lun, le premier check-in sera vendredi suivant
+ *
+ * Le seuil 5 jours laisse toujours assez de marge pour que le prochain
+ * vendredi matin soit déjà au-delà du seuil, quelle que soit l'heure
+ * d'inscription.
  */
-export function secondFridayAfter(createdAt: string): Date {
-  const created = new Date(createdAt)
-  const d = new Date(created)
-  d.setHours(0, 0, 0, 0)
-  const day = d.getDay()
-  const daysToNextFriday = (5 - day + 7) % 7 || 7
-  d.setDate(d.getDate() + daysToNextFriday + 7)
-  d.setHours(9, 0, 0, 0)
-  return d
+export function isEligibleForAlerts(createdAt: string | Date): boolean {
+  return parisCalendarDaysBetween(createdAt) >= 5
 }
