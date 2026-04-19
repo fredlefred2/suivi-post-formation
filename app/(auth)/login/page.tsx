@@ -68,7 +68,7 @@ export default function LoginPage() {
               S&apos;inscrire
             </Link>
           </div>
-          <p className="text-center text-[11px] mt-4" style={{ color: '#c4b99a' }}>V1.28</p>
+          <p className="text-center text-[11px] mt-4" style={{ color: '#c4b99a' }}>V1.29</p>
         </div>
       </div>
     </div>
