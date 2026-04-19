@@ -47,13 +47,16 @@ export default function AxeRing({ axeId, axeIndex, subject, completedCount, like
   return (
     <Link
       href={`/axes?index=${axeIndex}`}
-      className="axe-ring-float flex items-center gap-3 p-3 bg-white rounded-[18px] transition-all active:scale-[0.98] hover:shadow-sm"
+      className="axe-ring-float block bg-white rounded-[18px] hover:shadow-sm"
       style={{
         border: '2px solid #f0ebe0',
         animationDelay: `${axeIndex * 0.5}s`,
       }}
       {...(axeIndex === 0 ? { 'data-onboarding': 'progression' } : {})}
     >
+      {/* Wrapper intérieur pour porter le active:scale sans conflit
+          avec l'animation translateY de .axe-ring-float sur le Link parent */}
+      <div className="flex items-center gap-3 p-3 transition-transform active:scale-[0.98]">
       {/* Cercle avec anneau progressif + icône niveau au centre */}
       <div className="relative shrink-0" style={{ width: 52, height: 52 }}>
         <svg
@@ -123,6 +126,7 @@ export default function AxeRing({ axeId, axeIndex, subject, completedCount, like
       </div>
 
       <ChevronRight size={18} style={{ color: '#a0937c' }} className="shrink-0" />
+      </div>
     </Link>
   )
 }

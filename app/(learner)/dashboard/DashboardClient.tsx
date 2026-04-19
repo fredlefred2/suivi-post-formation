@@ -116,11 +116,16 @@ export default function DashboardClient({
   const doneCount = stepsData.filter((s) => s.done).length
   const pct = Math.round((doneCount / stepsData.length) * 100)
 
-  // ── Salutation dynamique selon l'heure (client-only pour éviter mismatch SSR) ──
+  // ── Salutation dynamique + date du jour (client-only pour éviter mismatch SSR) ──
   const [greeting, setGreeting] = useState<string | null>(null)
+  const [todayLabel, setTodayLabel] = useState<string | null>(null)
   useEffect(() => {
     const h = new Date().getHours()
     setGreeting(h < 12 ? 'Bon matin' : h >= 18 ? 'Bonsoir' : 'Hello')
+    const d = new Date()
+    const days = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.']
+    const months = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+    setTodayLabel(`${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`)
   }, [])
 
   // ── Météo du dernier check-in (emoji à côté du prénom) ──
@@ -153,14 +158,6 @@ export default function DashboardClient({
     return axes.length > 0
       ? (<>Prêt à noter une action aujourd&apos;hui&nbsp;?</>)
       : null
-  })()
-
-  // ── Date du jour (pour la carte "À faire aujourd'hui") ──────────
-  const todayLabel = (() => {
-    const d = new Date()
-    const days = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.']
-    const months = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
-    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
   })()
 
   // ── Détection si une des 4 icônes "À faire" a une action (halo) ──
@@ -206,8 +203,8 @@ export default function DashboardClient({
               )}
             </p>
 
-            {/* Phrase de contexte dynamique (v1.29.3) */}
-            {contextPhrase && (
+            {/* Phrase de contexte dynamique (v1.29.3) — masquée pendant l'onboarding */}
+            {contextPhrase && !isOnboarding && (
               <div
                 className="mt-2.5 px-2.5 py-1.5 rounded-xl text-[12px] leading-[1.4] flex items-center gap-1.5"
                 style={{
@@ -237,7 +234,9 @@ export default function DashboardClient({
               <p className="text-[11px] font-extrabold tracking-wider uppercase pl-1 flex items-center gap-1.5" style={{ color: '#1a1a2e' }}>
                 <span>⚡</span> À faire aujourd&apos;hui
               </p>
-              <span className="text-[10px] font-semibold pr-1" style={{ color: '#a0937c' }}>{todayLabel}</span>
+              {todayLabel && (
+                <span className="text-[10px] font-semibold pr-1" style={{ color: '#a0937c' }}>{todayLabel}</span>
+              )}
             </div>
             <DashboardIcons
               axes={axes.map(a => ({ id: a.id, completedCount: a.completedCount }))}
