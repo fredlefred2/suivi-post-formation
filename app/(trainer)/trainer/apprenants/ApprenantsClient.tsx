@@ -216,7 +216,7 @@ export default function ApprenantsClient({
       <div
         className="rounded-2xl p-4 relative overflow-hidden"
         style={{
-          background: '#1a1a2e',
+          background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)',
           boxShadow: '0 8px 30px rgba(26, 26, 46, 0.3)',
         }}
       >

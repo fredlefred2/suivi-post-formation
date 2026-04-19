@@ -321,9 +321,9 @@ export default function TrainerMessagesClient({ currentUserId, initialContact, a
                   <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
                       isMine
-                        ? 'text-white rounded-br-md bg-[#1a1a2e]'
+                        ? 'text-white rounded-br-md'
                         : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
-                    }`}>
+                    }`} style={isMine ? { background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' } : undefined}>
                       <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                       <p className={`text-[10px] mt-1 ${isMine ? 'text-white/50' : 'text-gray-500'}`}>
                         {formatTime(msg.created_at)}

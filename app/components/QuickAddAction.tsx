@@ -321,7 +321,7 @@ function UserBubble({ text, onTap }: { text: string; onTap?: () => void }) {
         </button>
         <button onClick={onTap}
           className="rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%] text-[14px] font-medium text-left active:scale-[0.98] transition-transform"
-          style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+          style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)', color: '#fbbf24' }}>
           {text}
         </button>
       </div>
@@ -330,7 +330,7 @@ function UserBubble({ text, onTap }: { text: string; onTap?: () => void }) {
   return (
     <div className="flex justify-end chat-bubble-in">
       <div className="rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%] text-[14px] font-medium"
-        style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+        style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)', color: '#fbbf24' }}>
         {text}
       </div>
     </div>
@@ -961,7 +961,7 @@ export default function QuickAddAction({ axes, open, onClose, onSuccess, onboard
         <div className="relative bg-white rounded-t-[28px] sm:rounded-[28px] shadow-xl w-full max-w-md mx-0 sm:mx-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
 
           {/* Header compact */}
-          <div className="px-5 py-3 flex items-center justify-between" style={{ background: '#1a1a2e' }}>
+          <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}>
             <div className="flex items-center gap-2.5">
               {step !== 'axe' && (
                 <button onClick={goBack} className="text-white/50 active:text-white">

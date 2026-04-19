@@ -24,7 +24,7 @@ export default async function CheckinPage() {
   const headerBlock = (
     <div
       className="rounded-[28px] px-5 py-4 relative overflow-hidden"
-      style={{ background: '#1a1a2e' }}
+      style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
     >
       <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
       <div className="relative">

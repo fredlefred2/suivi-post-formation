@@ -77,7 +77,7 @@ export default function MobileDrawer({ variant = 'learner' }: Props) {
             boxShadow: '8px 0 40px rgba(0, 0, 0, 0.08)',
           }}>
             {/* En-tête */}
-            <div className="flex items-center justify-between px-5 h-16" style={{ background: '#1a1a2e' }}>
+            <div className="flex items-center justify-between px-5 h-16" style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}>
               <span className="font-display font-bold text-base tracking-tight text-white flex items-center gap-2">
                 <Image src="/yapluka-symbol.png" alt="YAPLUKA" width={18} height={17} />
                 YAPL<span style={{ color: '#fbbf24' }}>UKA</span>

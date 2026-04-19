@@ -237,7 +237,7 @@ export default function OnboardingFlow({
         <div className="card !p-0 flex-1 flex flex-col overflow-hidden max-w-2xl w-full mx-auto sm:mx-0">
           <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden flex flex-col flex-1">
             {/* Header gradient */}
-            <div className="px-5 py-4 shrink-0" style={{ background: '#1a1a2e' }}>
+            <div className="px-5 py-4 shrink-0" style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}>
               <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
               <p className="text-white/50 text-xs mt-0.5">Modifie les détails de ton axe</p>
             </div>

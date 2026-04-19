@@ -154,7 +154,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       <div className="shrink-0 space-y-3 pb-3">
         <div
           className="rounded-[28px] p-4 relative overflow-hidden"
-          style={{ background: '#1a1a2e' }}
+          style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
         >
           <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
           <div className="relative flex items-center justify-between">
@@ -195,7 +195,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
       {showAxeForm && (
         <div className="rounded-[22px] bg-white shadow-lg overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
           {/* Header gradient */}
-          <div className="px-5 py-4" style={{ background: '#1a1a2e' }}>
+          <div className="px-5 py-4" style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}>
             <h2 className="text-white font-bold text-base">🎯 Nouvel axe de progrès</h2>
             <p className="text-white/50 text-xs mt-0.5">Définis un domaine à améliorer</p>
           </div>
@@ -654,7 +654,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
           <div className="absolute inset-0 bg-black/40" onClick={() => setEditingAxe(null)} />
           <div className="relative w-full max-w-md rounded-[28px] bg-white shadow-xl overflow-hidden" style={{ border: '2px solid #f0ebe0' }}>
             {/* Header gradient */}
-            <div className="px-5 py-4" style={{ background: '#1a1a2e' }}>
+            <div className="px-5 py-4" style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}>
               <h2 className="text-white font-bold text-base">✏️ Modifier l&apos;axe de progrès</h2>
               <p className="text-white/50 text-xs mt-0.5">Modifie les détails de ton axe</p>
             </div>

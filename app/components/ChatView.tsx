@@ -174,7 +174,7 @@ export default function ChatView({
                       ? 'text-white rounded-br-md'
                       : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
                   }`}
-                  {...(isMine ? { style: { background: '#1a1a2e' } } : {})}
+                  {...(isMine ? { style: { background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' } } : {})}
                 >
                   <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                   <p className={`text-[10px] mt-1 ${isMine ? '' : 'text-gray-500'}`} {...(isMine ? { style: { color: 'rgba(255,255,255,0.5)' } } : {})}>

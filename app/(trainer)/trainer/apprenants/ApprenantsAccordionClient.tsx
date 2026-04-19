@@ -321,7 +321,7 @@ export default function ApprenantsAccordionClient({
                 }}
               >
                 {/* Mini header stats navy */}
-                <div className="rounded-2xl p-3.5 relative overflow-hidden mb-3" style={{ background: '#1a1a2e' }}>
+                <div className="rounded-2xl p-3.5 relative overflow-hidden mb-3" style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}>
                   <div className="absolute -top-5 -right-3 w-14 h-14 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
                   <div className="relative grid grid-cols-3 gap-1.5">
                     <div className="text-center">
@@ -622,7 +622,7 @@ export default function ApprenantsAccordionClient({
                 <button
                   onClick={() => router.push(`/trainer/messages?with=${learner.id}`)}
                   className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-2 text-sm font-bold text-white transition-colors"
-                  style={{ background: '#1a1a2e', borderRadius: 14 }}
+                  style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)', borderRadius: 14 }}
                 >
                   💬 Envoyer un message a {learner.firstName}
                 </button>
