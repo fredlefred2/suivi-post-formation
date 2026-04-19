@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+// Génération IA de tips via Claude : l'appel peut prendre 10-30s sur des
+// prompts longs. Valeur par défaut Vercel (10s) insuffisante → tip coupé en
+// plein vol. On étend à 60s (max accepté sur tous les plans Vercel).
+export const maxDuration = 60
+
 /**
  * Vérifie qu'un formateur gère bien le groupe auquel appartient un apprenant donné.
  * Renvoie true uniquement si l'apprenant est membre d'au moins un groupe

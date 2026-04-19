@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendNotification } from '@/lib/send-notification'
 
+// Cron mardi 8h — envoi des tips programmés. Si un tip doit être généré
+// à la volée (pas de next_scheduled), appelle Claude → potentiellement 15-30s.
+export const maxDuration = 60
+
 /**
  * Cron mardi 8h — Envoi des tips pre-generes.
  *

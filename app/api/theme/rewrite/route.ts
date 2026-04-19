@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 
+// Claude peut prendre 10-20s pour réécrire un thème long.
+export const maxDuration = 60
+
 export async function POST(request: Request) {
   try {
     const { theme } = await request.json()

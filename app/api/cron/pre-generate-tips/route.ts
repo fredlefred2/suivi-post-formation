@@ -3,6 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { generatePersonalizedTip } from '@/lib/generate-tips'
 import { gatherLearnerContext } from '@/lib/gather-learner-context'
 
+// Cron lundi 17h — génère jusqu'à 100 tips via Claude en vagues parallèles
+// de 5. Peut durer 30-60s selon la taille du groupe et la latence Claude.
+export const maxDuration = 60
+
 /**
  * Cron lundi 17h — Pre-generation des tips personnalises.
  *

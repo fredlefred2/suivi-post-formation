@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Claude peut prendre 10-15s pour générer les suggestions contextes/actions.
+export const maxDuration = 60
+
 /**
  * POST /api/suggestions
  *
