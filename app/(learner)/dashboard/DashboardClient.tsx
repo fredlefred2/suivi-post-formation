@@ -12,6 +12,7 @@ import OpenAppPrompt from '@/app/components/OpenAppPrompt'
 import AxeRing from '@/app/components/AxeRing'
 import { CheckinHistoryModal, CoachHistoryModal } from '@/app/components/HistoryModals'
 import { useOnboarding } from '@/lib/onboarding-context'
+import { getNextLevel } from '@/lib/axeHelpers'
 import { useRouter } from 'next/navigation'
 
 type AxeItem = {
@@ -115,22 +116,75 @@ export default function DashboardClient({
   const doneCount = stepsData.filter((s) => s.done).length
   const pct = Math.round((doneCount / stepsData.length) * 100)
 
+  // ── Salutation dynamique selon l'heure (client-only pour éviter mismatch SSR) ──
+  const [greeting, setGreeting] = useState<string | null>(null)
+  useEffect(() => {
+    const h = new Date().getHours()
+    setGreeting(h < 12 ? 'Bon matin' : h >= 18 ? 'Bonsoir' : 'Hello')
+  }, [])
+
+  // ── Météo du dernier check-in (emoji à côté du prénom) ──
+  const lastWeather = weatherHistory.length > 0 ? weatherHistory[weatherHistory.length - 1] : null
+  const weatherEmoji = lastWeather === 'sunny' ? '☀️'
+    : lastWeather === 'cloudy' ? '⛅'
+    : lastWeather === 'stormy' ? '⛈️' : ''
+
+  // ── Phrase de contexte dynamique ────────────────────────────────
+  // Priorités : rang 1 > streak >= 3 > proche d'un level-up > neutre
+  const contextPhrase = (() => {
+    // 1. Rang 1 dans un groupe > 1 personne
+    if (rank === 1 && groupSize && groupSize > 1 && totalActions > 0) {
+      return (<><span className="text-base leading-none">🏆</span> Tu es <strong>1er</strong> de ton groupe cette semaine, bravo&nbsp;!</>)
+    }
+    // 2. Streak >= 3 (3 semaines consécutives de check-in)
+    if (streak >= 3) {
+      return (<><span className="text-base leading-none">🔥</span> <strong>{streak} semaines</strong> consécutives de check-in — régularité&nbsp;!</>)
+    }
+    // 3. Axe le plus proche d'un level-up (delta ≤ 2)
+    const closestAxe = axes
+      .map(a => ({ axe: a, next: getNextLevel(a.completedCount) }))
+      .filter(x => x.next && x.next.delta <= 2 && x.next.delta > 0)
+      .sort((a, b) => a.next!.delta - b.next!.delta)[0]
+    if (closestAxe) {
+      const n = closestAxe.next!
+      return (<><span className="text-base leading-none">💪</span> Encore <strong>{n.delta} action{n.delta > 1 ? 's' : ''}</strong> pour passer à {n.icon} sur <em className="not-italic font-bold">{closestAxe.axe.subject}</em></>)
+    }
+    // 4. Neutre
+    return axes.length > 0
+      ? (<>Prêt à noter une action aujourd&apos;hui&nbsp;?</>)
+      : null
+  })()
+
+  // ── Date du jour (pour la carte "À faire aujourd'hui") ──────────
+  const todayLabel = (() => {
+    const d = new Date()
+    const days = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.']
+    const months = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
+  })()
+
+  // ── Détection si une des 4 icônes "À faire" a une action (halo) ──
+  const hasPendingTask = (checkinIsOpen && !checkinDone) || tipAvailable || messagesUnread > 0
+
 
   return (
     <TipProvider>
-      <div className="space-y-3 pb-20 sm:pb-4">
+      <div className="space-y-3 pb-20 sm:pb-4 dash-watermark">
 
-        {/* ── 1. Header navy compact — Option A ── */}
+        {/* ── 1. Header navy dégradé (v1.29.3) ── */}
         <div
           className="rounded-[22px] px-[18px] py-[14px] relative overflow-hidden"
           data-onboarding="checkin-area"
-          style={{ background: '#1a1a2e' }}
+          style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
         >
           {/* Cercle décoratif amber */}
-          <div className="absolute -top-4 -right-3 w-[70px] h-[70px] rounded-full" style={{ background: 'rgba(251,191,36,0.12)' }} />
+          <div className="absolute -top-4 -right-3 w-[70px] h-[70px] rounded-full" style={{ background: 'rgba(251,191,36,0.14)' }} />
 
           <div className="relative">
-            <h1 className="text-[16px] font-extrabold text-white leading-tight">Salut {firstName} 👋</h1>
+            <h1 className="text-[16px] font-extrabold text-white leading-tight">
+              {greeting ?? 'Salut'} {firstName} 👋
+              {weatherEmoji && <span className="ml-1.5 text-[14px]" aria-hidden>{weatherEmoji}</span>}
+            </h1>
             <p className="text-[12px] mt-1 font-semibold flex items-center flex-wrap gap-x-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
               💪 <span style={{ color: '#fbbf24' }} className="font-extrabold">{animatedActions}</span> actions
               <span style={{ color: 'rgba(255,255,255,0.3)' }}> · </span>
@@ -151,23 +205,40 @@ export default function DashboardClient({
                 </>
               )}
             </p>
+
+            {/* Phrase de contexte dynamique (v1.29.3) */}
+            {contextPhrase && (
+              <div
+                className="mt-2.5 px-2.5 py-1.5 rounded-xl text-[12px] leading-[1.4] flex items-center gap-1.5"
+                style={{
+                  background: 'rgba(251,191,36,0.14)',
+                  border: '1px solid rgba(251,191,36,0.25)',
+                  color: '#fef3c7',
+                }}
+              >
+                <span className="[&_strong]:text-[#fbbf24] [&_strong]:font-extrabold [&_em]:text-white">{contextPhrase}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ── 2. Carte "À faire aujourd'hui" avec les 4 icônes ── */}
+        {/* ── 2. Carte "À faire aujourd'hui" (dégradé warm + date + halo) ── */}
         {axes.length > 0 && (
           <div
-            className="rounded-[22px] px-3 py-3.5"
+            className={`rounded-[22px] px-3 py-3.5 ${hasPendingTask ? 'tasks-card-halo' : ''}`}
             data-onboarding="tasks-card"
             style={{
-              background: 'white',
+              background: 'linear-gradient(180deg, #ffffff 0%, #fffbf0 100%)',
               border: '2px solid #f0ebe0',
               boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
             }}
           >
-            <p className="text-[11px] font-extrabold tracking-wider uppercase mb-2.5 pl-1 flex items-center gap-1.5" style={{ color: '#1a1a2e' }}>
-              <span>⚡</span> À faire aujourd&apos;hui
-            </p>
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-[11px] font-extrabold tracking-wider uppercase pl-1 flex items-center gap-1.5" style={{ color: '#1a1a2e' }}>
+                <span>⚡</span> À faire aujourd&apos;hui
+              </p>
+              <span className="text-[10px] font-semibold pr-1" style={{ color: '#a0937c' }}>{todayLabel}</span>
+            </div>
             <DashboardIcons
               axes={axes.map(a => ({ id: a.id, completedCount: a.completedCount }))}
               streak={streak}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { getCurrentLevel, getCurrentLevelIndex, getNextLevel, getProgress } from '@/lib/axeHelpers'
@@ -31,15 +32,26 @@ export default function AxeRing({ axeId, axeIndex, subject, completedCount, like
   // SVG anneau : r=22 → circonférence = 2*π*22 ≈ 138.23
   const radius = 22
   const circumference = 2 * Math.PI * radius
-  const dashOffset = circumference * (1 - progress / 100)
+
+  // Animation de remplissage au mount : on part de 0% et on remplit vers progress
+  // (v1.29.3 — anneaux qui respirent)
+  const [animatedProgress, setAnimatedProgress] = useState(0)
+  useEffect(() => {
+    const t = setTimeout(() => setAnimatedProgress(progress), 120)
+    return () => clearTimeout(t)
+  }, [progress])
+  const dashOffset = circumference * (1 - animatedProgress / 100)
 
   const ringColor = RING_COLORS[levelIdx]
 
   return (
     <Link
       href={`/axes?index=${axeIndex}`}
-      className="flex items-center gap-3 p-3 bg-white rounded-[18px] transition-all active:scale-[0.98] hover:shadow-sm"
-      style={{ border: '2px solid #f0ebe0' }}
+      className="axe-ring-float flex items-center gap-3 p-3 bg-white rounded-[18px] transition-all active:scale-[0.98] hover:shadow-sm"
+      style={{
+        border: '2px solid #f0ebe0',
+        animationDelay: `${axeIndex * 0.5}s`,
+      }}
       {...(axeIndex === 0 ? { 'data-onboarding': 'progression' } : {})}
     >
       {/* Cercle avec anneau progressif + icône niveau au centre */}
