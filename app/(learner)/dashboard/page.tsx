@@ -41,7 +41,7 @@ export default async function DashboardPage() {
       .order('created_at', { ascending: true }),
     // Tip non lu le plus récent (pastille 💡 + CoachGiftPrompt)
     supabase.from('tips')
-      .select('id, content, advice, week_number, acted, axe_id, axe:axes(subject)')
+      .select('id, content, advice, example, week_number, acted, axe_id, axe:axes(subject)')
       .eq('learner_id', user!.id)
       .eq('sent', true)
       .eq('acted', false)
@@ -77,6 +77,7 @@ export default async function DashboardPage() {
         id: (currentTip as { id: string }).id,
         content: (currentTip as { content: string }).content,
         advice: (currentTip as { advice: string | null }).advice ?? null,
+        example: (currentTip as { example: string | null }).example ?? null,
         axe_subject: tipAxeSubject ?? undefined,
       }
     : null

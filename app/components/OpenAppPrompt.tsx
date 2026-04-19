@@ -9,6 +9,7 @@ type InitialTip = {
   id: string
   content: string
   advice: string | null
+  example: string | null
   axe_subject?: string
 } | null
 

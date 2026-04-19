@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
   // Récupérer tous les tips avec infos axe
   const { data: tips } = await supabaseAdmin
     .from('tips')
-    .select('id, axe_id, learner_id, week_number, content, advice, sent, acted, read_at, next_scheduled, axe:axes(subject)')
+    .select('id, axe_id, learner_id, week_number, content, advice, example, sent, acted, read_at, next_scheduled, axe:axes(subject)')
     .in('learner_id', learnerIds)
     .order('learner_id')
     .order('axe_id')

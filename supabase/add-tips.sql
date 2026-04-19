@@ -21,8 +21,11 @@ create table if not exists tips (
   -- le choix d'origine en prod.
   learner_id uuid not null references auth.users(id) on delete cascade,
   week_number integer not null,
+  -- Format v1.29.3+ : content = mantra (punchline), advice = action (geste),
+  -- example = mise en scène concrète. Les anciens tips ont example = null.
   content text not null,
   advice text,
+  example text,
   sent boolean not null default false,
   acted boolean not null default false,
   next_scheduled boolean default false,
@@ -32,6 +35,10 @@ create table if not exists tips (
   -- generatePersonalizedTip (upsert sur ce couple).
   unique(axe_id, week_number)
 );
+
+-- Migration ascendante : ajouter la colonne 'example' si elle n'existe pas
+-- (pour les bases existantes créées avant v1.29.3)
+alter table tips add column if not exists example text;
 
 -- ============================================================
 -- INDEXES

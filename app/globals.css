@@ -639,4 +639,22 @@
   .bulb-flash {
     animation: bulb-flash 0.8s ease-out forwards;
   }
+
+  /* ──────── Mantra — halo pulsant derrière l'ampoule 💡 ──────── */
+  @keyframes mantra-halo-pulse {
+    0%, 100% { transform: scale(0.9); opacity: 0.55; }
+    50%      { transform: scale(1.15); opacity: 0.85; }
+  }
+  .mantra-halo-pulse {
+    animation: mantra-halo-pulse 2.5s ease-in-out infinite;
+  }
+
+  /* ──────── Étoiles décoratives qui scintillent ──────── */
+  @keyframes star-twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50%      { opacity: 0.65; transform: scale(1.1); }
+  }
+  .star-twinkle {
+    animation: star-twinkle 4s ease-in-out infinite;
+  }
 }

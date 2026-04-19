@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data: tips } = await supabase
     .from('tips')
-    .select('id, content, advice, week_number, sent, acted, axe_id, axe:axes(subject)')
+    .select('id, content, advice, example, week_number, sent, acted, axe_id, axe:axes(subject)')
     .eq('learner_id', user.id)
     .order('axe_id')
     .order('week_number')

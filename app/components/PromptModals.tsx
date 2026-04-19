@@ -153,10 +153,43 @@ type CoachGiftPromptProps = {
     id: string
     content: string
     advice: string | null
+    example?: string | null
     axe_subject?: string
   } | null
   onRead: () => void
   onSkip: () => void
+}
+
+// Décorations warm : 6 étoiles amber qui scintillent en fond de fenêtre coach
+function CoachStars() {
+  const stars = [
+    { top: '12%', left: '8%', size: 10, delay: '0s' },
+    { top: '22%', right: '12%', size: 8, delay: '0.8s' },
+    { top: '55%', left: '6%', size: 9, delay: '1.6s' },
+    { top: '68%', right: '8%', size: 11, delay: '2.4s' },
+    { top: '85%', left: '14%', size: 7, delay: '3.2s' },
+    { top: '40%', right: '20%', size: 8, delay: '2s' },
+  ]
+  return (
+    <>
+      {stars.map((s, i) => (
+        <span
+          key={i}
+          className="absolute star-twinkle pointer-events-none"
+          style={{
+            ...s,
+            fontSize: s.size,
+            color: '#fbbf24',
+            opacity: 0.5,
+            animationDelay: s.delay,
+          }}
+          aria-hidden
+        >
+          ✦
+        </span>
+      ))}
+    </>
+  )
 }
 
 export function CoachGiftPrompt({ open, tip, onRead, onSkip }: CoachGiftPromptProps) {
@@ -179,10 +212,11 @@ export function CoachGiftPrompt({ open, tip, onRead, onSkip }: CoachGiftPromptPr
 
   return (
     <PromptOverlay
-      gradient="linear-gradient(180deg, #1a1a2e 0%, #0f0f1e 100%)"
+      gradient="radial-gradient(ellipse at 20% 20%, rgba(251,191,36,0.12) 0%, transparent 40%), radial-gradient(ellipse at 80% 80%, rgba(236,72,153,0.08) 0%, transparent 45%), linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)"
       onClose={onSkip}
       hideClose
     >
+      <CoachStars />
       {!showTip ? (
         <>
           {/* Ampoule — éteinte puis allumée au clic */}
@@ -272,10 +306,11 @@ export function CoachGiftPrompt({ open, tip, onRead, onSkip }: CoachGiftPromptPr
           {/* Confettis */}
           <ConfettiRain count={30} />
 
-          {/* Tip révélé */}
-          <div className="px-6 max-w-sm w-full prompt-fade-in relative">
+          {/* Tip révélé — mantra / action / exemple (style warm) */}
+          <div className="px-5 max-w-sm w-full prompt-fade-in relative">
+            {/* Chip axe */}
             {tip.axe_subject && (
-              <div className="text-center mb-3">
+              <div className="text-center mb-4">
                 <span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold"
                   style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
                   ✨ {tip.axe_subject}
@@ -283,26 +318,113 @@ export function CoachGiftPrompt({ open, tip, onRead, onSkip }: CoachGiftPromptPr
               </div>
             )}
 
-            <p className="text-white text-lg font-bold leading-snug mb-4 text-center">
-              {tip.content}
-            </p>
+            {/* ── BLOC MANTRA ──────────────────────────────── */}
+            <div className="relative text-center mb-5 px-2">
+              {/* Grands guillemets décoratifs en ambre translucide */}
+              <span
+                aria-hidden
+                className="absolute font-serif font-black pointer-events-none"
+                style={{
+                  top: -8, left: -4,
+                  fontSize: 110, lineHeight: 0.8,
+                  color: 'rgba(251,191,36,0.14)',
+                  zIndex: 0,
+                }}
+              >&ldquo;</span>
+              <span
+                aria-hidden
+                className="absolute font-serif font-black pointer-events-none"
+                style={{
+                  bottom: -40, right: -4,
+                  fontSize: 110, lineHeight: 0.8,
+                  color: 'rgba(251,191,36,0.14)',
+                  zIndex: 0,
+                }}
+              >&rdquo;</span>
 
+              <p
+                className="font-extrabold uppercase tracking-[2px] mb-2.5"
+                style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}
+              >
+                Mantra
+              </p>
+
+              {/* Emoji 💡 universel avec halo amber pulsant */}
+              <div className="relative inline-block mb-2" style={{ zIndex: 2 }}>
+                <div
+                  className="absolute mantra-halo-pulse pointer-events-none"
+                  style={{
+                    inset: -16,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(251,191,36,0.35) 0%, transparent 70%)',
+                  }}
+                />
+                <span className="relative text-[32px] leading-none" aria-hidden>💡</span>
+              </div>
+
+              <p
+                className="text-white font-bold italic leading-snug relative"
+                style={{ fontSize: 20, zIndex: 2 }}
+              >
+                <span style={{ color: '#fbbf24' }}>«&nbsp;</span>
+                {tip.content}
+                <span style={{ color: '#fbbf24' }}>&nbsp;»</span>
+              </p>
+            </div>
+
+            {/* ── BLOC ACTION (amber accent) ────────────────── */}
             {tip.advice && (
               <div
-                className="text-white/70 text-sm leading-relaxed p-4 rounded-2xl mb-6"
+                className="px-4 py-3 mb-3 relative"
                 style={{
-                  background: 'rgba(255,255,255,0.05)',
+                  background: 'rgba(251,191,36,0.15)',
                   borderLeft: '3px solid #fbbf24',
+                  borderRadius: '0 14px 14px 0',
+                  boxShadow: '0 0 24px rgba(251,191,36,0.08)',
+                  zIndex: 2,
                 }}
               >
-                {tip.advice}
+                <p
+                  className="font-extrabold uppercase mb-1 flex items-center gap-1"
+                  style={{ color: '#fbbf24', fontSize: 10, letterSpacing: '1.5px' }}
+                >
+                  ⚡ Action
+                </p>
+                <p className="text-white text-[14px] leading-relaxed">{tip.advice}</p>
+              </div>
+            )}
+
+            {/* ── BLOC EXEMPLE (plus discret) ────────────────── */}
+            {tip.example && (
+              <div
+                className="px-4 py-3 mb-5 relative"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  borderRadius: 16,
+                  zIndex: 2,
+                }}
+              >
+                <p
+                  className="font-extrabold uppercase mb-1 flex items-center gap-1"
+                  style={{ color: 'rgba(255,255,255,0.55)', fontSize: 10, letterSpacing: '1.5px' }}
+                >
+                  🎬 Exemple
+                </p>
+                <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  {tip.example}
+                </p>
               </div>
             )}
 
             <button
               onClick={onRead}
-              className="w-full py-4 rounded-2xl font-extrabold text-base active:scale-95 transition-transform"
-              style={{ background: '#fbbf24', color: '#1a1a2e' }}
+              className="w-full py-4 rounded-2xl font-extrabold text-base active:scale-95 transition-transform relative"
+              style={{
+                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                color: '#1a1a2e',
+                boxShadow: '0 8px 24px rgba(251,191,36,0.35)',
+                zIndex: 2,
+              }}
             >
               Compris 👍
             </button>

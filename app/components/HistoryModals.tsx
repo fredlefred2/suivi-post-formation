@@ -211,6 +211,7 @@ type TipItem = {
   id: string
   content: string
   advice: string | null
+  example?: string | null
   week_number: number
   acted: boolean
   sent?: boolean
@@ -302,29 +303,13 @@ export function CoachHistoryModal({ open, onClose }: Props) {
         </div>
       )}
 
-      {/* Dernier tip */}
+      {/* Dernier tip — mis en avant avec bloc "✓ Dernier conseil" */}
       {!loading && !error && latest && (
-        <div
-          className="rounded-2xl p-4 mb-4 text-white"
-          style={{ background: 'rgba(255,255,255,0.08)', borderLeft: '3px solid #fbbf24' }}
-        >
-          <p className="text-[10px] font-extrabold tracking-wider uppercase mb-2" style={{ color: '#fbbf24' }}>
+        <div className="mb-4">
+          <p className="text-[10px] font-extrabold tracking-wider uppercase mb-2 px-1" style={{ color: '#fbbf24' }}>
             ✓ Dernier conseil
           </p>
-          {latest.axeSubject && (
-            <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: 'rgba(251,191,36,0.8)' }}>
-              ✨ {latest.axeSubject}
-            </p>
-          )}
-          <p className="text-[14px] font-bold leading-snug mb-2">{latest.content}</p>
-          {latest.advice && (
-            <p
-              className="text-[12px] leading-relaxed p-3 rounded-xl mt-3"
-              style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)' }}
-            >
-              {latest.advice}
-            </p>
-          )}
+          <TipCard tip={latest} />
         </div>
       )}
 
@@ -335,34 +320,108 @@ export function CoachHistoryModal({ open, onClose }: Props) {
             Historique ({older.length})
           </p>
           {older.map(tip => (
-            <div
-              key={tip.id}
-              className="rounded-xl p-3 mb-2 text-white relative"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              {tip.acted && (
-                <span
-                  className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-extrabold"
-                  style={{ background: '#10b981', color: 'white' }}
-                  title="Lu"
-                >
-                  ✓
-                </span>
-              )}
-              {tip.axeSubject && (
-                <p className="text-[9px] font-bold uppercase tracking-wide mb-1 pr-6" style={{ color: '#fbbf24' }}>
-                  {tip.axeSubject}
-                </p>
-              )}
-              <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                Semaine {tip.week_number}
-              </p>
-              <p className="text-[12px] font-semibold leading-snug pr-6">{tip.content}</p>
-            </div>
+            <TipCard key={tip.id} tip={tip} compact />
           ))}
         </>
       )}
     </HistoryOverlay>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Tip card — gère le format NOUVEAU (mantra+action+example)
+// et le format LEGACY (content+advice seuls, pas d'example)
+// ═══════════════════════════════════════════════════════════════
+function TipCard({ tip, compact = false }: { tip: TipItem; compact?: boolean }) {
+  const isNewFormat = !!tip.example
+
+  return (
+    <div
+      className="rounded-2xl p-4 mb-2 text-white relative"
+      style={{
+        background: isNewFormat ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
+        borderLeft: isNewFormat ? '3px solid #fbbf24' : '3px solid rgba(255,255,255,0.2)',
+      }}
+    >
+      {tip.acted && (
+        <span
+          className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-extrabold"
+          style={{ background: '#10b981', color: 'white' }}
+          title="Lu"
+        >
+          ✓
+        </span>
+      )}
+
+      {/* Méta (axe + semaine) */}
+      <div className="flex items-center gap-2 mb-2 pr-6">
+        {tip.axeSubject && (
+          <span
+            className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold"
+            style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}
+          >
+            ✨ {tip.axeSubject}
+          </span>
+        )}
+        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          Semaine {tip.week_number}
+        </span>
+      </div>
+
+      {/* Mantra en italique avec guillemets amber (les deux formats l'affichent) */}
+      <p
+        className={`font-bold italic leading-snug ${compact ? 'text-[13px]' : 'text-[14.5px]'} mb-0`}
+      >
+        <span style={{ color: '#fbbf24' }}>«&nbsp;</span>
+        {tip.content}
+        <span style={{ color: '#fbbf24' }}>&nbsp;»</span>
+      </p>
+
+      {/* Nouveau format — action + exemple dans des sous-blocs */}
+      {isNewFormat && tip.advice && (
+        <div className="mt-3 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            <span
+              className="font-extrabold uppercase mr-1"
+              style={{ color: '#fbbf24', fontSize: 9, letterSpacing: '1px' }}
+            >
+              ⚡ Action
+            </span>
+            {tip.advice}
+          </p>
+          {tip.example && (
+            <p
+              className="text-[11px] leading-relaxed mt-2 pt-2 border-t"
+              style={{ color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.08)' }}
+            >
+              <span
+                className="font-extrabold uppercase mr-1"
+                style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, letterSpacing: '1px' }}
+              >
+                🎬 Exemple
+              </span>
+              {tip.example}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Ancien format — juste le conseil (advice) sous le content */}
+      {!isNewFormat && tip.advice && (
+        <p
+          className="text-[12px] leading-relaxed p-3 rounded-xl mt-3"
+          style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)' }}
+        >
+          <span
+            className="font-extrabold uppercase mr-1"
+            style={{ color: 'rgba(251,191,36,0.6)', fontSize: 9, letterSpacing: '1px' }}
+          >
+            Conseil
+          </span>
+          {tip.advice}
+        </p>
+      )}
+    </div>
   )
 }
 

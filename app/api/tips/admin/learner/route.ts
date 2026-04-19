@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   // Récupérer les tips avec infos axe (incluant created_at pour le tri)
   const { data: tips } = await supabaseAdmin
     .from('tips')
-    .select('id, axe_id, week_number, content, advice, sent, acted, read_at, next_scheduled, axe:axes(subject, created_at)')
+    .select('id, axe_id, week_number, content, advice, example, sent, acted, read_at, next_scheduled, axe:axes(subject, created_at)')
     .eq('learner_id', learnerId)
     .order('week_number')
 

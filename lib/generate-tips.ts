@@ -137,6 +137,7 @@ Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après :
 // ──────────────────────────────────────────────────────────────────
 
 import type { LearnerTipContext } from './gather-learner-context'
+import { getCurrentLevel, getNextLevel } from './axeHelpers'
 
 const WEATHER_LABELS: Record<string, string> = {
   sunny: 'au beau fixe (sunny)',
@@ -146,12 +147,13 @@ const WEATHER_LABELS: Record<string, string> = {
 
 /**
  * Genere UN tip personnalise a partir du contexte complet de l'apprenant.
+ * Format : mantra (punchline) + action (geste) + example (mise en scène).
  * Retourne le tip insere ou null en cas d'erreur.
  */
 export async function generatePersonalizedTip(
   ctx: LearnerTipContext,
   weekNumber: number
-): Promise<{ id: string; content: string; advice: string | null } | null> {
+): Promise<{ id: string; content: string; advice: string | null; example: string | null } | null> {
   const apiKey = process.env.CLAUDE_API_KEY
   if (!apiKey) {
     console.error('[Tips] CLAUDE_API_KEY manquante')
@@ -190,45 +192,78 @@ ${ctx.difficulties ? `  - Difficulte exprimee : "${ctx.difficulties}"` : ''}
 ${ctx.difficulties ? `→ Fais reference a la difficulte exprimee dans ton conseil, avec bienveillance.` : ''}`
     : ''
 
-  const prompt = `Tu es un coach bienveillant et pragmatique en formation professionnelle. Tu tutoies l'apprenant dans le RAPPEL et dans le CONSEIL. Ton oral, naturel, bien ecrit. Tu encourages sans etre mielleux. Tu ne juges JAMAIS — meme si l'apprenant n'a pas fait grand-chose, tu restes positif et tu proposes un petit pas accessible.
+  // Niveau actuel + prochain palier sur cet axe (pour adapter le défi)
+  const currentLevel = getCurrentLevel(ctx.actionCount)
+  const nextLevel = getNextLevel(ctx.actionCount)
+  const levelBlock = nextLevel
+    ? `NIVEAU SUR CET AXE : ${currentLevel.icon} ${currentLevel.label} (${ctx.actionCount} action(s))
+PROCHAIN PALIER : ${nextLevel.icon} ${nextLevel.label} — ${nextLevel.delta} action(s) de plus`
+    : `NIVEAU SUR CET AXE : ${currentLevel.icon} ${currentLevel.label} (niveau max atteint)`
 
-IMPORTANT SUR LE TON :
-- JAMAIS de formulations qui pointent un manque ("tu n'as rien fait", "sans check-in, sans premier pas", "tu decroches", "desengagement"). C'est culpabilisant.
-- JAMAIS de "mais" qui annule ce qui precede ("c'est bien, MAIS...")
-- Si l'apprenant a peu agi : propose simplement un premier geste, sans souligner ce qui n'a pas ete fait
-- Si la meteo est mauvaise : empathie d'abord, puis une suggestion douce
-- Ton de grand frere/grande soeur qui a de l'experience, pas de prof qui corrige
+  const prompt = `Tu es un coach qui connaît cet apprenant en détail. Tu vas lui générer UN tip COURT, PERCUTANT et ULTRA-PERSONNALISÉ en 3 parties.
+
+Réponds UNIQUEMENT en JSON valide :
+{
+  "mantra": "60-100 caractères. Un proverbe, une maxime, une punchline qui CLAQUE. Images, paradoxes, formules qui restent en tête. ZÉRO explication. Pas de 'il faut', 'tu dois', 'c'est important'.",
+  "action": "120-180 caractères. UN geste précis pour CETTE SEMAINE. Commence par un verbe. Ancre dans son contexte métier (son rôle, son équipe, son type de client) sans citer de nom propre.",
+  "example": "200-400 caractères. Un mini-scénario qui MONTRE l'action en situation réelle. Dialogues plausibles entre crochets, enchaînement clair. Le lecteur doit se dire 'ah ouais, je vois exactement comment faire'."
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONTEXTE DE L'APPRENANT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 FORMATION : "${ctx.groupTheme}"
-AXE TRAVAILLE : "${ctx.axeSubject}" (${ctx.axeDescription})
 
-APPRENANT : ${ctx.firstName}, semaine ${ctx.weekInProgram}
-${ctx.totalActions > 0 ? `- ${ctx.totalActions} actions au total, regularite ${ctx.regularityPct}%` : '- En phase de demarrage'}
-${ctx.checkinStreak > 0 ? `- ${ctx.checkinStreak} check-in(s) consecutif(s)` : ''}
-${ctx.likesReceived > 0 ? `- ${ctx.likesReceived} like(s) recu(s) sur ses actions` : ''}
+AXE TRAVAILLÉ : "${ctx.axeSubject}"
+${ctx.axeDescription ? `Description : ${ctx.axeDescription}` : ''}
+
+${levelBlock}
+
+ENGAGEMENT GLOBAL :
+${ctx.totalActions > 0 ? `- ${ctx.totalActions} actions au total, régularité ${ctx.regularityPct}%` : '- En phase de démarrage'}
+${ctx.checkinStreak > 0 ? `- ${ctx.checkinStreak} check-in(s) consécutif(s)` : ''}
+${ctx.likesReceived > 0 ? `- ${ctx.likesReceived} like(s) reçu(s) de ses coéquipiers` : ''}
 
 ${actionBlock}
 
 ${weatherBlock}
 
-${ctx.previousTips.length > 0 ? `TIPS DEJA ENVOYES (ne PAS reprendre ces sujets) :
-${ctx.previousTips.map((t, i) => `${i + 1}. [S.${t.week}${t.acted ? ' ✅' : ''}] ${t.content}`).join('\n')}` : ''}
+${ctx.previousTips.length > 0 ? `TIPS DÉJÀ ENVOYÉS (sujet DIFFÉRENT !) :
+${ctx.previousTips.map((t, i) => `  ${i + 1}. [S.${t.week}${t.acted ? ' ✅' : ''}] ${t.content}`).join('\n')}` : ''}
 
-GENERE UN TIP :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RÈGLES D'OR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-RAPPEL (2-3 phrases, tutoiement) : Un principe ou une idee cle de la formation, en lien avec ce que vit ${ctx.firstName}. Reformule avec tes mots, pas de citation inventee. Le rappel doit resonner avec la situation de l'apprenant (ses actions, sa meteo, ses difficultes) sans pointer ce qui manque.
+1. MANTRA — surprenant, évocateur, zéro banalité. Format proverbe / aphorisme.
 
-CONSEIL (max 500 car., tutoiement) : UNE action precise faisable aujourd'hui. Ancre ton conseil dans un element concret du contexte de ${ctx.firstName} — une action qu'il a faite, ce qui a marche pour lui, ou sa situation actuelle. Propose quelque chose de DIFFERENT de ce qu'il a deja fait.
+2. ACTION & EXEMPLE — réutilise les TYPES de situations citées par l'apprenant (son rôle, ses types d'interactions, contexte métier) MAIS :
+   ❌ JAMAIS de noms propres spécifiques : noms de collaborateurs, clients, enseignes, marques de produits, lieux nommés.
+   ✅ Utilise : "un collaborateur", "une collègue", "un client", "un chef de rayon", "ton équipe", "une personne de ton service", "un interlocuteur".
 
-REGLES :
-- Tutoiement partout (rappel ET conseil)
-- NE PAS utiliser le prenom de l'apprenant dans le rappel ni le conseil
-- NE JAMAIS citer de chiffres negatifs (0 actions, 0%, semaine X sans rien)
-- NE JAMAIS citer de theoriciens/frameworks sauf : Triangle toxique, DESC, OSBD, DISC, Drivers de Berne
-- Sujet different des tips precedents
-- Ton chaleureux et encourageant, jamais culpabilisant
+3. ADAPTATION AU CONTEXTE :
+   - Météo stormy → empathie + tout petit pas, jamais de challenge
+   - Météo sunny + progression rapide → pousser, challenger
+   - Difficulté exprimée → l'aborder de biais dans l'exemple (jamais pointer directement)
+   - Ce qui a marché → capitaliser dessus, pas "mais essaie aussi"
+   - Apprenant qui démarre (Intention / Essai) → première brique ultra simple et accessible
+   - Apprenant avancé (Réflexe / Maîtrise) → sophistiquer, proposer une subtilité
 
-Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
+4. INTERDITS STRICTS :
+   - Aucun post-it, "écris sur un bout de papier", "note dans ton agenda", "prépare une fiche", "fais-toi un mémo" — on veut des actions OPÉRATIONNELLES en situation réelle, pas des astuces de bureau.
+   - Pas de prénom (ni de l'apprenant ni de qui que ce soit)
+   - Pas de jargon théorique (exceptions tolérées : DESC, OSBD, DISC, Triangle toxique, Drivers de Berne, SMART).
+   - Jamais culpabilisant, jamais de "malgré que", "mais tu n'as pas", "tu décroches"
+   - Pas de chiffres négatifs (0 action, 0%, etc.)
+
+5. Sujet DIFFÉRENT des tips déjà envoyés listés plus haut.
+
+6. Tutoiement partout. Ton : grand frère / grande sœur qui a de l'expérience.
+
+7. EXEMPLE — les paroles ou phrases "qu'on dirait" doivent être entre guillemets "..." (doubles guillemets droits), pour qu'elles ressortent visuellement.
+
+Rappel FORMAT JSON : uniquement les 3 champs mantra, action, example. Pas de préambule, pas de markdown.`
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -261,13 +296,22 @@ Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
     }
 
     const parsed = JSON.parse(jsonMatch[0])
-    const content = (parsed.rappel || '').trim()
-    const advice = (parsed.conseil || '').trim() || null
+    // Nouveau format (mantra/action/example) avec compat ascendante pour l'ancien (rappel/conseil)
+    const mantra = (parsed.mantra || parsed.rappel || '').trim()
+    const action = (parsed.action || parsed.conseil || '').trim() || null
+    const example = (parsed.example || '').trim() || null
 
-    if (!content) {
-      console.error('[Tips] Contenu vide')
+    if (!mantra) {
+      console.error('[Tips] Mantra vide')
       return null
     }
+
+    // Les 3 champs sont persistés sous :
+    //   content = mantra  (compatibilité schéma existant)
+    //   advice  = action
+    //   example = example (nouvelle colonne)
+    const content = mantra
+    const advice = action
 
     // Protection : ne JAMAIS écraser un tip déjà envoyé (sent=true).
     // On vérifie avant tout si le slot (axe_id, week_number) est occupé par un tip sent.
@@ -295,6 +339,7 @@ Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
           week_number: weekNumber,
           content,
           advice,
+          example,
           sent: false,
           acted: false,
           next_scheduled: true,
@@ -319,7 +364,7 @@ Reponds UNIQUEMENT en JSON : {"rappel": "...", "conseil": "..."}`
       .neq('id', inserted.id)
 
     console.log(`[Tips] Tip genere pour learner ${ctx.learnerId.slice(0, 8)} / axe ${ctx.axeId.slice(0, 8)} (S.${weekNumber})`)
-    return { id: inserted.id, content, advice }
+    return { id: inserted.id, content, advice, example }
   } catch (err) {
     console.error('[Tips] Erreur generation personnalisee:', err)
     return null
