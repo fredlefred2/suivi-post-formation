@@ -181,20 +181,37 @@ export function CheckinHistoryModal({ open, onClose, isOffPeriod, streak }: Chec
           {older.map(ci => (
             <div
               key={ci.id}
-              className="rounded-xl p-3 mb-2 flex items-center gap-3"
+              className="rounded-xl p-3 mb-2"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
-              <span className="text-2xl" style={{ lineHeight: 1 }}>
-                {WEATHER_EMOJI[ci.weather] ?? '❓'}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-bold text-white truncate">
-                  {WEATHER_LABEL[ci.weather] ?? ci.weather}
-                </p>
-                <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  Semaine {ci.week_number} · {formatDate(ci.created_at)}
-                </p>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl shrink-0" style={{ lineHeight: 1 }}>
+                  {WEATHER_EMOJI[ci.weather] ?? '❓'}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-bold text-white truncate">
+                    {WEATHER_LABEL[ci.weather] ?? ci.weather}
+                  </p>
+                  <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    Semaine {ci.week_number} · {formatDate(ci.created_at)}
+                  </p>
+                </div>
               </div>
+              {/* Réussites + difficultés si renseignées */}
+              {(ci.what_worked || ci.difficulties) && (
+                <div className="pl-10 mt-2 space-y-1">
+                  {ci.what_worked && (
+                    <p className="text-[11px] leading-relaxed" style={{ color: '#86efac' }}>
+                      ✓ {ci.what_worked}
+                    </p>
+                  )}
+                  {ci.difficulties && (
+                    <p className="text-[11px] leading-relaxed" style={{ color: '#fca5a5' }}>
+                      ⚠ {ci.difficulties}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </>
