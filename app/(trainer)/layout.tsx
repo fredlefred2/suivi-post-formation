@@ -6,7 +6,6 @@ import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 import MessageIcon from '@/app/components/MessageIcon'
 import TrainerSidebar from '@/app/components/TrainerSidebar'
-import PushRegistration from '@/app/components/PushRegistration'
 
 const navItems = [
   { href: '/trainer/dashboard', label: 'Accueil', iconName: 'LayoutDashboard' },
@@ -94,7 +93,6 @@ export default async function TrainerLayout({ children }: { children: React.Reac
         shortLabel: label,
       }))} />
       <div className="h-16 sm:hidden" />
-      <PushRegistration />
     </div>
   )
 }
