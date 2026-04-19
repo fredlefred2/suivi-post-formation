@@ -1,41 +1,47 @@
 export default function CheckinLoading() {
   return (
-    <div className="space-y-6 pb-4 animate-pulse">
-      {/* Titre */}
-      <div>
-        <div className="h-7 w-52 bg-gray-200 rounded-lg" />
-        <div className="h-4 w-36 bg-gray-100 rounded mt-1" />
+    <div className="space-y-3 pb-4 animate-pulse">
+      {/* Header navy dégradé (identique à checkin/page.tsx) */}
+      <div
+        className="rounded-[28px] px-5 py-4 relative overflow-hidden"
+        style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
+      >
+        <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
+        <div className="relative space-y-2">
+          <div className="h-5 w-52 rounded" style={{ background: 'rgba(255,255,255,0.2)' }} />
+          <div className="h-3 w-36 rounded" style={{ background: 'rgba(255,255,255,0.1)' }} />
+        </div>
       </div>
 
-      {/* Météo */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-        <div className="h-4 w-40 bg-gray-200 rounded" />
+      {/* Météo (3 gros boutons) */}
+      <div className="bg-white rounded-2xl p-5 space-y-3" style={{ border: '2px solid #f0ebe0' }}>
+        <div className="h-4 w-40 bg-stone-200/70 rounded" />
         <div className="flex gap-4 justify-center">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 w-16 bg-gray-100 rounded-xl" />
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-16 w-16 bg-stone-200/50 rounded-xl" />
           ))}
         </div>
       </div>
 
-      {/* Axes sliders */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-        <div className="h-4 w-36 bg-gray-200 rounded" />
-        {[1, 2, 3].map((i) => (
+      {/* Sliders axes */}
+      <div className="bg-white rounded-2xl p-5 space-y-4" style={{ border: '2px solid #f0ebe0' }}>
+        <div className="h-4 w-36 bg-stone-200/70 rounded" />
+        {[0, 1, 2].map((i) => (
           <div key={i} className="space-y-2">
-            <div className="h-4 w-32 bg-gray-200 rounded" />
-            <div className="h-2 w-full bg-gray-100 rounded-full" />
+            <div className="h-3 w-40 bg-stone-200/60 rounded" />
+            <div className="h-2 w-full bg-stone-200/40 rounded-full" />
           </div>
         ))}
       </div>
 
       {/* Texte libre */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-        <div className="h-4 w-44 bg-gray-200 rounded" />
-        <div className="h-20 w-full bg-gray-100 rounded-xl" />
+      <div className="bg-white rounded-2xl p-5 space-y-3" style={{ border: '2px solid #f0ebe0' }}>
+        <div className="h-4 w-44 bg-stone-200/70 rounded" />
+        <div className="h-20 w-full bg-stone-200/40 rounded-xl" />
       </div>
 
-      {/* Bouton */}
-      <div className="h-12 w-full rounded-xl" style={{ background: '#fffbeb' }} />
+      {/* Bouton valider */}
+      <div className="h-12 w-full rounded-xl bg-amber-100" />
     </div>
   )
 }
