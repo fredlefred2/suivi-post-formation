@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { HelpCircle, Sparkles, Loader2, Clock, Check, FileText, AlertCircle, RefreshCw } from 'lucide-react'
+import { HelpCircle, Sparkles, Loader2, Clock, Check, FileText, AlertCircle, RefreshCw, Trash2, X } from 'lucide-react'
 import { QUIZ_QUESTIONS_PER_QUIZ, QUIZ_SECONDS_PER_QUESTION } from '@/lib/types'
 
 type Question = {
@@ -77,6 +77,9 @@ export default function TrainerGroupQuizClient({
   const [regenError, setRegenError] = useState<string | null>(null)
   const [regenQuestionId, setRegenQuestionId] = useState<string | null>(null)
   const [questionError, setQuestionError] = useState<{ id: string; msg: string } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const hasTheme = (theme ?? '').trim().length >= 20
 
@@ -100,6 +103,29 @@ export default function TrainerGroupQuizClient({
         setRegenError('Erreur réseau')
       }
     })
+  }
+
+  const handleDeleteQuiz = async () => {
+    if (!currentQuiz) return
+    setIsDeleting(true)
+    setDeleteError(null)
+    try {
+      const res = await fetch('/api/trainer/quiz/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizId: currentQuiz.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setDeleteError(data?.error ?? 'Erreur suppression')
+      } else {
+        setConfirmDelete(false)
+        router.refresh()
+      }
+    } catch {
+      setDeleteError('Erreur réseau')
+    }
+    setIsDeleting(false)
   }
 
   const handleRegenerateQuestion = async (questionId: string) => {
@@ -180,15 +206,29 @@ export default function TrainerGroupQuizClient({
           </div>
 
           {isQuizWeekCurrent && hasTheme && (
-            <button
-              onClick={handleRegenerate}
-              disabled={isRegenerating}
-              className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold rounded-xl transition-colors hover:bg-[#fffbeb] disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ border: '2px solid #fde68a', color: '#92400e', background: '#fffbeb' }}
-            >
-              {isRegenerating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-              {isRegenerating ? 'Génération…' : currentQuiz ? 'Régénérer' : 'Générer maintenant'}
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {currentQuiz && (
+                <button
+                  onClick={() => { setDeleteError(null); setConfirmDelete(true) }}
+                  disabled={isRegenerating || isDeleting}
+                  className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold rounded-xl transition-colors hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ border: '2px solid #fecaca', color: '#991b1b', background: '#fff' }}
+                  title="Supprimer ce quiz"
+                >
+                  <Trash2 size={14} />
+                  Supprimer
+                </button>
+              )}
+              <button
+                onClick={handleRegenerate}
+                disabled={isRegenerating || isDeleting}
+                className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold rounded-xl transition-colors hover:bg-[#fffbeb] disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ border: '2px solid #fde68a', color: '#92400e', background: '#fffbeb' }}
+              >
+                {isRegenerating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                {isRegenerating ? 'Génération…' : currentQuiz ? 'Régénérer' : 'Générer maintenant'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -373,6 +413,57 @@ export default function TrainerGroupQuizClient({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modale confirmation suppression quiz */}
+      {confirmDelete && currentQuiz && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" onClick={() => !isDeleting && setConfirmDelete(false)} />
+          <div className="relative bg-white rounded-[26px] shadow-xl w-full max-w-sm" style={{ border: '2px solid #f0ebe0' }}>
+            <button
+              onClick={() => !isDeleting && setConfirmDelete(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              disabled={isDeleting}
+            >
+              <X size={18} />
+            </button>
+            <div className="p-6 text-center">
+              <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-3" style={{ background: '#fef2f2' }}>
+                <Trash2 size={24} style={{ color: '#b91c1c' }} />
+              </div>
+              <h3 className="text-[17px] font-extrabold" style={{ color: '#1a1a2e' }}>Supprimer ce quiz ?</h3>
+              <p className="text-[13px] mt-2 leading-relaxed" style={{ color: '#6b6761' }}>
+                Le quiz de la semaine {currentQuiz.week_number} sera supprimé définitivement. Cette action est irréversible.
+              </p>
+              <p className="text-[12px] mt-2" style={{ color: '#a0937c' }}>
+                Si au moins un apprenant l&apos;a commencé, la suppression sera refusée pour préserver ses données.
+              </p>
+              {deleteError && (
+                <div className="rounded-xl px-4 py-3 text-[12px] mt-3 text-left" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>
+                  {deleteError}
+                </div>
+              )}
+              <div className="flex gap-2 mt-5">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2.5 text-[13px] font-bold rounded-xl text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteQuiz}
+                  disabled={isDeleting}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-[13px] font-extrabold rounded-xl text-white transition-colors disabled:opacity-50"
+                  style={{ background: '#dc2626' }}
+                >
+                  {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  {isDeleting ? 'Suppression…' : 'Supprimer'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
