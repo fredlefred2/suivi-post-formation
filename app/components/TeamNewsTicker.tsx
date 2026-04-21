@@ -7,12 +7,12 @@ type Props = {
   news: string[]
 }
 
-const ITEM_HEIGHT = 18 // px — doit correspondre à la CSS ci-dessous
+const ITEM_HEIGHT = 22 // px — doit correspondre à la CSS ci-dessous
 const DWELL_MS = 4500  // durée d'affichage d'une news
 const TRANSITION_MS = 450 // durée d'animation entre 2 news
 
 /**
- * Ticker vertical rotatif — affiche une news à la fois avec slide-up auto
+ * Bandeau d'actualités du groupe — affiche une news à la fois avec slide-up
  * toutes les ~4.5s. Pause au hover. Masqué si aucune news.
  */
 export default function TeamNewsTicker({ news }: Props) {
@@ -32,22 +32,29 @@ export default function TeamNewsTicker({ news }: Props) {
 
   return (
     <div
-      className="flex items-center overflow-hidden"
+      className="flex items-center overflow-hidden rounded-[16px]"
       style={{
-        background: 'linear-gradient(90deg, rgba(251,191,36,0.14), rgba(251,191,36,0.04))',
-        borderTop: '1px solid rgba(251,191,36,0.18)',
-        borderBottom: '1px solid rgba(251,191,36,0.18)',
-        padding: '8px 14px',
-        height: 34,
+        background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+        border: '2px solid #fde68a',
+        boxShadow: '0 2px 8px rgba(251,191,36,0.15)',
+        padding: '10px 14px',
+        height: 44,
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <Megaphone
-        size={13}
-        className="shrink-0 mr-2"
-        style={{ color: '#fbbf24', filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.5))' }}
-      />
+      <div
+        className="shrink-0 mr-3 flex items-center justify-center rounded-full"
+        style={{
+          width: 26,
+          height: 26,
+          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+          boxShadow: '0 2px 6px rgba(251,191,36,0.4)',
+        }}
+      >
+        <Megaphone size={14} color="#fff" strokeWidth={2.5} />
+      </div>
+
       <div
         className="relative flex-1 overflow-hidden"
         style={{ height: ITEM_HEIGHT }}
@@ -64,9 +71,9 @@ export default function TeamNewsTicker({ news }: Props) {
               style={{
                 height: ITEM_HEIGHT,
                 lineHeight: `${ITEM_HEIGHT}px`,
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'rgba(255,255,255,0.92)',
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#1a1a2e',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -77,6 +84,23 @@ export default function TeamNewsTicker({ news }: Props) {
           ))}
         </div>
       </div>
+
+      {/* Indicateur de progression (petits points) */}
+      {news.length > 1 && (
+        <div className="flex gap-1 ml-2 shrink-0">
+          {news.map((_, i) => (
+            <span
+              key={i}
+              className="inline-block rounded-full transition-all"
+              style={{
+                width: i === index ? 14 : 4,
+                height: 4,
+                background: i === index ? '#f59e0b' : 'rgba(245,158,11,0.25)',
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

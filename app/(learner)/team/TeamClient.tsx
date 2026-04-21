@@ -4,24 +4,14 @@ import type { ActionFeedbackData } from '@/lib/types'
 import TeamNewsTicker from '@/app/components/TeamNewsTicker'
 import TeamActionsCarousel from '@/app/components/TeamActionsCarousel'
 
-function getDynamiqueForCount(count: number) {
-  if (count === 0) return { icon: '💡', level: 0, label: 'Intention' }
-  if (count <= 2) return { icon: '🧪', level: 1, label: 'Essai' }
-  if (count <= 4) return { icon: '🔄', level: 2, label: 'Habitude' }
-  if (count <= 6) return { icon: '⚡', level: 3, label: 'Réflexe' }
-  return { icon: '👑', level: 4, label: 'Maîtrise' }
-}
-
-const LEVEL_DOT_BG: Record<number, string> = {
-  0: '#f1f5f9', 1: '#e0f2fe', 2: '#d1fae5', 3: '#ffedd5', 4: '#ffe4e6',
-}
-
 type ScoringEntry = {
   id: string
   name: string
-  totalActions: number        // total cumul (pour dyns)
-  last15Actions: number       // nouveau tri podium (15 derniers jours)
-  axesCounts: number[]        // total par axe
+  totalActions: number
+  last15Actions: number
+  last15Checkins: number
+  last15Quizzes: number
+  axesCounts: number[]
 }
 
 type RecentAction = {
@@ -55,20 +45,21 @@ export default function TeamClient({
   feedbackMap,
   news,
 }: Props) {
-  // Trier par actions 15j desc, puis total desc en tiebreaker
-  const sorted = [...scoringData]
-    .map((s) => {
-      const dyns = [0, 1, 2].map((i) => getDynamiqueForCount(s.axesCounts[i] ?? 0))
-      return { ...s, dyns }
-    })
-    .sort((a, b) => b.last15Actions - a.last15Actions || b.totalActions - a.totalActions)
+  // Tri par activité 15 jours (actions + quiz + check-in additionnés pour départager)
+  const sorted = [...scoringData].sort((a, b) => {
+    const aTot = a.last15Actions + a.last15Quizzes + a.last15Checkins
+    const bTot = b.last15Actions + b.last15Quizzes + b.last15Checkins
+    return bTot - aTot || b.totalActions - a.totalActions
+  })
 
   function getInitials(name: string) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
   }
 
-  // Podium top 3 (uniquement si au moins 1 action sur 15j chez le 1er)
-  const podium = sorted.filter(s => s.last15Actions > 0).slice(0, 3)
+  // Podium top 3 (uniquement si au moins 1 activité sur 15j)
+  const podium = sorted.filter(s =>
+    s.last15Actions + s.last15Quizzes + s.last15Checkins > 0
+  ).slice(0, 3)
   const podiumDisplay = podium.length >= 3
     ? [podium[1], podium[0], podium[2]]
     : podium.length === 2
@@ -81,13 +72,10 @@ export default function TeamClient({
     { avatarSize: 'w-11 h-11', border: '2px solid #f97316', shadow: 'none', baseH: 40, baseGrad: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)', baseFontSize: 22, avatarFontSize: 14 },
   ]
 
-  // Reste du classement (4e et +)
-  const rest = sorted.slice(podium.length)
-
   return (
     <div className="space-y-4 pb-4">
 
-      {/* ── Header noir discret (v1.29.5) ── */}
+      {/* ── Header noir discret ── */}
       <div
         className="rounded-[22px] px-[18px] py-[14px] relative overflow-hidden"
         style={{ background: '#1a1a2e' }}
@@ -115,10 +103,10 @@ export default function TeamClient({
         </div>
       </div>
 
-      {/* ── Ticker news valorisantes ── */}
+      {/* ── Ticker news ── */}
       <TeamNewsTicker news={news} />
 
-      {/* ── Podium — ces 15 derniers jours ── */}
+      {/* ── Podium — 15 derniers jours ── */}
       {podium.length > 0 ? (
         <div>
           <h2 className="section-title mb-1 pl-1">Les plus actifs ces 15 derniers jours</h2>
@@ -144,20 +132,30 @@ export default function TeamClient({
                   <p className="text-[11px] font-bold text-center truncate w-full" style={{ color: '#1a1a2e' }}>
                     {learner.name}
                   </p>
-                  <p className="text-[10px] font-medium mb-1.5" style={{ color: '#a0937c' }}>
-                    {learner.last15Actions} action{learner.last15Actions !== 1 ? 's' : ''}
-                  </p>
 
-                  <div className="flex gap-1 mb-2">
-                    {learner.dyns.map((d, i) => (
-                      <span
-                        key={i}
-                        className="w-[22px] h-[22px] rounded-lg flex items-center justify-center text-[11px]"
-                        style={{ background: LEVEL_DOT_BG[d.level] }}
-                      >
-                        {d.icon}
-                      </span>
-                    ))}
+                  {/* 3 mini-compteurs : actions / quiz / check-in */}
+                  <div className="flex gap-1 mt-1 mb-2">
+                    <span
+                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold"
+                      style={{ background: '#d1fae5', color: '#065f46' }}
+                      title="Actions"
+                    >
+                      📝<span>{learner.last15Actions}</span>
+                    </span>
+                    <span
+                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold"
+                      style={{ background: '#ede9fe', color: '#5b21b6' }}
+                      title="Quiz répondus"
+                    >
+                      🎯<span>{learner.last15Quizzes}</span>
+                    </span>
+                    <span
+                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold"
+                      style={{ background: '#dbeafe', color: '#075985' }}
+                      title="Check-ins"
+                    >
+                      🌤️<span>{learner.last15Checkins}</span>
+                    </span>
                   </div>
 
                   <div
@@ -181,54 +179,6 @@ export default function TeamClient({
           <p className="text-2xl mb-2">🌅</p>
           <p className="text-sm" style={{ color: '#a0937c' }}>La semaine commence, personne n&apos;a encore posté.</p>
           <p className="text-xs mt-1" style={{ color: '#c4b99a' }}>Sois le premier à te lancer !</p>
-        </div>
-      )}
-
-      {/* ── Classement 4e et + ── */}
-      {rest.length > 0 && (
-        <div
-          className="rounded-[22px] bg-white"
-          style={{ border: '2px solid #f0ebe0', padding: '10px 12px' }}
-        >
-          {rest.map((learner, idx) => {
-            const rank = podium.length + idx + 1
-            const noActivity = learner.last15Actions === 0
-            return (
-              <div
-                key={learner.id}
-                className="flex items-center gap-3"
-                style={{
-                  padding: '7px 0',
-                  borderTop: idx === 0 ? 'none' : '1px solid #f4efe3',
-                  opacity: noActivity ? 0.55 : 1,
-                }}
-              >
-                <span className="text-[12px] font-extrabold text-center" style={{ color: '#a0937c', width: 24 }}>
-                  {rank}
-                </span>
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0"
-                  style={{ background: '#1a1a2e', color: '#fbbf24' }}
-                >
-                  {getInitials(learner.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold truncate" style={{ color: '#1a1a2e' }}>
-                    {learner.name}
-                  </p>
-                </div>
-                <span
-                  className="text-[12px] font-extrabold shrink-0"
-                  style={{ color: noActivity ? '#a0937c' : '#92400e' }}
-                >
-                  {learner.last15Actions}
-                  <span className="text-[10px] font-semibold ml-1" style={{ color: '#a0937c' }}>
-                    action{learner.last15Actions !== 1 ? 's' : ''}
-                  </span>
-                </span>
-              </div>
-            )
-          })}
         </div>
       )}
 

@@ -5,6 +5,23 @@ import { X } from 'lucide-react'
 import ActionFeedback from './ActionFeedback'
 import type { ActionFeedbackData } from '@/lib/types'
 
+// Couleurs de niveau (alignées sur le système existant)
+const LEVEL_BG: Record<number, string> = {
+  0: '#94a3b8', // Intention — slate
+  1: '#0ea5e9', // Essai — sky
+  2: '#10b981', // Habitude — emerald
+  3: '#f59e0b', // Réflexe — amber
+  4: '#fb7185', // Maîtrise — rose
+}
+
+function getLevel(count: number): { icon: string; level: number; label: string } {
+  if (count === 0) return { icon: '💡', level: 0, label: 'Intention' }
+  if (count <= 2) return { icon: '🧪', level: 1, label: 'Essai' }
+  if (count <= 4) return { icon: '🔄', level: 2, label: 'Habitude' }
+  if (count <= 6) return { icon: '⚡', level: 3, label: 'Réflexe' }
+  return { icon: '👑', level: 4, label: 'Maîtrise' }
+}
+
 type Action = {
   id: string
   description: string
@@ -19,10 +36,6 @@ type Props = {
   actions: Action[]
   feedbackMap: Record<string, ActionFeedbackData>
   deltaThisWeek: number
-}
-
-function getInitials(first: string, last: string): string {
-  return `${first[0] ?? ''}${last[0] ?? ''}`.toUpperCase()
 }
 
 function formatAge(iso: string): string {
@@ -97,7 +110,9 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
               animationDuration: `${Math.max(20, actions.length * 6)}s`,
             }}
           >
-            {looped.map((a, idx) => (
+            {looped.map((a, idx) => {
+              const dyn = getLevel(a.axe_action_count)
+              return (
               <div
                 key={`${a.id}-${idx}`}
                 className="shrink-0 rounded-2xl px-3 py-2.5"
@@ -109,10 +124,14 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
               >
                 <div className="flex items-center gap-2 mb-1">
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold"
-                    style={{ background: '#1a1a2e', color: '#fbbf24' }}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[14px] shrink-0"
+                    style={{
+                      background: LEVEL_BG[dyn.level],
+                      boxShadow: `0 2px 6px ${LEVEL_BG[dyn.level]}50`,
+                    }}
+                    title={dyn.label}
                   >
-                    {getInitials(a.learner_first_name, a.learner_last_name)}
+                    {dyn.icon}
                   </div>
                   <div className="min-w-0">
                     <div className="text-[11px] font-extrabold truncate" style={{ color: '#1a1a2e' }}>
@@ -139,7 +158,8 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
                   {formatAge(a.created_at)}
                 </p>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
@@ -171,14 +191,20 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
             </div>
 
             <div className="overflow-y-auto flex-1 px-5 py-2">
-              {actions.map((a) => (
+              {actions.map((a) => {
+                const dyn = getLevel(a.axe_action_count)
+                return (
                 <div key={a.id} className="py-3" style={{ borderBottom: '1px solid #f0ebe0' }}>
                   <div className="flex items-start gap-3">
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0"
-                      style={{ background: '#1a1a2e', color: '#fbbf24' }}
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-[16px] shrink-0"
+                      style={{
+                        background: LEVEL_BG[dyn.level],
+                        boxShadow: `0 2px 6px ${LEVEL_BG[dyn.level]}55`,
+                      }}
+                      title={dyn.label}
                     >
-                      {getInitials(a.learner_first_name, a.learner_last_name)}
+                      {dyn.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-extrabold">
@@ -205,7 +231,8 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
                     </div>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>

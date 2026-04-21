@@ -141,13 +141,44 @@ export default async function TeamPage() {
 
   // Activité 15 derniers jours par apprenant (pour le tri du podium)
   const last15ActionsByLearner: Record<string, number> = {}
-  memberIds.forEach(id => { last15ActionsByLearner[id] = 0 })
+  const last15CheckinsByLearner: Record<string, number> = {}
+  const last15QuizByLearner: Record<string, number> = {}
+  memberIds.forEach(id => {
+    last15ActionsByLearner[id] = 0
+    last15CheckinsByLearner[id] = 0
+    last15QuizByLearner[id] = 0
+  })
   for (const a of allActions) {
     if (a.created_at >= fifteenCutoffStr) {
       const lid = (a as { learner_id: string }).learner_id
       last15ActionsByLearner[lid] = (last15ActionsByLearner[lid] ?? 0) + 1
     }
   }
+
+  // Check-ins des 15 derniers jours par apprenant
+  const { data: last15CheckinsRaw } = memberIds.length > 0
+    ? await admin
+        .from('checkins')
+        .select('learner_id, created_at')
+        .in('learner_id', memberIds)
+        .gte('created_at', fifteenCutoffStr)
+    : { data: [] as Array<{ learner_id: string; created_at: string }> }
+  ;(last15CheckinsRaw ?? []).forEach(c => {
+    last15CheckinsByLearner[c.learner_id] = (last15CheckinsByLearner[c.learner_id] ?? 0) + 1
+  })
+
+  // Quiz complétés des 15 derniers jours par apprenant (pour les membres du groupe)
+  const { data: last15QuizRaw } = memberIds.length > 0
+    ? await admin
+        .from('quiz_attempts')
+        .select('learner_id, completed_at')
+        .in('learner_id', memberIds)
+        .not('completed_at', 'is', null)
+        .gte('completed_at', fifteenCutoffStr)
+    : { data: [] as Array<{ learner_id: string; completed_at: string | null }> }
+  ;(last15QuizRaw ?? []).forEach(q => {
+    last15QuizByLearner[q.learner_id] = (last15QuizByLearner[q.learner_id] ?? 0) + 1
+  })
 
   // News valorisantes (ticker du header)
   const newsList = await generateTeamNews({
@@ -236,6 +267,8 @@ export default async function TeamPage() {
           name: learnerNameMap[lid] ?? 'Inconnu',
           totalActions: total,
           last15Actions: last15ActionsByLearner[lid] ?? 0,
+          last15Checkins: last15CheckinsByLearner[lid] ?? 0,
+          last15Quizzes: last15QuizByLearner[lid] ?? 0,
           axesCounts,
         }
       })}
