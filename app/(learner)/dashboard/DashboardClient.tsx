@@ -219,7 +219,7 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* ── 2. Mes axes — remontés en haut (v1.29.4) ── */}
+        {/* ── 2. Mes axes — présentation verticale 3 colonnes (v1.29.4) ── */}
         {axes.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -231,17 +231,19 @@ export default function DashboardClient({
               )}
             </div>
 
-            {axes.map((axe) => (
-              <AxeRing
-                key={axe.id}
-                axeId={axe.id}
-                axeIndex={axe.index}
-                subject={axe.subject}
-                completedCount={axe.completedCount}
-                likesCount={axe.likesCount}
-                commentsCount={axe.commentsCount}
-              />
-            ))}
+            <div className="grid grid-cols-3 gap-2 items-stretch">
+              {axes.map((axe) => (
+                <AxeRing
+                  key={axe.id}
+                  axeId={axe.id}
+                  axeIndex={axe.index}
+                  subject={axe.subject}
+                  completedCount={axe.completedCount}
+                  likesCount={axe.likesCount}
+                  commentsCount={axe.commentsCount}
+                />
+              ))}
+            </div>
           </div>
         )}
 
