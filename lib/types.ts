@@ -13,6 +13,7 @@ export type Profile = {
 export type Group = {
   id: string
   name: string
+  theme: string | null
   trainer_id: string
   created_at: string
 }
@@ -117,4 +118,60 @@ export type ActionFeedbackData = {
     trainer_first_name: string
     trainer_last_name: string
   }>
+}
+
+// ─────────────────────────────────────────────────────────
+// Quiz bimensuels (v1.29.4) — semaines ISO paires, jeudi 8h
+// ─────────────────────────────────────────────────────────
+
+export type QuizQuestionType = 'qcm' | 'truefalse'
+
+export type Quiz = {
+  id: string
+  group_id: string
+  week_number: number
+  year: number
+  theme_snapshot: string
+  generated_at: string
+}
+
+export type QuizQuestion = {
+  id: string
+  quiz_id: string
+  position: number        // 1..4
+  type: QuizQuestionType
+  question: string
+  choices: string[]       // QCM : 4 items · vrai/faux : 2 items
+  correct_index: number
+  explanation: string | null
+}
+
+export type QuizAttempt = {
+  id: string
+  quiz_id: string
+  learner_id: string
+  started_at: string
+  completed_at: string | null
+  score: number           // 0..4 (nb bonnes réponses)
+}
+
+export type QuizAnswer = {
+  id: string
+  attempt_id: string
+  question_id: string
+  question_started_at: string
+  selected_index: number | null   // null si hors délai
+  is_correct: boolean
+  time_ms: number | null
+  answered_at: string
+}
+
+// Constantes quiz
+export const QUIZ_QUESTIONS_PER_QUIZ = 4
+export const QUIZ_SECONDS_PER_QUESTION = 15
+export const QUIZ_BRIEF_MAX_LENGTH = 2000
+
+// Un quiz existe uniquement les semaines ISO paires
+export function isQuizWeek(weekNumber: number): boolean {
+  return weekNumber % 2 === 0
 }
