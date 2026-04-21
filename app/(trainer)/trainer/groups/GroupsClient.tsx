@@ -2,9 +2,11 @@
 
 import { useState, useTransition, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Plus, X, ChevronDown, MoreVertical, Sparkles, Loader2 } from 'lucide-react'
+import { Plus, X, ChevronDown, MoreVertical, Sparkles, Loader2, FileText, HelpCircle, Settings, Trash2 } from 'lucide-react'
 import { createGroup, deleteGroup, removeLearnerFromGroup } from './actions'
 import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
+import GroupBriefModal from '@/app/components/GroupBriefModal'
+import { useRouter } from 'next/navigation'
 
 type Group = {
   id: string
@@ -29,6 +31,7 @@ export default function GroupsClient({
   groups: Group[]
   membersMap: Record<string, MemberInfo[]>
 }) {
+  const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -40,6 +43,7 @@ export default function GroupsClient({
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
   const [rewritingTheme, setRewritingTheme] = useState(false)
   const [createThemeValue, setCreateThemeValue] = useState('')
+  const [briefGroupId, setBriefGroupId] = useState<string | null>(null)
 
   async function handleRewriteTheme(currentValue: string, setter: (v: string) => void) {
     if (!currentValue.trim() || currentValue.trim().length < 5) return
@@ -205,156 +209,232 @@ export default function GroupsClient({
             const members = membersMap[group.id] ?? []
             const isExpanded = expandedGroups.has(group.id)
 
+            const hasTheme = (group.theme ?? '').trim().length >= 20
+
             return (
-              <div key={group.id} className="bg-white rounded-[22px] overflow-visible" style={{ border: '2px solid #f0ebe0' }}>
-                {/* Header du groupe */}
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                  <button
-                    onClick={() => toggleGroup(group.id)}
-                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
-                  >
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: '#fffbeb' }}>
+              <div
+                key={group.id}
+                className="bg-white rounded-[24px] overflow-visible transition-all"
+                style={{
+                  border: '2px solid #f0ebe0',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03), 0 6px 20px rgba(0,0,0,0.05)',
+                }}
+              >
+                {/* ── Header carte (titre + nb + thème) ── */}
+                <div className="p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0" style={{ background: '#fffbeb' }}>
                       👥
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-gray-900 text-[15px] truncate">{group.name}</p>
-                        <span className="text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: '#fffbeb', color: '#92400e' }}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="font-extrabold text-[17px] truncate" style={{ color: '#1a1a2e' }}>
+                          {group.name}
+                        </h2>
+                        <span
+                          className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-extrabold shrink-0"
+                          style={{ background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a' }}
+                        >
                           {memberCount}
                         </span>
                       </div>
-                      {group.theme && (
-                        <p className="text-xs text-gray-400 mt-0.5 truncate">{group.theme}</p>
+                      {group.theme ? (
+                        <p className="text-[12px] mt-0.5 line-clamp-2 leading-snug" style={{ color: '#a0937c' }}>
+                          {group.theme}
+                        </p>
+                      ) : (
+                        <p className="text-[12px] mt-0.5 italic" style={{ color: '#c4b99a' }}>
+                          Pas encore de brief défini
+                        </p>
                       )}
                     </div>
-                    <ChevronDown
-                      size={18}
-                      className={`text-gray-400 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                    />
-                  </button>
+                  </div>
 
-                  {/* Menu groupe */}
-                  <div className="relative" data-menu>
+                  {/* ── 3 boutons : Brief / Quiz / Paramètres ── */}
+                  <div className="flex gap-2.5 mt-4">
+                    {/* Brief */}
                     <button
-                      onClick={() => setOpenMenu(openMenu === `group-${group.id}` ? null : `group-${group.id}`)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+                      onClick={() => setBriefGroupId(group.id)}
+                      className="flex-1 min-w-0 flex flex-col items-center gap-1.5 py-3 px-2 rounded-[18px] transition-all hover:-translate-y-0.5"
+                      style={{
+                        background: hasTheme ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)' : '#fffbeb',
+                        border: hasTheme ? '2px solid #fde68a' : '2px dashed #fde68a',
+                        color: '#1a1a2e',
+                      }}
                     >
-                      <MoreVertical size={16} />
-                    </button>
-                    {openMenu === `group-${group.id}` && (
-                      <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[18px] shadow-lg z-30 py-1" style={{ border: '2px solid #f0ebe0' }}>
-                        <Link
-                          href={`/trainer/groups/${group.id}`}
-                          className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                        >
-                          <span>💪</span> Gérer les tips
-                        </Link>
-                        <button
-                          onClick={() => { setDeletingGroupId(group.id); setOpenMenu(null) }}
-                          className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                        >
-                          <span>🗑️</span> Supprimer le groupe
-                        </button>
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: hasTheme ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' : '#fef3c7',
+                          color: hasTheme ? '#fff' : '#92400e',
+                          boxShadow: hasTheme ? '0 3px 10px rgba(251,191,36,0.35)' : 'none',
+                        }}
+                      >
+                        {hasTheme ? <FileText size={18} strokeWidth={2.3} /> : <Plus size={18} strokeWidth={2.6} />}
                       </div>
-                    )}
+                      <span className="text-[12px] font-extrabold leading-tight">
+                        {hasTheme ? 'Brief' : 'Définir le brief'}
+                      </span>
+                      <span className="text-[10px] font-semibold leading-tight" style={{ color: hasTheme ? '#a0937c' : '#92400e' }}>
+                        {hasTheme ? 'thème défini' : 'démarrer ici'}
+                      </span>
+                    </button>
+
+                    {/* Quiz */}
+                    <Link
+                      href={hasTheme ? `/trainer/groups/${group.id}/quiz` : '#'}
+                      onClick={(e) => { if (!hasTheme) e.preventDefault() }}
+                      className={`flex-1 min-w-0 flex flex-col items-center gap-1.5 py-3 px-2 rounded-[18px] transition-all hover:-translate-y-0.5 ${hasTheme ? '' : 'pointer-events-none opacity-50 cursor-not-allowed'}`}
+                      style={{
+                        background: '#fff',
+                        border: '2px solid #f0ebe0',
+                        color: '#1a1a2e',
+                      }}
+                    >
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: hasTheme ? 'linear-gradient(135deg, #ddd6fe 0%, #a78bfa 100%)' : '#f0ebe0',
+                          color: '#fff',
+                          filter: hasTheme ? 'none' : 'grayscale(1)',
+                        }}
+                      >
+                        <HelpCircle size={18} strokeWidth={2.3} />
+                      </div>
+                      <span className="text-[12px] font-extrabold leading-tight">Quiz</span>
+                      <span className="text-[10px] font-semibold leading-tight" style={{ color: '#a0937c' }}>
+                        {hasTheme ? 'voir résultats' : 'brief requis'}
+                      </span>
+                    </Link>
+
+                    {/* Paramètres */}
+                    <button
+                      onClick={() => setDeletingGroupId(group.id)}
+                      className="flex-1 min-w-0 flex flex-col items-center gap-1.5 py-3 px-2 rounded-[18px] transition-all hover:-translate-y-0.5"
+                      style={{
+                        background: '#fff',
+                        border: '2px solid #f0ebe0',
+                        color: '#1a1a2e',
+                      }}
+                    >
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: 'linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%)',
+                          color: '#fff',
+                        }}
+                      >
+                        <Settings size={18} strokeWidth={2.3} />
+                      </div>
+                      <span className="text-[12px] font-extrabold leading-tight">Paramètres</span>
+                      <span className="text-[10px] font-semibold leading-tight" style={{ color: '#a0937c' }}>
+                        supprimer
+                      </span>
+                    </button>
                   </div>
                 </div>
 
-                {/* Membres */}
+                {/* ── Toggle volet apprenants ── */}
+                <button
+                  onClick={() => toggleGroup(group.id)}
+                  className="w-full flex items-center justify-center gap-2 py-3 text-[12px] font-bold hover:bg-[#fffbf0] transition-colors"
+                  style={{
+                    color: '#a0937c',
+                    borderTop: '2px solid #f0ebe0',
+                    borderBottomLeftRadius: isExpanded ? 0 : 22,
+                    borderBottomRightRadius: isExpanded ? 0 : 22,
+                  }}
+                >
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                  />
+                  {isExpanded ? 'Replier' : memberCount === 0 ? 'Aucun apprenant' : `Voir les ${memberCount} apprenant${memberCount > 1 ? 's' : ''}`}
+                </button>
+
+                {/* ── Volet apprenants full-width ── */}
                 {isExpanded && (
-                  <div style={{ borderTop: '2px solid #f0ebe0' }}>
+                  <div
+                    style={{
+                      background: 'linear-gradient(180deg, #faf8f4 0%, #fffbf0 100%)',
+                      borderTop: '1px solid #f0ebe0',
+                      borderBottomLeftRadius: 22,
+                      borderBottomRightRadius: 22,
+                    }}
+                  >
                     {members.length === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-6">Aucun participant dans ce groupe</p>
+                      <p className="text-sm text-gray-400 text-center py-6">Aucun apprenant dans ce groupe</p>
                     ) : (
                       <div>
                         {members
                           .sort((a, b) => a.last_name.localeCompare(b.last_name, 'fr'))
                           .map((m, idx) => {
                             const isLastTwo = idx >= members.length - 2
-
                             return (
-                              <div key={m.learner_id}>
-                                <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
-                                  {/* Avatar */}
-                                  <div className="w-8 h-8 rounded-full font-semibold flex items-center justify-center text-xs shrink-0" style={{ background: '#1a1a2e', color: '#fbbf24' }}>
-                                    {m.first_name[0]}{m.last_name[0]}
-                                  </div>
+                              <div
+                                key={m.learner_id}
+                                className="flex items-center gap-3 px-5 py-3 hover:bg-white/70 transition-colors"
+                                style={{ borderTop: idx === 0 ? 'none' : '1px solid #f0ebe0' }}
+                              >
+                                {/* Avatar */}
+                                <div className="w-9 h-9 rounded-full font-extrabold flex items-center justify-center text-[12px] shrink-0" style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                                  {m.first_name[0]}{m.last_name[0]}
+                                </div>
 
-                                  {/* Nom cliquable → page apprenants, groupe sélectionné, learner en focus */}
-                                  <Link
-                                    href={`/trainer/apprenants?group=${group.id}&learner=${m.learner_id}`}
-                                    className="flex-1 min-w-0"
+                                {/* Nom cliquable → fiche apprenant */}
+                                <Link
+                                  href={`/trainer/apprenants?group=${group.id}&learner=${m.learner_id}`}
+                                  className="flex-1 min-w-0"
+                                >
+                                  <p className="text-[14px] font-bold truncate" style={{ color: '#1a1a2e' }}>
+                                    {m.first_name} {m.last_name}
+                                  </p>
+                                  <p className="text-[11px]" style={{ color: '#a0937c' }}>
+                                    Voir la fiche détaillée →
+                                  </p>
+                                </Link>
+
+                                {/* Menu membre */}
+                                <div className="relative" data-menu>
+                                  <button
+                                    onClick={() => setOpenMenu(openMenu === m.learner_id ? null : m.learner_id)}
+                                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
                                   >
-                                    <p className="text-sm font-medium transition-colors truncate" style={{ color: '#1a1a2e' }}>
-                                      {m.first_name} {m.last_name}
-                                    </p>
-                                  </Link>
-
-                                  {/* Pastille tips → cliquable vers gestion tips */}
-                                  <Link
-                                    href={`/trainer/groups/${group.id}?learner=${m.learner_id}`}
-                                    className="flex items-center gap-1 shrink-0"
-                                  >
-                                    {m.tips_total > 0 ? (
-                                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity ${
-                                        m.tips_sent > 0
-                                          ? 'border border-[#fde68a]'
-                                          : 'bg-gray-100 text-gray-500 border border-gray-200'
-                                      }`}
-                                        style={m.tips_sent > 0 ? { background: '#fffbeb', color: '#92400e' } : {}}>
-                                        {m.tips_sent}/{m.tips_total}
-                                      </span>
-                                    ) : (
-                                      <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-400 border border-gray-200">
-                                        —
-                                      </span>
-                                    )}
-                                    <span className={`text-base ${m.tips_total > 0 ? '' : 'opacity-25'}`}>💪</span>
-                                  </Link>
-
-                                  {/* Menu membre */}
-                                  <div className="relative" data-menu>
-                                    <button
-                                      onClick={() => setOpenMenu(openMenu === m.learner_id ? null : m.learner_id)}
-                                      className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
-                                    >
-                                      <MoreVertical size={14} />
-                                    </button>
-                                    {openMenu === m.learner_id && (
-                                      <div className={`absolute right-0 w-48 bg-white rounded-[18px] shadow-lg z-30 py-1 ${
-                                        isLastTwo ? 'bottom-full mb-1' : 'top-full mt-1'
-                                      }`}>
-                                        {/* Réaffecter */}
-                                        {groups.filter(g => g.id !== group.id).length > 0 && (
-                                          <>
-                                            <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">Réaffecter à</p>
-                                            {groups
-                                              .filter(g => g.id !== group.id)
-                                              .map(g => (
-                                                <button
-                                                  key={g.id}
-                                                  disabled={isPending}
-                                                  onClick={() => handleReassign(m.learner_id, group.id, g.id)}
-                                                  className="w-full text-left px-3 py-2 text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
-                                  style={{ color: '#1a1a2e' }}
-                                  onMouseEnter={e => { e.currentTarget.style.background = '#fffbeb' }}
-                                  onMouseLeave={e => { e.currentTarget.style.background = '' }}
-                                                >
-                                                  <span>🔄</span> {g.name}
-                                                </button>
-                                              ))}
-                                            <div className="border-t border-gray-100 my-1" />
-                                          </>
-                                        )}
-                                        <button
-                                          onClick={() => openDeleteLearner(m.learner_id, group.id)}
-                                          className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                        >
-                                          <span>🗑️</span> Supprimer
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
+                                    <MoreVertical size={16} />
+                                  </button>
+                                  {openMenu === m.learner_id && (
+                                    <div className={`absolute right-0 w-48 bg-white rounded-[18px] shadow-lg z-30 py-1 ${
+                                      isLastTwo ? 'bottom-full mb-1' : 'top-full mt-1'
+                                    }`} style={{ border: '2px solid #f0ebe0' }}>
+                                      {groups.filter(g => g.id !== group.id).length > 0 && (
+                                        <>
+                                          <p className="px-3 py-1.5 text-[11px] text-gray-400 font-medium uppercase tracking-wide">Réaffecter à</p>
+                                          {groups
+                                            .filter(g => g.id !== group.id)
+                                            .map(g => (
+                                              <button
+                                                key={g.id}
+                                                disabled={isPending}
+                                                onClick={() => handleReassign(m.learner_id, group.id, g.id)}
+                                                className="w-full text-left px-3 py-2 text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+                                                style={{ color: '#1a1a2e' }}
+                                                onMouseEnter={e => { e.currentTarget.style.background = '#fffbeb' }}
+                                                onMouseLeave={e => { e.currentTarget.style.background = '' }}
+                                              >
+                                                <span>🔄</span> {g.name}
+                                              </button>
+                                            ))}
+                                          <div className="border-t border-gray-100 my-1" />
+                                        </>
+                                      )}
+                                      <button
+                                        onClick={() => openDeleteLearner(m.learner_id, group.id)}
+                                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                      >
+                                        <Trash2 size={14} /> Supprimer
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             )
@@ -368,6 +448,22 @@ export default function GroupsClient({
           })}
         </div>
       )}
+
+      {/* Modale Brief de formation (nouveau — v1.29.4) */}
+      {briefGroupId && (() => {
+        const g = groups.find(x => x.id === briefGroupId)
+        if (!g) return null
+        return (
+          <GroupBriefModal
+            groupId={g.id}
+            groupName={g.name}
+            initialTheme={g.theme}
+            open={!!briefGroupId}
+            onClose={() => setBriefGroupId(null)}
+            onSaved={() => router.refresh()}
+          />
+        )
+      })()}
 
       {/* Popup confirmation suppression apprenant */}
       {deletingLearnerId && deletingLearner && (
