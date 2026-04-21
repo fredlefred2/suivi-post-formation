@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import ActionFeedback from '@/app/components/ActionFeedback'
 import type { ActionFeedbackData } from '@/lib/types'
-import { useCountUp } from '@/lib/useCountUp'
+import TeamNewsTicker from '@/app/components/TeamNewsTicker'
+import TeamActionsCarousel from '@/app/components/TeamActionsCarousel'
 
 function getDynamiqueForCount(count: number) {
   if (count === 0) return { icon: '💡', level: 0, label: 'Intention' }
@@ -13,10 +12,6 @@ function getDynamiqueForCount(count: number) {
   return { icon: '👑', level: 4, label: 'Maîtrise' }
 }
 
-const AVATAR_BG_COLORS: Record<number, string> = {
-  0: '#94a3b8', 1: '#0284c7', 2: '#059669', 3: '#d97706', 4: '#e11d48',
-}
-
 const LEVEL_DOT_BG: Record<number, string> = {
   0: '#f1f5f9', 1: '#e0f2fe', 2: '#d1fae5', 3: '#ffedd5', 4: '#ffe4e6',
 }
@@ -24,8 +19,9 @@ const LEVEL_DOT_BG: Record<number, string> = {
 type ScoringEntry = {
   id: string
   name: string
-  totalActions: number
-  axesCounts: number[]
+  totalActions: number        // total cumul (pour dyns)
+  last15Actions: number       // nouveau tri podium (15 derniers jours)
+  axesCounts: number[]        // total par axe
 }
 
 type RecentAction = {
@@ -39,17 +35,14 @@ type RecentAction = {
 }
 
 type Props = {
-  groupId: string
   groupName: string
   membersCount: number
   totalActions: number
   recentActionsCount: number
-  weatherCounts: { sunny: number; cloudy: number; stormy: number }
-  totalWithCheckin: number
-  isCheckinOpen: boolean
   scoringData: ScoringEntry[]
   recentActions: RecentAction[]
   feedbackMap: Record<string, ActionFeedbackData>
+  news: string[]
 }
 
 export default function TeamClient({
@@ -57,31 +50,25 @@ export default function TeamClient({
   membersCount,
   totalActions,
   recentActionsCount,
-  weatherCounts,
-  totalWithCheckin,
   scoringData,
   recentActions,
   feedbackMap,
+  news,
 }: Props) {
-  const [showAll, setShowAll] = useState(false)
-
-  const animatedMembers = useCountUp(membersCount)
-  const animatedDelta = useCountUp(recentActionsCount)
-
+  // Trier par actions 15j desc, puis total desc en tiebreaker
   const sorted = [...scoringData]
     .map((s) => {
       const dyns = [0, 1, 2].map((i) => getDynamiqueForCount(s.axesCounts[i] ?? 0))
-      const totalLevel = dyns.reduce((a, m) => a + m.level, 0)
-      return { ...s, dyns, totalLevel }
+      return { ...s, dyns }
     })
-    .sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
+    .sort((a, b) => b.last15Actions - a.last15Actions || b.totalActions - a.totalActions)
 
   function getInitials(name: string) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
   }
 
-  // Podium top 3 : [2e, 1er, 3e]
-  const podium = sorted.slice(0, 3)
+  // Podium top 3 (uniquement si au moins 1 action sur 15j chez le 1er)
+  const podium = sorted.filter(s => s.last15Actions > 0).slice(0, 3)
   const podiumDisplay = podium.length >= 3
     ? [podium[1], podium[0], podium[2]]
     : podium.length === 2
@@ -94,52 +81,47 @@ export default function TeamClient({
     { avatarSize: 'w-11 h-11', border: '2px solid #f97316', shadow: 'none', baseH: 40, baseGrad: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)', baseFontSize: 22, avatarFontSize: 14 },
   ]
 
-  const visibleActions = showAll ? recentActions : recentActions.slice(0, 4)
-  const hasMore = recentActions.length > 4
+  // Reste du classement (4e et +)
+  const rest = sorted.slice(podium.length)
 
   return (
-    <div className="space-y-5 pb-4">
-      {/* ── Header navy ── */}
+    <div className="space-y-4 pb-4">
+
+      {/* ── Header noir discret (v1.29.5) ── */}
       <div
-        className="rounded-[28px] p-5 relative overflow-hidden"
-        style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
+        className="rounded-[22px] px-[18px] py-[14px] relative overflow-hidden"
+        style={{ background: '#1a1a2e' }}
       >
-        <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
-
-        <div className="relative flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-[22px] font-extrabold text-white">{groupName}</h1>
-            <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{membersCount} participant{membersCount !== 1 ? 's' : ''}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-[17px] font-extrabold text-white leading-tight">Team</h1>
+            <p className="text-[11px] mt-0.5 font-semibold truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              {groupName} · {membersCount} participant{membersCount !== 1 ? 's' : ''}
+            </p>
           </div>
-          {totalWithCheckin > 0 && (() => {
-            const max = Math.max(weatherCounts.sunny, weatherCounts.cloudy, weatherCounts.stormy)
-            const avgEmoji = weatherCounts.sunny === max ? '☀️' : weatherCounts.cloudy === max ? '⛅' : '⛈️'
-            return <span className="text-3xl drop-shadow-lg">{avgEmoji}</span>
-          })()}
-        </div>
-
-        <div className="relative grid grid-cols-3 gap-2">
-          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <div className="font-display text-[26px] font-bold text-white">{animatedMembers}</div>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>membres</p>
-          </div>
-          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <div className="font-display text-[26px] font-bold" style={{ color: recentActionsCount > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
-              {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
+          <div className="text-right shrink-0">
+            <div className="text-[13px] font-bold" style={{ color: '#fff' }}>
+              <span style={{ color: '#fbbf24', fontWeight: 800 }}>{totalActions}</span>
+              <span className="text-[11px] font-semibold ml-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                action{totalActions !== 1 ? 's' : ''}
+              </span>
             </div>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>cette semaine</p>
-          </div>
-          <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <div className="font-display text-[26px] font-bold text-white">{totalActions}</div>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>actions</p>
+            {recentActionsCount > 0 && (
+              <div className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                <span style={{ color: '#fbbf24', fontWeight: 800 }}>+{recentActionsCount}</span> cette sem.
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ── Podium top 3 ── */}
-      {podium.length > 0 && (
+      {/* ── Ticker news valorisantes ── */}
+      <TeamNewsTicker news={news} />
+
+      {/* ── Podium — ces 15 derniers jours ── */}
+      {podium.length > 0 ? (
         <div>
-          <h2 className="section-title mb-1">Les plus actifs sur Yapluka</h2>
+          <h2 className="section-title mb-1 pl-1">Les plus actifs ces 15 derniers jours</h2>
           <div className="flex items-end justify-center gap-2 pt-4 pb-0 px-2">
             {podiumDisplay.map((learner, displayIdx) => {
               const cfg = podiumConfig[podium.length >= 3 ? displayIdx : podium.length === 2 ? (displayIdx === 0 ? 0 : 1) : 1]
@@ -163,7 +145,7 @@ export default function TeamClient({
                     {learner.name}
                   </p>
                   <p className="text-[10px] font-medium mb-1.5" style={{ color: '#a0937c' }}>
-                    {learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}
+                    {learner.last15Actions} action{learner.last15Actions !== 1 ? 's' : ''}
                   </p>
 
                   <div className="flex gap-1 mb-2">
@@ -194,92 +176,68 @@ export default function TeamClient({
             })}
           </div>
         </div>
-      )}
-
-      {/* ── Actions récentes — feedback inline ── */}
-      {recentActions.length === 0 ? (
-        <div className="rounded-[22px] bg-white p-6 text-center" style={{ border: '2px solid #f0ebe0' }}>
-          <p className="text-2xl mb-2">💤</p>
-          <p className="text-sm" style={{ color: '#a0937c' }}>Aucune action récente de l&apos;équipe</p>
-          <p className="text-xs mt-1" style={{ color: '#c4b99a' }}>Sois le premier à en ajouter une !</p>
-        </div>
       ) : (
-        <div>
-          <div className="flex items-center justify-between mb-2.5">
-            <h2 className="section-title">Actions récentes</h2>
-          </div>
-
-          <div className="space-y-2.5">
-            {visibleActions.map((action) => {
-              const dyn = getDynamiqueForCount(action.axe_action_count)
-              return (
-                <div
-                  key={action.id}
-                  className="bg-white rounded-[18px] p-3.5"
-                  style={{ border: '1.5px solid #f0ebe0' }}
-                >
-                  {/* En-tete : avatar + nom + axe + date */}
-                  <div className="flex items-start gap-2.5">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                      style={{ background: AVATAR_BG_COLORS[dyn.level] ?? AVATAR_BG_COLORS[0] }}
-                    >
-                      {getInitials(`${action.learner_first_name} ${action.learner_last_name}`)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold" style={{ color: '#1a1a2e' }}>
-                          {action.learner_first_name} {action.learner_last_name}
-                        </span>
-                        <span className="text-xs">{dyn.icon}</span>
-                        <span className="text-[10px] ml-auto" style={{ color: '#a0937c' }}>
-                          {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        </span>
-                      </div>
-                      <p className="text-[10px] font-medium" style={{ color: '#92400e' }}>{action.axe_subject}</p>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-[13px] leading-relaxed mt-2" style={{ color: '#1a1a2e' }}>
-                    {action.description}
-                  </p>
-
-                  {/* Feedback inline */}
-                  {feedbackMap[action.id] && (
-                    <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid #f5f0e8' }}>
-                      <ActionFeedback
-                        actionId={action.id}
-                        feedback={feedbackMap[action.id]}
-                        canInteract={true}
-                      />
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Bouton voir plus / replier */}
-          {hasMore && (
-            <button
-              onClick={() => setShowAll(prev => !prev)}
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-2.5 rounded-[14px] text-xs font-semibold transition-all"
-              style={{
-                border: '2px dashed #f0ebe0',
-                color: '#a0937c',
-                background: showAll ? '#fffbeb' : 'transparent',
-                borderColor: showAll ? '#fbbf24' : '#f0ebe0',
-              }}
-            >
-              {showAll
-                ? '▲ Replier'
-                : `Voir les ${recentActions.length - 4} autres actions`
-              }
-            </button>
-          )}
+        <div className="rounded-[22px] bg-white p-6 text-center" style={{ border: '2px solid #f0ebe0' }}>
+          <p className="text-2xl mb-2">🌅</p>
+          <p className="text-sm" style={{ color: '#a0937c' }}>La semaine commence, personne n&apos;a encore posté.</p>
+          <p className="text-xs mt-1" style={{ color: '#c4b99a' }}>Sois le premier à te lancer !</p>
         </div>
       )}
+
+      {/* ── Classement 4e et + ── */}
+      {rest.length > 0 && (
+        <div
+          className="rounded-[22px] bg-white"
+          style={{ border: '2px solid #f0ebe0', padding: '10px 12px' }}
+        >
+          {rest.map((learner, idx) => {
+            const rank = podium.length + idx + 1
+            const noActivity = learner.last15Actions === 0
+            return (
+              <div
+                key={learner.id}
+                className="flex items-center gap-3"
+                style={{
+                  padding: '7px 0',
+                  borderTop: idx === 0 ? 'none' : '1px solid #f4efe3',
+                  opacity: noActivity ? 0.55 : 1,
+                }}
+              >
+                <span className="text-[12px] font-extrabold text-center" style={{ color: '#a0937c', width: 24 }}>
+                  {rank}
+                </span>
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0"
+                  style={{ background: '#1a1a2e', color: '#fbbf24' }}
+                >
+                  {getInitials(learner.name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold truncate" style={{ color: '#1a1a2e' }}>
+                    {learner.name}
+                  </p>
+                </div>
+                <span
+                  className="text-[12px] font-extrabold shrink-0"
+                  style={{ color: noActivity ? '#a0937c' : '#92400e' }}
+                >
+                  {learner.last15Actions}
+                  <span className="text-[10px] font-semibold ml-1" style={{ color: '#a0937c' }}>
+                    action{learner.last15Actions !== 1 ? 's' : ''}
+                  </span>
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* ── Actions récentes : carrousel + "Voir tout" ── */}
+      <TeamActionsCarousel
+        actions={recentActions}
+        feedbackMap={feedbackMap}
+        deltaThisWeek={recentActionsCount}
+      />
     </div>
   )
 }

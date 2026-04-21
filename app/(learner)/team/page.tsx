@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import type { ActionFeedbackData } from '@/lib/types'
+import { generateTeamNews } from '@/lib/team-news'
 import TeamClient from './TeamClient'
 
 export default async function TeamPage() {
@@ -103,12 +104,17 @@ export default async function TeamPage() {
     axeSubjectMap[axe.id] = axe.subject
   })
 
-  // ── Actions des 7 derniers jours ──
+  // ── Actions des 7 derniers jours + activité 15j (pour le podium) ──
   const now = new Date()
   const sevenDaysAgo = new Date(now)
   sevenDaysAgo.setDate(now.getDate() - 7)
   sevenDaysAgo.setHours(0, 0, 0, 0)
   const cutoffStr = sevenDaysAgo.toISOString()
+
+  const fifteenDaysAgo = new Date(now)
+  fifteenDaysAgo.setDate(now.getDate() - 15)
+  fifteenDaysAgo.setHours(0, 0, 0, 0)
+  const fifteenCutoffStr = fifteenDaysAgo.toISOString()
 
   // Lundi courant pour le calcul météo
   const dayOfWeekNow = now.getDay()
@@ -132,6 +138,24 @@ export default async function TeamPage() {
   const recentActions = allActions
     .filter((a) => a.created_at >= cutoffStr)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  // Activité 15 derniers jours par apprenant (pour le tri du podium)
+  const last15ActionsByLearner: Record<string, number> = {}
+  memberIds.forEach(id => { last15ActionsByLearner[id] = 0 })
+  for (const a of allActions) {
+    if (a.created_at >= fifteenCutoffStr) {
+      const lid = (a as { learner_id: string }).learner_id
+      last15ActionsByLearner[lid] = (last15ActionsByLearner[lid] ?? 0) + 1
+    }
+  }
+
+  // News valorisantes (ticker du header)
+  const newsList = await generateTeamNews({
+    groupId,
+    memberIds,
+    members: members.map(m => ({ learner_id: m.learner_id, first_name: m.profiles.first_name })),
+    currentUserId: user.id,
+  })
 
   // ── Checkins pour la météo ──
   const { data: checkinsRaw } = memberIds.length > 0
@@ -200,14 +224,10 @@ export default async function TeamPage() {
 
   return (
     <TeamClient
-      groupId={groupId}
       groupName={group.name}
       membersCount={members.length}
       totalActions={totalActions}
       recentActionsCount={recentActions.length}
-      weatherCounts={weatherCounts}
-      totalWithCheckin={totalWithCheckin}
-      isCheckinOpen={isCheckinOpen}
       scoringData={memberIds.map((lid) => {
         const axesCounts = learnerAxesMap[lid] ?? []
         const total = axesCounts.reduce((a, b) => a + b, 0)
@@ -215,6 +235,7 @@ export default async function TeamPage() {
           id: lid,
           name: learnerNameMap[lid] ?? 'Inconnu',
           totalActions: total,
+          last15Actions: last15ActionsByLearner[lid] ?? 0,
           axesCounts,
         }
       })}
@@ -228,6 +249,7 @@ export default async function TeamPage() {
         learner_last_name: a.learner_last_name,
       }))}
       feedbackMap={feedbackMap}
+      news={newsList}
     />
   )
 }
