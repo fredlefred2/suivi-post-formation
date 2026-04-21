@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YAPLUKA — Pour que la formation laisse une trace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:ital,wght@0,500;0,700;0,900;1,500;1,700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #faf8f4; color: #1a1a2e; line-height: 1.55; overflow-x: hidden; }
+  .serif { font-family: 'Fraunces', Georgia, serif; font-weight: 700; letter-spacing: -0.02em; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(250,248,244,0.88); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(26,26,46,0.06); }
+  .nav-inner { max-width: 1100px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'Fraunces', serif; font-weight: 900; font-size: 22px; letter-spacing: -0.03em; display: flex; align-items: center; gap: 8px; color: #1a1a2e; }
+  .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 12px rgba(251,191,36,0.6); }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a { color: #1a1a2e; text-decoration: none; font-weight: 500; font-size: 14px; opacity: 0.8; }
+  .nav-links a:hover { opacity: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 15px; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+  .btn-amber { background: #fbbf24; color: #1a1a2e; }
+  .btn-amber:hover { background: #f59e0b; transform: translateY(-1px); box-shadow: 0 10px 28px rgba(251,191,36,0.4); }
+  .btn-ghost { background: transparent; color: #1a1a2e; border: 1.5px solid #d6d3d1; }
+  .btn-ghost:hover { border-color: #1a1a2e; }
+  @media (max-width: 760px) { .nav-links { display: none; } }
+
+  /* HERO */
+  .hero { padding: 140px 24px 80px; max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 60px; align-items: center; position: relative; }
+  .hero::before { content: ''; position: absolute; top: 60px; right: -120px; width: 420px; height: 420px; background: radial-gradient(circle, rgba(251,191,36,0.14), transparent 70%); border-radius: 50%; z-index: 0; }
+  .hero-content { position: relative; z-index: 1; }
+  h1.hero-title { font-size: clamp(42px, 5.8vw, 68px); line-height: 1.02; letter-spacing: -0.035em; margin-bottom: 22px; }
+  .hero-title em { font-style: italic; color: #f59e0b; }
+  .hero-sub { font-size: 19px; color: #44403c; margin-bottom: 32px; max-width: 500px; }
+  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } }
+
+  /* PHONE */
+  .phone-wrapper { display: flex; justify-content: center; position: relative; z-index: 1; }
+  .phone { width: 300px; aspect-ratio: 9 / 19.5; background: linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%); border-radius: 42px; padding: 10px; box-shadow: 0 40px 80px rgba(26,26,46,0.28), 0 16px 40px rgba(26,26,46,0.18); animation: float 6s ease-in-out infinite; }
+  .phone-inner { width: 100%; height: 100%; border-radius: 34px; background: #faf8f4; overflow: hidden; position: relative; }
+  .phone-inner img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; background: repeating-linear-gradient(45deg, #f5f5f4 0, #f5f5f4 10px, #faf8f4 10px, #faf8f4 20px); color: #78716c; }
+  .placeholder-icon { font-size: 42px; margin-bottom: 12px; opacity: 0.5; }
+  .placeholder-title { font-weight: 700; font-size: 14px; color: #1a1a2e; margin-bottom: 6px; }
+  .placeholder-note { font-size: 12px; line-height: 1.4; }
+
+  section { padding: 90px 24px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .eyebrow { display: inline-block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 14px; color: #f59e0b; }
+  h2.section-title { font-size: clamp(30px, 4vw, 48px); line-height: 1.1; letter-spacing: -0.025em; margin-bottom: 16px; max-width: 780px; }
+  .section-sub { font-size: 17px; color: #57534e; max-width: 620px; margin-bottom: 48px; }
+
+  /* PROBLEM */
+  .problem { background: #fff; border: 2px solid #f0ebe0; border-radius: 24px; padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+  .problem-chart { position: relative; height: 240px; display: flex; align-items: flex-end; justify-content: space-around; gap: 14px; padding: 28px 0 0; border-bottom: 2px dashed #e7e5e4; }
+  .bar { flex: 1; background: linear-gradient(180deg, #fbbf24, #f59e0b); border-radius: 8px 8px 0 0; position: relative; animation: bar-grow 1.2s ease-out backwards; }
+  .bar:nth-child(1) { animation-delay: 0.1s; }
+  .bar:nth-child(2) { animation-delay: 0.25s; }
+  .bar:nth-child(3) { animation-delay: 0.4s; }
+  .bar:nth-child(4) { animation-delay: 0.55s; }
+  @keyframes bar-grow { from { height: 0 !important; } }
+  .bar-label { position: absolute; bottom: -26px; left: 0; right: 0; text-align: center; font-size: 11px; color: #78716c; font-weight: 600; }
+  .bar-value { position: absolute; top: -24px; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 800; }
+  .problem-text h3 { font-size: 26px; line-height: 1.2; margin-bottom: 14px; letter-spacing: -0.02em; }
+  .problem-text p { color: #57534e; font-size: 16px; margin-bottom: 10px; }
+  .problem-text p strong { color: #1a1a2e; }
+  @media (max-width: 860px) { .problem { grid-template-columns: 1fr; padding: 36px 24px; } }
+
+  /* ANSWER BRIDGE */
+  .answer-bridge { background: linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%); color: #fff; padding: 80px 24px; position: relative; overflow: hidden; }
+  .answer-bridge::before { content: ''; position: absolute; top: -80px; right: -60px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(251,191,36,0.2), transparent 70%); border-radius: 50%; }
+  .answer-bridge::after { content: ''; position: absolute; bottom: -60px; left: -40px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%); border-radius: 50%; }
+  .answer-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; text-align: center; }
+  .answer-eyebrow { display: inline-block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #fbbf24; margin-bottom: 16px; }
+  .answer-bridge h2 { font-family: 'Fraunces', serif; font-weight: 700; font-size: clamp(30px, 4.2vw, 46px); letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 20px; }
+  .answer-bridge h2 em { color: #fbbf24; font-style: italic; }
+  .answer-bridge > .answer-inner > p { color: rgba(255,255,255,0.82); font-size: 17px; max-width: 620px; margin: 0 auto 36px; }
+  .answer-pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: left; }
+  .answer-pillar { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 22px; }
+  .answer-pillar-num { display: inline-block; width: 30px; height: 30px; border-radius: 50%; background: #fbbf24; color: #1a1a2e; font-family: 'Fraunces', serif; font-weight: 900; font-size: 14px; text-align: center; line-height: 30px; margin-bottom: 12px; }
+  .answer-pillar strong { display: block; font-size: 16px; margin-bottom: 6px; color: #fff; }
+  .answer-pillar p { color: rgba(255,255,255,0.7); font-size: 14px; margin: 0; }
+  @media (max-width: 760px) { .answer-pillars { grid-template-columns: 1fr; } }
+
+  /* BENEFIT HEADER */
+  .benefit-header { display: flex; gap: 16px; align-items: center; margin-bottom: 40px; }
+  .benefit-header-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .benefit-header.learner .benefit-header-icon { background: linear-gradient(135deg, #fde68a, #fbbf24); }
+  .benefit-header.manager .benefit-header-icon { background: linear-gradient(135deg, #c7d2fe, #4f46e5); }
+  .benefit-header-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #78716c; margin-bottom: 2px; }
+  .benefit-header-title { font-family: 'Fraunces', serif; font-weight: 700; font-size: clamp(28px, 3.6vw, 42px); letter-spacing: -0.02em; line-height: 1.1; }
+  .benefit-header-title em { font-style: italic; color: #f59e0b; }
+
+  /* JOURNEY 1/2/3 */
+  .journey { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 56px; position: relative; }
+  .journey::before { content: ''; position: absolute; top: 30px; left: 16%; right: 16%; height: 2px; background: repeating-linear-gradient(90deg, #fbbf24 0, #fbbf24 6px, transparent 6px, transparent 14px); z-index: 0; }
+  .journey-step { background: #fff; border: 2px solid #f0ebe0; border-radius: 20px; padding: 26px 24px; position: relative; z-index: 1; }
+  .journey-step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .journey-num { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a2e; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-weight: 900; font-size: 18px; flex-shrink: 0; box-shadow: 0 6px 16px rgba(251,191,36,0.35); }
+  .journey-step h3 { font-size: 17px; letter-spacing: -0.01em; }
+  .journey-step-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #78716c; margin-bottom: 2px; }
+  .journey-step p { color: #57534e; font-size: 14px; }
+  .axe-examples { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .axe-example { background: #fff7ed; border: 1px solid #fde68a; border-radius: 10px; padding: 8px 12px; font-size: 13px; color: #1a1a2e; display: flex; align-items: center; gap: 8px; }
+  @media (max-width: 860px) { .journey { grid-template-columns: 1fr; } .journey::before { display: none; } }
+
+  /* PILLARS — 4 grands pavés thématiques */
+  .pillar { background: #fff; border: 2px solid #f0ebe0; border-radius: 24px; padding: 36px; margin-bottom: 22px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 36px; align-items: center; transition: all 0.3s; }
+  .pillar:hover { border-color: #fbbf24; transform: translateY(-2px); box-shadow: 0 18px 40px rgba(26,26,46,0.05); }
+  .pillar.reverse { grid-template-columns: 1fr 1.4fr; }
+  .pillar.reverse .pillar-content { order: 2; }
+  .pillar.reverse .pillar-visual { order: 1; }
+  .pillar-head { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+  .pillar-icon { width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 6px 14px rgba(0,0,0,0.06); flex-shrink: 0; }
+  .pillar-icon.amber { background: linear-gradient(135deg, #fde68a, #fbbf24); }
+  .pillar-icon.navy { background: linear-gradient(135deg, #c7d2fe, #4f46e5); color: #fff; }
+  .pillar-icon.rose { background: linear-gradient(135deg, #fbcfe8, #ec4899); color: #fff; }
+  .pillar-icon.teal { background: linear-gradient(135deg, #a7f3d0, #14b8a6); color: #fff; }
+  .pillar-verb { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #f59e0b; margin-bottom: 2px; }
+  .pillar-title { font-family: 'Fraunces', serif; font-weight: 700; font-size: 24px; letter-spacing: -0.015em; line-height: 1.1; }
+  .pillar-desc { color: #57534e; font-size: 15px; margin-bottom: 14px; }
+  .pillar-bullets { display: flex; flex-direction: column; gap: 8px; }
+  .pillar-bullets li { list-style: none; padding-left: 22px; position: relative; color: #44403c; font-size: 14.5px; }
+  .pillar-bullets li::before { content: '→'; position: absolute; left: 0; color: #f59e0b; font-weight: 900; }
+
+  .pillar-visual-inner { background: linear-gradient(135deg, #fffbf0 0%, #fef3c7 100%); border: 1.5px solid #fde68a; border-radius: 18px; padding: 24px; min-height: 220px; display: flex; flex-direction: column; justify-content: center; gap: 12px; position: relative; overflow: hidden; }
+  .pillar-visual-inner.dark { background: linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%); border-color: rgba(251,191,36,0.2); color: #fff; }
+  .pillar-visual-inner.dark::before { content: ''; position: absolute; top: -30px; right: -30px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(251,191,36,0.2), transparent 70%); border-radius: 50%; }
+  .pillar-visual-inner.light-pink { background: linear-gradient(135deg, #fff 0%, #fce7f3 100%); border-color: #fbcfe8; }
+  .pillar-visual-inner.light-teal { background: linear-gradient(135deg, #fff 0%, #ccfbf1 100%); border-color: #a7f3d0; }
+  @media (max-width: 860px) { .pillar, .pillar.reverse { grid-template-columns: 1fr; padding: 28px 24px; } .pillar.reverse .pillar-content, .pillar.reverse .pillar-visual { order: unset; } }
+
+  /* LEVEL MINI TRACK inside pillar 1 */
+  .mini-levels { display: flex; justify-content: space-between; align-items: center; gap: 6px; position: relative; margin-top: 8px; }
+  .mini-levels::before { content: ''; position: absolute; top: 20px; left: 8%; right: 8%; height: 2px; background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399, #fb923c, #f472b6); border-radius: 2px; z-index: 0; }
+  .mini-level { position: relative; z-index: 1; text-align: center; flex: 1; }
+  .mini-level-bubble { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid #f0ebe0; display: flex; align-items: center; justify-content: center; font-size: 18px; margin: 0 auto 6px; }
+  .mini-level.l1 .mini-level-bubble { border-color: #a78bfa; }
+  .mini-level.l2 .mini-level-bubble { border-color: #60a5fa; }
+  .mini-level.l3 .mini-level-bubble { border-color: #34d399; }
+  .mini-level.l4 .mini-level-bubble { border-color: #fb923c; }
+  .mini-level.l5 .mini-level-bubble { border-color: #f472b6; }
+  .mini-level-name { font-size: 10px; font-weight: 700; color: #1a1a2e; }
+
+  /* Coaching sample inside pillar 2 */
+  .coaching-mini { }
+  .coaching-mini-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: #fbbf24; margin-bottom: 6px; }
+  .coaching-mini-mantra { font-family: 'Fraunces', serif; font-style: italic; font-size: 15px; line-height: 1.35; margin-bottom: 8px; }
+  .coaching-mini-action { background: rgba(251,191,36,0.12); border-radius: 8px; padding: 8px 10px; font-size: 12px; margin-bottom: 6px; }
+  .coaching-mini-action strong { color: #fbbf24; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 2px; }
+
+  /* Like/comment sample inside pillar 3 */
+  .social-mini { background: #fff; border: 1.5px solid #f0ebe0; border-radius: 12px; padding: 12px 14px; font-size: 13px; position: relative; z-index: 1; }
+  .social-mini-author { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .social-mini-action { color: #57534e; font-size: 12.5px; margin-bottom: 8px; }
+  .social-mini-meta { display: flex; gap: 14px; align-items: center; font-size: 12px; color: #78716c; }
+  .social-mini-meta .liked { color: #ec4899; font-weight: 600; }
+  .social-mini-comment { background: #faf8f4; border-radius: 10px; padding: 7px 10px; font-size: 12px; color: #44403c; margin-top: 8px; border-left: 3px solid #fbbf24; }
+  .social-mini-comment strong { color: #1a1a2e; }
+
+  /* Podium mini inside pillar 3 */
+  .podium-mini { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 90px; position: relative; z-index: 1; margin-top: 10px; }
+  .podium-col { display: flex; flex-direction: column; align-items: center; }
+  .podium-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a2e; font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+  .podium-col.gold .podium-avatar { background: linear-gradient(135deg, #fde047, #eab308); }
+  .podium-col.silver .podium-avatar { background: linear-gradient(135deg, #e7e5e4, #a8a29e); }
+  .podium-col.bronze .podium-avatar { background: linear-gradient(135deg, #fed7aa, #f97316); }
+  .podium-bar { background: #fff; border: 1.5px solid #f0ebe0; border-top: 3px solid #fbbf24; border-radius: 4px 4px 0 0; width: 44px; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-weight: 900; font-size: 13px; color: #1a1a2e; }
+
+  /* Quiz sample inside pillar 4 */
+  .quiz-mini { }
+  .quiz-mini-q { font-weight: 700; font-size: 14px; margin-bottom: 10px; color: #1a1a2e; }
+  .quiz-mini-opt { background: #fff; border: 1.5px solid #f0ebe0; border-radius: 10px; padding: 8px 12px; font-size: 12.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .quiz-mini-opt.correct { background: #f0fdf4; border-color: #86efac; color: #166534; font-weight: 600; }
+  .quiz-mini-opt .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #d6d3d1; flex-shrink: 0; }
+  .quiz-mini-opt.correct .dot { border-color: #16a34a; background: #16a34a; box-shadow: inset 0 0 0 2px #fff; }
+
+  /* MANAGER SECTION */
+  .manager-section { background: linear-gradient(180deg, #fff 0%, #faf8f4 100%); padding: 90px 24px; }
+
+  /* MANAGER PILLARS */
+  .mgr-pillars { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-bottom: 40px; }
+  .mgr-pillar { background: #fff; border: 2px solid #f0ebe0; border-radius: 20px; padding: 32px; transition: all 0.3s; position: relative; overflow: hidden; }
+  .mgr-pillar:hover { border-color: #4f46e5; transform: translateY(-3px); box-shadow: 0 18px 36px rgba(79,70,229,0.08); }
+  .mgr-pillar-head { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+  .mgr-pillar-icon { width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #c7d2fe, #4f46e5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+  .mgr-pillar-verb { font-family: 'Fraunces', serif; font-weight: 900; font-size: 28px; color: #1a1a2e; letter-spacing: -0.02em; line-height: 1; }
+  .mgr-pillar-verb em { color: #4f46e5; font-style: italic; }
+  .mgr-pillar-sub { font-size: 14px; color: #78716c; margin-top: 2px; }
+  .mgr-pillar-body p { color: #57534e; font-size: 14.5px; margin-bottom: 10px; }
+  .mgr-pillar-body p strong { color: #1a1a2e; }
+  .mgr-pillar-list { list-style: none; margin-top: 8px; }
+  .mgr-pillar-list li { padding: 6px 0 6px 22px; position: relative; color: #44403c; font-size: 14px; }
+  .mgr-pillar-list li::before { content: '→'; position: absolute; left: 0; color: #4f46e5; font-weight: 900; }
+  @media (max-width: 720px) { .mgr-pillars { grid-template-columns: 1fr; } }
+
+  /* REPORT RIBBON */
+  .report-ribbon { background: #1a1a2e; color: #fff; border-radius: 20px; padding: 34px 36px; display: flex; gap: 28px; align-items: center; position: relative; overflow: hidden; }
+  .report-ribbon::before { content: ''; position: absolute; top: -60px; right: -40px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(251,191,36,0.25), transparent 70%); border-radius: 50%; }
+  .report-ribbon-icon { width: 60px; height: 60px; border-radius: 16px; background: rgba(251,191,36,0.18); border: 1.5px solid rgba(251,191,36,0.3); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; position: relative; z-index: 1; }
+  .report-ribbon-body { position: relative; z-index: 1; }
+  .report-ribbon-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: #fbbf24; margin-bottom: 6px; }
+  .report-ribbon h3 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 22px; letter-spacing: -0.015em; margin-bottom: 6px; }
+  .report-ribbon p { color: rgba(255,255,255,0.75); font-size: 14.5px; }
+  @media (max-width: 720px) { .report-ribbon { flex-direction: column; text-align: center; padding: 28px 22px; } }
+
+  /* COMPARISON TABLE */
+  .compare-wrap { padding: 90px 24px 0; }
+  .compare-card { max-width: 1100px; margin: 0 auto; background: #fff; border: 2px solid #f0ebe0; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(26,26,46,0.04); }
+  .compare-head { display: grid; grid-template-columns: 1.4fr 1fr 1fr; background: linear-gradient(180deg, #faf8f4 0%, #fff 100%); border-bottom: 2px solid #f0ebe0; }
+  .compare-head-col { padding: 24px 28px; display: flex; flex-direction: column; gap: 4px; }
+  .compare-head-col:nth-child(2) { background: #fef2f2; }
+  .compare-head-col:nth-child(3) { background: #f0fdf4; border-left: 2px solid #f0ebe0; }
+  .compare-head-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #78716c; }
+  .compare-head-value { font-family: 'Fraunces', serif; font-weight: 800; font-size: 22px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+  .compare-head-value.bad { color: #991b1b; }
+  .compare-head-value.good { color: #166534; }
+  .compare-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr; border-bottom: 1px solid #f0ebe0; }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row:hover { background: #fffbf0; }
+  .compare-cell { padding: 20px 28px; display: flex; gap: 12px; align-items: flex-start; font-size: 14.5px; }
+  .compare-cell.topic { font-weight: 700; color: #1a1a2e; font-size: 15px; background: #faf8f4; }
+  .compare-cell.topic .topic-icon { font-size: 22px; flex-shrink: 0; }
+  .compare-cell.bad { color: #7f1d1d; background: #fef2f2; }
+  .compare-cell.good { color: #14532d; background: #f0fdf4; border-left: 2px solid #f0ebe0; font-weight: 500; }
+  .compare-cell .mark { font-weight: 900; font-size: 16px; flex-shrink: 0; line-height: 1.3; }
+  .compare-cell.bad .mark { color: #dc2626; }
+  .compare-cell.good .mark { color: #16a34a; }
+  @media (max-width: 760px) {
+    .compare-head, .compare-row { grid-template-columns: 1fr; }
+    .compare-head-col:nth-child(3), .compare-cell.good { border-left: none; border-top: 2px solid #f0ebe0; }
+    .compare-cell.topic { padding-bottom: 8px; }
+  }
+
+  /* INCLUDED */
+  .included { background: #1a1a2e; color: #fff; border-radius: 24px; padding: 52px 44px; text-align: center; max-width: 820px; margin: 0 auto; position: relative; overflow: hidden; }
+  .included::before { content: ''; position: absolute; top: -80px; right: -60px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(251,191,36,0.25), transparent 70%); border-radius: 50%; }
+  .included-inner { position: relative; z-index: 1; }
+  .included h3 { font-size: clamp(26px, 3.2vw, 36px); margin-bottom: 14px; letter-spacing: -0.02em; line-height: 1.2; }
+  .included h3 em { color: #fbbf24; font-style: normal; }
+  .included p { color: rgba(255,255,255,0.78); font-size: 17px; max-width: 560px; margin: 0 auto; }
+
+  /* FINAL CTA */
+  .final-cta { padding: 100px 24px; text-align: center; }
+  .final-cta h2 { font-size: clamp(32px, 4.2vw, 48px); line-height: 1.1; margin-bottom: 16px; letter-spacing: -0.02em; max-width: 680px; margin: 0 auto 16px; }
+  .final-cta h2 em { color: #f59e0b; font-style: italic; }
+  .final-cta p { font-size: 17px; color: #57534e; margin-bottom: 32px; max-width: 560px; margin-left: auto; margin-right: auto; }
+
+  footer { padding: 40px 24px; text-align: center; color: #78716c; font-size: 13px; border-top: 1px solid #f0ebe0; }
+  footer strong { color: #1a1a2e; }
+  footer a { color: #78716c; text-decoration: none; }
+
+  /* ============ APPLE-STYLE SCROLL ANIMATIONS ============ */
+
+  /* Scroll progress bar */
+  .scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: transparent; z-index: 200; pointer-events: none; }
+  .scroll-progress-bar { height: 100%; background: linear-gradient(90deg, #fbbf24, #f59e0b); width: 0%; transition: width 0.1s linear; box-shadow: 0 0 12px rgba(251,191,36,0.6); }
+
+  /* Base reveal state — hidden until in view */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); will-change: opacity, transform; }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  .reveal-left { opacity: 0; transform: translateX(-50px); transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1), transform 1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .reveal-left.in { opacity: 1; transform: translateX(0); }
+
+  .reveal-right { opacity: 0; transform: translateX(50px); transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1), transform 1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .reveal-right.in { opacity: 1; transform: translateX(0); }
+
+  .reveal-scale { opacity: 0; transform: scale(0.92); transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1), transform 1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .reveal-scale.in { opacity: 1; transform: scale(1); }
+
+  .reveal-fade { opacity: 0; transition: opacity 1.2s ease; }
+  .reveal-fade.in { opacity: 1; }
+
+  /* Staggered children — each child delays 80ms after previous */
+  .stagger > * { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+  .stagger.in > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0.05s; }
+  .stagger.in > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.15s; }
+  .stagger.in > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.25s; }
+  .stagger.in > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.35s; }
+  .stagger.in > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 0.45s; }
+  .stagger.in > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 0.55s; }
+  .stagger.in > *:nth-child(7) { opacity: 1; transform: translateY(0); transition-delay: 0.65s; }
+
+  /* Word-by-word reveal for hero title */
+  .words-in .word { display: inline-block; opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+  .words-in.in .word { opacity: 1; transform: translateY(0); }
+  .words-in.in .word:nth-child(1) { transition-delay: 0.05s; }
+  .words-in.in .word:nth-child(2) { transition-delay: 0.15s; }
+  .words-in.in .word:nth-child(3) { transition-delay: 0.25s; }
+  .words-in.in .word:nth-child(4) { transition-delay: 0.35s; }
+  .words-in.in .word:nth-child(5) { transition-delay: 0.45s; }
+  .words-in.in .word:nth-child(6) { transition-delay: 0.55s; }
+  .words-in.in .word:nth-child(7) { transition-delay: 0.65s; }
+
+  /* Parallax halo in hero — managed by JS */
+  .hero::before { will-change: transform; transition: transform 0.1s linear; }
+
+  /* Phone follows parallax */
+  .phone { will-change: transform; }
+
+  /* Smooth anchor scroll offset so sticky nav doesn't hide titles */
+  section, .compare-wrap, .answer-bridge, .manager-section { scroll-margin-top: 80px; }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-fade, .stagger > *, .words-in .word {
+      opacity: 1 !important; transform: none !important; transition: none !important;
+    }
+    .hero::before, .phone { transform: none !important; }
+  }
+
+  /* ============ PUSH-IT FURTHER : PREMIUM EFFECTS ============ */
+
+  /* Cursor blob — ambre halo that follows the cursor subtly */
+  .cursor-blob { position: fixed; width: 420px; height: 420px; border-radius: 50%; pointer-events: none; z-index: 1; left: 0; top: 0; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.02) 40%, transparent 70%); mix-blend-mode: multiply; transition: opacity 0.6s ease; opacity: 0; will-change: transform; }
+  body:hover .cursor-blob { opacity: 1; }
+  @media (hover: none), (max-width: 760px) { .cursor-blob { display: none; } }
+
+  /* Floating ambient halos — slow drift in background */
+  .ambient-halo { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; opacity: 0.5; will-change: transform; }
+  .ambient-halo.h1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(251,191,36,0.15), transparent 70%); top: 10%; right: -10%; animation: drift1 22s ease-in-out infinite; }
+  .ambient-halo.h2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(139,92,246,0.1), transparent 70%); top: 50%; left: -8%; animation: drift2 28s ease-in-out infinite; }
+  .ambient-halo.h3 { width: 350px; height: 350px; background: radial-gradient(circle, rgba(236,72,153,0.08), transparent 70%); top: 75%; right: 10%; animation: drift3 32s ease-in-out infinite; }
+  @keyframes drift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-60px, 80px); } }
+  @keyframes drift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(80px, -60px); } }
+  @keyframes drift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-40px, -80px); } }
+  section, nav, footer, .compare-wrap, .answer-bridge, .manager-section { position: relative; z-index: 2; }
+  @media (prefers-reduced-motion: reduce) { .ambient-halo { animation: none; } }
+
+  /* 3D tilt containers */
+  .tilt { transform-style: preserve-3d; transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+  .tilt:hover { box-shadow: 0 30px 60px rgba(26,26,46,0.12), 0 12px 30px rgba(26,26,46,0.06); }
+
+  /* Magnetic button wrapper */
+  .magnetic { display: inline-block; transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+
+  /* Count-up numbers on Ebbinghaus */
+  .bar-value { font-variant-numeric: tabular-nums; }
+
+  /* Reveal with blur for bigger impact */
+  .reveal-blur { opacity: 0; filter: blur(12px); transform: translateY(30px); transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1), filter 1.1s cubic-bezier(0.22, 1, 0.36, 1), transform 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .reveal-blur.in { opacity: 1; filter: blur(0); transform: translateY(0); }
+
+  /* Phone "wipe" reveal when first in view */
+  .phone { position: relative; }
+  .phone.wipe::after { content: ''; position: absolute; inset: 0; background: #faf8f4; border-radius: 42px; transform-origin: top; transform: scaleY(1); transition: transform 1.2s cubic-bezier(0.76, 0, 0.24, 1); z-index: 10; }
+  .phone.wipe.in::after { transform: scaleY(0); }
+
+  /* Section pins visual — thin gradient divider between sections */
+  .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(26,26,46,0.08), transparent); margin: 0 auto; max-width: 60%; }
+
+  /* Floating "scroll" hint on first load */
+  .scroll-hint { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; color: #78716c; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; animation: fadeInLate 1.5s ease 1.5s backwards, bounce 2.5s ease-in-out infinite 3s; z-index: 50; pointer-events: none; }
+  .scroll-hint-arrow { width: 1px; height: 30px; background: linear-gradient(180deg, transparent, #78716c); position: relative; }
+  .scroll-hint-arrow::after { content: ''; position: absolute; bottom: 0; left: -3px; width: 7px; height: 7px; border-right: 1px solid #78716c; border-bottom: 1px solid #78716c; transform: rotate(45deg); }
+  @keyframes fadeInLate { from { opacity: 0; } to { opacity: 0.6; } }
+  @keyframes bounce { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 8px); } }
+  .scroll-hint.hidden { opacity: 0; transition: opacity 0.4s ease; }
+
+  /* Parallax CSS variables used by JS */
+  .hero::before { transform: translateY(var(--halo-y, 0px)) translateX(var(--halo-mx, 0px)); }
+
+  /* Subtle mouse-tilt on hero phone */
+  .hero .phone-wrapper { perspective: 1200px; }
+</style>
+</head>
+<body>
+
+<!-- Scroll progress bar -->
+<div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
+
+<!-- Cursor blob + floating ambient halos -->
+<div class="cursor-blob" id="cursorBlob"></div>
+<div class="ambient-halo h1"></div>
+<div class="ambient-halo h2"></div>
+<div class="ambient-halo h3"></div>
+
+<!-- Scroll hint -->
+<div class="scroll-hint" id="scrollHint">
+  <span>Découvrir</span>
+  <div class="scroll-hint-arrow"></div>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo"><span class="logo-dot"></span>YAPLUKA</div>
+    <div class="nav-links">
+      <a href="#apprenant">L'apprenant</a>
+      <a href="#manager">Le manager</a>
+      <a href="#compare">Avec / Sans</a>
+      <a href="#contact" class="btn btn-amber" style="padding: 10px 18px; font-size: 14px;">Nous contacter</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <h1 class="hero-title serif words-in in" id="heroTitle"><span class="word">Après</span> <span class="word">la</span> <span class="word">formation,</span> <em><span class="word">c'est</span> <span class="word">là</span> <span class="word">que</span> <span class="word">tout</span> <span class="word">se</span> <span class="word">joue.</span></em></h1>
+    <p class="hero-sub reveal" style="transition-delay: 0.7s;">YAPLUKA est l'app d'ancrage post-formation incluse dans nos parcours h3O. 90 jours pour que ce qui a été appris devienne ce que l'on fait.</p>
+    <div class="hero-ctas reveal" style="transition-delay: 0.85s;">
+      <span class="magnetic"><a href="#contact" class="btn btn-amber">Parler d'un projet</a></span>
+      <a href="#apprenant" class="btn btn-ghost">Voir ce que ça donne</a>
+    </div>
+  </div>
+
+  <div class="phone-wrapper reveal-scale in" id="heroPhone">
+    <div class="phone wipe reveal-fade">
+      <div class="phone-inner">
+        <img src="./screenshots/dashboard.png" alt="Dashboard YAPLUKA" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section>
+  <div class="container">
+    <span class="eyebrow reveal">Le constat</span>
+    <h2 class="section-title serif reveal">80% de la formation<br/>est oublié en 30 jours.</h2>
+    <div class="problem reveal-scale">
+      <div class="problem-chart">
+        <div class="bar" style="height: 95%;"><div class="bar-value" data-count="100" data-suffix="%">0%</div><div class="bar-label">Jour J</div></div>
+        <div class="bar" style="height: 60%;"><div class="bar-value" data-count="58" data-suffix="%">0%</div><div class="bar-label">+1 semaine</div></div>
+        <div class="bar" style="height: 30%;"><div class="bar-value" data-count="33" data-suffix="%">0%</div><div class="bar-label">+1 mois</div></div>
+        <div class="bar" style="height: 18%;"><div class="bar-value" data-count="21" data-suffix="%">0%</div><div class="bar-label">+3 mois</div></div>
+      </div>
+      <div class="problem-text">
+        <h3>Ebbinghaus, 1885.<br/>Rien n'a bougé depuis.</h3>
+        <p>Deux jours en salle, un retour bureau, la charge qui reprend. <strong>La mémoire fond, les intentions s'effacent.</strong></p>
+        <p>Et personne n'a de preuve que ça a servi à quelque chose.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ANSWER BRIDGE -->
+<div class="answer-bridge">
+  <div class="answer-inner">
+    <div class="answer-eyebrow reveal">Notre réponse</div>
+    <h2 class="serif reveal">On prolonge la formation<br/>là où elle compte vraiment : <em>sur le terrain.</em></h2>
+    <p class="reveal">Pendant les 90 jours qui suivent la session, vos équipes gardent YAPLUKA dans la poche. Elles passent à l'action. Elles se motivent. Elles progressent. Et vous, vous restez connecté au réel.</p>
+    <div class="answer-pillars stagger">
+      <div class="answer-pillar">
+        <span class="answer-pillar-num">1</span>
+        <strong>Une app dans la poche</strong>
+        <p>30 secondes par jour. Zéro charge cognitive. Juste de quoi maintenir le fil.</p>
+      </div>
+      <div class="answer-pillar">
+        <span class="answer-pillar-num">2</span>
+        <strong>Un collectif qui se pousse</strong>
+        <p>Formateur, coéquipiers, coaching. L'apprenant n'est jamais seul.</p>
+      </div>
+      <div class="answer-pillar">
+        <span class="answer-pillar-num">3</span>
+        <strong>Un rapport à la fin</strong>
+        <p>Chiffres, verbatim, analyse. Pour décider la suite en connaissance de cause.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APPRENANT ============ -->
+<section id="apprenant">
+  <div class="container">
+    <div class="benefit-header learner reveal">
+      <div class="benefit-header-icon">💪</div>
+      <div>
+        <div class="benefit-header-label">Pour l'apprenant</div>
+        <div class="benefit-header-title serif">Il <em>choisit</em>. Il agit. Il progresse.</div>
+      </div>
+    </div>
+
+    <!-- JOURNEY 1/2/3 -->
+    <div class="journey stagger">
+      <div class="journey-step">
+        <div class="journey-step-head">
+          <div class="journey-num">1</div>
+          <div>
+            <div class="journey-step-label">En sortie de formation</div>
+            <h3>Il définit ses axes</h3>
+          </div>
+        </div>
+        <p>En 10 minutes, il formule <strong>2 à 3 axes</strong> qu'il veut ancrer dans son quotidien. SES axes, pas ceux du manuel.</p>
+        <div class="axe-examples">
+          <div class="axe-example">🎯 Écouter avant de proposer</div>
+          <div class="axe-example">🎯 Défendre ma valeur sans brader</div>
+        </div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-step-head">
+          <div class="journey-num">2</div>
+          <div>
+            <div class="journey-step-label">Pendant 90 jours</div>
+            <h3>Il agit, s'entoure, s'amuse</h3>
+          </div>
+        </div>
+        <p>L'app lui donne <strong>tout ce qu'il faut</strong> pour mettre en œuvre, rester motivé, se faire coacher, tester.</p>
+        <p style="margin-top: 8px; color:#78716c; font-size:13px;">📱 Notifications douces · 30 sec/jour · jamais intrusif</p>
+      </div>
+      <div class="journey-step">
+        <div class="journey-step-head">
+          <div class="journey-num">3</div>
+          <div>
+            <div class="journey-step-label">À J+90</div>
+            <h3>Il a de nouveaux réflexes</h3>
+          </div>
+        </div>
+        <p>Les intentions sont devenues des <strong>habitudes</strong>. Parfois des réflexes. Parfois même de la maîtrise.</p>
+        <p style="margin-top: 8px; color:#78716c; font-size:13px;">👑 La transformation est mesurable et durable.</p>
+      </div>
+    </div>
+
+    <h2 class="section-title serif reveal" style="margin-bottom: 10px;">Tout ce qu'il trouve dans l'app<br/>pour <em style="color:#f59e0b; font-style:italic;">y arriver</em>.</h2>
+    <p class="section-sub reveal">Quatre piliers. Pensés pour l'action, la motivation, l'accompagnement et l'autotest.</p>
+
+    <!-- PILLAR 1 : AGIR + NIVEAUX + CHECK-IN -->
+    <div class="pillar tilt reveal-left">
+      <div class="pillar-content">
+        <div class="pillar-head">
+          <div class="pillar-icon amber">⚡</div>
+          <div>
+            <div class="pillar-verb">Agir · Mesurer · Faire le point</div>
+            <div class="pillar-title">Chaque action le fait monter d'un niveau.</div>
+          </div>
+        </div>
+        <p class="pillar-desc">La pratique se muscle une rep à la fois. Chaque action terrain compte, chaque semaine se clôture par un point météo, chaque axe évolue visiblement de l'intention à la maîtrise.</p>
+        <ul class="pillar-bullets">
+          <li><strong>Noter</strong> ses actions en 2 clics (ce qui a marché, ce qui a coincé)</li>
+          <li><strong>Voir</strong> ses axes progresser sur 5 niveaux : Intention → Essai → Habitude → Réflexe → Maîtrise</li>
+          <li><strong>Clôturer</strong> sa semaine avec un check-in météo ☀️⛅⛈️ en 60 secondes</li>
+        </ul>
+      </div>
+      <div class="pillar-visual">
+        <div class="pillar-visual-inner">
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #78716c;">Ses 3 axes aujourd'hui</div>
+          <div class="mini-levels">
+            <div class="mini-level l1"><div class="mini-level-bubble">💡</div><div class="mini-level-name">Intention</div></div>
+            <div class="mini-level l2"><div class="mini-level-bubble">🧪</div><div class="mini-level-name">Essai</div></div>
+            <div class="mini-level l3"><div class="mini-level-bubble">🔄</div><div class="mini-level-name">Habitude</div></div>
+            <div class="mini-level l4"><div class="mini-level-bubble">⚡</div><div class="mini-level-name">Réflexe</div></div>
+            <div class="mini-level l5"><div class="mini-level-bubble">👑</div><div class="mini-level-name">Maîtrise</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PILLAR 2 : ACCOMPAGNEMENT (coaching + formateur) -->
+    <div class="pillar reverse tilt reveal-right">
+      <div class="pillar-visual">
+        <div class="pillar-visual-inner dark">
+          <div class="coaching-mini">
+            <div class="coaching-mini-label">Un coup de pouce coaching</div>
+            <div class="coaching-mini-mantra">« On ne convainc pas un client. On lui donne les raisons de se convaincre lui-même. »</div>
+            <div class="coaching-mini-action"><strong>Passe à l'action</strong>À ton prochain rendez-vous, remplace « je vais vous expliquer » par « dis-moi ce qui est important pour toi ».</div>
+          </div>
+        </div>
+      </div>
+      <div class="pillar-content">
+        <div class="pillar-head">
+          <div class="pillar-icon navy">💡</div>
+          <div>
+            <div class="pillar-verb">Être coaché · Rester en lien</div>
+            <div class="pillar-title">Il n'avance jamais seul.</div>
+          </div>
+        </div>
+        <p class="pillar-desc">Un conseil coaching personnalisé, contextualisé à SON axe. Un fil direct avec son formateur h3O, ouvert tant qu'il en a besoin.</p>
+        <ul class="pillar-bullets">
+          <li><strong>Recevoir</strong> un conseil coaching court : un mantra, une action à tenter, un exemple concret</li>
+          <li><strong>Échanger</strong> directement avec son formateur h3O en cas de doute, d'obstacle ou de victoire</li>
+          <li><strong>Être débloqué</strong> au bon moment — un mot au bon instant vaut 3 semaines gagnées</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- PILLAR 3 : EMULATION (like + commentaires + classement) -->
+    <div class="pillar tilt reveal-left">
+      <div class="pillar-content">
+        <div class="pillar-head">
+          <div class="pillar-icon rose">❤️</div>
+          <div>
+            <div class="pillar-verb">S'émuler · Se pousser · Célébrer</div>
+            <div class="pillar-title">Le collectif fait la moitié du boulot.</div>
+          </div>
+        </div>
+        <p class="pillar-desc">Un like qui tombe au bon moment, un commentaire d'un coéquipier, une place sur le podium : la dynamique de groupe est ce qui fait passer la semaine suivante de « bof » à « allez, j'y vais ».</p>
+        <ul class="pillar-bullets">
+          <li><strong>Liker ❤️</strong> et <strong>commenter 💬</strong> les actions des coéquipiers</li>
+          <li><strong>Suivre</strong> le classement du groupe : podium, rangs, streaks</li>
+          <li><strong>Célébrer</strong> les level-up des autres — on progresse mieux en se tirant vers le haut</li>
+        </ul>
+      </div>
+      <div class="pillar-visual">
+        <div class="pillar-visual-inner light-pink">
+          <div class="social-mini">
+            <div class="social-mini-author">Marie · il y a 2h</div>
+            <div class="social-mini-action">« J'ai posé 3 questions avant de proposer la solution. Le client a ouvert son vrai besoin — je n'aurais jamais vu ça. »</div>
+            <div class="social-mini-meta"><span class="liked">❤️ 4 likes</span><span>💬 2 commentaires</span></div>
+            <div class="social-mini-comment"><strong>Thomas :</strong> Excellent, c'est exactement ce qu'on avait travaillé ! 🔥</div>
+          </div>
+          <div class="podium-mini">
+            <div class="podium-col silver"><div class="podium-avatar">T</div><div class="podium-bar" style="height: 50px;">2</div></div>
+            <div class="podium-col gold"><div class="podium-avatar">M</div><div class="podium-bar" style="height: 68px;">1</div></div>
+            <div class="podium-col bronze"><div class="podium-avatar">S</div><div class="podium-bar" style="height: 36px;">3</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PILLAR 4 : QUIZ -->
+    <div class="pillar reverse tilt reveal-right">
+      <div class="pillar-visual">
+        <div class="pillar-visual-inner light-teal">
+          <div class="quiz-mini">
+            <div class="quiz-mini-q">❓ Face à un client qui dit « C'est trop cher », quelle est la meilleure première réaction ?</div>
+            <div class="quiz-mini-opt"><div class="dot"></div>Justifier le prix avec les caractéristiques</div>
+            <div class="quiz-mini-opt correct"><div class="dot"></div>Demander « Par rapport à quoi ? »</div>
+            <div class="quiz-mini-opt"><div class="dot"></div>Proposer tout de suite une remise</div>
+          </div>
+        </div>
+      </div>
+      <div class="pillar-content">
+        <div class="pillar-head">
+          <div class="pillar-icon teal">🧠</div>
+          <div>
+            <div class="pillar-verb">Tester · Ancrer · Mémoriser</div>
+            <div class="pillar-title">Des mini-quizz pour ancrer ce qui compte.</div>
+          </div>
+        </div>
+        <p class="pillar-desc">Quelques questions clés bâties par nos formateurs, distillées au bon rythme. De la vraie répétition espacée, pas du bachotage scolaire.</p>
+        <ul class="pillar-bullets">
+          <li><strong>Réviser</strong> les notions clés de la formation de façon ludique</li>
+          <li><strong>Valider</strong> sa compréhension et repérer ses angles morts</li>
+          <li><strong>Ancrer</strong> les bons réflexes mentaux, pas juste les pratiques</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MANAGER ============ -->
+<section class="manager-section" id="manager">
+  <div class="container">
+    <div class="benefit-header manager reveal">
+      <div class="benefit-header-icon">📊</div>
+      <div>
+        <div class="benefit-header-label">Pour le manager & le commanditaire</div>
+        <div class="benefit-header-title serif">Un rapport à J+90<br/>qui vous dit <em>exactement</em> ce que vous devez savoir.</div>
+      </div>
+    </div>
+
+    <p class="section-sub reveal">À J+90, vous recevez un rapport clair et lisible en 5 minutes. Il vous permet quatre choses concrètes :</p>
+
+    <div class="mgr-pillars stagger">
+      <div class="mgr-pillar tilt">
+        <div class="mgr-pillar-head">
+          <div class="mgr-pillar-icon">👀</div>
+          <div>
+            <div class="mgr-pillar-verb serif">Voir</div>
+            <div class="mgr-pillar-sub">Qui a fait quoi pendant les 90 jours</div>
+          </div>
+        </div>
+        <div class="mgr-pillar-body">
+          <p>Fini le « ça s'est bien passé ». Vous savez exactement ce qui s'est passé sur le terrain.</p>
+          <ul class="mgr-pillar-list">
+            <li>Les actions menées par chaque collaborateur</li>
+            <li>Les axes qui ont vraiment été travaillés</li>
+            <li>Les retours qu'ils ont eux-mêmes écrits</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mgr-pillar tilt">
+        <div class="mgr-pillar-head">
+          <div class="mgr-pillar-icon">📏</div>
+          <div>
+            <div class="mgr-pillar-verb serif">Mesurer</div>
+            <div class="mgr-pillar-sub">Les progrès, avec des chiffres</div>
+          </div>
+        </div>
+        <div class="mgr-pillar-body">
+          <p>Des indicateurs simples qui disent si la formation a produit des effets.</p>
+          <ul class="mgr-pillar-list">
+            <li>Le niveau atteint sur chaque axe : intention, habitude, réflexe, maîtrise</li>
+            <li>La régularité et le climat de l'équipe</li>
+            <li>Un score d'ancrage global, défendable devant votre direction</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mgr-pillar tilt">
+        <div class="mgr-pillar-head">
+          <div class="mgr-pillar-icon">🤝</div>
+          <div>
+            <div class="mgr-pillar-verb serif">Accompagner</div>
+            <div class="mgr-pillar-sub">Savoir quoi dire en 1-à-1</div>
+          </div>
+        </div>
+        <div class="mgr-pillar-body">
+          <p>Pour chaque collaborateur, vous savez quoi valoriser, quoi relancer, et quoi dire cette semaine.</p>
+          <ul class="mgr-pillar-list">
+            <li>Ce qu'il fait bien, et ce qui coince encore</li>
+            <li>3 choses concrètes à lui dire en 1-à-1 dès cette semaine</li>
+            <li>Un feu 🟢 🟡 🔴 par personne : qui féliciter, qui relancer, qui aider</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mgr-pillar tilt">
+        <div class="mgr-pillar-head">
+          <div class="mgr-pillar-icon">🎯</div>
+          <div>
+            <div class="mgr-pillar-verb serif">Décider</div>
+            <div class="mgr-pillar-sub">La suite, sans naviguer à vue</div>
+          </div>
+        </div>
+        <div class="mgr-pillar-body">
+          <p>Vous avez de quoi trancher : on reconduit, on approfondit, on élargit à d'autres équipes ?</p>
+          <ul class="mgr-pillar-list">
+            <li>Ce qui a marché et mérite d'être reproduit</li>
+            <li>Ce qui demande un renfort avant d'aller plus loin</li>
+            <li>De quoi justifier le budget auprès de votre direction</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-ribbon reveal-scale">
+      <div class="report-ribbon-icon">📩</div>
+      <div class="report-ribbon-body">
+        <div class="report-ribbon-label">Votre rendez-vous à J+90</div>
+        <h3>Un rapport court, clair, actionnable.</h3>
+        <p>5 minutes de lecture. De quoi parler aux collaborateurs dès la semaine suivante et décider de la suite en connaissance de cause.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<div class="compare-wrap" id="compare">
+  <div class="container" style="margin-bottom: 40px;">
+    <span class="eyebrow reveal">Le test du quotidien</span>
+    <h2 class="section-title serif reveal">Ce que ça change, concrètement.</h2>
+  </div>
+  <div class="compare-card reveal-scale">
+    <div class="compare-head">
+      <div class="compare-head-col"><span class="compare-head-title">Sujet</span></div>
+      <div class="compare-head-col">
+        <span class="compare-head-title">Sans YAPLUKA</span>
+        <span class="compare-head-value bad">😕 Le réel habituel</span>
+      </div>
+      <div class="compare-head-col">
+        <span class="compare-head-title">Avec YAPLUKA</span>
+        <span class="compare-head-value good">🎯 Ce qui change</span>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">🧠</span>Ancrage terrain</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>80% oublié en 30 jours. La formation fond.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Pratique quotidienne pendant 90 jours. Les réflexes s'installent.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">💰</span>ROI pour la direction</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>« C'était super intéressant ». Impossible à justifier.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Chiffres, verbatim, analyse. Le budget se défend tout seul.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">💪</span>Motivation</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>Enthousiasme qui retombe en 10 jours.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Niveaux, likes, classement. L'envie d'y retourner chaque semaine.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">🤝</span>Collectif</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>Chacun rentre dans son coin. Le groupe se dissout.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Les coéquipiers se likent, se commentent, se poussent.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">💡</span>Coaching individuel</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>Zéro accompagnement après la formation.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Un conseil coaching personnalisé, contextualisé à son axe.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">💬</span>Lien avec le formateur</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>Contact coupé dès la sortie de salle.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Formateur joignable par fil direct. Débloque au bon moment.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">🧠</span>Ancrage des connaissances</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>Les contenus s'effacent faute de rappel.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Mini-quizz qui consolident les notions clés.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">👀</span>Visibilité manager</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>Aucune. Vous subissez ce qui revient — ou pas.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Vous voyez qui avance, qui décroche, qui excelle.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">🎯</span>1-à-1 & suivi d'équipe</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>« Alors, ta formation ? » dans le vide.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Sujets précis, exemples concrets, conseils pour le manager.</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell topic"><span class="topic-icon">🔄</span>Reconduire ou pas</div>
+      <div class="compare-cell bad"><span class="mark">✕</span>Décision au feeling. Ou pas de décision du tout.</div>
+      <div class="compare-cell good"><span class="mark">✓</span>Une décision factuelle, argumentée, défendable.</div>
+    </div>
+  </div>
+</div>
+
+<!-- INCLUDED -->
+<section>
+  <div class="included reveal-scale">
+    <div class="included-inner">
+      <h3 class="serif">YAPLUKA est <em>inclus</em> dans nos formations h3O.</h3>
+      <p>Pas de devis séparé, pas de ligne en plus. Vous nous confiez une formation, nous vous livrons la formation <strong style="color:#fff;">et</strong> les 90 jours qui suivent.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section id="contact" class="final-cta">
+  <h2 class="serif reveal">On en <em>discute</em> ?</h2>
+  <p class="reveal">30 minutes pour comprendre votre besoin, les équipes concernées, et définir le bon format de formation.</p>
+  <span class="magnetic reveal"><a href="mailto:flacabanne@h3o-rh.fr?subject=YAPLUKA%20h3O%20—%20Demande%20d%27échange" class="btn btn-amber">Écrire à l'équipe h3O</a></span>
+</section>
+
+<footer>
+  <strong>h3O · YAPLUKA</strong> — L'ancrage post-formation inclus dans nos parcours · <a href="mailto:flacabanne@h3o-rh.fr">flacabanne@h3o-rh.fr</a>
+</footer>
+
+<script>
+  // ============ SCROLL PROGRESS BAR ============
+  const scrollBar = document.getElementById('scrollBar');
+  function updateScrollBar() {
+    const h = document.documentElement;
+    const total = h.scrollHeight - h.clientHeight;
+    const pct = total > 0 ? (h.scrollTop / total) * 100 : 0;
+    scrollBar.style.width = pct + '%';
+  }
+
+  // ============ PARALLAX HERO HALO + PHONE ============
+  const hero = document.querySelector('.hero');
+  const heroPhone = document.getElementById('heroPhone');
+  function updateParallax() {
+    const y = window.scrollY;
+    if (y < window.innerHeight) {
+      // Halo moves slower than scroll
+      if (hero) hero.style.setProperty('--halo-y', (y * 0.4) + 'px');
+      // Phone moves slightly up, fades at same time
+      if (heroPhone) {
+        const t = Math.min(y / 600, 1);
+        heroPhone.style.transform = `translateY(${y * -0.08}px) scale(${1 - t * 0.05})`;
+        heroPhone.style.opacity = 1 - t * 0.3;
+      }
+    }
+  }
+
+  // Combine scroll handlers with requestAnimationFrame
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        updateScrollBar();
+        updateParallax();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+  updateScrollBar();
+  updateParallax();
+
+  // ============ INTERSECTION OBSERVER — reveal on scroll ============
+  const targets = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-fade, .stagger');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        // Trigger bar-grow replay for Ebbinghaus chart when in view
+        if (entry.target.classList.contains('problem')) {
+          entry.target.querySelectorAll('.bar').forEach((b, i) => {
+            b.style.animation = 'none';
+            b.offsetHeight; // force reflow
+            b.style.animation = `bar-grow 1.2s cubic-bezier(0.22, 1, 0.36, 1) ${0.1 + i * 0.15}s backwards`;
+          });
+        }
+        io.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.12,
+    rootMargin: '0px 0px -80px 0px',
+  });
+  targets.forEach((el) => io.observe(el));
+
+  // ============ HERO TITLE — already visible (no reveal observer needed, handled via .in preset on load) ============
+
+  // ============ SMOOTH SCROLL FOR NAV LINKS — fine-tuned easing ============
+  document.querySelectorAll('a[href^="#"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href');
+      if (id === '#' || !id) return;
+      const target = document.querySelector(id);
+      if (!target) return;
+      e.preventDefault();
+      const top = target.getBoundingClientRect().top + window.scrollY - 70;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  });
+
+  // ============ CURSOR BLOB — smooth follow ============
+  const cursorBlob = document.getElementById('cursorBlob');
+  let blobX = window.innerWidth / 2, blobY = window.innerHeight / 2;
+  let targetX = blobX, targetY = blobY;
+  window.addEventListener('mousemove', (e) => { targetX = e.clientX; targetY = e.clientY; }, { passive: true });
+  function animateBlob() {
+    blobX += (targetX - blobX) * 0.12;
+    blobY += (targetY - blobY) * 0.12;
+    cursorBlob.style.transform = `translate(${blobX}px, ${blobY}px) translate(-50%, -50%)`;
+    requestAnimationFrame(animateBlob);
+  }
+  animateBlob();
+
+  // ============ MAGNETIC BUTTONS ============
+  document.querySelectorAll('.magnetic').forEach((el) => {
+    const btn = el.querySelector('a') || el;
+    el.addEventListener('mousemove', (e) => {
+      const rect = el.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      el.style.transform = `translate(${x * 0.3}px, ${y * 0.5}px)`;
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = 'translate(0, 0)';
+    });
+  });
+
+  // ============ 3D TILT ON CARDS ============
+  const supportsHover = window.matchMedia('(hover: hover)').matches;
+  if (supportsHover) {
+    document.querySelectorAll('.tilt').forEach((el) => {
+      el.addEventListener('mousemove', (e) => {
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const cx = rect.width / 2;
+        const cy = rect.height / 2;
+        const rx = ((y - cy) / cy) * -4;
+        const ry = ((x - cx) / cx) * 4;
+        el.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = '';
+      });
+    });
+  }
+
+  // ============ HERO MOUSE PARALLAX ON PHONE ============
+  const heroWrap = document.querySelector('.hero');
+  const heroPhoneEl = document.querySelector('.hero .phone');
+  if (heroWrap && heroPhoneEl && supportsHover) {
+    heroWrap.addEventListener('mousemove', (e) => {
+      const rect = heroWrap.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+      heroPhoneEl.style.transform = `perspective(1400px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateZ(0)`;
+      heroWrap.style.setProperty('--halo-mx', (x * 30) + 'px');
+    });
+    heroWrap.addEventListener('mouseleave', () => {
+      heroPhoneEl.style.transform = '';
+      heroWrap.style.setProperty('--halo-mx', '0px');
+    });
+  }
+
+  // ============ COUNT-UP ANIMATION ON STATS ============
+  function animateCount(el) {
+    const target = parseInt(el.dataset.count, 10);
+    const suffix = el.dataset.suffix || '';
+    const duration = 1400;
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      const value = Math.round(target * eased);
+      el.textContent = value + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const countObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('[data-count]').forEach((el, i) => {
+          setTimeout(() => animateCount(el), 150 + i * 120);
+        });
+        countObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.problem').forEach((el) => countObserver.observe(el));
+
+  // ============ HIDE SCROLL HINT ON FIRST SCROLL ============
+  const scrollHint = document.getElementById('scrollHint');
+  let hintHidden = false;
+  window.addEventListener('scroll', () => {
+    if (!hintHidden && window.scrollY > 120) {
+      scrollHint.classList.add('hidden');
+      hintHidden = true;
+    }
+  }, { passive: true });
+</script>
+
+</body>
+</html>
