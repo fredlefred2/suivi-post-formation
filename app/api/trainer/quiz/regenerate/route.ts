@@ -43,10 +43,9 @@ export async function POST(request: NextRequest) {
   }
 
   const { week, year } = getCurrentWeek()
-  // TEST v1.29.4 — restriction semaine paire désactivée (à revert)
-  // if (!isQuizWeek(week)) {
-  //   return NextResponse.json({ error: `Semaine ${week} impaire — pas de quiz cette semaine.` }, { status: 400 })
-  // }
+  if (!isQuizWeek(week)) {
+    return NextResponse.json({ error: `Semaine ${week} impaire — pas de quiz cette semaine.` }, { status: 400 })
+  }
 
   const result = await generateQuizForGroup({
     groupId,

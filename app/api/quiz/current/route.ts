@@ -21,10 +21,10 @@ export async function GET() {
 
   const { week, year } = getCurrentWeek()
 
-  // TEST v1.29.4 — restriction semaine paire désactivée (à revert)
-  // if (!isQuizWeek(week)) {
-  //   return NextResponse.json({ quiz: null, attempt: null, nextPosition: null, answeredCount: 0, totalQuestions: QUIZ_QUESTIONS_PER_QUIZ })
-  // }
+  // Semaine impaire : pas de quiz cette semaine
+  if (!isQuizWeek(week)) {
+    return NextResponse.json({ quiz: null, attempt: null, nextPosition: null, answeredCount: 0, totalQuestions: QUIZ_QUESTIONS_PER_QUIZ })
+  }
 
   // Trouver le groupe de l'apprenant
   const { data: membership } = await supabaseAdmin
