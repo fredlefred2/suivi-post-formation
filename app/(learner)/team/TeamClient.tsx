@@ -133,29 +133,26 @@ export default function TeamClient({
                     {learner.name}
                   </p>
 
-                  {/* 3 mini-compteurs : actions / quiz / check-in */}
-                  <div className="flex gap-1 mt-1 mb-2">
-                    <span
-                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold"
-                      style={{ background: '#d1fae5', color: '#065f46' }}
-                      title="Actions"
-                    >
-                      📝<span>{learner.last15Actions}</span>
-                    </span>
-                    <span
-                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold"
-                      style={{ background: '#ede9fe', color: '#5b21b6' }}
-                      title="Quiz répondus"
-                    >
-                      🎯<span>{learner.last15Quizzes}</span>
-                    </span>
-                    <span
-                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold"
-                      style={{ background: '#dbeafe', color: '#075985' }}
-                      title="Check-ins"
-                    >
-                      🌤️<span>{learner.last15Checkins}</span>
-                    </span>
+                  {/* Stats 15j : 3 lignes de texte sous le nom */}
+                  <div className="flex flex-col gap-0.5 mt-1 mb-2 text-center">
+                    <p className="text-[10px] font-semibold" style={{ color: '#1a1a2e' }}>
+                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Actions}</span>
+                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                        action{learner.last15Actions !== 1 ? 's' : ''}
+                      </span>
+                    </p>
+                    <p className="text-[10px] font-semibold" style={{ color: '#1a1a2e' }}>
+                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Checkins}</span>
+                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                        check-in{learner.last15Checkins !== 1 ? 's' : ''}
+                      </span>
+                    </p>
+                    <p className="text-[10px] font-semibold" style={{ color: '#1a1a2e' }}>
+                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Quizzes}</span>
+                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                        quizz
+                      </span>
+                    </p>
                   </div>
 
                   <div

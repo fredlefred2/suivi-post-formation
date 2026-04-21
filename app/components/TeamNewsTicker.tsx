@@ -7,13 +7,13 @@ type Props = {
   news: string[]
 }
 
-const ITEM_HEIGHT = 22 // px — doit correspondre à la CSS ci-dessous
-const DWELL_MS = 4500  // durée d'affichage d'une news
-const TRANSITION_MS = 450 // durée d'animation entre 2 news
+const ITEM_HEIGHT = 28 // px — hauteur d'une ligne, doit correspondre au line-height
+const DWELL_MS = 5000
+const TRANSITION_MS = 450
 
 /**
  * Bandeau d'actualités du groupe — affiche une news à la fois avec slide-up
- * toutes les ~4.5s. Pause au hover. Masqué si aucune news.
+ * toutes les ~5s. Pause au hover. Masqué si aucune news.
  */
 export default function TeamNewsTicker({ news }: Props) {
   const [index, setIndex] = useState(0)
@@ -32,13 +32,12 @@ export default function TeamNewsTicker({ news }: Props) {
 
   return (
     <div
-      className="flex items-center overflow-hidden rounded-[16px]"
+      className="flex items-center rounded-[16px]"
       style={{
         background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
         border: '2px solid #fde68a',
         boxShadow: '0 2px 8px rgba(251,191,36,0.15)',
         padding: '10px 14px',
-        height: 44,
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -46,8 +45,8 @@ export default function TeamNewsTicker({ news }: Props) {
       <div
         className="shrink-0 mr-3 flex items-center justify-center rounded-full"
         style={{
-          width: 26,
-          height: 26,
+          width: 28,
+          height: 28,
           background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
           boxShadow: '0 2px 6px rgba(251,191,36,0.4)',
         }}
@@ -56,7 +55,7 @@ export default function TeamNewsTicker({ news }: Props) {
       </div>
 
       <div
-        className="relative flex-1 overflow-hidden"
+        className="relative flex-1 min-w-0 overflow-hidden"
         style={{ height: ITEM_HEIGHT }}
       >
         <div
@@ -84,23 +83,6 @@ export default function TeamNewsTicker({ news }: Props) {
           ))}
         </div>
       </div>
-
-      {/* Indicateur de progression (petits points) */}
-      {news.length > 1 && (
-        <div className="flex gap-1 ml-2 shrink-0">
-          {news.map((_, i) => (
-            <span
-              key={i}
-              className="inline-block rounded-full transition-all"
-              style={{
-                width: i === index ? 14 : 4,
-                height: 4,
-                background: i === index ? '#f59e0b' : 'rgba(245,158,11,0.25)',
-              }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
