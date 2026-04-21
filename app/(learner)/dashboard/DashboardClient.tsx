@@ -219,7 +219,33 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* ── 2. Carte "À faire aujourd'hui" (dégradé warm + date + halo) ── */}
+        {/* ── 2. Mes axes — remontés en haut (v1.29.4) ── */}
+        {axes.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="section-title">Mes axes</h2>
+              {axesCount < 3 && (
+                <Link href="/axes" className="text-xs font-bold hover:underline" style={{ color: '#92400e' }}>
+                  + Ajouter
+                </Link>
+              )}
+            </div>
+
+            {axes.map((axe) => (
+              <AxeRing
+                key={axe.id}
+                axeId={axe.id}
+                axeIndex={axe.index}
+                subject={axe.subject}
+                completedCount={axe.completedCount}
+                likesCount={axe.likesCount}
+                commentsCount={axe.commentsCount}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ── 3. Carte "À faire aujourd'hui" (dégradé warm + date + halo) ── */}
         {axes.length > 0 && (
           <div
             className={`rounded-[22px] px-3 py-3.5 ${hasPendingTask ? 'tasks-card-halo' : ''}`}
@@ -261,6 +287,51 @@ export default function DashboardClient({
           </div>
         )}
 
+        {/* ── 4. Carte Quiz de la semaine (v1.29.4 — placeholder en attendant le dev complet) ── */}
+        {axes.length > 0 && (
+          <div
+            className="rounded-[22px] px-3 py-3.5"
+            style={{
+              background: 'linear-gradient(180deg, #ffffff 0%, #fffbf0 100%)',
+              border: '2px solid #fde68a',
+              boxShadow: '0 4px 18px rgba(251,191,36,0.18)',
+            }}
+          >
+            <div className="flex items-center gap-2.5">
+              <div
+                className="flex items-center justify-center flex-shrink-0"
+                style={{
+                  width: 40, height: 40, borderRadius: 12,
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                  boxShadow: '0 4px 12px rgba(251,191,36,0.4)',
+                  fontSize: 18,
+                }}
+              >
+                🎯
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-extrabold tracking-wider uppercase" style={{ color: '#92400e' }}>
+                  Quiz de la semaine
+                </p>
+                <p className="text-[13px] font-bold mt-0.5" style={{ color: '#1a1a2e' }}>
+                  {groupTheme ? '3 questions · 45 secondes' : 'Bientôt disponible'}
+                </p>
+              </div>
+            </div>
+            <button
+              disabled={!groupTheme}
+              className="w-full mt-3 py-3 rounded-2xl font-extrabold text-[14px] tap-scale disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{
+                background: groupTheme ? '#fbbf24' : '#f0ebe0',
+                color: groupTheme ? '#1a1a2e' : '#a0937c',
+                boxShadow: groupTheme ? '0 4px 20px rgba(251,191,36,0.3)' : 'none',
+              }}
+            >
+              {groupTheme ? 'Démarrer le quiz →' : 'Quiz bientôt ouvert'}
+            </button>
+          </div>
+        )}
+
         {/* Barre de progression onboarding */}
         {pct < 100 && (
           <div className="card p-4">
@@ -291,32 +362,6 @@ export default function DashboardClient({
             <p className="text-sm font-bold" style={{ color: '#1a1a2e' }}>Commence ton parcours !</p>
             <p className="text-xs mt-1" style={{ color: '#a0937c' }}>Crée ton premier axe de progrès</p>
           </Link>
-        )}
-
-        {/* ── 3. Mes axes (format hybride : cercle + texte) ── */}
-        {axes.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h2 className="section-title">Mes axes</h2>
-              {axesCount < 3 && (
-                <Link href="/axes" className="text-xs font-bold hover:underline" style={{ color: '#92400e' }}>
-                  + Ajouter
-                </Link>
-              )}
-            </div>
-
-            {axes.map((axe) => (
-              <AxeRing
-                key={axe.id}
-                axeId={axe.id}
-                axeIndex={axe.index}
-                subject={axe.subject}
-                completedCount={axe.completedCount}
-                likesCount={axe.likesCount}
-                commentsCount={axe.commentsCount}
-              />
-            ))}
-          </div>
         )}
 
         {/* Quick Add Action Modal */}
