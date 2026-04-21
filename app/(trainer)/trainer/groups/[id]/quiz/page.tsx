@@ -58,7 +58,8 @@ export default async function TrainerGroupQuizPage({ params }: { params: { id: s
   if (!group) notFound()
 
   const { week, year } = getCurrentWeek()
-  const isCurrentWeekQuizWeek = isQuizWeek(week)
+  // TEST v1.29.4 — restriction semaine paire désactivée (à revert)
+  const isCurrentWeekQuizWeek = true // isQuizWeek(week)
 
   // ── Quiz de la semaine courante ──
   let currentQuiz: QuizRow | null = null
