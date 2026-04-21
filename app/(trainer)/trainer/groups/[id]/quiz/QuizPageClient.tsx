@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { HelpCircle, Sparkles, Loader2, Clock, Check, X, FileText, AlertCircle } from 'lucide-react'
+import { HelpCircle, Sparkles, Loader2, Clock, Check, FileText, AlertCircle, RefreshCw } from 'lucide-react'
 import { QUIZ_QUESTIONS_PER_QUIZ, QUIZ_SECONDS_PER_QUESTION } from '@/lib/types'
 
 type Question = {
@@ -75,6 +75,8 @@ export default function TrainerGroupQuizClient({
   const router = useRouter()
   const [isRegenerating, startTransition] = useTransition()
   const [regenError, setRegenError] = useState<string | null>(null)
+  const [regenQuestionId, setRegenQuestionId] = useState<string | null>(null)
+  const [questionError, setQuestionError] = useState<{ id: string; msg: string } | null>(null)
 
   const hasTheme = (theme ?? '').trim().length >= 20
 
@@ -98,6 +100,28 @@ export default function TrainerGroupQuizClient({
         setRegenError('Erreur réseau')
       }
     })
+  }
+
+  const handleRegenerateQuestion = async (questionId: string) => {
+    if (!currentQuiz) return
+    setQuestionError(null)
+    setRegenQuestionId(questionId)
+    try {
+      const res = await fetch('/api/trainer/quiz/regenerate-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizId: currentQuiz.id, questionId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setQuestionError({ id: questionId, msg: data?.error ?? 'Erreur' })
+      } else {
+        router.refresh()
+      }
+    } catch {
+      setQuestionError({ id: questionId, msg: 'Erreur réseau' })
+    }
+    setRegenQuestionId(null)
   }
 
   return (
@@ -178,9 +202,26 @@ export default function TrainerGroupQuizClient({
           <div className="space-y-4">
             {currentQuestions.map((q, i) => (
               <div key={q.id} style={{ borderTop: i === 0 ? 'none' : '2px solid #f0ebe0', paddingTop: i === 0 ? 0 : 16 }}>
-                <p className="text-[11px] font-extrabold tracking-wider uppercase mb-2" style={{ color: '#a0937c' }}>
-                  Question {q.position} · {q.type === 'qcm' ? 'QCM' : 'Vrai / Faux'}
-                </p>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <p className="text-[11px] font-extrabold tracking-wider uppercase" style={{ color: '#a0937c' }}>
+                    Question {q.position} · {q.type === 'qcm' ? 'QCM' : 'Vrai / Faux'}
+                  </p>
+                  <button
+                    onClick={() => handleRegenerateQuestion(q.id)}
+                    disabled={regenQuestionId === q.id || isRegenerating}
+                    className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold rounded-lg transition-colors hover:bg-[#fffbeb] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ color: '#92400e' }}
+                    title="Régénérer cette question avec l'IA"
+                  >
+                    {regenQuestionId === q.id ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                    {regenQuestionId === q.id ? 'Génération…' : 'Régénérer'}
+                  </button>
+                </div>
+                {questionError?.id === q.id && (
+                  <div className="rounded-lg px-3 py-2 text-[12px] mb-2" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>
+                    {questionError.msg}
+                  </div>
+                )}
                 <p className="text-[14px] font-bold leading-snug" style={{ color: '#1a1a2e' }}>{q.question}</p>
 
                 <div className="mt-2 space-y-1.5">

@@ -168,7 +168,7 @@ export type QuizAnswer = {
 
 // Constantes quiz
 export const QUIZ_QUESTIONS_PER_QUIZ = 4
-export const QUIZ_SECONDS_PER_QUESTION = 15
+export const QUIZ_SECONDS_PER_QUESTION = 60
 export const QUIZ_BRIEF_MAX_LENGTH = 2000
 
 // Un quiz existe uniquement les semaines ISO paires

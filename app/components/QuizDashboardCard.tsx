@@ -69,7 +69,7 @@ export default function QuizDashboardCard() {
 
   const subLabel = inProgress
     ? `Question ${nextPosition} sur ${totalQuestions}`
-    : `${totalQuestions} questions · ${totalQuestions * 15} secondes`
+    : `${totalQuestions} questions · 1 minute chacune`
 
   return (
     <>
