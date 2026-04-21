@@ -129,31 +129,9 @@ export default function TeamClient({
                     {getInitials(learner.name)}
                   </div>
 
-                  <p className="text-[11px] font-bold text-center truncate w-full" style={{ color: '#1a1a2e' }}>
+                  <p className="text-[11px] font-bold text-center truncate w-full mb-2" style={{ color: '#1a1a2e' }}>
                     {learner.name}
                   </p>
-
-                  {/* Stats 15j : 3 lignes de texte sous le nom */}
-                  <div className="flex flex-col gap-0.5 mt-1 mb-2 text-center">
-                    <p className="text-[10px] font-semibold" style={{ color: '#1a1a2e' }}>
-                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Actions}</span>
-                      <span className="ml-1" style={{ color: '#a0937c' }}>
-                        action{learner.last15Actions !== 1 ? 's' : ''}
-                      </span>
-                    </p>
-                    <p className="text-[10px] font-semibold" style={{ color: '#1a1a2e' }}>
-                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Checkins}</span>
-                      <span className="ml-1" style={{ color: '#a0937c' }}>
-                        check-in{learner.last15Checkins !== 1 ? 's' : ''}
-                      </span>
-                    </p>
-                    <p className="text-[10px] font-semibold" style={{ color: '#1a1a2e' }}>
-                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Quizzes}</span>
-                      <span className="ml-1" style={{ color: '#a0937c' }}>
-                        quizz
-                      </span>
-                    </p>
-                  </div>
 
                   <div
                     className="w-full rounded-t-xl flex items-center justify-center font-bold text-white"
@@ -165,6 +143,28 @@ export default function TeamClient({
                     }}
                   >
                     {actualRank}
+                  </div>
+
+                  {/* Stats 15j — SOUS la marche */}
+                  <div className="w-full pt-2 text-center">
+                    <p className="text-[10px] font-semibold leading-tight" style={{ color: '#1a1a2e' }}>
+                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Actions}</span>
+                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                        action{learner.last15Actions !== 1 ? 's' : ''}
+                      </span>
+                    </p>
+                    <p className="text-[10px] font-semibold leading-tight" style={{ color: '#1a1a2e' }}>
+                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Checkins}</span>
+                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                        check-in{learner.last15Checkins !== 1 ? 's' : ''}
+                      </span>
+                    </p>
+                    <p className="text-[10px] font-semibold leading-tight" style={{ color: '#1a1a2e' }}>
+                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Quizzes}</span>
+                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                        quizz
+                      </span>
+                    </p>
                   </div>
                 </div>
               )

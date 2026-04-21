@@ -7,13 +7,14 @@ type Props = {
   news: string[]
 }
 
-const ITEM_HEIGHT = 28 // px — hauteur d'une ligne, doit correspondre au line-height
+const ITEM_HEIGHT = 38 // px — hauteur d'un slot (2 lignes × 19px line-height)
+const LINE_HEIGHT = 19
 const DWELL_MS = 5000
 const TRANSITION_MS = 450
 
 /**
- * Bandeau d'actualités du groupe — affiche une news à la fois avec slide-up
- * toutes les ~5s. Pause au hover. Masqué si aucune news.
+ * Bandeau d'actualités du groupe — affiche une news à la fois (max 2 lignes)
+ * avec slide-up toutes les ~5s. Pause au hover. Masqué si aucune news.
  */
 export default function TeamNewsTicker({ news }: Props) {
   const [index, setIndex] = useState(0)
@@ -37,7 +38,7 @@ export default function TeamNewsTicker({ news }: Props) {
         background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
         border: '2px solid #fde68a',
         boxShadow: '0 2px 8px rgba(251,191,36,0.15)',
-        padding: '10px 14px',
+        padding: '8px 12px',
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -69,13 +70,14 @@ export default function TeamNewsTicker({ news }: Props) {
               key={i}
               style={{
                 height: ITEM_HEIGHT,
-                lineHeight: `${ITEM_HEIGHT}px`,
-                fontSize: 13,
+                lineHeight: `${LINE_HEIGHT}px`,
+                fontSize: 12.5,
                 fontWeight: 700,
                 color: '#1a1a2e',
-                whiteSpace: 'nowrap',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis',
               }}
             >
               {item}
