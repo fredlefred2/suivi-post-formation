@@ -11,6 +11,7 @@ import DashboardIcons from '@/app/components/DashboardIcons'
 import OpenAppPrompt from '@/app/components/OpenAppPrompt'
 import AxeRing from '@/app/components/AxeRing'
 import QuizDashboardCard from '@/app/components/QuizDashboardCard'
+import HeaderNavy from '@/app/components/ui/HeaderNavy'
 import { CheckinHistoryModal, CoachHistoryModal } from '@/app/components/HistoryModals'
 import { useOnboarding } from '@/lib/onboarding-context'
 import { getNextLevel } from '@/lib/axeHelpers'
@@ -169,45 +170,41 @@ export default function DashboardClient({
     <TipProvider>
       <div className="space-y-3 pb-20 sm:pb-4 dash-watermark">
 
-        {/* ── 1. Header navy dégradé (v1.29.3) ── */}
-        <div
-          className="rounded-[22px] px-[18px] py-[14px] relative overflow-hidden"
-          data-onboarding="checkin-area"
-          style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
-        >
-          {/* Cercle décoratif amber */}
-          <div className="absolute -top-4 -right-3 w-[70px] h-[70px] rounded-full" style={{ background: 'rgba(251,191,36,0.14)' }} />
-
-          <div className="relative">
-            <h1 className="text-[16px] font-extrabold text-white leading-tight">
-              {greeting ?? 'Salut'} {firstName} 👋
-              {weatherEmoji && <span className="ml-1.5 text-[14px]" aria-hidden>{weatherEmoji}</span>}
-            </h1>
-            <p className="text-[12px] mt-1 font-semibold flex items-center flex-wrap gap-x-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              💪 <span style={{ color: '#fbbf24' }} className="font-extrabold">{animatedActions}</span> actions
-              <span style={{ color: 'rgba(255,255,255,0.3)' }}> · </span>
-              {deltaActionsThisWeek >= 0 ? (
-                <>
-                  <span style={{ color: deltaActionsThisWeek > 0 ? '#fbbf24' : 'rgba(255,255,255,0.7)' }} className="font-extrabold">
-                    {deltaActionsThisWeek > 0 ? `+${animatedDelta}` : '0'}
-                  </span>
-                  <span>cette sem.</span>
-                </>
-              ) : null}
-              {rank && rank <= 3 && groupSize && groupSize > 1 && (
-                <>
-                  <span style={{ color: 'rgba(255,255,255,0.3)' }}> · </span>
-                  🏆 <span style={{ color: '#fbbf24' }} className="font-extrabold">
-                    {rank === 1 ? '1er' : rank === 2 ? '2e' : '3e'}
-                  </span>
-                </>
-              )}
-            </p>
-
-            {/* Phrase de contexte dynamique (v1.29.3) — masquée pendant l'onboarding */}
+        {/* ── 1. Header navy harmonisé (composant partagé) ── */}
+        <div data-onboarding="checkin-area">
+          <HeaderNavy
+            title={
+              <>
+                {greeting ?? 'Salut'} {firstName} 👋
+                {weatherEmoji && <span className="ml-1.5 text-[14px]" aria-hidden>{weatherEmoji}</span>}
+              </>
+            }
+            subtitle={
+              <span className="flex items-center flex-wrap gap-x-1">
+                💪 <span style={{ color: '#fbbf24' }} className="font-extrabold">{animatedActions}</span> actions
+                <span style={{ color: 'rgba(255,255,255,0.3)' }}> · </span>
+                {deltaActionsThisWeek >= 0 ? (
+                  <>
+                    <span style={{ color: deltaActionsThisWeek > 0 ? '#fbbf24' : 'rgba(255,255,255,0.7)' }} className="font-extrabold">
+                      {deltaActionsThisWeek > 0 ? `+${animatedDelta}` : '0'}
+                    </span>
+                    <span>cette sem.</span>
+                  </>
+                ) : null}
+                {rank && rank <= 3 && groupSize && groupSize > 1 && (
+                  <>
+                    <span style={{ color: 'rgba(255,255,255,0.3)' }}> · </span>
+                    🏆 <span style={{ color: '#fbbf24' }} className="font-extrabold">
+                      {rank === 1 ? '1er' : rank === 2 ? '2e' : '3e'}
+                    </span>
+                  </>
+                )}
+              </span>
+            }
+          >
             {contextPhrase && !isOnboarding && (
               <div
-                className="mt-2.5 px-2.5 py-1.5 rounded-xl text-[12px] leading-[1.4] flex items-center gap-1.5"
+                className="px-2.5 py-1.5 rounded-xl text-[12px] leading-[1.4] flex items-center gap-1.5"
                 style={{
                   background: 'rgba(251,191,36,0.14)',
                   border: '1px solid rgba(251,191,36,0.25)',
@@ -217,7 +214,7 @@ export default function DashboardClient({
                 <span className="[&_strong]:text-[#fbbf24] [&_strong]:font-extrabold [&_em]:text-white">{contextPhrase}</span>
               </div>
             )}
-          </div>
+          </HeaderNavy>
         </div>
 
         {/* ── 2. Mes axes — présentation verticale 3 colonnes (v1.29.4) ── */}

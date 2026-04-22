@@ -4,6 +4,7 @@ import { useState, useTransition, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { UserCheck, UserMinus, ChevronDown } from 'lucide-react'
 import { assignToGroup, removeFromGroup } from './actions'
+import HeaderNavy from '@/app/components/ui/HeaderNavy'
 
 type LearnerStats = {
   axesCount: number
@@ -213,20 +214,10 @@ export default function ApprenantsClient({
 
   return (
     <div className="space-y-6 pb-4">
-      <div
-        className="rounded-2xl p-4 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)',
-          boxShadow: '0 8px 30px rgba(26, 26, 46, 0.3)',
-        }}
-      >
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
-        <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
-        <div className="relative">
-          <h1 className="text-xl font-extrabold text-white">Participants</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{learners.length} inscrit{learners.length !== 1 ? 's' : ''}</p>
-        </div>
-      </div>
+      <HeaderNavy
+        title="Participants"
+        subtitle={<>{learners.length} inscrit{learners.length !== 1 ? 's' : ''}</>}
+      />
 
       {learners.length === 0 ? (
         <div className="card text-center py-10 text-gray-500 text-sm">
