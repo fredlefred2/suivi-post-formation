@@ -226,7 +226,7 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
                           <ActionFeedback
                             actionId={a.id}
                             feedback={feedbackMap[a.id]}
-                            canInteract={false}
+                            canInteract={true}
                           />
                         )}
                       </div>
