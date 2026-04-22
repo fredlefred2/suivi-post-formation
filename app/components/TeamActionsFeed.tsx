@@ -2,36 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
-import ActionFeedback from './ActionFeedback'
 import type { ActionFeedbackData } from '@/lib/types'
-
-// Couleurs de niveau (alignées sur l'app)
-const LEVEL_BG: Record<number, string> = {
-  0: '#94a3b8', // Intention — slate
-  1: '#0ea5e9', // Essai — sky
-  2: '#10b981', // Habitude — emerald
-  3: '#f59e0b', // Réflexe — amber
-  4: '#fb7185', // Maîtrise — rose
-}
-
-function getLevel(count: number): { icon: string; level: number; label: string } {
-  if (count === 0) return { icon: '💡', level: 0, label: 'Intention' }
-  if (count <= 2) return { icon: '🧪', level: 1, label: 'Essai' }
-  if (count <= 4) return { icon: '🔄', level: 2, label: 'Habitude' }
-  if (count <= 6) return { icon: '⚡', level: 3, label: 'Réflexe' }
-  return { icon: '👑', level: 4, label: 'Maîtrise' }
-}
-
-function formatAge(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const minutes = Math.round(diff / 60000)
-  if (minutes < 60) return `il y a ${Math.max(1, minutes)} min`
-  const hours = Math.round(minutes / 60)
-  if (hours < 24) return `il y a ${hours} h`
-  const days = Math.round(hours / 24)
-  if (days === 1) return 'hier'
-  return `il y a ${days} j`
-}
+import ActionItem from './ui/ActionItem'
+import Chip from './ui/Chip'
 
 type Action = {
   id: string
@@ -47,7 +20,7 @@ type Props = {
   actions: Action[]
   feedbackMap: Record<string, ActionFeedbackData>
   deltaThisWeek: number
-  /** Nombre d'actions visibles dans le feed avant le bouton Voir tout */
+  /** Nombre d'actions visibles avant le bouton "Voir tout" */
   visibleCount?: number
 }
 
@@ -92,84 +65,36 @@ export default function TeamActionsFeed({
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <p className="text-[11px] font-extrabold tracking-wider uppercase" style={{ color: '#a0937c' }}>
             Dernières actions
-            {deltaThisWeek > 0 && <span className="ml-2 text-[10px] normal-case" style={{ color: '#92400e', letterSpacing: 0 }}>· {deltaThisWeek} cette sem.</span>}
+            {deltaThisWeek > 0 && (
+              <span className="ml-2 text-[10px] normal-case" style={{ color: '#92400e', letterSpacing: 0 }}>
+                · {deltaThisWeek} cette sem.
+              </span>
+            )}
           </p>
           {hasMore && (
             <button
               onClick={() => setModalOpen(true)}
-              className="text-[10.5px] font-extrabold px-2 py-1 rounded-full hover:brightness-95 transition-all"
-              style={{ background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a' }}
+              className="hover:brightness-95 transition-all"
             >
-              Voir tout →
+              <Chip variant="amber" size="xs">Voir tout →</Chip>
             </button>
           )}
         </div>
 
-        {/* Feed — 2 actions visibles par défaut */}
+        {/* Feed — 2 actions visibles par défaut avec ActionItem partagé */}
         <div className="px-4 pb-2">
-          {visibleActions.map((a, idx) => {
-            const dyn = getLevel(a.axe_action_count)
-            return (
-              <div
-                key={a.id}
-                className="flex gap-2.5 py-2.5"
-                style={{
-                  borderTop: idx === 0 ? 'none' : '1px solid #f4efe3',
-                }}
-              >
-                {/* Avatar coloré par niveau */}
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-[15px] shrink-0"
-                  style={{
-                    background: '#fff',
-                    border: `2.5px solid ${LEVEL_BG[dyn.level]}`,
-                    boxShadow: `0 0 0 2px ${LEVEL_BG[dyn.level]}22`,
-                  }}
-                  title={dyn.label}
-                >
-                  {dyn.icon}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  {/* Meta : prénom · axe · time */}
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold">
-                    <span style={{ color: '#1a1a2e' }}>{a.learner_first_name}</span>
-                    <span style={{ color: '#a0937c' }}>·</span>
-                    <span className="truncate" style={{ color: '#92400e' }}>{a.axe_subject}</span>
-                    <span className="ml-auto font-semibold shrink-0" style={{ color: '#a0937c', fontSize: 10 }}>
-                      {formatAge(a.created_at)}
-                    </span>
-                  </div>
-
-                  {/* Description (2 lignes max) */}
-                  <p
-                    className="text-[12.5px] mt-0.5"
-                    style={{
-                      color: '#1a1a2e',
-                      lineHeight: 1.4,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {a.description}
-                  </p>
-
-                  {/* Feedback inline — likes + commentaires cliquables */}
-                  {feedbackMap[a.id] && (
-                    <div className="mt-1">
-                      <ActionFeedback
-                        actionId={a.id}
-                        feedback={feedbackMap[a.id]}
-                        canInteract={true}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+          {visibleActions.map((a, idx) => (
+            <div key={a.id} style={{ borderTop: idx === 0 ? 'none' : 'inherit' }}>
+              <ActionItem
+                action={a}
+                feedback={feedbackMap[a.id]}
+                showAuthor
+                showAxe
+                lineClamp={2}
+                avatarSize={36}
+              />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -200,49 +125,17 @@ export default function TeamActionsFeed({
             </div>
 
             <div className="overflow-y-auto flex-1 px-5 py-2">
-              {actions.map((a) => {
-                const dyn = getLevel(a.axe_action_count)
-                return (
-                  <div key={a.id} className="py-3" style={{ borderBottom: '1px solid #f0ebe0' }}>
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-[18px] shrink-0"
-                        style={{
-                          background: '#fff',
-                          border: `3px solid ${LEVEL_BG[dyn.level]}`,
-                          boxShadow: `0 0 0 2px ${LEVEL_BG[dyn.level]}22`,
-                        }}
-                        title={dyn.label}
-                      >
-                        {dyn.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-extrabold">
-                          {a.learner_first_name} {a.learner_last_name}
-                          <span className="ml-1 font-bold" style={{ color: '#92400e' }}>
-                            · {a.axe_subject}
-                          </span>
-                        </p>
-                        <p className="text-[13px] mt-0.5" style={{ color: '#1a1a2e' }}>
-                          {a.description}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1.5">
-                          <span className="text-[10px]" style={{ color: '#a0937c' }}>
-                            {formatAge(a.created_at)}
-                          </span>
-                          {feedbackMap[a.id] && (
-                            <ActionFeedback
-                              actionId={a.id}
-                              feedback={feedbackMap[a.id]}
-                              canInteract={true}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+              {actions.map((a) => (
+                <ActionItem
+                  key={a.id}
+                  action={a}
+                  feedback={feedbackMap[a.id]}
+                  showAuthor
+                  showAxe
+                  lineClamp={4}
+                  avatarSize={40}
+                />
+              ))}
             </div>
           </div>
         </div>
