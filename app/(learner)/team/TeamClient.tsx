@@ -2,7 +2,7 @@
 
 import type { ActionFeedbackData } from '@/lib/types'
 import TeamNewsTicker from '@/app/components/TeamNewsTicker'
-import TeamActionsCarousel from '@/app/components/TeamActionsCarousel'
+import TeamActionsFeed from '@/app/components/TeamActionsFeed'
 
 type ScoringEntry = {
   id: string
@@ -66,44 +66,43 @@ export default function TeamClient({
     ? [podium[1], podium[0]]
     : podium
 
-  // Config des 3 places (display order : 2e · 1er · 3e)
-  // — 1er = amber gradient + halo · 2e = slate clean · 3e = orange subtil
+  // Config des 3 places (display order : 2e · 1er · 3e) — COMPACT (v1.29.5)
   const podiumConfig = [
     {
-      avatarSize: 'w-12 h-12',
+      avatarSize: 'w-10 h-10',
       avatarBorder: '2px solid #cbd5e1',
       avatarShadow: '0 0 0 3px rgba(148,163,184,0.12)',
-      avatarFontSize: 15,
-      stepH: 50,
+      avatarFontSize: 13,
+      stepH: 34,
       stepBg: 'linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%)',
       stepColor: '#475569',
-      stepFontSize: 20,
+      stepFontSize: 18,
       chipBg: '#f1f5f9',
       chipColor: '#475569',
       chipBorder: '1px solid #e2e8f0',
     },
     {
-      avatarSize: 'w-16 h-16',
+      avatarSize: 'w-[52px] h-[52px]',
       avatarBorder: '3px solid #fbbf24',
-      avatarShadow: '0 6px 22px rgba(251,191,36,0.45), 0 0 0 4px rgba(251,191,36,0.15)',
-      avatarFontSize: 19,
-      stepH: 72,
+      avatarShadow: '0 4px 14px rgba(251,191,36,0.4), 0 0 0 3px rgba(251,191,36,0.15)',
+      avatarFontSize: 16,
+      stepH: 50,
       stepBg: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)',
       stepColor: '#fff',
-      stepFontSize: 26,
+      stepFontSize: 22,
       chipBg: '#fffbeb',
       chipColor: '#92400e',
       chipBorder: '1px solid #fde68a',
     },
     {
-      avatarSize: 'w-12 h-12',
+      avatarSize: 'w-10 h-10',
       avatarBorder: '2px solid #fdba74',
       avatarShadow: '0 0 0 3px rgba(253,186,116,0.15)',
-      avatarFontSize: 15,
-      stepH: 38,
+      avatarFontSize: 13,
+      stepH: 24,
       stepBg: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)',
       stepColor: '#fff',
-      stepFontSize: 20,
+      stepFontSize: 18,
       chipBg: '#fff7ed',
       chipColor: '#9a3412',
       chipBorder: '1px solid #fed7aa',
@@ -111,30 +110,30 @@ export default function TeamClient({
   ]
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="space-y-2.5 pb-3">
 
-      {/* ── Header navy dégradé (harmonisé avec dashboard) ── */}
+      {/* ── Header navy dégradé compact (v1.29.5) ── */}
       <div
-        className="rounded-[22px] px-[18px] py-[14px] relative overflow-hidden"
+        className="rounded-[18px] px-[14px] py-[10px] relative overflow-hidden"
         style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
       >
-        <div className="absolute -top-4 -right-3 w-[70px] h-[70px] rounded-full" style={{ background: 'rgba(251,191,36,0.14)' }} />
+        <div className="absolute -top-3 -right-2 w-[56px] h-[56px] rounded-full" style={{ background: 'rgba(251,191,36,0.14)' }} />
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-[17px] font-extrabold text-white leading-tight">Team</h1>
-            <p className="text-[11px] mt-0.5 font-semibold truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            <h1 className="text-[15px] font-extrabold text-white leading-tight">Team</h1>
+            <p className="text-[10.5px] mt-0.5 font-semibold truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>
               {groupName} · {membersCount} participant{membersCount !== 1 ? 's' : ''}
             </p>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-[13px] font-bold" style={{ color: '#fff' }}>
+            <div className="text-[12px] font-bold" style={{ color: '#fff' }}>
               <span style={{ color: '#fbbf24', fontWeight: 800 }}>{totalActions}</span>
-              <span className="text-[11px] font-semibold ml-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              <span className="text-[10px] font-semibold ml-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 action{totalActions !== 1 ? 's' : ''}
               </span>
             </div>
             {recentActionsCount > 0 && (
-              <div className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              <div className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 <span style={{ color: '#fbbf24', fontWeight: 800 }}>+{recentActionsCount}</span> cette sem.
               </div>
             )}
@@ -145,27 +144,29 @@ export default function TeamClient({
       {/* ── Ticker news ── */}
       <TeamNewsTicker news={news} />
 
-      {/* ── Podium — les plus actifs ces 15 derniers jours ── */}
+      {/* ── Podium compact — les plus actifs ces 15 derniers jours ── */}
       {podium.length > 0 ? (
         <div
-          className="rounded-[22px] px-3 pt-4 pb-3"
+          className="rounded-[18px] px-3 pt-3 pb-2"
           style={{
             background: 'linear-gradient(180deg, #ffffff 0%, #fffbf0 100%)',
             border: '2px solid #f0ebe0',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.05)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}
         >
-          <h2 className="section-title text-center mb-3">Les plus actifs ces 15 derniers jours</h2>
-          <div className="flex items-end justify-center gap-2.5">
+          <h2 className="text-[10.5px] font-extrabold tracking-wider uppercase text-center mb-2" style={{ color: '#a0937c' }}>
+            Les plus actifs · 15 derniers jours
+          </h2>
+          <div className="flex items-end justify-center gap-2">
             {podiumDisplay.map((learner, displayIdx) => {
               const cfg = podiumConfig[podium.length >= 3 ? displayIdx : podium.length === 2 ? (displayIdx === 0 ? 0 : 1) : 1]
               const actualRank = podium.indexOf(learner) + 1
               const gestes = learner.last15Actions + learner.last15Checkins + learner.last15Quizzes
 
               return (
-                <div key={learner.id} className="flex flex-col items-center flex-1" style={{ maxWidth: 120 }}>
+                <div key={learner.id} className="flex flex-col items-center flex-1" style={{ maxWidth: 110 }}>
                   <div
-                    className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-extrabold text-white mb-2 transition-transform`}
+                    className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-extrabold text-white mb-1 transition-transform`}
                     style={{
                       background: '#1a1a2e',
                       color: '#fbbf24',
@@ -177,12 +178,12 @@ export default function TeamClient({
                     {getInitials(learner.name)}
                   </div>
 
-                  <p className="text-[12px] font-extrabold text-center truncate w-full mb-2" style={{ color: '#1a1a2e' }}>
+                  <p className="text-[11px] font-extrabold text-center truncate w-full mb-1.5" style={{ color: '#1a1a2e' }}>
                     {learner.name.split(' ')[0]}
                   </p>
 
                   <div
-                    className="w-full rounded-t-[14px] flex items-center justify-center font-extrabold"
+                    className="w-full rounded-t-[12px] flex items-center justify-center font-extrabold"
                     style={{
                       height: cfg.stepH,
                       background: cfg.stepBg,
@@ -195,9 +196,9 @@ export default function TeamClient({
                     {actualRank}
                   </div>
 
-                  {/* Chiffre unique : X gestes */}
+                  {/* Chip "X gestes" */}
                   <div
-                    className="mt-2 px-2.5 py-1 rounded-full text-[11px] font-extrabold"
+                    className="mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold"
                     style={{
                       background: cfg.chipBg,
                       color: cfg.chipColor,
@@ -210,23 +211,23 @@ export default function TeamClient({
               )
             })}
           </div>
-          <p className="text-[10px] text-center mt-3" style={{ color: '#a0937c' }}>
-            1 geste = 1 action · 1 check-in · 1 quiz répondu
+          <p className="text-[9.5px] text-center mt-2" style={{ color: '#a0937c' }}>
+            1 geste = 1 action · 1 check-in · 1 quiz
           </p>
         </div>
       ) : (
-        <div className="rounded-[22px] bg-white p-6 text-center" style={{ border: '2px solid #f0ebe0' }}>
-          <p className="text-2xl mb-2">🌅</p>
-          <p className="text-sm" style={{ color: '#a0937c' }}>La quinzaine commence, personne n&apos;a encore posté.</p>
-          <p className="text-xs mt-1" style={{ color: '#c4b99a' }}>Sois le premier à te lancer !</p>
+        <div className="rounded-[18px] bg-white p-4 text-center" style={{ border: '2px solid #f0ebe0' }}>
+          <p className="text-xl mb-1">🌅</p>
+          <p className="text-[12px]" style={{ color: '#a0937c' }}>La quinzaine commence, personne n&apos;a encore posté.</p>
         </div>
       )}
 
-      {/* ── Actions récentes : carrousel + "Voir tout" ── */}
-      <TeamActionsCarousel
+      {/* ── Feed actions — 2 actions visibles + Voir tout ── */}
+      <TeamActionsFeed
         actions={recentActions}
         feedbackMap={feedbackMap}
         deltaThisWeek={recentActionsCount}
+        visibleCount={2}
       />
     </div>
   )
