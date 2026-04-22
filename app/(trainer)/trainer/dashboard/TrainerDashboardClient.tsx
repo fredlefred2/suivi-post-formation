@@ -6,8 +6,8 @@ import { useRouter, usePathname } from 'next/navigation'
 import { Download, Loader2 } from 'lucide-react'
 import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
-import ActionFeedback from '@/app/components/ActionFeedback'
 import { useCountUp } from '@/lib/useCountUp'
+import ActionItem from '@/app/components/ui/ActionItem'
 
 export type GroupData = {
   id: string
@@ -553,42 +553,26 @@ export default function TrainerDashboardClient({
             <h2 className="text-[14px] font-bold" style={{ color: '#1a1a2e' }}>Actions recentes</h2>
           </div>
 
-          <div className="space-y-2.5">
-            {(showAllActions ? filteredActions.slice(0, 20) : filteredActions.slice(0, 4)).map((action) => {
-              const dyn = getDynamiqueForCount(action.axe_action_count)
-              return (
-                <div
-                  key={action.id}
-                  className="bg-white rounded-[18px] p-3.5"
-                  style={{ border: '1.5px solid #f0ebe0' }}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                      style={{ background: AVATAR_BG_COLORS[dyn.level] ?? AVATAR_BG_COLORS[0] }}
-                    >
-                      {action.learner_first_name.charAt(0)}{action.learner_last_name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold" style={{ color: '#1a1a2e' }}>
-                          {action.learner_first_name} {action.learner_last_name}
-                        </span>
-                        <span className="text-xs">{dyn.icon}</span>
-                        <span className="text-[10px] ml-auto" style={{ color: '#a0937c' }}>
-                          {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        </span>
-                      </div>
-                      <p className="text-[10px] font-medium" style={{ color: '#92400e' }}>{action.axe_subject}</p>
-                    </div>
-                  </div>
-                  <p className="text-[13px] leading-relaxed mt-2" style={{ color: '#1a1a2e' }}>{action.description}</p>
-                  <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid #f5f0e8' }}>
-                    <ActionFeedback actionId={action.id} feedback={action.feedback} canInteract={true} />
-                  </div>
-                </div>
-              )
-            })}
+          <div className="rounded-[18px] bg-white px-4" style={{ border: '2px solid #f0ebe0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            {(showAllActions ? filteredActions.slice(0, 20) : filteredActions.slice(0, 4)).map((action) => (
+              <ActionItem
+                key={action.id}
+                action={{
+                  id: action.id,
+                  description: action.description,
+                  created_at: action.created_at,
+                  axe_subject: action.axe_subject,
+                  axe_action_count: action.axe_action_count,
+                  learner_first_name: action.learner_first_name,
+                  learner_last_name: action.learner_last_name,
+                }}
+                feedback={action.feedback}
+                showAuthor
+                showAxe
+                lineClamp={3}
+                avatarSize={38}
+              />
+            ))}
           </div>
 
           {filteredActions.length > 4 && (
