@@ -406,7 +406,7 @@ export default function AxesClient({ axes, initialIndex = 0, feedbackMap = {}, o
                                 <ActionFeedback
                                   actionId={action.id}
                                   feedback={feedbackMap[action.id] ?? emptyFeedback}
-                                  canInteract={false}
+                                  canInteract={true}
                                 />
                               </div>
                             </div>

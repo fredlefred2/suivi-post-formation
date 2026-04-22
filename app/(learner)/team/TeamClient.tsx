@@ -3,6 +3,7 @@
 import type { ActionFeedbackData } from '@/lib/types'
 import TeamNewsTicker from '@/app/components/TeamNewsTicker'
 import TeamActionsFeed from '@/app/components/TeamActionsFeed'
+import HeaderNavy from '@/app/components/ui/HeaderNavy'
 
 type ScoringEntry = {
   id: string
@@ -112,21 +113,14 @@ export default function TeamClient({
   return (
     <div className="space-y-2.5 pb-3">
 
-      {/* ── Header navy dégradé compact (v1.29.5) ── */}
-      <div
-        className="rounded-[18px] px-[14px] py-[10px] relative overflow-hidden"
-        style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
-      >
-        <div className="absolute -top-3 -right-2 w-[56px] h-[56px] rounded-full" style={{ background: 'rgba(251,191,36,0.14)' }} />
-        <div className="relative flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-[15px] font-extrabold text-white leading-tight">Team</h1>
-            <p className="text-[10.5px] mt-0.5 font-semibold truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              {groupName} · {membersCount} participant{membersCount !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <div className="text-right shrink-0">
-            <div className="text-[12px] font-bold" style={{ color: '#fff' }}>
+      {/* ── Header navy harmonisé (composant partagé) ── */}
+      <HeaderNavy
+        compact
+        title="Team"
+        subtitle={<>{groupName} · {membersCount} participant{membersCount !== 1 ? 's' : ''}</>}
+        right={
+          <>
+            <div className="text-[12px] font-bold">
               <span style={{ color: '#fbbf24', fontWeight: 800 }}>{totalActions}</span>
               <span className="text-[10px] font-semibold ml-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 action{totalActions !== 1 ? 's' : ''}
@@ -137,9 +131,9 @@ export default function TeamClient({
                 <span style={{ color: '#fbbf24', fontWeight: 800 }}>+{recentActionsCount}</span> cette sem.
               </div>
             )}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* ── Ticker news ── */}
       <TeamNewsTicker news={news} />
