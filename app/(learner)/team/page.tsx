@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import type { ActionFeedbackData } from '@/lib/types'
 import { generateTeamNews } from '@/lib/team-news'
+import { readCachedTeamNews } from '@/lib/generate-team-news-ai'
 import TeamClient from './TeamClient'
 
 export default async function TeamPage() {
@@ -180,8 +181,11 @@ export default async function TeamPage() {
     last15QuizByLearner[q.learner_id] = (last15QuizByLearner[q.learner_id] ?? 0) + 1
   })
 
-  // News valorisantes (ticker du header)
-  const newsList = await generateTeamNews({
+  // News valorisantes (ticker) :
+  // 1. priorité : cache Claude hebdo (lib/generate-team-news-ai.ts, cron dimanche 20h UTC)
+  // 2. fallback : règles hardcoded (lib/team-news.ts) si cache vide/périmé
+  const cachedNews = await readCachedTeamNews(groupId)
+  const newsList = cachedNews ?? await generateTeamNews({
     groupId,
     memberIds,
     members: members.map(m => ({ learner_id: m.learner_id, first_name: m.profiles.first_name })),
