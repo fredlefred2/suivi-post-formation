@@ -66,10 +66,48 @@ export default function TeamClient({
     ? [podium[1], podium[0]]
     : podium
 
+  // Config des 3 places (display order : 2e · 1er · 3e)
+  // — 1er = amber gradient + halo · 2e = slate clean · 3e = orange subtil
   const podiumConfig = [
-    { avatarSize: 'w-11 h-11', border: '2px solid #94a3b8', shadow: 'none', baseH: 56, baseGrad: 'linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%)', baseFontSize: 22, avatarFontSize: 14 },
-    { avatarSize: 'w-14 h-14', border: '3px solid #fbbf24', shadow: '0 4px 16px rgba(251,191,36,0.4)', baseH: 80, baseGrad: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)', baseFontSize: 28, avatarFontSize: 18 },
-    { avatarSize: 'w-11 h-11', border: '2px solid #f97316', shadow: 'none', baseH: 40, baseGrad: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)', baseFontSize: 22, avatarFontSize: 14 },
+    {
+      avatarSize: 'w-12 h-12',
+      avatarBorder: '2px solid #cbd5e1',
+      avatarShadow: '0 0 0 3px rgba(148,163,184,0.12)',
+      avatarFontSize: 15,
+      stepH: 50,
+      stepBg: 'linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%)',
+      stepColor: '#475569',
+      stepFontSize: 20,
+      chipBg: '#f1f5f9',
+      chipColor: '#475569',
+      chipBorder: '1px solid #e2e8f0',
+    },
+    {
+      avatarSize: 'w-16 h-16',
+      avatarBorder: '3px solid #fbbf24',
+      avatarShadow: '0 6px 22px rgba(251,191,36,0.45), 0 0 0 4px rgba(251,191,36,0.15)',
+      avatarFontSize: 19,
+      stepH: 72,
+      stepBg: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)',
+      stepColor: '#fff',
+      stepFontSize: 26,
+      chipBg: '#fffbeb',
+      chipColor: '#92400e',
+      chipBorder: '1px solid #fde68a',
+    },
+    {
+      avatarSize: 'w-12 h-12',
+      avatarBorder: '2px solid #fdba74',
+      avatarShadow: '0 0 0 3px rgba(253,186,116,0.15)',
+      avatarFontSize: 15,
+      stepH: 38,
+      stepBg: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)',
+      stepColor: '#fff',
+      stepFontSize: 20,
+      chipBg: '#fff7ed',
+      chipColor: '#9a3412',
+      chipBorder: '1px solid #fed7aa',
+    },
   ]
 
   return (
@@ -107,78 +145,79 @@ export default function TeamClient({
       {/* ── Ticker news ── */}
       <TeamNewsTicker news={news} />
 
-      {/* ── Podium — 15 derniers jours ── */}
+      {/* ── Podium — les plus actifs ces 15 derniers jours ── */}
       {podium.length > 0 ? (
-        <div>
-          <h2 className="section-title mb-1 pl-1">Les plus actifs ces 15 derniers jours</h2>
-          <div className="flex items-end justify-center gap-2 pt-4 pb-0 px-2">
+        <div
+          className="rounded-[22px] px-3 pt-4 pb-3"
+          style={{
+            background: 'linear-gradient(180deg, #ffffff 0%, #fffbf0 100%)',
+            border: '2px solid #f0ebe0',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.05)',
+          }}
+        >
+          <h2 className="section-title text-center mb-3">Les plus actifs ces 15 derniers jours</h2>
+          <div className="flex items-end justify-center gap-2.5">
             {podiumDisplay.map((learner, displayIdx) => {
               const cfg = podiumConfig[podium.length >= 3 ? displayIdx : podium.length === 2 ? (displayIdx === 0 ? 0 : 1) : 1]
               const actualRank = podium.indexOf(learner) + 1
+              const gestes = learner.last15Actions + learner.last15Checkins + learner.last15Quizzes
 
               return (
                 <div key={learner.id} className="flex flex-col items-center flex-1" style={{ maxWidth: 120 }}>
                   <div
-                    className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-extrabold text-white mb-2`}
+                    className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-extrabold text-white mb-2 transition-transform`}
                     style={{
                       background: '#1a1a2e',
-                      border: cfg.border,
-                      boxShadow: cfg.shadow,
+                      color: '#fbbf24',
+                      border: cfg.avatarBorder,
+                      boxShadow: cfg.avatarShadow,
                       fontSize: cfg.avatarFontSize,
                     }}
                   >
                     {getInitials(learner.name)}
                   </div>
 
-                  <p className="text-[11px] font-bold text-center truncate w-full mb-2" style={{ color: '#1a1a2e' }}>
-                    {learner.name}
+                  <p className="text-[12px] font-extrabold text-center truncate w-full mb-2" style={{ color: '#1a1a2e' }}>
+                    {learner.name.split(' ')[0]}
                   </p>
 
                   <div
-                    className="w-full rounded-t-xl flex items-center justify-center font-bold text-white"
+                    className="w-full rounded-t-[14px] flex items-center justify-center font-extrabold"
                     style={{
-                      height: cfg.baseH,
-                      background: cfg.baseGrad,
+                      height: cfg.stepH,
+                      background: cfg.stepBg,
+                      color: cfg.stepColor,
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: cfg.baseFontSize,
+                      fontSize: cfg.stepFontSize,
+                      letterSpacing: '-0.02em',
                     }}
                   >
                     {actualRank}
                   </div>
 
-                  {/* Stats 15j — SOUS la marche, avec icônes devant */}
-                  <div className="w-full pt-2 space-y-0.5">
-                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold leading-tight">
-                      <span className="text-[12px]" aria-hidden>⚡</span>
-                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Actions}</span>
-                      <span style={{ color: '#a0937c' }}>
-                        action{learner.last15Actions !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold leading-tight">
-                      <span className="text-[12px]" aria-hidden>✅</span>
-                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Checkins}</span>
-                      <span style={{ color: '#a0937c' }}>
-                        check-in{learner.last15Checkins !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold leading-tight">
-                      <span className="text-[12px]" aria-hidden>🃏</span>
-                      <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Quizzes}</span>
-                      <span style={{ color: '#a0937c' }}>
-                        quizz
-                      </span>
-                    </div>
+                  {/* Chiffre unique : X gestes */}
+                  <div
+                    className="mt-2 px-2.5 py-1 rounded-full text-[11px] font-extrabold"
+                    style={{
+                      background: cfg.chipBg,
+                      color: cfg.chipColor,
+                      border: cfg.chipBorder,
+                    }}
+                  >
+                    {gestes} geste{gestes !== 1 ? 's' : ''}
                   </div>
                 </div>
               )
             })}
           </div>
+          <p className="text-[10px] text-center mt-3" style={{ color: '#a0937c' }}>
+            1 geste = 1 action · 1 check-in · 1 quiz répondu
+          </p>
         </div>
       ) : (
         <div className="rounded-[22px] bg-white p-6 text-center" style={{ border: '2px solid #f0ebe0' }}>
           <p className="text-2xl mb-2">🌅</p>
-          <p className="text-sm" style={{ color: '#a0937c' }}>La semaine commence, personne n&apos;a encore posté.</p>
+          <p className="text-sm" style={{ color: '#a0937c' }}>La quinzaine commence, personne n&apos;a encore posté.</p>
           <p className="text-xs mt-1" style={{ color: '#c4b99a' }}>Sois le premier à te lancer !</p>
         </div>
       )}
