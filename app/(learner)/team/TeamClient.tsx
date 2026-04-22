@@ -75,12 +75,13 @@ export default function TeamClient({
   return (
     <div className="space-y-4 pb-4">
 
-      {/* ── Header noir discret ── */}
+      {/* ── Header navy dégradé (harmonisé avec dashboard) ── */}
       <div
         className="rounded-[22px] px-[18px] py-[14px] relative overflow-hidden"
-        style={{ background: '#1a1a2e' }}
+        style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="absolute -top-4 -right-3 w-[70px] h-[70px] rounded-full" style={{ background: 'rgba(251,191,36,0.14)' }} />
+        <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-[17px] font-extrabold text-white leading-tight">Team</h1>
             <p className="text-[11px] mt-0.5 font-semibold truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>
@@ -145,26 +146,29 @@ export default function TeamClient({
                     {actualRank}
                   </div>
 
-                  {/* Stats 15j — SOUS la marche */}
-                  <div className="w-full pt-2 text-center">
-                    <p className="text-[10px] font-semibold leading-tight" style={{ color: '#1a1a2e' }}>
+                  {/* Stats 15j — SOUS la marche, avec icônes devant */}
+                  <div className="w-full pt-2 space-y-0.5">
+                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold leading-tight">
+                      <span className="text-[12px]" aria-hidden>⚡</span>
                       <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Actions}</span>
-                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                      <span style={{ color: '#a0937c' }}>
                         action{learner.last15Actions !== 1 ? 's' : ''}
                       </span>
-                    </p>
-                    <p className="text-[10px] font-semibold leading-tight" style={{ color: '#1a1a2e' }}>
+                    </div>
+                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold leading-tight">
+                      <span className="text-[12px]" aria-hidden>✅</span>
                       <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Checkins}</span>
-                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                      <span style={{ color: '#a0937c' }}>
                         check-in{learner.last15Checkins !== 1 ? 's' : ''}
                       </span>
-                    </p>
-                    <p className="text-[10px] font-semibold leading-tight" style={{ color: '#1a1a2e' }}>
+                    </div>
+                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold leading-tight">
+                      <span className="text-[12px]" aria-hidden>🃏</span>
                       <span className="font-extrabold" style={{ color: '#92400e' }}>{learner.last15Quizzes}</span>
-                      <span className="ml-1" style={{ color: '#a0937c' }}>
+                      <span style={{ color: '#a0937c' }}>
                         quizz
                       </span>
-                    </p>
+                    </div>
                   </div>
                 </div>
               )

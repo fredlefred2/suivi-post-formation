@@ -2,10 +2,10 @@ import { supabaseAdmin } from './supabase-admin'
 
 // Seuils paliers (alignés sur getDynamique dans axeHelpers.ts)
 const THRESHOLDS = [
-  { count: 1, icon: '🧪', label: 'Essai' },
-  { count: 3, icon: '🔄', label: 'Habitude' },
-  { count: 5, icon: '⚡', label: 'Réflexe' },
-  { count: 7, icon: '👑', label: 'Maîtrise' },
+  { count: 1, icon: '🧪', label: 'Essai', verb: 'démarre' },
+  { count: 3, icon: '🔄', label: 'Habitude', verb: 'passe en' },
+  { count: 5, icon: '⚡', label: 'Réflexe', verb: 'franchit' },
+  { count: 7, icon: '👑', label: 'Maîtrise', verb: 'atteint la' },
 ]
 
 // Jalons d'actions cumulées côté groupe
@@ -22,10 +22,15 @@ type ActionRow = {
   created_at: string
 }
 
+// Rotation de variantes — rend le ticker moins répétitif si plusieurs events du même type
+function pick<T>(arr: T[], seed: number): T {
+  return arr[seed % arr.length]
+}
+
 /**
  * Génère une petite liste de news valorisantes pour le groupe
  * (à partir de l'activité des 7 derniers jours).
- * Pas de bruit, pas d'alerte, pas de culpabilisation.
+ * Formulations variées, tournures valorisantes, pas de bruit.
  */
 export async function generateTeamNews({
   groupId,
@@ -44,7 +49,13 @@ export async function generateTeamNews({
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const sevenDaysAgoStr = sevenDaysAgo.toISOString()
 
-  // ── Toutes les actions des membres (pour calculer les paliers avant/après cutoff) ──
+  const firstNameById = new Map<string, string>()
+  for (const m of members) firstNameById.set(m.learner_id, m.first_name)
+  const displayName = (id: string) => id === currentUserId ? 'Toi' : (firstNameById.get(id) ?? 'Un membre')
+  const verbConjugated = (id: string, thirdPerson: string, secondPerson: string) =>
+    id === currentUserId ? secondPerson : thirdPerson
+
+  // ── Toutes les actions des membres ──
   const { data: actionsRaw } = await supabaseAdmin
     .from('actions')
     .select('axe_id, learner_id, created_at')
@@ -53,14 +64,8 @@ export async function generateTeamNews({
   const actions = (actionsRaw ?? []) as ActionRow[]
   const totalGroup = actions.length
 
-  const firstNameById = new Map<string, string>()
-  for (const m of members) firstNameById.set(m.learner_id, m.first_name)
-  const displayName = (id: string) => id === currentUserId ? 'Toi' : (firstNameById.get(id) ?? 'Un membre')
-
   // ── Level-ups franchis dans la semaine ──
-  // Pour chaque (axe, learner) : count avant cutoff et count total.
-  // Si un palier est franchi entre les deux → level-up récent.
-  const levelUps: Array<{ learnerId: string; icon: string; label: string }> = []
+  const levelUps: Array<{ learnerId: string; icon: string; label: string; verb: string }> = []
   const byAxeLearner = new Map<string, { before: number; after: number }>()
   for (const a of actions) {
     const key = `${a.axe_id}:${a.learner_id}`
@@ -73,12 +78,12 @@ export async function generateTeamNews({
     const learnerId = key.split(':')[1]
     for (const t of THRESHOLDS) {
       if (before < t.count && after >= t.count) {
-        levelUps.push({ learnerId, icon: t.icon, label: t.label })
+        levelUps.push({ learnerId, icon: t.icon, label: t.label, verb: t.verb })
       }
     }
   })
 
-  // ── First actions : apprenant qui a posté sa 1re action totale dans la semaine ──
+  // ── First actions ──
   const firstActionsOfLearners: string[] = []
   firstNameById.forEach((_, learnerId) => {
     const learnerActions = actions.filter(a => a.learner_id === learnerId)
@@ -97,8 +102,6 @@ export async function generateTeamNews({
     .not('completed_at', 'is', null)
     .gte('completed_at', sevenDaysAgoStr)
 
-  // On a besoin du nombre de questions pour savoir si c'est un carton plein.
-  // Les quiz ont 4 questions (QUIZ_QUESTIONS_PER_QUIZ), mais on reste générique.
   const { data: quizzesRaw } = await supabaseAdmin
     .from('quizzes')
     .select('id')
@@ -106,58 +109,130 @@ export async function generateTeamNews({
   const groupQuizIds = new Set((quizzesRaw ?? []).map(q => q.id))
 
   const cartonsPleins: string[] = []
+  let totalQuizAnswered = 0
   for (const a of (attemptsRaw ?? [])) {
     if (!groupQuizIds.has((a as { quiz_id: string }).quiz_id)) continue
-    // Carton plein = score 4 (4 questions par quiz)
+    totalQuizAnswered++
     if ((a as { score: number }).score >= 4) {
       cartonsPleins.push((a as { learner_id: string }).learner_id)
     }
   }
 
-  // ── Jalon équipe (action cumulée franchie dans la semaine) ──
+  // ── Jalon équipe ──
   const actionsBeforeCount = actions.filter(a => a.created_at < sevenDaysAgoStr).length
   const crossedMilestone = GROUP_MILESTONES.find(
     m => actionsBeforeCount < m && totalGroup >= m
   )
 
-  // ── Tout le monde a été actif cette semaine ──
-  const learnersActiveThisWeek = new Set<string>()
+  // ── Streaks d'actions dans la semaine (3+ actions) ──
+  const weekActionsCount = new Map<string, number>()
   for (const a of actions) {
-    if (a.created_at >= sevenDaysAgoStr) learnersActiveThisWeek.add(a.learner_id)
+    if (a.created_at >= sevenDaysAgoStr) {
+      weekActionsCount.set(a.learner_id, (weekActionsCount.get(a.learner_id) ?? 0) + 1)
+    }
   }
-  const allActive = learnersActiveThisWeek.size === memberIds.length && memberIds.length > 1
+  const streakers: Array<{ learnerId: string; count: number }> = []
+  weekActionsCount.forEach((count, learnerId) => {
+    if (count >= 3) streakers.push({ learnerId, count })
+  })
 
-  // ── Compose les messages (priorité aux events rares) ──
+  // ── Tout le monde actif ──
+  const allActive = weekActionsCount.size === memberIds.length && memberIds.length > 1
+
+  // ── Check-ins de la semaine (ambiance équipe) ──
+  const { data: checkinsRaw } = await supabaseAdmin
+    .from('checkins')
+    .select('learner_id')
+    .in('learner_id', memberIds)
+    .gte('created_at', sevenDaysAgoStr)
+  const checkinsCount = (checkinsRaw ?? []).length
+  const allCheckedIn = checkinsCount === memberIds.length && memberIds.length > 1
+
+  // ── Nombre total d'actions cette semaine ──
+  const weekTotal = Array.from(weekActionsCount.values()).reduce((a, b) => a + b, 0)
+
+  // ═════════════════════════════════════════════════════
+  // Composition des messages (formulations variées et vivantes)
+  // ═════════════════════════════════════════════════════
   const news: string[] = []
 
-  // Level-ups
-  for (const lu of levelUps) {
+  // Level-ups — priorité absolue
+  levelUps.forEach((lu, i) => {
     const name = displayName(lu.learnerId)
-    news.push(`${lu.icon} ${name} passe ${lu.label.toLowerCase()} sur un de ses axes`)
-  }
+    const self = lu.learnerId === currentUserId
+    const variants = [
+      `${lu.icon} ${name} ${verbConjugated(lu.learnerId, lu.verb + ' ' + lu.label, 'passes en ' + lu.label)} sur un de ${self ? 'tes' : 'ses'} axes`,
+      `${lu.icon} ${name} ${verbConjugated(lu.learnerId, 'débloque le niveau', 'débloques le niveau')} ${lu.label}`,
+    ]
+    if (lu.label === 'Maîtrise') {
+      variants.push(`${lu.icon} ${name} ${verbConjugated(lu.learnerId, 'maîtrise un axe de progrès', 'maîtrises un axe de progrès')} — respect`)
+    }
+    news.push(pick(variants, i))
+  })
 
   // Cartons pleins
-  for (const id of cartonsPleins) {
+  cartonsPleins.forEach((id, i) => {
     const name = displayName(id)
-    news.push(`🎯 ${name} a fait 4/4 au dernier quiz — carton plein`)
-  }
+    const self = id === currentUserId
+    const variants = [
+      `🃏 ${name} ${self ? 'as' : 'a'} fait 4/4 au dernier quiz — carton plein`,
+      `🏅 ${self ? 'Tu as' : name + ' a'} tout bon au dernier quiz`,
+      `🎉 4 sur 4 pour ${name} au dernier quiz — joli coup`,
+    ]
+    news.push(pick(variants, i))
+  })
 
   // Premières actions
-  for (const id of firstActionsOfLearners) {
+  firstActionsOfLearners.forEach((id, i) => {
     const name = displayName(id)
-    news.push(`🌱 ${name} a posté sa première action`)
-  }
+    const self = id === currentUserId
+    const variants = [
+      `🌱 ${name} ${self ? 'viens' : 'vient'} de poster ${self ? 'ta' : 'sa'} toute première action`,
+      `🎉 Première action pour ${name} — bienvenue dans le mouvement`,
+      `👋 ${name} ${self ? 'franchis' : 'franchit'} le premier pas avec une action`,
+    ]
+    news.push(pick(variants, i))
+  })
+
+  // Streaks d'actions (3+ cette semaine)
+  streakers.forEach((s, i) => {
+    const name = displayName(s.learnerId)
+    const self = s.learnerId === currentUserId
+    const variants = [
+      `🔥 ${name} ${self ? 'enchaînes' : 'enchaîne'} ${s.count} actions cette semaine`,
+      `💪 ${s.count} actions pour ${name} cette semaine — le rythme est là`,
+    ]
+    news.push(pick(variants, i))
+  })
 
   // Jalon équipe
   if (crossedMilestone) {
-    news.push(`🏆 Le groupe passe la barre des ${crossedMilestone} actions cumulées`)
+    const variants = [
+      `🏆 Le groupe passe la barre des ${crossedMilestone} actions cumulées`,
+      `📈 Cap des ${crossedMilestone} actions franchi côté équipe — bravo à tous`,
+      `🎪 ${crossedMilestone} actions au compteur du groupe`,
+    ]
+    news.push(pick(variants, 0))
   }
 
   // Tout le monde actif
   if (allActive) {
-    news.push(`✨ Cette semaine, tout le groupe a posté au moins une action`)
+    news.push(`✨ Tout le groupe a posté au moins une action cette semaine`)
   }
 
-  // Limiter à 4 news max pour ne pas saturer le ticker
-  return news.slice(0, 4)
+  // Tout le monde a fait son check-in
+  if (allCheckedIn) {
+    news.push(`🤝 100% de check-ins cette semaine — équipe soudée`)
+  }
+
+  // Bilan factuel si pas grand chose ne s'est passé
+  if (news.length === 0 && weekTotal > 0) {
+    news.push(`📣 ${weekTotal} action${weekTotal > 1 ? 's' : ''} dans l'équipe cette semaine`)
+  }
+  if (news.length === 0 && totalQuizAnswered > 0) {
+    news.push(`🃏 ${totalQuizAnswered} quiz répondu${totalQuizAnswered > 1 ? 's' : ''} dans l'équipe cette semaine`)
+  }
+
+  // Limiter à 6 news max (était 4 — on a plus de variété désormais)
+  return news.slice(0, 6)
 }

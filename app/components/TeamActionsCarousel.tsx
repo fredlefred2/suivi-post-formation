@@ -124,10 +124,11 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
               >
                 <div className="flex items-center gap-2 mb-1">
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[14px] shrink-0"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[14px] shrink-0"
                     style={{
-                      background: LEVEL_BG[dyn.level],
-                      boxShadow: `0 2px 6px ${LEVEL_BG[dyn.level]}50`,
+                      background: '#fff',
+                      border: `2.5px solid ${LEVEL_BG[dyn.level]}`,
+                      boxShadow: `0 0 0 2px ${LEVEL_BG[dyn.level]}22`,
                     }}
                     title={dyn.label}
                   >
@@ -197,10 +198,11 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
                 <div key={a.id} className="py-3" style={{ borderBottom: '1px solid #f0ebe0' }}>
                   <div className="flex items-start gap-3">
                     <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-[16px] shrink-0"
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-[18px] shrink-0"
                       style={{
-                        background: LEVEL_BG[dyn.level],
-                        boxShadow: `0 2px 6px ${LEVEL_BG[dyn.level]}55`,
+                        background: '#fff',
+                        border: `3px solid ${LEVEL_BG[dyn.level]}`,
+                        boxShadow: `0 0 0 2px ${LEVEL_BG[dyn.level]}22`,
                       }}
                       title={dyn.label}
                     >
