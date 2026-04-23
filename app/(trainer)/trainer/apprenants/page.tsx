@@ -183,15 +183,13 @@ export default async function ApprenantsPage({
   const cutoff7 = nowMs - 7 * 86400000
   const cutoff14 = nowMs - 14 * 86400000
 
-  // ── Quiz 14 derniers jours (pour inclure dans gestes) ─────────────────────
-  const cutoff14Iso = new Date(cutoff14).toISOString()
-  const { data: quizAttempts14d } = learnerIds.length > 0
+  // ── Quiz complétés (all-time) pour le tri cumulé + fenêtres 7j/14j ───────
+  const { data: quizAttemptsAll } = learnerIds.length > 0
     ? await admin
         .from('quiz_attempts')
         .select('learner_id, completed_at')
         .in('learner_id', learnerIds)
         .not('completed_at', 'is', null)
-        .gte('completed_at', cutoff14Iso)
     : { data: [] as Array<{ learner_id: string; completed_at: string | null }> }
 
   // ── Assembler les données par apprenant ──────────────────────────────────
@@ -290,8 +288,8 @@ export default async function ApprenantsPage({
       currentYear
     )
 
-    // ── Gestes 7j / 14j (actions + check-ins + quiz) pour la jauge ──
-    const quizzesForLearner = (quizAttempts14d ?? []).filter(q => q.learner_id === member.learner_id)
+    // ── Gestes cumulés (all-time) + fenêtres 7j / 14j pour la jauge ──
+    const quizzesForLearner = (quizAttemptsAll ?? []).filter(q => q.learner_id === member.learner_id)
     let gestes7d = 0
     let gestes14d = 0
     for (const action of allLearnerActions) {
@@ -310,6 +308,8 @@ export default async function ApprenantsPage({
       if (ts >= cutoff7) gestes7d++
       else if (ts >= cutoff14) gestes14d++
     }
+    // Total cumulé (tout historique confondu) = 1 action + 1 check-in + 1 quiz = 1 geste
+    const gestesCumulative = allLearnerActions.length + learnerCheckins.length + quizzesForLearner.length
 
     // Zone jauge :
     //   - green   : gestes7d>=1 && gestes14d>=1 (actif sur les 2 semaines)
@@ -337,8 +337,15 @@ export default async function ApprenantsPage({
       checkinStreak,
       gestes7d,
       gestes14d,
+      gestesCumulative,
       activityZone,
     }
+  })
+
+  // Tri : gestes cumulés décroissant, puis ordre alpha en secours
+  learners.sort((a, b) => {
+    if (b.gestesCumulative !== a.gestesCumulative) return b.gestesCumulative - a.gestesCumulative
+    return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, 'fr')
   })
 
   return (

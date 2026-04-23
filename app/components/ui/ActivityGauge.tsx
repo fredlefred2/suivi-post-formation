@@ -5,94 +5,108 @@ type Zone = 'red' | 'orange' | 'green'
 type Props = {
   /** Zone de l'aiguille */
   zone: Zone
-  /** Taille totale du SVG en px (default 36) */
+  /** Taille du SVG en px (default 44) */
   size?: number
   /** Label court affiché en tooltip */
   title?: string
 }
 
 /**
- * Jauge d'activité type compteur : 3 zones (rouge · orange · vert)
- * avec une aiguille positionnée selon la zone.
+ * Jauge d'activité en demi-cercle type speedometer :
+ * arc de 180° découpé en 3 secteurs égaux (rouge · orange · vert)
+ * avec aiguille pivotant depuis le centre du cercle.
  *
  * - red    : aucun geste sur les 14 derniers jours
  * - orange : gestes sur une seule des 2 dernières semaines
  * - green  : au moins 1 geste par semaine sur les 2 dernières
  */
-export default function ActivityGauge({ zone, size = 36, title }: Props) {
-  // Arc semi-circulaire de -90° à +90° (180° total)
-  // On divise en 3 tiers de 60° chacun : rouge (-90→-30), orange (-30→30), vert (30→90)
-  const w = size
-  const h = size * 0.68
-  const cx = w / 2
-  const cy = h - 2
-  const r = w / 2 - 3
+export default function ActivityGauge({ zone, size = 44, title }: Props) {
+  // ViewBox 100×56 pour garder le half-circle bien proportionné
+  // (hauteur = 56 laisse la place au pivot + aiguille)
+  const VB_W = 100
+  const VB_H = 56
+  const cx = 50
+  const cy = 50
+  const rOuter = 44 // rayon du bord extérieur de l'arc
+  const rInner = 34 // rayon du bord intérieur → épaisseur d'arc = 10 (~22% du rayon)
 
-  // Positions angulaires des segments (°). 180 = gauche, 0 = droite.
-  // SVG arcs : on va de angle=180 à angle=0 en balayant dans le sens horaire.
-  function polar(angleDeg: number, radius: number) {
+  // Angles en degrés, convention mathématique : 180° = gauche, 90° = haut, 0° = droite
+  // On balaie de 180° à 0° via le haut → sens trigonométrique inverse en SVG.
+  function polar(angleDeg: number, r: number) {
     const a = (angleDeg * Math.PI) / 180
-    return { x: cx + radius * Math.cos(a), y: cy - radius * Math.sin(a) }
+    return {
+      x: cx + r * Math.cos(a),
+      y: cy - r * Math.sin(a),
+    }
   }
 
-  function arcPath(startDeg: number, endDeg: number, radius: number, innerRadius: number) {
-    const start = polar(startDeg, radius)
-    const end = polar(endDeg, radius)
-    const startIn = polar(endDeg, innerRadius)
-    const endIn = polar(startDeg, innerRadius)
-    const largeArc = Math.abs(startDeg - endDeg) > 180 ? 1 : 0
-    // Sens horaire : sweep=0 (car on va de 180 vers 0)
+  // Secteur annulaire entre startAngle et endAngle (startAngle > endAngle)
+  // startAngle côté gauche (180 max), endAngle côté droit (0 min)
+  function sectorPath(startAngle: number, endAngle: number): string {
+    const outerStart = polar(startAngle, rOuter)
+    const outerEnd = polar(endAngle, rOuter)
+    const innerEnd = polar(endAngle, rInner)
+    const innerStart = polar(startAngle, rInner)
+    const large = Math.abs(startAngle - endAngle) > 180 ? 1 : 0
+    // Outer arc : de left vers right, sweep=0 (SVG y inversé → bord supérieur)
+    // Inner arc : de right vers left, sweep=1
     return [
-      `M ${start.x} ${start.y}`,
-      `A ${radius} ${radius} 0 ${largeArc} 0 ${end.x} ${end.y}`,
-      `L ${startIn.x} ${startIn.y}`,
-      `A ${innerRadius} ${innerRadius} 0 ${largeArc} 1 ${endIn.x} ${endIn.y}`,
+      `M ${outerStart.x} ${outerStart.y}`,
+      `A ${rOuter} ${rOuter} 0 ${large} 0 ${outerEnd.x} ${outerEnd.y}`,
+      `L ${innerEnd.x} ${innerEnd.y}`,
+      `A ${rInner} ${rInner} 0 ${large} 1 ${innerStart.x} ${innerStart.y}`,
       'Z',
     ].join(' ')
   }
 
-  const innerR = r * 0.58
+  // 3 tiers de 60° chacun : rouge 180→120, orange 120→60, vert 60→0
+  const RED = '#ef4444'
+  const ORANGE = '#f59e0b'
+  const GREEN = '#10b981'
 
-  // Angle de l'aiguille selon la zone (en degrés, 180=gauche, 0=droite)
-  // On vise le centre de chaque secteur.
-  const needleAngle =
-    zone === 'red' ? 150 : zone === 'orange' ? 90 : 30
+  // Centre de chaque secteur pour positionner l'aiguille
+  const needleAngle = zone === 'red' ? 150 : zone === 'orange' ? 90 : 30
 
-  // Couleurs selon la charte
-  const RED = '#f87171'
-  const ORANGE = '#fbbf24'
-  const GREEN = '#6ee7b7'
+  // Aiguille : longue tige qui part du pivot vers l'arc
+  const needleLength = rOuter - 4
+  const needleTip = polar(needleAngle, needleLength)
+  // Base de l'aiguille élargie (petit triangle pour effet speedometer)
+  const baseOffset = 3
+  const baseLeft = {
+    x: cx + baseOffset * Math.cos(((needleAngle + 90) * Math.PI) / 180),
+    y: cy - baseOffset * Math.sin(((needleAngle + 90) * Math.PI) / 180),
+  }
+  const baseRight = {
+    x: cx + baseOffset * Math.cos(((needleAngle - 90) * Math.PI) / 180),
+    y: cy - baseOffset * Math.sin(((needleAngle - 90) * Math.PI) / 180),
+  }
 
-  const needle = polar(needleAngle, r - 2)
+  // Hauteur réelle rendue = proportionnelle au viewBox (ratio 56/100)
+  const h = size * (VB_H / VB_W)
 
   return (
     <svg
-      width={w}
-      height={h + 3}
-      viewBox={`0 0 ${w} ${h + 3}`}
+      width={size}
+      height={h}
+      viewBox={`0 0 ${VB_W} ${VB_H}`}
       role="img"
       aria-label={title ?? `Activité : ${zone}`}
     >
       <title>{title ?? `Activité : ${zone}`}</title>
-      {/* Rouge : 180 → 120 */}
-      <path d={arcPath(180, 120, r, innerR)} fill={RED} opacity={zone === 'red' ? 1 : 0.32} />
-      {/* Orange : 120 → 60 */}
-      <path d={arcPath(120, 60, r, innerR)} fill={ORANGE} opacity={zone === 'orange' ? 1 : 0.32} />
-      {/* Vert : 60 → 0 */}
-      <path d={arcPath(60, 0, r, innerR)} fill={GREEN} opacity={zone === 'green' ? 1 : 0.32} />
 
-      {/* Aiguille */}
-      <line
-        x1={cx}
-        y1={cy}
-        x2={needle.x}
-        y2={needle.y}
-        stroke="#1a1a2e"
-        strokeWidth={1.6}
-        strokeLinecap="round"
+      {/* Secteurs — le secteur actif est opaque, les autres atténués */}
+      <path d={sectorPath(180, 120)} fill={RED} opacity={zone === 'red' ? 1 : 0.22} />
+      <path d={sectorPath(120, 60)} fill={ORANGE} opacity={zone === 'orange' ? 1 : 0.22} />
+      <path d={sectorPath(60, 0)} fill={GREEN} opacity={zone === 'green' ? 1 : 0.22} />
+
+      {/* Aiguille — triangle allongé du pivot au bord de l'arc */}
+      <polygon
+        points={`${baseLeft.x},${baseLeft.y} ${baseRight.x},${baseRight.y} ${needleTip.x},${needleTip.y}`}
+        fill="#1a1a2e"
       />
-      {/* Pivot */}
-      <circle cx={cx} cy={cy} r={2.2} fill="#1a1a2e" />
+      {/* Pivot central */}
+      <circle cx={cx} cy={cy} r={4} fill="#1a1a2e" />
+      <circle cx={cx} cy={cy} r={1.6} fill="#fbbf24" />
     </svg>
   )
 }

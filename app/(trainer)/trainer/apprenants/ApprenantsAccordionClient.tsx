@@ -58,6 +58,7 @@ type LearnerCardData = {
   checkinStreak: number
   gestes7d: number
   gestes14d: number
+  gestesCumulative: number
   activityZone: 'red' | 'orange' | 'green'
 }
 
@@ -287,7 +288,8 @@ export default function ApprenantsAccordionClient({
                   {learner.firstName} {learner.lastName}
                 </p>
                 <p className="text-[11px]" style={{ color: '#a0937c' }}>
-                  {totalActions} action{totalActions !== 1 ? 's' : ''} · {learner.totalCheckins} check-in{learner.totalCheckins !== 1 ? 's' : ''}
+                  <span style={{ color: '#1a1a2e', fontWeight: 700 }}>{learner.gestesCumulative}</span> geste{learner.gestesCumulative !== 1 ? 's' : ''}
+                  <span className="opacity-60"> · {totalActions} act. · {learner.totalCheckins} chk.</span>
                 </p>
               </div>
               <div
@@ -301,7 +303,7 @@ export default function ApprenantsAccordionClient({
               </div>
               <div
                 className="shrink-0 flex items-center justify-center"
-                style={{ width: 38, height: 32 }}
+                style={{ width: 46, height: 32 }}
                 title={
                   learner.activityZone === 'green'
                     ? `Actif · ${learner.gestes7d} geste${learner.gestes7d !== 1 ? 's' : ''} cette sem. · ${learner.gestes14d} la sem. d'avant`
@@ -310,7 +312,7 @@ export default function ApprenantsAccordionClient({
                     : `Aucun geste sur 14 jours`
                 }
               >
-                <ActivityGauge zone={learner.activityZone} size={36} />
+                <ActivityGauge zone={learner.activityZone} size={44} />
               </div>
               <span
                 className="text-sm shrink-0 transition-transform"

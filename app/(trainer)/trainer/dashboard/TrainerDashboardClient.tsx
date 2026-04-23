@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { Download, Loader2 } from 'lucide-react'
 import type { ActionFeedbackData } from '@/lib/types'
@@ -39,12 +38,6 @@ export type UnassignedLearner = {
   id: string
   first_name: string
   last_name: string
-}
-
-const WEATHER_ICONS: Record<string, string> = {
-  sunny: '☀️',
-  cloudy: '⛅',
-  stormy: '⛈️',
 }
 
 type Props = {
@@ -126,12 +119,6 @@ export default function TrainerDashboardClient({
     return new Set(filteredGroups.flatMap((g) => g.members.map((m) => m.learner_id)))
   }, [filteredGroups])
 
-  const learnerGroupMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    groups.forEach((g) => g.members.forEach((m) => { map[m.learner_id] = g.id }))
-    return map
-  }, [groups])
-
   const learnerNameMap = useMemo(() => {
     const map: Record<string, string> = {}
     groups.forEach((g) => g.members.forEach((m) => { map[m.learner_id] = `${m.first_name} ${m.last_name}` }))
@@ -153,26 +140,6 @@ export default function TrainerDashboardClient({
     return monday.toISOString()
   }, [])
   const recentActionsFiltered = filteredActions.filter((a) => a.created_at >= thisMondayISO)
-
-  // ── Meteo : distribution semaine passée ──
-  const prevWeek = useMemo(() => {
-    let w = currentWeek - 1, y = currentYear
-    if (w <= 0) { w = 52; y-- }
-    return { week: w, year: y }
-  }, [currentWeek, currentYear])
-
-  const weatherDistribution = useMemo(() => {
-    const lastWeekCheckins = filteredCheckins.filter(
-      (c) => c.week_number === prevWeek.week && c.year === prevWeek.year
-    )
-    const counts = { sunny: 0, cloudy: 0, stormy: 0 }
-    lastWeekCheckins.forEach((c) => {
-      if (c.weather in counts) counts[c.weather as keyof typeof counts]++
-    })
-    return counts
-  }, [filteredCheckins, prevWeek])
-
-  const totalWithCheckin = weatherDistribution.sunny + weatherDistribution.cloudy + weatherDistribution.stormy
 
   // ── Check-ins manquants ──
   const thisWeekCheckinLearnerIds = new Set(thisWeekCheckins.map((c) => c.learner_id))
@@ -320,8 +287,6 @@ export default function TrainerDashboardClient({
     }
   }, [isDownloading, selectedOption])
 
-  const apprenantLink = `/trainer/apprenants?group=${selectedOption}`
-
   return (
     <div className="space-y-4 pb-4">
 
@@ -367,16 +332,27 @@ export default function TrainerDashboardClient({
           className="relative px-5 pb-5 cursor-pointer active:scale-[0.98] transition-transform"
           onClick={() => router.push(`/trainer/apprenants${selectedOption !== 'all' && selectedOption !== 'unassigned' ? `?group=${selectedOption}` : ''}`)}
         >
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <h1 className="text-[17px] font-extrabold text-white leading-tight">{selectionLabel}</h1>
+          <div className="flex items-start justify-between mb-3 gap-2">
+            <div className="min-w-0">
+              <h1 className="text-[17px] font-extrabold text-white leading-tight truncate">{selectionLabel}</h1>
               <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
             </div>
-            {totalWithCheckin > 0 && (() => {
-              const max = Math.max(weatherDistribution.sunny, weatherDistribution.cloudy, weatherDistribution.stormy)
-              const avgEmoji = weatherDistribution.sunny === max ? '☀️' : weatherDistribution.cloudy === max ? '⛅' : '⛈️'
-              return <span className="text-2xl drop-shadow-lg">{avgEmoji}</span>
-            })()}
+            {selectedOption !== 'all' && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDownloadReport() }}
+                disabled={isDownloading}
+                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-50 active:scale-95"
+                style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}
+                title="Télécharger le rapport PDF du groupe"
+              >
+                {isDownloading ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Download size={13} />
+                )}
+                <span>{isDownloading ? (downloadStatus || 'Génération…') : 'Rapport'}</span>
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -416,24 +392,6 @@ export default function TrainerDashboardClient({
             </div>
           </div>
 
-          {/* Bouton rapport PDF intégré */}
-          {selectedOption !== 'all' && (
-            <div className="flex justify-end mt-3">
-              <button
-                onClick={(e) => { e.stopPropagation(); handleDownloadReport() }}
-                disabled={isDownloading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors disabled:opacity-50 active:scale-95"
-                style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}
-              >
-                {isDownloading ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Download size={14} />
-                )}
-                {isDownloading ? (downloadStatus || 'Generation...') : 'Rapport PDF'}
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -585,35 +543,6 @@ export default function TrainerDashboardClient({
         )
       })()}
 
-      {/* ── Classement 4e+ — gestes 15 derniers jours ── */}
-      {sorted.length > 3 && (
-        <div style={{ marginBottom: 20 }}>
-          {sorted.slice(3).map((learner, idx) => (
-            <Link
-              key={learner.id}
-              href={`/trainer/apprenants?group=${learnerGroupMap[learner.id] ?? ''}&learner=${learner.id}`}
-              className="flex items-center gap-2.5 bg-white hover:bg-[#fffbeb] transition-colors"
-              style={{ padding: '10px 14px', border: '1.5px solid #f0ebe0', borderRadius: 14, marginBottom: 6, textDecoration: 'none' }}
-            >
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0" style={{ background: '#f0ebe0', color: '#a0937c' }}>
-                {idx + 4}
-              </div>
-              <span className="text-[13px] font-semibold flex-1 truncate" style={{ color: '#1a1a2e' }}>{learner.name}</span>
-              {learner.lastWeather && <span className="text-sm shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>}
-              <div
-                className="px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0"
-                style={{
-                  background: learner.gestes15 > 0 ? '#fffbeb' : '#f1f5f9',
-                  color: learner.gestes15 > 0 ? '#92400e' : '#64748b',
-                  border: learner.gestes15 > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
-                }}
-              >
-                {learner.gestes15} geste{learner.gestes15 !== 1 ? 's' : ''}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
 
       {/* ── Actions récentes avec feedback inline ── */}
       {filteredActions.length > 0 ? (
