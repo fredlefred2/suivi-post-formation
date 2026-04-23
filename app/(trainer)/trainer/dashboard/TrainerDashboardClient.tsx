@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { Download, Loader2 } from 'lucide-react'
-import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
 import { useCountUp } from '@/lib/useCountUp'
 import ActionItem from '@/app/components/ui/ActionItem'
@@ -48,19 +47,6 @@ const WEATHER_ICONS: Record<string, string> = {
   stormy: '⛈️',
 }
 
-function getDynamiqueForCount(count: number) {
-  const dyn = getDynamique(count)
-  return { icon: dyn.icon, level: getCurrentLevelIndex(count), label: dyn.label }
-}
-
-const AVATAR_BG_COLORS: Record<number, string> = {
-  0: '#94a3b8', 1: '#0284c7', 2: '#059669', 3: '#d97706', 4: '#e11d48',
-}
-
-const LEVEL_DOT_BG: Record<number, string> = {
-  0: '#f1f5f9', 1: '#e0f2fe', 2: '#d1fae5', 3: '#ffedd5', 4: '#ffe4e6',
-}
-
 type Props = {
   groups: GroupData[]
   checkins: CheckinData[]
@@ -71,6 +57,8 @@ type Props = {
   unassignedLearners?: UnassignedLearner[]
   learnerAxesMap?: Record<string, number[]>
   learnerRegularity?: Record<string, number>
+  /** Gestes 15 derniers jours par apprenant — actions + check-ins + quizz */
+  learnerGestes15d?: Record<string, { actions: number; checkins: number; quizzes: number }>
   initialGroup?: string
   currentUserId: string
 }
@@ -85,6 +73,7 @@ export default function TrainerDashboardClient({
   unassignedLearners = [],
   learnerAxesMap = {},
   learnerRegularity = {},
+  learnerGestes15d = {},
   initialGroup,
   currentUserId,
 }: Props) {
@@ -245,21 +234,22 @@ export default function TrainerDashboardClient({
   const animatedRegularity = useCountUp(avgRegularity)
   const animatedDelta = useCountUp(recentActionsFiltered.length)
 
-  // ── Scoring ──
+  // ── Scoring (trié par gestes 15 derniers jours — aligné sur podium apprenant) ──
   const sorted = useMemo(() => {
     return Array.from(filteredLearnerIds).map((lid) => {
       const axesCounts = learnerAxesMap[lid] ?? []
       const totalActions = axesCounts.reduce((a, b) => a + b, 0)
-      const dyns = [0, 1, 2].map((i) => getDynamiqueForCount(axesCounts[i] ?? 0))
-      const totalLevel = dyns.reduce((a, m) => a + m.level, 0)
       // Derniere meteo
       const learnerCheckins = filteredCheckins
         .filter(c => c.learner_id === lid)
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       const lastWeather = learnerCheckins.length > 0 ? learnerCheckins[0].weather : null
-      return { id: lid, name: learnerNameMap[lid] ?? 'Inconnu', totalActions, dyns, totalLevel, lastWeather }
-    }).sort((a, b) => b.totalLevel - a.totalLevel || b.totalActions - a.totalActions)
-  }, [filteredLearnerIds, learnerAxesMap, learnerNameMap, filteredCheckins])
+      // Gestes 15j
+      const g15 = learnerGestes15d[lid] ?? { actions: 0, checkins: 0, quizzes: 0 }
+      const gestes15 = g15.actions + g15.checkins + g15.quizzes
+      return { id: lid, name: learnerNameMap[lid] ?? 'Inconnu', totalActions, lastWeather, gestes15, gestes15Breakdown: g15 }
+    }).sort((a, b) => b.gestes15 - a.gestes15 || b.totalActions - a.totalActions)
+  }, [filteredLearnerIds, learnerAxesMap, learnerNameMap, filteredCheckins, learnerGestes15d])
 
 
   const [downloadStatus, setDownloadStatus] = useState('')
@@ -377,50 +367,50 @@ export default function TrainerDashboardClient({
           className="relative px-5 pb-5 cursor-pointer active:scale-[0.98] transition-transform"
           onClick={() => router.push(`/trainer/apprenants${selectedOption !== 'all' && selectedOption !== 'unassigned' ? `?group=${selectedOption}` : ''}`)}
         >
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start justify-between mb-3">
             <div>
-              <h1 className="text-[22px] font-extrabold text-white">{selectionLabel}</h1>
-              <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
+              <h1 className="text-[17px] font-extrabold text-white leading-tight">{selectionLabel}</h1>
+              <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{filteredLearnerIds.size} participant{filteredLearnerIds.size !== 1 ? 's' : ''}</p>
             </div>
             {totalWithCheckin > 0 && (() => {
               const max = Math.max(weatherDistribution.sunny, weatherDistribution.cloudy, weatherDistribution.stormy)
               const avgEmoji = weatherDistribution.sunny === max ? '☀️' : weatherDistribution.cloudy === max ? '⛅' : '⛈️'
-              return <span className="text-3xl drop-shadow-lg">{avgEmoji}</span>
+              return <span className="text-2xl drop-shadow-lg">{avgEmoji}</span>
             })()}
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div className="font-display text-[26px] font-bold" style={{ color: avgRegularity >= 75 ? '#6ee7b7' : avgRegularity >= 50 ? '#fbbf24' : '#f87171' }}>
+            <div className="rounded-xl py-2 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="font-display text-[19px] font-bold" style={{ color: avgRegularity >= 75 ? '#6ee7b7' : avgRegularity >= 50 ? '#fbbf24' : '#f87171' }}>
                 {animatedRegularity}%
               </div>
-              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>régularité</p>
+              <p className="text-[9px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.45)' }}>régularité</p>
             </div>
-            <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div className="font-display text-[26px] font-bold" style={{ color: recentActionsFiltered.length > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
+            <div className="rounded-xl py-2 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="font-display text-[19px] font-bold" style={{ color: recentActionsFiltered.length > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
                 {animatedDelta > 0 ? `+${animatedDelta}` : '0'}
               </div>
-              <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>cette semaine</p>
+              <p className="text-[9px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.45)' }}>cette semaine</p>
             </div>
-            <div className="rounded-2xl py-3 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            <div className="rounded-xl py-2 px-2 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
               {isCheckinOpen ? (
                 missingCount === 0 ? (
                   <>
-                    <div className="font-display text-[26px] font-bold" style={{ color: '#6ee7b7' }}>✓</div>
-                    <p className="text-[10px] mt-0.5 leading-tight" style={{ color: '#6ee7b7' }}>tous a jour</p>
+                    <div className="font-display text-[19px] font-bold" style={{ color: '#6ee7b7' }}>✓</div>
+                    <p className="text-[9px] mt-0.5 leading-tight" style={{ color: '#6ee7b7' }}>tous à jour</p>
                   </>
                 ) : (
                   <>
-                    <div className="font-display text-[26px] font-bold" style={{ color: '#fbbf24' }}>{missingCount}</div>
-                    <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>en attente</p>
+                    <div className="font-display text-[19px] font-bold" style={{ color: '#fbbf24' }}>{missingCount}</div>
+                    <p className="text-[9px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.45)' }}>en attente</p>
                   </>
                 )
               ) : (
                 <>
-                  <div className="font-display text-[26px] font-bold" style={{ color: lastWeekInfo.pct === 100 ? '#6ee7b7' : lastWeekInfo.pct >= 50 ? 'white' : '#fbbf24' }}>
+                  <div className="font-display text-[19px] font-bold" style={{ color: lastWeekInfo.pct === 100 ? '#6ee7b7' : lastWeekInfo.pct >= 50 ? 'white' : '#fbbf24' }}>
                     {lastWeekInfo.pct}%
                   </div>
-                  <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>check-ins</p>
+                  <p className="text-[9px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.45)' }}>check-ins</p>
                 </>
               )}
             </div>
@@ -458,9 +448,13 @@ export default function TrainerDashboardClient({
         </div>
       )}
 
-      {/* ── Podium top 3 ── */}
+      {/* ── Podium top 3 — 15 derniers jours (identique au podium apprenant) ── */}
       {sorted.length > 0 && (() => {
-        const podium = sorted.slice(0, 3)
+        function getInitials(name: string) {
+          return name.split(' ').map(n => n[0]).join('').toUpperCase()
+        }
+
+        const podium = sorted.filter(s => s.gestes15 > 0).slice(0, 3)
         const podiumDisplay = podium.length >= 3
           ? [podium[1], podium[0], podium[2]]
           : podium.length === 2
@@ -468,57 +462,130 @@ export default function TrainerDashboardClient({
           : podium
 
         const podiumConfig = [
-          { avatarSize: 'w-11 h-11', border: '2px solid #94a3b8', shadow: 'none', baseH: 56, baseGrad: 'linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%)', baseFontSize: 22, avatarFontSize: 14 },
-          { avatarSize: 'w-14 h-14', border: '3px solid #fbbf24', shadow: '0 4px 16px rgba(251,191,36,0.4)', baseH: 80, baseGrad: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)', baseFontSize: 28, avatarFontSize: 18 },
-          { avatarSize: 'w-11 h-11', border: '2px solid #f97316', shadow: 'none', baseH: 40, baseGrad: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)', baseFontSize: 22, avatarFontSize: 14 },
+          {
+            avatarSize: 'w-10 h-10',
+            avatarBorder: '2px solid #cbd5e1',
+            avatarShadow: '0 0 0 3px rgba(148,163,184,0.12)',
+            avatarFontSize: 13,
+            stepH: 34,
+            stepBg: 'linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%)',
+            stepColor: '#475569',
+            stepFontSize: 18,
+            chipBg: '#f1f5f9',
+            chipColor: '#475569',
+            chipBorder: '1px solid #e2e8f0',
+          },
+          {
+            avatarSize: 'w-[52px] h-[52px]',
+            avatarBorder: '3px solid #fbbf24',
+            avatarShadow: '0 4px 14px rgba(251,191,36,0.4), 0 0 0 3px rgba(251,191,36,0.15)',
+            avatarFontSize: 16,
+            stepH: 50,
+            stepBg: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)',
+            stepColor: '#fff',
+            stepFontSize: 22,
+            chipBg: '#fffbeb',
+            chipColor: '#92400e',
+            chipBorder: '1px solid #fde68a',
+          },
+          {
+            avatarSize: 'w-10 h-10',
+            avatarBorder: '2px solid #fdba74',
+            avatarShadow: '0 0 0 3px rgba(253,186,116,0.15)',
+            avatarFontSize: 13,
+            stepH: 24,
+            stepBg: 'linear-gradient(180deg, #fdba74 0%, #f97316 100%)',
+            stepColor: '#fff',
+            stepFontSize: 18,
+            chipBg: '#fff7ed',
+            chipColor: '#9a3412',
+            chipBorder: '1px solid #fed7aa',
+          },
         ]
 
-        function getInitials(name: string) {
-          return name.split(' ').map(n => n[0]).join('').toUpperCase()
+        if (podium.length === 0) {
+          return (
+            <div className="rounded-[18px] bg-white p-4 text-center" style={{ border: '2px solid #f0ebe0' }}>
+              <p className="text-xl mb-1">🌅</p>
+              <p className="text-[12px]" style={{ color: '#a0937c' }}>La quinzaine commence, personne n&apos;a encore posté.</p>
+            </div>
+          )
         }
 
         return (
           <div
-            className="cursor-pointer active:scale-[0.98] transition-transform"
+            className="rounded-[18px] px-3 pt-3 pb-2 cursor-pointer active:scale-[0.98] transition-transform"
             onClick={() => router.push(`/trainer/apprenants${selectedOption !== 'all' && selectedOption !== 'unassigned' ? `?group=${selectedOption}` : ''}`)}
+            style={{
+              background: 'linear-gradient(180deg, #ffffff 0%, #fffbf0 100%)',
+              border: '2px solid #f0ebe0',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}
           >
-            <h2 className="text-[14px] font-bold mb-1" style={{ color: '#1a1a2e' }}>Les plus actifs sur Yapluka</h2>
-            <div className="flex items-end justify-center gap-2 pt-4 pb-0 px-2">
+            <h2 className="text-[10.5px] font-extrabold tracking-wider uppercase text-center mb-2" style={{ color: '#a0937c' }}>
+              Les plus actifs · 15 derniers jours
+            </h2>
+            <div className="flex items-end justify-center gap-2">
               {podiumDisplay.map((learner, displayIdx) => {
                 const cfg = podiumConfig[podium.length >= 3 ? displayIdx : podium.length === 2 ? (displayIdx === 0 ? 0 : 1) : 1]
                 const actualRank = podium.indexOf(learner) + 1
+                const gestes = learner.gestes15
                 return (
-                  <div key={learner.id} className="flex flex-col items-center flex-1" style={{ maxWidth: 120 }}>
+                  <div key={learner.id} className="flex flex-col items-center flex-1" style={{ maxWidth: 110 }}>
                     <div
-                      className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-extrabold text-white mb-2`}
-                      style={{ background: '#1a1a2e', border: cfg.border, boxShadow: cfg.shadow, fontSize: cfg.avatarFontSize }}
+                      className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-extrabold mb-1 transition-transform`}
+                      style={{
+                        background: '#1a1a2e',
+                        color: '#fbbf24',
+                        border: cfg.avatarBorder,
+                        boxShadow: cfg.avatarShadow,
+                        fontSize: cfg.avatarFontSize,
+                      }}
                     >
                       {getInitials(learner.name)}
                     </div>
-                    <p className="text-[11px] font-bold text-center truncate w-full" style={{ color: '#1a1a2e' }}>{learner.name}</p>
-                    <p className="text-[10px] font-medium mb-1.5" style={{ color: '#a0937c' }}>{learner.totalActions} action{learner.totalActions !== 1 ? 's' : ''}</p>
-                    <div className="flex gap-1 mb-2">
-                      {learner.dyns.map((d, i) => (
-                        <span key={i} className="w-[22px] h-[22px] rounded-lg flex items-center justify-center text-[11px]" style={{ background: LEVEL_DOT_BG[d.level] }}>
-                          {d.icon}
-                        </span>
-                      ))}
-                    </div>
+
+                    <p className="text-[11px] font-extrabold text-center truncate w-full mb-1.5" style={{ color: '#1a1a2e' }}>
+                      {learner.name.split(' ')[0]}
+                    </p>
+
                     <div
-                      className="w-full rounded-t-xl flex items-center justify-center font-bold text-white"
-                      style={{ height: cfg.baseH, background: cfg.baseGrad, fontFamily: "'Space Grotesk', sans-serif", fontSize: cfg.baseFontSize }}
+                      className="w-full rounded-t-[12px] flex items-center justify-center font-extrabold"
+                      style={{
+                        height: cfg.stepH,
+                        background: cfg.stepBg,
+                        color: cfg.stepColor,
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        fontSize: cfg.stepFontSize,
+                        letterSpacing: '-0.02em',
+                      }}
                     >
                       {actualRank}
+                    </div>
+
+                    {/* Chip "X gestes" */}
+                    <div
+                      className="mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold"
+                      style={{
+                        background: cfg.chipBg,
+                        color: cfg.chipColor,
+                        border: cfg.chipBorder,
+                      }}
+                    >
+                      {gestes} geste{gestes !== 1 ? 's' : ''}
                     </div>
                   </div>
                 )
               })}
             </div>
+            <p className="text-[9.5px] text-center mt-2" style={{ color: '#a0937c' }}>
+              1 geste = 1 action · 1 check-in · 1 quiz
+            </p>
           </div>
         )
       })()}
 
-      {/* ── Classement complet ── */}
+      {/* ── Classement 4e+ — gestes 15 derniers jours ── */}
       {sorted.length > 3 && (
         <div style={{ marginBottom: 20 }}>
           {sorted.slice(3).map((learner, idx) => (
@@ -533,13 +600,15 @@ export default function TrainerDashboardClient({
               </div>
               <span className="text-[13px] font-semibold flex-1 truncate" style={{ color: '#1a1a2e' }}>{learner.name}</span>
               {learner.lastWeather && <span className="text-sm shrink-0">{WEATHER_ICONS[learner.lastWeather] ?? ''}</span>}
-              <span className="text-[11px] font-medium shrink-0" style={{ color: '#a0937c' }}>{learner.totalActions} act.</span>
-              <div className="flex gap-0.5 shrink-0">
-                {learner.dyns.map((d, i) => (
-                  <span key={i} className="w-5 h-5 rounded-md flex items-center justify-center text-[10px]" style={{ background: LEVEL_DOT_BG[d.level] }}>
-                    {d.icon}
-                  </span>
-                ))}
+              <div
+                className="px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0"
+                style={{
+                  background: learner.gestes15 > 0 ? '#fffbeb' : '#f1f5f9',
+                  color: learner.gestes15 > 0 ? '#92400e' : '#64748b',
+                  border: learner.gestes15 > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
+                }}
+              >
+                {learner.gestes15} geste{learner.gestes15 !== 1 ? 's' : ''}
               </div>
             </Link>
           ))}

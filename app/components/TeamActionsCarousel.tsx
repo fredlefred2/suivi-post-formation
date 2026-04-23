@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import ActionFeedback from './ActionFeedback'
 import type { ActionFeedbackData } from '@/lib/types'
+import { formatRelativeAge } from '@/lib/utils'
 
 // Couleurs de niveau (alignées sur le système existant)
 const LEVEL_BG: Record<number, string> = {
@@ -36,17 +37,6 @@ type Props = {
   actions: Action[]
   feedbackMap: Record<string, ActionFeedbackData>
   deltaThisWeek: number
-}
-
-function formatAge(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const minutes = Math.round(diff / 60000)
-  if (minutes < 60) return `il y a ${Math.max(1, minutes)} min`
-  const hours = Math.round(minutes / 60)
-  if (hours < 24) return `il y a ${hours} h`
-  const days = Math.round(hours / 24)
-  if (days === 1) return 'hier'
-  return `il y a ${days} j`
 }
 
 export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWeek }: Props) {
@@ -156,7 +146,7 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
                   {a.description}
                 </p>
                 <p className="text-[10px] font-semibold mt-1.5" style={{ color: '#a0937c' }}>
-                  {formatAge(a.created_at)}
+                  {formatRelativeAge(a.created_at)}
                 </p>
               </div>
               )
@@ -220,7 +210,7 @@ export default function TeamActionsCarousel({ actions, feedbackMap, deltaThisWee
                       </p>
                       <div className="flex items-center gap-3 mt-1.5">
                         <span className="text-[10px]" style={{ color: '#a0937c' }}>
-                          {formatAge(a.created_at)}
+                          {formatRelativeAge(a.created_at)}
                         </span>
                         {feedbackMap[a.id] && (
                           <ActionFeedback

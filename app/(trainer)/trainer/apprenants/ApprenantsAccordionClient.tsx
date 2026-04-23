@@ -6,18 +6,15 @@ import { ChevronDown } from 'lucide-react'
 import { getDynamique, getCurrentLevelIndex } from '@/lib/axeHelpers'
 import type { ActionFeedbackData } from '@/lib/types'
 import ActionFeedback from '@/app/components/ActionFeedback'
+import { formatRelativeAge } from '@/lib/utils'
+import ActivityGauge from '@/app/components/ui/ActivityGauge'
 
 const WEATHER_ICONS: Record<string, string> = { sunny: '☀️', cloudy: '⛅', stormy: '⛈️' }
-const AVATAR_BG_COLORS: Record<number, string> = { 0: '#94a3b8', 1: '#0284c7', 2: '#059669', 3: '#d97706', 4: '#e11d48' }
 const LEVEL_DOT_BG: Record<number, string> = { 0: '#f1f5f9', 1: '#e0f2fe', 2: '#d1fae5', 3: '#ffedd5', 4: '#ffe4e6' }
 
 function getDynamiqueForCount(count: number) {
   const dyn = getDynamique(count)
   return { icon: dyn.icon, level: getCurrentLevelIndex(count), label: dyn.label }
-}
-
-function getInitials(first: string, last: string) {
-  return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
 }
 
 type ActionRow = { id: string; description: string; completed: boolean; created_at: string }
@@ -59,6 +56,9 @@ type LearnerCardData = {
   feedbackMap: Record<string, ActionFeedbackData>
   regularity: number
   checkinStreak: number
+  gestes7d: number
+  gestes14d: number
+  activityZone: 'red' | 'orange' | 'green'
 }
 
 type GroupInfo = { id: string; name: string; count: number }
@@ -272,10 +272,15 @@ export default function ApprenantsAccordionClient({
               }}
             >
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-extrabold shrink-0"
-                style={{ background: '#1a1a2e', color: '#fbbf24' }}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-[18px] shrink-0"
+                style={{ background: '#1a1a2e' }}
+                title={
+                  learner.lastWeather
+                    ? `Dernière météo : ${learner.lastWeather}`
+                    : 'Pas encore de check-in'
+                }
               >
-                {getInitials(learner.firstName, learner.lastName)}
+                {learner.lastWeather ? (WEATHER_ICONS[learner.lastWeather] ?? '—') : '—'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold truncate" style={{ color: '#1a1a2e' }}>
@@ -295,10 +300,17 @@ export default function ApprenantsAccordionClient({
                 {learner.regularity}%
               </div>
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[15px] shrink-0"
-                style={{ background: '#1a1a2e' }}
+                className="shrink-0 flex items-center justify-center"
+                style={{ width: 38, height: 32 }}
+                title={
+                  learner.activityZone === 'green'
+                    ? `Actif · ${learner.gestes7d} geste${learner.gestes7d !== 1 ? 's' : ''} cette sem. · ${learner.gestes14d} la sem. d'avant`
+                    : learner.activityZone === 'orange'
+                    ? `Activité partielle · 7j : ${learner.gestes7d} · 8-14j : ${learner.gestes14d}`
+                    : `Aucun geste sur 14 jours`
+                }
               >
-                {learner.lastWeather ? (WEATHER_ICONS[learner.lastWeather] ?? '—') : '—'}
+                <ActivityGauge zone={learner.activityZone} size={36} />
               </div>
               <span
                 className="text-sm shrink-0 transition-transform"
@@ -444,7 +456,7 @@ export default function ApprenantsAccordionClient({
                                       <p className="text-xs leading-relaxed" style={{ color: '#1a1a2e' }}>{action.description}</p>
                                       <div className="flex items-center justify-between mt-1">
                                         <span className="text-[9px]" style={{ color: '#a0937c' }}>
-                                          {new Date(action.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                          {formatRelativeAge(action.created_at)}
                                         </span>
                                         {fb && (
                                           <div className="scale-90 origin-right">

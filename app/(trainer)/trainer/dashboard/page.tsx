@@ -205,6 +205,39 @@ export default async function TrainerDashboardPage({
     learnerRegularity[lid] = Math.min(100, Math.round((activeWeeks.size / totalWeeks) * 100))
   }
 
+  // ── Gestes 15 derniers jours par apprenant (actions + check-ins + quiz) ──
+  const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000)
+  fifteenDaysAgo.setHours(0, 0, 0, 0)
+  const fifteenCutoffStr = fifteenDaysAgo.toISOString()
+
+  const learnerGestes15d: Record<string, { actions: number; checkins: number; quizzes: number }> = {}
+  learnerIds.forEach(id => { learnerGestes15d[id] = { actions: 0, checkins: 0, quizzes: 0 } })
+
+  for (const a of (actionsRaw ?? [])) {
+    if (a.created_at >= fifteenCutoffStr) {
+      const lid = (a as { learner_id: string }).learner_id
+      if (learnerGestes15d[lid]) learnerGestes15d[lid].actions++
+    }
+  }
+
+  for (const c of (checkinsRaw ?? [])) {
+    if (c.created_at >= fifteenCutoffStr) {
+      if (learnerGestes15d[c.learner_id]) learnerGestes15d[c.learner_id].checkins++
+    }
+  }
+
+  const { data: quizAttempts15d } = learnerIds.length > 0
+    ? await admin
+        .from('quiz_attempts')
+        .select('learner_id, completed_at')
+        .in('learner_id', learnerIds)
+        .not('completed_at', 'is', null)
+        .gte('completed_at', fifteenCutoffStr)
+    : { data: [] as Array<{ learner_id: string; completed_at: string | null }> }
+  ;(quizAttempts15d ?? []).forEach(q => {
+    if (learnerGestes15d[q.learner_id]) learnerGestes15d[q.learner_id].quizzes++
+  })
+
   // ── 7. Apprenants non affectés ─────────────────────────────────────────
   const { data: allGroupMembers } = await admin
     .from('group_members')
@@ -232,6 +265,7 @@ export default async function TrainerDashboardPage({
       unassignedLearners={unassignedLearners}
       learnerAxesMap={learnerAxesMap}
       learnerRegularity={learnerRegularity}
+      learnerGestes15d={learnerGestes15d}
       initialGroup={searchParams.group}
       currentUserId={user!.id}
     />
