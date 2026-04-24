@@ -2,6 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ════════════════════════════════════════════════
+   Design System YAPLUKA v1.30
+   — Palette enrichie : navy + amber + accents niveau (sky/emerald/amber/coral)
+   — Amber réservé aux CTA et célébrations (plus en fond dominant)
+   ════════════════════════════════════════════════ */
+:root {
+  /* Navy — identité, headers, profondeur */
+  --navy: #1a1a2e;
+  --navy-2: #2a1a3e;
+
+  /* Amber — CTA, célébration, accent focal */
+  --amber: #fbbf24;
+  --amber-2: #f59e0b;
+  --amber-deep: #92400e;
+  --amber-soft: #fffbeb;
+  --amber-border: #fde68a;
+
+  /* Teal — neutralité vivante, progression */
+  --teal: #14b8a6;
+  --teal-2: #0f766e;
+  --teal-deep: #115e59;
+  --teal-soft: #ccfbf1;
+  --teal-border: #99f6e4;
+
+  /* Coral — Maîtrise, moments forts */
+  --coral: #fb7185;
+  --coral-2: #e11d48;
+  --coral-deep: #9f1239;
+  --coral-soft: #ffe4e6;
+  --coral-border: #fecdd3;
+
+  /* Sky — Essai, démarrage */
+  --sky: #38bdf8;
+  --sky-2: #0284c7;
+  --sky-deep: #075985;
+  --sky-soft: #e0f2fe;
+  --sky-border: #bae6fd;
+
+  /* Emerald — Habitude, régularité */
+  --emerald: #10b981;
+  --emerald-deep: #065f46;
+  --emerald-soft: #d1fae5;
+  --emerald-border: #86efac;
+
+  /* Warm neutrals */
+  --bg: #faf8f4;
+  --warm-border: #f0ebe0;
+  --warm-border-2: #e0d8c8;
+  --text-navy: #1a1a2e;
+  --text-muted: #5f5b55;
+  --text-subtle: #a0937c;
+  --text-faint: #c4b99a;
+}
+
 @layer base {
   body {
     @apply text-gray-900 antialiased;

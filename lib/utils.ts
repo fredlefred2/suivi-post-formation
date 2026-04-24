@@ -149,6 +149,30 @@ export function getCheckinContext(): {
 }
 
 /**
+ * Formate une date ISO en délai relatif en français :
+ * "à l'instant", "il y a 5 min", "il y a 3 h", "hier", "il y a 4 j",
+ * puis "il y a 2 sem." pour 7-27j, et une date courte au-delà.
+ */
+export function formatRelativeAge(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const minutes = Math.round(diff / 60000)
+  if (minutes < 1) return 'à l\'instant'
+  if (minutes < 60) return `il y a ${minutes} min`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `il y a ${hours} h`
+  const days = Math.round(hours / 24)
+  if (days === 1) return 'hier'
+  if (days < 7) return `il y a ${days} j`
+  if (days < 28) {
+    const weeks = Math.floor(days / 7)
+    return `il y a ${weeks} sem.`
+  }
+  const d = new Date(iso)
+  const months = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+  return `${d.getDate()} ${months[d.getMonth()]}`
+}
+
+/**
  * Retourne le nombre de semaines écoulées depuis une date.
  */
 export function weeksSince(dateStr: string): number {

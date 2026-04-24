@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import type { ActionFeedbackData } from '@/lib/types'
+import { generateTeamNews } from '@/lib/team-news'
+import { readCachedTeamNews } from '@/lib/generate-team-news-ai'
 import TeamClient from './TeamClient'
 
 export default async function TeamPage() {
@@ -103,12 +105,17 @@ export default async function TeamPage() {
     axeSubjectMap[axe.id] = axe.subject
   })
 
-  // ── Actions des 7 derniers jours ──
+  // ── Actions des 7 derniers jours + activité 15j (pour le podium) ──
   const now = new Date()
   const sevenDaysAgo = new Date(now)
   sevenDaysAgo.setDate(now.getDate() - 7)
   sevenDaysAgo.setHours(0, 0, 0, 0)
   const cutoffStr = sevenDaysAgo.toISOString()
+
+  const fifteenDaysAgo = new Date(now)
+  fifteenDaysAgo.setDate(now.getDate() - 15)
+  fifteenDaysAgo.setHours(0, 0, 0, 0)
+  const fifteenCutoffStr = fifteenDaysAgo.toISOString()
 
   // Lundi courant pour le calcul météo
   const dayOfWeekNow = now.getDay()
@@ -132,6 +139,58 @@ export default async function TeamPage() {
   const recentActions = allActions
     .filter((a) => a.created_at >= cutoffStr)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  // Activité 15 derniers jours par apprenant (pour le tri du podium)
+  const last15ActionsByLearner: Record<string, number> = {}
+  const last15CheckinsByLearner: Record<string, number> = {}
+  const last15QuizByLearner: Record<string, number> = {}
+  memberIds.forEach(id => {
+    last15ActionsByLearner[id] = 0
+    last15CheckinsByLearner[id] = 0
+    last15QuizByLearner[id] = 0
+  })
+  for (const a of allActions) {
+    if (a.created_at >= fifteenCutoffStr) {
+      const lid = (a as { learner_id: string }).learner_id
+      last15ActionsByLearner[lid] = (last15ActionsByLearner[lid] ?? 0) + 1
+    }
+  }
+
+  // Check-ins des 15 derniers jours par apprenant
+  const { data: last15CheckinsRaw } = memberIds.length > 0
+    ? await admin
+        .from('checkins')
+        .select('learner_id, created_at')
+        .in('learner_id', memberIds)
+        .gte('created_at', fifteenCutoffStr)
+    : { data: [] as Array<{ learner_id: string; created_at: string }> }
+  ;(last15CheckinsRaw ?? []).forEach(c => {
+    last15CheckinsByLearner[c.learner_id] = (last15CheckinsByLearner[c.learner_id] ?? 0) + 1
+  })
+
+  // Quiz complétés des 15 derniers jours par apprenant (pour les membres du groupe)
+  const { data: last15QuizRaw } = memberIds.length > 0
+    ? await admin
+        .from('quiz_attempts')
+        .select('learner_id, completed_at')
+        .in('learner_id', memberIds)
+        .not('completed_at', 'is', null)
+        .gte('completed_at', fifteenCutoffStr)
+    : { data: [] as Array<{ learner_id: string; completed_at: string | null }> }
+  ;(last15QuizRaw ?? []).forEach(q => {
+    last15QuizByLearner[q.learner_id] = (last15QuizByLearner[q.learner_id] ?? 0) + 1
+  })
+
+  // News valorisantes (ticker) :
+  // 1. priorité : cache Claude hebdo (lib/generate-team-news-ai.ts, cron dimanche 20h UTC)
+  // 2. fallback : règles hardcoded (lib/team-news.ts) si cache vide/périmé
+  const cachedNews = await readCachedTeamNews(groupId)
+  const newsList = cachedNews ?? await generateTeamNews({
+    groupId,
+    memberIds,
+    members: members.map(m => ({ learner_id: m.learner_id, first_name: m.profiles.first_name })),
+    currentUserId: user.id,
+  })
 
   // ── Checkins pour la météo ──
   const { data: checkinsRaw } = memberIds.length > 0
@@ -200,14 +259,10 @@ export default async function TeamPage() {
 
   return (
     <TeamClient
-      groupId={groupId}
       groupName={group.name}
       membersCount={members.length}
       totalActions={totalActions}
       recentActionsCount={recentActions.length}
-      weatherCounts={weatherCounts}
-      totalWithCheckin={totalWithCheckin}
-      isCheckinOpen={isCheckinOpen}
       scoringData={memberIds.map((lid) => {
         const axesCounts = learnerAxesMap[lid] ?? []
         const total = axesCounts.reduce((a, b) => a + b, 0)
@@ -215,6 +270,9 @@ export default async function TeamPage() {
           id: lid,
           name: learnerNameMap[lid] ?? 'Inconnu',
           totalActions: total,
+          last15Actions: last15ActionsByLearner[lid] ?? 0,
+          last15Checkins: last15CheckinsByLearner[lid] ?? 0,
+          last15Quizzes: last15QuizByLearner[lid] ?? 0,
           axesCounts,
         }
       })}
@@ -228,6 +286,7 @@ export default async function TeamPage() {
         learner_last_name: a.learner_last_name,
       }))}
       feedbackMap={feedbackMap}
+      news={newsList}
     />
   )
 }

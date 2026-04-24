@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { formatWeek, calculateStreak, getCheckinContext } from '@/lib/utils'
 import CheckinForm from './CheckinForm'
+import HeaderNavy from '@/app/components/ui/HeaderNavy'
 
 export default async function CheckinPage() {
   const supabase = createClient()
@@ -20,18 +21,12 @@ export default async function CheckinPage() {
   const WEATHER_EMOJI: Record<string, string> = { sunny: '☀️', cloudy: '⛅', stormy: '⛈️' }
   const WEATHER_BG: Record<string, string> = { sunny: 'bg-amber-50/50', cloudy: 'bg-sky-50/50', stormy: 'bg-red-50/50' }
 
-  // Header navy — unique, toujours le meme
+  // Header navy — composant partagé
   const headerBlock = (
-    <div
-      className="rounded-[28px] px-5 py-4 relative overflow-hidden"
-      style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
-    >
-      <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
-      <div className="relative">
-        <h1 className="text-xl font-extrabold text-white">Check-in hebdomadaire</h1>
-        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Fais le point sur ta semaine</p>
-      </div>
-    </div>
+    <HeaderNavy
+      title="Check-in hebdomadaire"
+      subtitle="Fais le point sur ta semaine"
+    />
   )
 
   // Historique compact

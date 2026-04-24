@@ -178,6 +178,20 @@ export default async function ApprenantsPage({
   sunday.setDate(monday.getDate() + 6)
   sunday.setHours(23, 59, 59, 999)
 
+  // ── Fenêtres 7j / 14j (pour la jauge d'activité) ──────────────────────────
+  const nowMs = now.getTime()
+  const cutoff7 = nowMs - 7 * 86400000
+  const cutoff14 = nowMs - 14 * 86400000
+
+  // ── Quiz complétés (all-time) pour le tri cumulé + fenêtres 7j/14j ───────
+  const { data: quizAttemptsAll } = learnerIds.length > 0
+    ? await admin
+        .from('quiz_attempts')
+        .select('learner_id, completed_at')
+        .in('learner_id', learnerIds)
+        .not('completed_at', 'is', null)
+    : { data: [] as Array<{ learner_id: string; completed_at: string | null }> }
+
   // ── Assembler les données par apprenant ──────────────────────────────────
   const learners = sorted.map((member) => {
     const p = (profiles ?? []).find((pr) => pr.id === member.learner_id)
@@ -274,6 +288,37 @@ export default async function ApprenantsPage({
       currentYear
     )
 
+    // ── Gestes cumulés (all-time) + fenêtres 7j / 14j pour la jauge ──
+    const quizzesForLearner = (quizAttemptsAll ?? []).filter(q => q.learner_id === member.learner_id)
+    let gestes7d = 0
+    let gestes14d = 0
+    for (const action of allLearnerActions) {
+      const ts = new Date(action.created_at).getTime()
+      if (ts >= cutoff7) gestes7d++
+      else if (ts >= cutoff14) gestes14d++
+    }
+    for (const ci of learnerCheckins) {
+      const ts = new Date(ci.created_at).getTime()
+      if (ts >= cutoff7) gestes7d++
+      else if (ts >= cutoff14) gestes14d++
+    }
+    for (const q of quizzesForLearner) {
+      if (!q.completed_at) continue
+      const ts = new Date(q.completed_at).getTime()
+      if (ts >= cutoff7) gestes7d++
+      else if (ts >= cutoff14) gestes14d++
+    }
+    // Total cumulé (tout historique confondu) = 1 action + 1 check-in + 1 quiz = 1 geste
+    const gestesCumulative = allLearnerActions.length + learnerCheckins.length + quizzesForLearner.length
+
+    // Zone jauge :
+    //   - green   : gestes7d>=1 && gestes14d>=1 (actif sur les 2 semaines)
+    //   - orange  : (gestes7d==0 && gestes14d>=1) || (gestes7d>=1 && gestes14d==0)
+    //   - red     : gestes7d==0 && gestes14d==0
+    let activityZone: 'red' | 'orange' | 'green' = 'red'
+    if (gestes7d >= 1 && gestes14d >= 1) activityZone = 'green'
+    else if (gestes7d >= 1 || gestes14d >= 1) activityZone = 'orange'
+
     return {
       id: member.learner_id,
       firstName,
@@ -290,7 +335,17 @@ export default async function ApprenantsPage({
       feedbackMap: learnerFeedbackMap,
       regularity,
       checkinStreak,
+      gestes7d,
+      gestes14d,
+      gestesCumulative,
+      activityZone,
     }
+  })
+
+  // Tri : gestes cumulés décroissant, puis ordre alpha en secours
+  learners.sort((a, b) => {
+    if (b.gestesCumulative !== a.gestesCumulative) return b.gestesCumulative - a.gestesCumulative
+    return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, 'fr')
   })
 
   return (

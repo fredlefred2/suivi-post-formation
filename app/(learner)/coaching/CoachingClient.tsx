@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
+import HeaderNavy from '@/app/components/ui/HeaderNavy'
 
 interface Tip {
   id: string
@@ -91,25 +92,11 @@ export default function CoachingClient({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
-      {/* Header navy */}
-      <div
-        className="rounded-[28px] p-5 relative overflow-hidden"
-        style={{ background: 'linear-gradient(165deg, #1a1a2e 0%, #2a1a3e 100%)' }}
-      >
-        <div className="absolute -top-8 -right-5 w-28 h-28 rounded-full" style={{ background: 'rgba(251,191,36,0.15)' }} />
-
-        <div className="relative flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-lg" style={{ background: 'rgba(255,255,255,0.2)' }}>
-            💪
-          </div>
-          <div>
-            <h1 className="text-[22px] font-extrabold text-white">Mon coaching</h1>
-            <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              {sentTips.length} conseil{sentTips.length > 1 ? 's' : ''} reçu{sentTips.length > 1 ? 's' : ''}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Header navy harmonisé */}
+      <HeaderNavy
+        title={<span>💪 Mon coaching</span>}
+        subtitle={<>{sentTips.length} conseil{sentTips.length > 1 ? 's' : ''} reçu{sentTips.length > 1 ? 's' : ''}</>}
+      />
 
       {tips.length === 0 ? (
         <div className="rounded-[22px] bg-white p-8 text-center" style={{ border: '2px solid #f0ebe0' }}>
