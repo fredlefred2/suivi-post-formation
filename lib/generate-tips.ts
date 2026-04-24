@@ -261,7 +261,7 @@ RÈGLES D'OR
 
 6. Tutoiement partout. Ton : grand frère / grande sœur qui a de l'expérience.
 
-7. EXEMPLE — les paroles ou phrases "qu'on dirait" doivent être entre guillemets "..." (doubles guillemets droits), pour qu'elles ressortent visuellement.
+7. EXEMPLE — les paroles ou phrases "qu'on dirait" doivent être entre guillemets français « ... » (typographie FR correcte ET compatibles JSON). N'utilise JAMAIS de guillemets droits "..." à l'intérieur du champ example, ça casse le parsing.
 
 Rappel FORMAT JSON : uniquement les 3 champs mantra, action, example. Pas de préambule, pas de markdown.`
 
