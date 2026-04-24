@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { notifyTrainerOfAction } from '@/lib/notify-trainer'
 
 // Helper : supprime les tips non envoyés quand un axe est modifié
 // (les tips personnalisés seront regénérés par le cron lundi 17h)
@@ -109,10 +110,13 @@ export async function createAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Non authentifié' }
 
+  const axeId = formData.get('axe_id') as string
+  const description = formData.get('description') as string
+
   const { data, error } = await supabase.from('actions').insert({
-    axe_id: formData.get('axe_id') as string,
+    axe_id: axeId,
     learner_id: user.id,
-    description: formData.get('description') as string,
+    description,
     completed: true, // Une action ajoutée est directement une action menée
   }).select('id').single()
 
@@ -120,7 +124,23 @@ export async function createAction(formData: FormData) {
   revalidatePath('/axes')
   revalidatePath('/dashboard')
 
-  // Notifications d'actions remplacées par un digest hebdo (cron mercredi 8h)
+  // v1.31 — notif formateur : un apprenant vient de poster une action
+  // Fire-and-forget, jamais bloquant (retour client non-dépendant)
+  try {
+    const { data: axe } = await supabaseAdmin
+      .from('axes')
+      .select('subject')
+      .eq('id', axeId)
+      .maybeSingle()
+    notifyTrainerOfAction({
+      learnerId: user.id,
+      axeSubject: axe?.subject ?? 'un axe',
+      description,
+    }).catch(() => {})
+  } catch {
+    // silencieux
+  }
+
   return { id: data.id }
 }
 

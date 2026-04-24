@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>YAPLUKA — Notifications & automatisations</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f8f9fc;
+    color: #0f172a;
+    line-height: 1.5;
+    padding: 40px 24px 80px;
+  }
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .doc-header {
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #e5e7ec;
+  }
+  .doc-header .eyebrow {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    margin-bottom: 14px;
+  }
+  .doc-header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .doc-header p {
+    font-size: 14px;
+    color: #64748b;
+  }
+
+  /* Section */
+  section { margin-bottom: 48px; }
+  section > h2 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  section > h2 .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 6px;
+  }
+  section > h2 .tag.learner { background: #eef2ff; color: #3730a3; }
+  section > h2 .tag.trainer { background: #fef3c7; color: #92400e; }
+  section > p.lead {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+    max-width: 700px;
+  }
+
+  /* ─── Calendrier hebdo visuel ─── */
+  .week-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 1px;
+    background: #e5e7ec;
+    border: 1px solid #e5e7ec;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .week-grid .col-head {
+    background: #0f172a;
+    color: #fff;
+    padding: 10px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .week-grid .col-head.time { background: #1e293b; }
+  .week-grid .row-head {
+    background: #f1f3f8;
+    color: #475569;
+    padding: 14px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .week-grid .cell {
+    background: #ffffff;
+    padding: 10px 8px;
+    min-height: 72px;
+    font-size: 11px;
+    line-height: 1.35;
+    position: relative;
+  }
+  .week-grid .cell.empty { background: #fafbfc; }
+  .week-grid .event {
+    padding: 6px 8px;
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  .event .lbl {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 2px;
+  }
+  .event.apprenant { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
+  .event.formateur { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .event.both { background: linear-gradient(135deg, #eef2ff 0%, #fef3c7 100%); color: #1e293b; border: 1px solid #d4d7e0; }
+  .event.backend { background: #f1f5f9; color: #475569; border: 1px dashed #cbd5e1; font-style: italic; }
+
+  /* ─── Tables ─── */
+  .table-wrap {
+    border: 1px solid #e5e7ec;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  table th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #475569;
+    background: #f8f9fc;
+    border-bottom: 1px solid #e5e7ec;
+  }
+  table td {
+    padding: 12px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid #f1f3f8;
+    vertical-align: top;
+  }
+  table tr:last-child td { border-bottom: none; }
+  table tr:hover td { background: #fafbfc; }
+  table td.day {
+    font-weight: 700;
+    white-space: nowrap;
+    color: #0f172a;
+  }
+  table td.time {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: #475569;
+  }
+  table td.notif {
+    font-weight: 500;
+  }
+  table td.notif strong {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  table td.channel { white-space: nowrap; }
+  table td.condition {
+    font-size: 12px;
+    color: #64748b;
+    max-width: 340px;
+  }
+
+  /* Badges canal */
+  .chan {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .chan.push { background: #e0f2fe; color: #075985; }
+  .chan.bell { background: #eef2ff; color: #3730a3; }
+  .chan.modal { background: #fce7f3; color: #9d174d; }
+  .chan.banner { background: #fef3c7; color: #92400e; }
+  .chan.badge { background: #dcfce7; color: #166534; }
+  .chan.none { background: #f1f5f9; color: #475569; }
+
+  /* Callout cards */
+  .callout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 720px) {
+    .callout-grid { grid-template-columns: 1fr; }
+  }
+  .callout {
+    background: #fff;
+    border: 1px solid #e5e7ec;
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .callout .title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .callout ul {
+    list-style: none;
+  }
+  .callout ul li {
+    padding: 6px 0;
+    border-bottom: 1px dashed #e5e7ec;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .callout ul li:last-child { border-bottom: none; }
+  .callout ul li strong { color: #3730a3; font-weight: 700; }
+  .callout.rules { border-left: 3px solid #6366f1; }
+  .callout.quiet { border-left: 3px solid #f59e0b; }
+
+  /* Legende */
+  .legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px dashed #d4d7e0;
+    border-radius: 10px;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #475569;
+  }
+  .legend-swatch {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 2px solid #e5e7ec;
+    font-size: 12px;
+    color: #64748b;
+  }
+  footer p { margin-bottom: 8px; }
+
+  @media print {
+    body { background: #fff; padding: 20px; font-size: 11px; }
+    .doc-header h1 { font-size: 24px; }
+    section { page-break-inside: avoid; margin-bottom: 30px; }
+    .week-grid, .table-wrap, .callout { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="doc-header">
+    <div class="eyebrow">Documentation · v1.30 / v1.31</div>
+    <h1>Notifications, alertes &amp; automatisations</h1>
+    <p>Tout ce qui se déclenche automatiquement dans YAPLUKA, par jour de la semaine, par événement et par rôle. Horaires en heure de Paris.</p>
+  </header>
+
+  <!-- ═══ LÉGENDE ═══ -->
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:#eef2ff;border-color:#c7d2fe;"></span> Apprenant</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#fef3c7;border-color:#fde68a;"></span> Formateur</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:linear-gradient(135deg,#eef2ff,#fef3c7);"></span> Les deux</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#f1f5f9;border:1px dashed #cbd5e1;"></span> Backend (pas de notif)</div>
+    <div class="legend-item" style="margin-left:auto;"><span class="chan push">PUSH</span> push web · <span class="chan bell">BELL</span> cloche in-app · <span class="chan modal">MODAL</span> modal · <span class="chan banner">BANDEAU</span> bandeau · <span class="chan badge">BADGE</span> badge app</div>
+  </div>
+
+  <!-- ═══ SECTION 1 · CALENDRIER HEBDO ═══ -->
+  <section>
+    <h2>🗓️ Calendrier hebdomadaire</h2>
+    <p class="lead">Ce qui part automatiquement chaque semaine, sans action humaine. Les cases claires = rien ne se passe ce jour-là à cette heure.</p>
+
+    <div class="week-grid">
+      <!-- Header -->
+      <div class="col-head time">Heure</div>
+      <div class="col-head">Lundi</div>
+      <div class="col-head">Mardi</div>
+      <div class="col-head">Mercredi</div>
+      <div class="col-head">Jeudi</div>
+      <div class="col-head">Vendredi</div>
+      <div class="col-head">Samedi</div>
+      <div class="col-head">Dimanche</div>
+
+      <!-- Row 08:00 -->
+      <div class="row-head">08:00</div>
+      <div class="cell empty"></div>
+      <div class="cell">
+        <div class="event apprenant">
+          <span class="lbl">Apprenant · push</span>
+          💡 Ton coach a un message<br>
+          <em style="opacity:0.7;font-style:normal;font-size:10.5px;">{axe} : "{tip}"</em>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="event both">
+          <span class="lbl">Apprenant + formateur · push</span>
+          💪 Activité de la semaine<br>
+          <em style="opacity:0.7;font-style:normal;font-size:10.5px;">apprenant : voir groupe · formateur : voir total</em>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="event backend">
+          <span class="lbl">Backend (sem. paires)</span>
+          🧠 Génération des quiz<br>
+          <em style="font-size:10.5px;">Claude prépare 4 questions / groupe</em>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="event apprenant">
+          <span class="lbl">Apprenant · push</span>
+          ☀️ Check-in de la semaine !<br>
+          <em style="opacity:0.7;font-style:normal;font-size:10.5px;">Si check-in pas fait</em>
+        </div>
+      </div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+
+      <!-- Row 09:00 -->
+      <div class="row-head">09:00</div>
+      <div class="cell">
+        <div class="event apprenant">
+          <span class="lbl">Apprenant · push</span>
+          👀 Relance inactivité<br>
+          <em style="opacity:0.7;font-style:normal;font-size:10.5px;">Si 10+ jours sans action</em>
+        </div>
+      </div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+
+      <!-- Row 17:00 -->
+      <div class="row-head">17:00</div>
+      <div class="cell">
+        <div class="event backend">
+          <span class="lbl">Backend</span>
+          🤖 Pré-génération tips<br>
+          <em style="font-size:10.5px;">Claude prépare le tip de chaque apprenant (envoi mardi 08:00). Le formateur peut modifier entre 17:00 et mardi 08:00.</em>
+        </div>
+      </div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+
+      <!-- Row 20:00 -->
+      <div class="row-head">20:00</div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell">
+        <div class="event backend">
+          <span class="lbl">Backend</span>
+          📰 Génération Team News<br>
+          <em style="font-size:10.5px;">Claude rédige le résumé du groupe affiché sur la page Team</em>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 2 · EN TANT QU'APPRENANT ═══ -->
+  <section>
+    <h2>🎓 En tant qu'<span class="tag learner">Apprenant</span></h2>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">1. Push hebdomadaires reçus</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:90px;">Jour</th>
+            <th style="width:70px;">Heure</th>
+            <th>Contenu de la notification</th>
+            <th style="width:100px;">Canal</th>
+            <th>Condition d'envoi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day">Lundi</td>
+            <td class="time">09:00</td>
+            <td class="notif"><strong>👀 Coucou {prénom} !</strong><br>Ça fait X jours qu'on ne s'est pas vus... T'as tenté un truc qu'on pourrait noter ?</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+            <td class="condition">Aucune action depuis <strong>10 jours calendaires</strong> (Paris), ≥ 1 action existante, inscrit ≥ 5 jours</td>
+          </tr>
+          <tr>
+            <td class="day">Mardi</td>
+            <td class="time">08:00</td>
+            <td class="notif"><strong>💡 Ton coach a un message</strong><br>{axe} : "{contenu du tip personnalisé}"</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+            <td class="condition">Au moins 1 axe actif. Tip pré-généré par Claude la veille à 17:00 (relisable/modifiable par le formateur avant l'envoi)</td>
+          </tr>
+          <tr>
+            <td class="day">Mercredi</td>
+            <td class="time">08:00</td>
+            <td class="notif"><strong>💪 Ton équipe avance !</strong><br>N nouvelle(s) action(s) cette semaine dans ton groupe. Va voir !</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+            <td class="condition">Les coéquipiers (excluant moi) ont posté ≥ 1 action depuis lundi 00:00</td>
+          </tr>
+          <tr>
+            <td class="day">Vendredi</td>
+            <td class="time">08:00</td>
+            <td class="notif"><strong>☀️ Check-in de la semaine !</strong><br>{prénom}, c'est le moment de faire le point sur ta semaine. 2 minutes suffisent !</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+            <td class="condition">Inscrit ≥ 5 jours, check-in pas encore fait pour la semaine ISO courante, re-vérifié juste avant l'envoi</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">2. Déclenchements suite à une action du formateur</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Déclencheur</th>
+            <th>Notification reçue</th>
+            <th style="width:120px;">Canal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day">Like ❤️ sur une de mes actions</td>
+            <td class="notif"><strong>❤️ J'aime</strong><br>{nom} a aimé ton action « {description tronquée 40c} »</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+          </tr>
+          <tr>
+            <td class="day">Commentaire 💬 sur une de mes actions</td>
+            <td class="notif"><strong>💬 Commentaire</strong><br>{nom} a commenté ton action</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+          </tr>
+          <tr>
+            <td class="day">Message privé reçu (1:1)</td>
+            <td class="notif"><strong>💬 Nouveau message</strong><br>{début du message, 50c}…</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+          </tr>
+          <tr>
+            <td class="day">Message team reçu (groupe)</td>
+            <td class="notif"><strong>📢 Message de {nom}</strong><br>{début du message, 60c}…</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span style="font-size:10.5px;color:#64748b;font-style:italic;">sans cloche</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">3. Modales qui s'ouvrent à l'arrivée sur l'app (ordre de priorité)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px;">Rang</th>
+            <th>Modal</th>
+            <th>Condition d'apparition</th>
+            <th>Règle anti-spam</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day">1</td>
+            <td class="notif"><strong>Check-in prompt</strong><br><em style="color:#64748b;">C'est le moment ! + streak si ≥ 1</em></td>
+            <td class="condition">Fenêtre ouverte (ven 18h → lun 18h) ET check-in pas fait</td>
+            <td class="condition">Réapparait à chaque ouverture tant que pas fait (urgent)</td>
+          </tr>
+          <tr>
+            <td class="day">2</td>
+            <td class="notif"><strong>Coach Gift</strong><br><em style="color:#64748b;">Ampoule à allumer → tip révélé</em></td>
+            <td class="condition">Un tip existe avec <code>acted=false</code></td>
+            <td class="condition">Skip bloque <strong>1 journée</strong> (reset minuit)</td>
+          </tr>
+          <tr>
+            <td class="day">3</td>
+            <td class="notif"><strong>Action Relance</strong><br><em style="color:#64748b;">Ça fait X jours !</em></td>
+            <td class="condition">10+ jours sans action posée</td>
+            <td class="condition">Skip bloque <strong>1 journée</strong></td>
+          </tr>
+          <tr>
+            <td class="day">4</td>
+            <td class="notif"><strong>Quiz prompt</strong></td>
+            <td class="condition">Semaine ISO paire ET quiz pas encore joué</td>
+            <td class="condition">Skip bloque <strong>1 semaine</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">4. En continu côté client</h3>
+    <div class="callout-grid">
+      <div class="callout">
+        <div class="title">⏱️ Polling cloche</div>
+        <ul>
+          <li>Toutes les <strong>60 secondes</strong></li>
+          <li>+ Refresh quand l'app revient au 1er plan</li>
+          <li>Met à jour le <strong>badge rouge</strong> sur la cloche</li>
+          <li>Met à jour le <strong>badge app</strong> (icône iOS/Android)</li>
+        </ul>
+      </div>
+      <div class="callout">
+        <div class="title">✨ Halo pulsant</div>
+        <ul>
+          <li>Sur les 4 icônes "À faire aujourd'hui"</li>
+          <li>Activé si check-in pas fait, tip non lu, messages non lus</li>
+          <li>Événement <code>messages-read</code> reset le halo quand je lis mes messages</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;margin-top:12px;font-size:12.5px;line-height:1.5;color:#3730a3;">
+      <strong>🔔 v1.31 — Ce que je fais, mon formateur le voit :</strong><br>
+      Chaque action posée, chaque check-in validé, chaque quiz complété envoie un push à mon formateur.
+      C'est automatique côté serveur — je n'ai rien à faire de plus.
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 3 · EN TANT QUE FORMATEUR ═══ -->
+  <section>
+    <h2>👨‍🏫 En tant que <span class="tag trainer">Formateur</span></h2>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">1. Ce qui me concerne dans la semaine</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:90px;">Jour</th>
+            <th style="width:70px;">Heure</th>
+            <th>Ce qui se passe</th>
+            <th style="width:100px;">Canal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day">Lundi</td>
+            <td class="time">17:00</td>
+            <td class="notif"><strong>🤖 Claude pré-génère les tips</strong> pour chaque apprenant. Fenêtre <strong>jusqu'à mardi 08:00</strong> pour les relire/modifier dans <code>/trainer/apprenants/{id}</code> onglet Tips.</td>
+            <td class="channel"><span class="chan none">BACKEND</span></td>
+          </tr>
+          <tr>
+            <td class="day">Mercredi</td>
+            <td class="time">08:00</td>
+            <td class="notif"><strong>💪 Activité de la semaine</strong><br>N action(s) enregistrée(s) en X jour(s) par vos apprenants.</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+          </tr>
+          <tr>
+            <td class="day">Jeudi</td>
+            <td class="time">08:00</td>
+            <td class="notif"><strong>🧠 Génération des quiz</strong> (semaines ISO paires uniquement). Claude génère 4 questions par groupe à partir du brief. Visibles dans <code>/trainer/groups/{id}/quiz</code>.</td>
+            <td class="channel"><span class="chan none">BACKEND</span></td>
+          </tr>
+          <tr>
+            <td class="day">Dimanche</td>
+            <td class="time">20:00</td>
+            <td class="notif"><strong>📰 Génération des Team News.</strong> Claude rédige le résumé de l'activité hebdo par groupe, affiché sur la page Team des apprenants.</td>
+            <td class="channel"><span class="chan none">BACKEND</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">2. Déclenchements par événement apprenant <span style="font-weight:600;color:#3730a3;font-size:11px;margin-left:6px;padding:2px 8px;background:#eef2ff;border-radius:6px;">MAJ v1.31</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Déclencheur</th>
+            <th>Ce qui m'arrive</th>
+            <th style="width:120px;">Canal</th>
+            <th style="width:180px;">Lien d'ouverture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day">Message privé reçu d'un apprenant</td>
+            <td class="notif"><strong>💬 Nouveau message</strong><br>{début du message, 50c}…</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+            <td class="condition"><code>/trainer/messages?with={id}</code></td>
+          </tr>
+          <tr>
+            <td class="day">Apprenant poste une action</td>
+            <td class="notif"><strong>⚡ {Prénom} vient d'agir</strong><br>{axe} · « {description 60c} »</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+            <td class="condition"><code>/trainer/apprenants?group={gid}&amp;learner={id}</code></td>
+          </tr>
+          <tr>
+            <td class="day">Apprenant fait son check-in</td>
+            <td class="notif"><strong>{météo emoji} Check-in de {Prénom}</strong><br>{Prénom} a fait son point de la semaine · {what_worked 60c}</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+            <td class="condition"><code>/trainer/apprenants?group={gid}&amp;learner={id}</code></td>
+          </tr>
+          <tr>
+            <td class="day">Apprenant complète un quiz</td>
+            <td class="notif"><strong>🎯 Quiz de {Prénom}</strong><br>Score {n}/{total} — {Prénom} vient de terminer le quiz de la semaine</td>
+            <td class="channel"><span class="chan push">PUSH</span> <span class="chan bell">BELL</span></td>
+            <td class="condition"><code>/trainer/groups/{gid}/quiz</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:#64748b;margin-top:8px;max-width:700px;line-height:1.5;">
+      <strong>Notes v1.31 :</strong> ces 3 notifs sont déclenchées en fire-and-forget dans le code
+      (jamais bloquantes pour l'apprenant). Lookup du formateur via <code>group_members → groups.trainer_id</code>.
+      Pas de throttling — si un apprenant pose 5 actions d'affilée, le formateur reçoit 5 pushs. Le canal push web
+      reste mutable par le formateur au niveau navigateur.
+    </p>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">3. Bandeaux contextuels à l'ouverture</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th>Bandeau affiché</th>
+            <th>Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day">/trainer/dashboard</td>
+            <td class="notif"><strong>⏰ N check-in(s) en attente</strong><br>+ liste des prénoms, chacun cliquable (v1.31 : ouvre la messagerie pré-remplie avec un template de relance)</td>
+            <td class="condition">Fenêtre check-in ouverte (ven-lun) ET au moins 1 apprenant n'a pas validé</td>
+          </tr>
+          <tr>
+            <td class="day">/trainer/dashboard</td>
+            <td class="notif"><strong>🔴 N apprenant(s) sans activité depuis 15 jours</strong><br>+ liste des prénoms, cliquables (v1.31 uniquement)</td>
+            <td class="condition">Au moins 1 apprenant avec jauge rouge (0 geste sur 14 jours)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">4. En continu côté client</h3>
+    <div class="callout-grid">
+      <div class="callout">
+        <div class="title">⏱️ Polling cloche</div>
+        <ul>
+          <li>Toutes les <strong>60 secondes</strong></li>
+          <li>+ Refresh quand l'app revient au 1er plan</li>
+          <li>Agrège uniquement les messages privés reçus</li>
+        </ul>
+      </div>
+      <div class="callout quiet">
+        <div class="title">🔔 Notifs événementielles (v1.31)</div>
+        <ul>
+          <li><strong>Action posée</strong> → push + cloche (ouvre la fiche apprenant)</li>
+          <li><strong>Check-in validé</strong> → push + cloche avec météo</li>
+          <li><strong>Quiz complété</strong> → push + cloche avec score</li>
+          <li>Pas de throttling : chaque action génère un push</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 4 · RÈGLES TRANSVERSES ═══ -->
+  <section>
+    <h2>🛡️ Règles transverses</h2>
+    <div class="callout-grid">
+      <div class="callout rules">
+        <div class="title">🛡️ Anti-harcèlement</div>
+        <ul>
+          <li>Le cron <strong>weekly-reminder</strong> re-vérifie juste avant d'envoyer (pas de push "fais ton check-in" 3 secondes après validation)</li>
+          <li>Un formateur ne peut pas se liker lui-même</li>
+          <li>Skip de modal = bloqué 1 jour pour tip/relance, 1 semaine pour quiz</li>
+          <li>Table <code>prompt_dismissals</code> mémorise les skips par apprenant</li>
+        </ul>
+      </div>
+      <div class="callout rules">
+        <div class="title">📧 Email</div>
+        <ul>
+          <li><strong>Aucun email automatique</strong> à date</li>
+          <li>Template <code>email-template-yapluka.html</code> présent dans le repo mais non branché</li>
+          <li>Resend configuré en env mais inutilisé par les crons actuels</li>
+          <li>Potentiel ouvert si besoin d'un rappel email hebdo</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px;color:#475569;">Tables Supabase impliquées</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:180px;">Table</th>
+            <th>Utilisée pour</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="day"><code>notifications</code></td><td>Historique cloche (insert à chaque push envoyé)</td></tr>
+          <tr><td class="day"><code>push_subscriptions</code></td><td>Endpoints VAPID par user (upsert quand le user active les notifs)</td></tr>
+          <tr><td class="day"><code>prompt_dismissals</code></td><td>Mémorise les skips de modales (empêche le harcèlement)</td></tr>
+          <tr><td class="day"><code>tips</code></td><td>Pré-generation lundi 17h (<code>next_scheduled=true</code>), envoi mardi 8h (<code>sent=true</code>), lecture par apprenant (<code>acted=true</code>)</td></tr>
+          <tr><td class="day"><code>action_likes</code></td><td>Trigger notif <code>action_liked</code></td></tr>
+          <tr><td class="day"><code>action_comments</code></td><td>Trigger notif <code>action_commented</code></td></tr>
+          <tr><td class="day"><code>messages</code></td><td>Trigger notif <code>message</code> (1:1)</td></tr>
+          <tr><td class="day"><code>team_messages</code></td><td>Trigger notif <code>team_message</code> (push only, pas cloche)</td></tr>
+          <tr><td class="day"><code>checkins</code></td><td>Contrainte d'unicité (1 check-in par apprenant par semaine ISO) · base pour cron vendredi</td></tr>
+          <tr><td class="day"><code>actions</code></td><td>Base pour le cron relance 10j</td></tr>
+          <tr><td class="day"><code>quizzes</code> / <code>quiz_attempts</code></td><td>Génération cron jeudi, affichage dashboard + classement formateur</td></tr>
+          <tr><td class="day"><code>team_news_cache</code></td><td>Cache du résumé IA groupe (dimanche 20h)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>Fichiers de référence</strong> (si besoin de plonger dans le code) :</p>
+    <p>Cron jobs : <code>app/api/cron/*/route.ts</code> (7 fichiers)</p>
+    <p>Envoi push : <code>lib/send-notification.ts</code>, <code>lib/web-push.ts</code></p>
+    <p>Orchestrateur modales : <code>app/components/OpenAppPrompt.tsx</code> + <code>app/components/PromptModals.tsx</code></p>
+    <p>Cloche : <code>app/components/NotificationBell.tsx</code></p>
+    <p>Triggers événement : <code>app/actions/feedback.ts</code> · <code>app/api/messages/route.ts</code> · <code>app/api/team-messages/route.ts</code></p>
+    <p>Config cron : <code>vercel.json</code></p>
+  </footer>
+
+</div>
+
+</body>
+</html>

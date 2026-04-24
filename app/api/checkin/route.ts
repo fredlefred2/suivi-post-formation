@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCheckinContext } from '@/lib/utils'
+import { notifyTrainerOfCheckin } from '@/lib/notify-trainer'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,6 +69,13 @@ export async function POST(req: NextRequest) {
       }, { onConflict: 'axe_id,week_number,year' })
     }
   }
+
+  // v1.31 — notif formateur : check-in validé
+  notifyTrainerOfCheckin({
+    learnerId: user.id,
+    weather,
+    whatWorked: what_worked,
+  }).catch(() => {})
 
   return NextResponse.json({ success: true })
 }

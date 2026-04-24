@@ -18,6 +18,10 @@ type NotificationType =
   | 'inactivity'
   | 'weekly_tip'
   | 'action_digest'
+  // v1.31 — notifs formateur quand un apprenant agit
+  | 'learner_action'
+  | 'learner_checkin'
+  | 'learner_quiz'
 
 interface SendNotificationParams {
   userId: string

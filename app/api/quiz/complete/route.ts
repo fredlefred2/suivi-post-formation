@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { QUIZ_QUESTIONS_PER_QUIZ } from '@/lib/types'
+import { notifyTrainerOfQuiz } from '@/lib/notify-trainer'
 
 /**
  * POST /api/quiz/complete
@@ -71,6 +72,13 @@ export async function POST(request: NextRequest) {
   if (updErr) {
     return NextResponse.json({ error: 'Erreur complétion' }, { status: 500 })
   }
+
+  // v1.31 — notif formateur : quiz complété
+  notifyTrainerOfQuiz({
+    learnerId: user.id,
+    score,
+    total: QUIZ_QUESTIONS_PER_QUIZ,
+  }).catch(() => {})
 
   return NextResponse.json({
     score,
