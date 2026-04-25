@@ -170,12 +170,12 @@ export async function POST(request: NextRequest) {
     const ctx = await gatherLearnerContext(currentTip.learner_id, currentTip.axe_id)
     if (!ctx) return NextResponse.json({ error: 'Contexte introuvable' }, { status: 404 })
 
-    // Generer le nouveau AVANT de supprimer l'ancien (evite la perte si erreur)
+    // generatePersonalizedTip wipe lui-même les tips en attente du learner
+    // pour cette semaine (l'ancien tipId est inclus dans ce wipe) puis insert
+    // un nouveau. Plus besoin de delete explicite après — c'était le bug
+    // d'avant (le delete supprimait le résultat de l'upsert).
     const result = await generatePersonalizedTip(ctx, currentTip.week_number)
     if (!result) return NextResponse.json({ error: 'Erreur de régénération' }, { status: 500 })
-
-    // Supprimer l'ancien seulement apres generation reussie
-    await supabaseAdmin.from('tips').delete().eq('id', tipId)
 
     return NextResponse.json({ success: true, tip: result })
   }

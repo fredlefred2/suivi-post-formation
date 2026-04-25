@@ -23,15 +23,18 @@ export async function GET(request: NextRequest) {
   }
 
   // ── 1. Trouver tous les apprenants avec des axes ──────────────
+  // Tri par created_at = ordre canonique des axes (sert de base à la
+  // rotation circulaire au step 4).
   const { data: allAxes } = await supabaseAdmin
     .from('axes')
-    .select('id, learner_id, subject')
+    .select('id, learner_id, subject, created_at')
+    .order('created_at', { ascending: true })
 
   if (!allAxes || allAxes.length === 0) {
     return NextResponse.json({ message: 'Aucun axe trouve', generated: 0 })
   }
 
-  // Grouper les axes par apprenant
+  // Grouper les axes par apprenant (ordre created_at préservé)
   const axesByLearner = new Map<string, Array<{ id: string; subject: string }>>()
   for (const axe of allAxes) {
     if (!axesByLearner.has(axe.learner_id)) {
@@ -93,11 +96,15 @@ export async function GET(request: NextRequest) {
     const learnerAxes = axesByLearner.get(learnerId)!
     const lastAxeId = lastSentAxeByLearner.get(learnerId)
 
-    // Choisir l'axe (alterner avec le dernier envoyé)
+    // Rotation circulaire (V1.30.1) : on prend l'axe suivant dans l'ordre
+    // created_at après le dernier envoyé. Si pas d'historique → premier axe.
+    // Avec 4 axes A→B→C→D→A, garantit que tous sont visités.
     let targetAxe = learnerAxes[0]
-    if (lastAxeId && learnerAxes.length > 1) {
-      const otherAxe = learnerAxes.find((a) => a.id !== lastAxeId)
-      if (otherAxe) targetAxe = otherAxe
+    if (lastAxeId) {
+      const lastIdx = learnerAxes.findIndex((a) => a.id === lastAxeId)
+      if (lastIdx !== -1) {
+        targetAxe = learnerAxes[(lastIdx + 1) % learnerAxes.length]
+      }
     }
 
     try {
