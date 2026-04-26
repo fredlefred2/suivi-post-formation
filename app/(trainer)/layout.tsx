@@ -5,6 +5,8 @@ import LogoutButton from '@/app/components/LogoutButton'
 import MobileDrawer from '@/app/components/MobileDrawer'
 import BottomNav from '@/app/components/BottomNav'
 import MessageIcon from '@/app/components/MessageIcon'
+import NotificationBell from '@/app/components/NotificationBell'
+import PushRegistration from '@/app/components/PushRegistration'
 import TrainerSidebar from '@/app/components/TrainerSidebar'
 
 const navItems = [
@@ -70,6 +72,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
           </div>
           <div className="flex items-center gap-2">
             <MessageIcon variant="trainer" currentUserId={user.id} allLearners={allLearners} />
+            <NotificationBell />
             <LogoutButton />
           </div>
         </div>
@@ -93,6 +96,9 @@ export default async function TrainerLayout({ children }: { children: React.Reac
         shortLabel: label,
       }))} />
       <div className="h-16 sm:hidden" />
+
+      {/* ── Push registration (V1.30.2 — pour recevoir les notifs apprenant en push) ── */}
+      <PushRegistration />
     </div>
   )
 }

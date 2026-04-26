@@ -22,6 +22,11 @@ type NotificationType =
   | 'streak_risk'
   | 'inactivity'
   | 'action_digest'
+  | 'weekly_tip'
+  // V1.30.2 — notifs formateur quand un apprenant agit
+  | 'learner_action'
+  | 'learner_checkin'
+  | 'learner_quiz'
 
 type Notification = {
   id: string
@@ -49,6 +54,11 @@ const TYPE_ICONS: Record<NotificationType, string> = {
   streak_risk: '⚠️',
   inactivity: '⚠️',
   action_digest: '💪',
+  weekly_tip: '💡',
+  // V1.30.2 — notifs formateur (titre porte déjà l'emoji ⚡/☀️/🎯, on garde un fallback neutre)
+  learner_action: '⚡',
+  learner_checkin: '🌤️',
+  learner_quiz: '🎯',
 }
 
 function timeAgo(dateStr: string): string {
