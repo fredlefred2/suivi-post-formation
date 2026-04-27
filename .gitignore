@@ -8,6 +8,7 @@ out/
 # Variables d'environnement (contient les clés secrètes — ne jamais committer)
 .env
 .env.local
+.env.local.*
 .env.development.local
 .env.test.local
 .env.production.local
@@ -23,3 +24,4 @@ npm-debug.log*
 
 # Maquettes HTML — prototypage UI hors code principal
 maquette-*.html
+scripts/send-push.mjs
