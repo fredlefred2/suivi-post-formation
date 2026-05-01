@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { isEligibleForAlerts } from '@/lib/utils'
 import { sendNotification } from '@/lib/send-notification'
+import { sendEmail, getEmailEligibleLearnerIds, APP_URL } from '@/lib/send-email'
+import { checkinReminderEmail } from '@/lib/email-templates'
 
 // Route protégée par un secret — appelée par Vercel Cron chaque vendredi à 9h
 export async function GET(request: NextRequest) {
@@ -57,6 +59,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Tous les participants ont fait leur check-in', sent: 0 })
   }
 
+  // Filtre email pilote (null = tout le monde, Set = uniquement le groupe pilote)
+  const emailEligibleIds = await getEmailEligibleLearnerIds()
+
   // Envoi des push en parallèle avec re-vérification juste avant — évite
   // d'envoyer un rappel à un apprenant qui vient de valider son check-in
   // pendant que ce cron tournait.
@@ -72,13 +77,21 @@ export async function GET(request: NextRequest) {
 
       if (justChecked) return { skipped: true }
 
-      await sendNotification({
-        userId: learner.id,
-        type: 'checkin_reminder',
-        title: '☀️ Check-in de la semaine !',
-        body: `${learner.first_name}, c'est le moment de faire le point sur ta semaine. 2 minutes suffisent !`,
-        url: '/checkin',
-      })
+      const emailAllowed = emailEligibleIds === null || emailEligibleIds.has(learner.id)
+      const tasks: Promise<unknown>[] = [
+        sendNotification({
+          userId: learner.id,
+          type: 'checkin_reminder',
+          title: '☀️ Check-in de la semaine !',
+          body: `${learner.first_name}, c'est le moment de faire le point sur ta semaine. 2 minutes suffisent !`,
+          url: '/checkin',
+        }),
+      ]
+      if (emailAllowed) {
+        const { subject, html } = checkinReminderEmail({ firstName: learner.first_name, appUrl: APP_URL })
+        tasks.push(sendEmail({ userId: learner.id, subject, html }))
+      }
+      await Promise.allSettled(tasks)
       return { skipped: false }
     })
   )
