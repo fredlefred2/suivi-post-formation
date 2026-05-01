@@ -45,7 +45,9 @@ direct sur `main` possible, wipe data sans cérémonie.
 
 | Branche | Tag | État |
 |---------|-----|------|
-| `main` | **`v1.30.3`** | Production stable (point de retour fiable) |
+| `main` | **`v1.30.5`** | Production actuelle (inscription atomique + Resend transactionnels) |
+| — | `v1.30.4` | État stable juste après Resend, avant le fix inscription (cible de rollback intermédiaire) |
+| — | `v1.30.3` | Prod stable d'avant Resend (ancien point de retour fiable) |
 | `feature/v1.31` | — | Preview Lift Gradient (Stripe/Vercel) + notifs formateur. Pas en prod, rolled back après échec déploiement v1.31.x |
 | `feature/v1.30` | `v1.30` | Milestone design system (HeaderNavy, ActionItem, LevelAvatar, Chip, ActivityGauge) |
 | `feature/v1.29.4` | `v1.29.4` | Quiz bimensuel (mergée) |

@@ -17,11 +17,11 @@
 ### Inscription multiple — bug démo 6 apprenants (Option B)
 - **Zone** : auth / inscription / middleware / polling
 - **Pourquoi** : démo du ~25-27 avril avec 6 apprenants → plantages à l'inscription (cas Armelle = compte créé sans rattachement salle d'attente), lenteur pendant l'usage, déconnexions. Causes : code `register()` non atomique + middleware bavard (2 calls Supabase par clic) + polling agressif (4 timers actifs).
-- **Plan en 3 phases** (validation phase par phase avant push sur main) :
-  1. **Inscription atomique** — pré-créer "Salle d'attente" pour chaque formateur, réécrire `register()` en "tout ou rien", lister les comptes fantômes existants pour décision au cas par cas. ~1j, risque faible.
-  2. **Cache du middleware** — stocker le rôle dans un cookie signé 10 min, sauter le `SELECT role FROM profiles` quand le cookie est valide. Invalidation au logout. ~1.5j, risque modéré (touche toutes les routes).
-  3. **Polling intelligent** — Page Visibility API (5 min en arrière-plan au lieu de 60s), ChatView 60s au lieu de 30s quand inactif. ~½j, risque très faible.
-- **Avancée** : chantier ouvert 2026-05-01, démarrage Phase 1.
+- **Plan en 3 phases** :
+  1. ✅ **Inscription atomique** — livrée en `v1.30.5` (2026-05-01). `register()` "tout ou rien" + salle d'attente créée à l'inscription du formateur + 9 comptes fantômes purgés (313 rows).
+  2. ⏳ **Cache du middleware** — cookie signé 10 min, sauter `SELECT role FROM profiles` quand le cookie est valide. Invalidation au logout. ~1.5j, risque modéré (touche toutes les routes).
+  3. ⏳ **Polling intelligent** — Page Visibility API (5 min en arrière-plan au lieu de 60s), ChatView 60s au lieu de 30s quand inactif. ~½j, risque très faible.
+- **Avancée** : Phase 1 livrée + taggée `v1.30.5`. Phase 2 + 3 à attaquer dans une prochaine session.
 - **Dernière session** : 2026-05-01
 
 ---
@@ -57,9 +57,11 @@
 
 ## ✅ Récemment fini
 
+- **v1.30.5** (2026-05-01) — Inscription atomique : `register()` "tout ou rien" + rollback complet en cas d'échec post-Auth + salle d'attente créée à l'inscription du formateur. Bug d'origine : démo 6 apprenants 25-27/04. Purge prod : 9 comptes fantômes (313 rows).
+- **v1.30.4** (2026-05-01) — Tag intermédiaire capturant l'état "post-Resend, avant fix inscription" (cible de rollback intermédiaire).
 - **2026-05-01** — Template email "tip" en mode teaser (axe seulement, contenu masqué)
 - **2026-05-01** — Envois transactionnels Resend (check-in + tips) en pilote
-- **v1.30.3** — Prod stable (point de retour fiable)
+- **v1.30.3** — Prod stable d'avant Resend (ancien point de retour fiable)
 
 ---
 
