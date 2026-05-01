@@ -87,44 +87,33 @@ export function checkinReminderEmail(opts: { firstName: string; appUrl: string }
   }
 }
 
-export function weeklyTipEmail(opts: { firstName: string; axeSubject: string; content: string; advice?: string | null; example?: string | null; appUrl: string }): { subject: string; html: string } {
-  const { firstName, axeSubject, content, advice, example, appUrl } = opts
+export function weeklyTipEmail(opts: { firstName: string; axeSubject: string; appUrl: string }): { subject: string; html: string } {
+  const { firstName, axeSubject, appUrl } = opts
   const safeName = escapeHtml(firstName)
   const safeAxe = escapeHtml(axeSubject)
   const ctaUrl = `${appUrl}/dashboard`
 
-  const adviceBlock = advice
-    ? `<div style="margin:16px 0 0 0;padding:14px 16px;background:${COLORS.cream};border-left:3px solid ${COLORS.amber};border-radius:8px;">
-        <div style="font-size:12px;font-weight:700;color:${COLORS.amberDark};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Action concrète</div>
-        <div style="font-size:15px;line-height:1.6;color:${COLORS.navySoft};">${escapeHtml(advice)}</div>
-      </div>`
-    : ''
-
-  const exampleBlock = example
-    ? `<div style="margin:12px 0 0 0;padding:14px 16px;background:${COLORS.cream};border-left:3px solid ${COLORS.textMuted};border-radius:8px;">
-        <div style="font-size:12px;font-weight:700;color:${COLORS.textMuted};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Exemple</div>
-        <div style="font-size:15px;line-height:1.6;color:${COLORS.navySoft};font-style:italic;">${escapeHtml(example)}</div>
-      </div>`
-    : ''
-
   const bodyHtml = `
     <div style="font-size:13px;font-weight:600;color:${COLORS.amberDark};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">💡 Tip de la semaine</div>
-    <div style="font-size:24px;font-weight:700;line-height:1.3;color:${COLORS.navy};margin:0 0 6px 0;">Salut ${safeName}</div>
-    <div style="font-size:14px;color:${COLORS.textMuted};margin:0 0 16px 0;">Sur ton axe : <strong style="color:${COLORS.navy};">${safeAxe}</strong></div>
-    <p style="font-size:17px;line-height:1.6;color:${COLORS.navy};margin:0;font-weight:500;">
-      « ${escapeHtml(content)} »
+    <div style="font-size:24px;font-weight:700;line-height:1.3;color:${COLORS.navy};margin:0 0 12px 0;">Salut ${safeName}</div>
+    <p style="font-size:17px;line-height:1.6;color:${COLORS.navy};margin:0 0 8px 0;">
+      Ton coach a un nouveau tip pour toi.
     </p>
-    ${adviceBlock}
-    ${exampleBlock}
+    <p style="font-size:15px;line-height:1.6;color:${COLORS.navySoft};margin:0 0 8px 0;">
+      Sur ton axe : <strong style="color:${COLORS.navy};">${safeAxe}</strong>
+    </p>
+    <p style="font-size:15px;line-height:1.6;color:${COLORS.navySoft};margin:0;">
+      Connecte-toi à l'appli pour le découvrir.
+    </p>
   `
 
   return {
-    subject: `💡 Ton coach : ${truncate(axeSubject, 50)}`,
+    subject: `💡 Ton coach a un message pour toi`,
     html: layout({
       title: 'Tip de la semaine',
-      preheader: truncate(content, 110),
+      preheader: `Un nouveau tip sur ton axe : ${truncate(axeSubject, 80)}`,
       bodyHtml,
-      ctaLabel: 'Voir dans l\'appli',
+      ctaLabel: 'Voir mon tip',
       ctaUrl,
     }),
   }

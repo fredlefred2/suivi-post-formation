@@ -39,9 +39,6 @@ export async function POST(request: NextRequest) {
     ;({ subject, html } = weeklyTipEmail({
       firstName,
       axeSubject: 'Animer mes réunions avec plus d\'impact',
-      content: 'Commence chaque réunion par un tour de météo en 1 mot.',
-      advice: 'Demande à chacun comment il arrive en réunion (énergie, disponibilité). 90 secondes max.',
-      example: 'Lundi matin : "En un mot, comment vous arrivez ?" Jean dit "fatigué", Sophie dit "concentrée". Tu adaptes ton tempo.',
       appUrl,
     }))
   } else {

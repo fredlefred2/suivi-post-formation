@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
   const { data: scheduledTips } = await supabaseAdmin
     .from('tips')
-    .select('id, axe_id, learner_id, content, advice, example, week_number, axe:axes(subject)')
+    .select('id, axe_id, learner_id, content, week_number, axe:axes(subject)')
     .eq('next_scheduled', true)
     .eq('sent', false)
 
@@ -65,9 +65,6 @@ export async function GET(request: NextRequest) {
         const { subject: emailSubject, html } = weeklyTipEmail({
           firstName,
           axeSubject,
-          content: tip.content,
-          advice: (tip as any).advice ?? null,
-          example: (tip as any).example ?? null,
           appUrl: APP_URL,
         })
         tasks.push(sendEmail({ userId: tip.learner_id, subject: emailSubject, html }))
