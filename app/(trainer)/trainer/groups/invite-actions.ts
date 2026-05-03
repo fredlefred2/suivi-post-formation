@@ -3,9 +3,22 @@
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { sendEmailToAddress, APP_URL } from '@/lib/send-email'
 import { invitationEmail } from '@/lib/email-templates'
 import QRCode from 'qrcode'
+
+// L'URL embarquée dans les magic links et les QR codes doit pointer sur
+// l'environnement qui ENVOIE l'invitation (preview, prod, etc.), pas sur
+// la valeur figée de NEXT_PUBLIC_APP_URL qui pointe toujours sur la prod.
+// On lit l'origine depuis les headers de la requête en cours.
+function getOrigin(): string {
+  const h = headers()
+  const host = h.get('x-forwarded-host') || h.get('host')
+  const proto = h.get('x-forwarded-proto') || 'https'
+  if (host) return `${proto}://${host}`
+  return APP_URL
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers internes
@@ -157,7 +170,7 @@ export async function inviteLearnersByEmail(
       // On construit l'URL nous-mêmes avec token_hash → notre route /auth/confirm
       // utilise verifyOtp (le bon mécanisme pour les liens envoyés par email,
       // sans dépendance à un code_verifier PKCE côté navigateur).
-      const magicLinkUrl = `${APP_URL}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=magiclink&next=${encodeURIComponent('/dashboard')}`
+      const magicLinkUrl = `${getOrigin()}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=magiclink&next=${encodeURIComponent('/dashboard')}`
 
       const tpl = invitationEmail({
         firstName, groupName: group.name, trainerName,
@@ -231,7 +244,7 @@ export async function generateGroupInviteToken(groupId: string): Promise<{ error
   })
   if (error) return { error: `Création token : ${error.message}` }
 
-  const url = `${APP_URL}/join/${token}`
+  const url = `${getOrigin()}/join/${token}`
   const qrSvg = await buildQrSvg(url)
   return { token: { token, url, qrSvg, expiresAt, maxUses: DEFAULT_MAX_USES, usesCount: 0 } }
 }
@@ -252,7 +265,7 @@ export async function getGroupInviteToken(groupId: string): Promise<{ error?: st
 
   if (!data) return { token: null }
 
-  const url = `${APP_URL}/join/${data.token}`
+  const url = `${getOrigin()}/join/${data.token}`
   const qrSvg = await buildQrSvg(url)
   return {
     token: {
@@ -356,6 +369,6 @@ export async function joinGroupViaToken(
   }
 
   // URL via notre route /auth/confirm (verifyOtp côté serveur)
-  const magicLinkUrl = `${APP_URL}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=magiclink&next=${encodeURIComponent('/dashboard')}`
+  const magicLinkUrl = `${getOrigin()}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=magiclink&next=${encodeURIComponent('/dashboard')}`
   return { magicLinkUrl }
 }
