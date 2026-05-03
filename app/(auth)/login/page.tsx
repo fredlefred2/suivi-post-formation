@@ -56,7 +56,7 @@ export default function LoginPage() {
         <div className="bg-white rounded-[28px] p-6" style={{ border: '2px solid #f0ebe0', boxShadow: '0 4px 30px rgba(0,0,0,0.06)' }}>
 
           {mode === 'password' ? (
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <form key="form-pwd" onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-bold mb-1.5" style={{ color: '#1a1a2e' }}>Email</label>
                 <input id="email" name="email" type="email" required autoComplete="email"
@@ -81,7 +81,7 @@ export default function LoginPage() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleMagicLinkSubmit} className="space-y-4">
+            <form key="form-magic" onSubmit={handleMagicLinkSubmit} className="space-y-4">
               <div className="text-center mb-2">
                 <p className="text-sm font-bold" style={{ color: '#1a1a2e' }}>Connexion par lien email</p>
                 <p className="text-xs mt-1" style={{ color: '#a0937c' }}>Saisis ton email, tu recevras un lien de connexion. Pas besoin de mot de passe.</p>
