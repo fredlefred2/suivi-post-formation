@@ -172,34 +172,76 @@ export default function InviteModal({
               Chaque personne reçoit un mail avec un lien de connexion direct (pas de mot de passe à saisir).
             </p>
 
-            <div className="rounded-xl overflow-hidden" style={{ border: '1.5px solid #f0ebe0' }}>
-              <div className="grid gap-2 p-2 text-[10px] font-semibold uppercase tracking-wider" style={{ background: '#faf8f4', color: '#a0937c', gridTemplateColumns: '1fr 0.7fr 0.7fr 28px' }}>
-                <div className="px-2">Email</div>
-                <div>Prénom</div>
-                <div>Nom</div>
-                <div></div>
-              </div>
+            <div className="space-y-3">
               {rows.map((r, i) => (
-                <div key={i} className="grid gap-2 p-1.5 items-center" style={{ borderTop: '1px solid #f0ebe0', gridTemplateColumns: '1fr 0.7fr 0.7fr 28px' }}>
-                  <input type="email" value={r.email} onChange={e => updateRow(i, 'email', e.target.value)} placeholder="email@exemple.fr"
-                    className="px-2 py-1.5 text-sm rounded-md w-full" style={{ border: '1.5px solid transparent' }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'} />
-                  <input type="text" value={r.firstName} onChange={e => updateRow(i, 'firstName', e.target.value)} placeholder="Prénom"
-                    className="px-2 py-1.5 text-sm rounded-md w-full" style={{ border: '1.5px solid transparent' }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'} />
-                  <input type="text" value={r.lastName} onChange={e => updateRow(i, 'lastName', e.target.value)} placeholder="Nom"
-                    className="px-2 py-1.5 text-sm rounded-md w-full" style={{ border: '1.5px solid transparent' }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'} />
-                  <button onClick={() => removeRow(i)} className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50" disabled={rows.length === 1} aria-label="Retirer">
-                    <Trash2 size={14} />
+                <div key={i} className="rounded-xl p-3 relative" style={{ border: '1.5px solid #f0ebe0', background: '#fdfcf8' }}>
+                  {/* Bouton retirer en coin (mobile-friendly tap target) */}
+                  <button
+                    onClick={() => removeRow(i)}
+                    disabled={rows.length === 1}
+                    aria-label="Retirer cet apprenant"
+                    className="absolute top-2 right-2 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={16} />
                   </button>
+
+                  {/* Email plein largeur (le champ le plus long) */}
+                  <div className="mb-2 pr-8">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#a0937c' }}>
+                      Email
+                    </label>
+                    <input
+                      type="email" value={r.email}
+                      onChange={e => updateRow(i, 'email', e.target.value)}
+                      placeholder="email@exemple.fr"
+                      autoCapitalize="off" autoCorrect="off" spellCheck={false}
+                      className="w-full px-3 py-2.5 text-base rounded-lg bg-white"
+                      style={{ border: '1.5px solid #f0ebe0', color: '#1a1a2e' }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#f0ebe0'}
+                    />
+                  </div>
+
+                  {/* Prénom + Nom sur 2 colonnes */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#a0937c' }}>
+                        Prénom
+                      </label>
+                      <input
+                        type="text" value={r.firstName}
+                        onChange={e => updateRow(i, 'firstName', e.target.value)}
+                        placeholder="Marie"
+                        className="w-full px-3 py-2.5 text-base rounded-lg bg-white"
+                        style={{ border: '1.5px solid #f0ebe0', color: '#1a1a2e' }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#f0ebe0'}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#a0937c' }}>
+                        Nom
+                      </label>
+                      <input
+                        type="text" value={r.lastName}
+                        onChange={e => updateRow(i, 'lastName', e.target.value)}
+                        placeholder="Dupont"
+                        className="w-full px-3 py-2.5 text-base rounded-lg bg-white"
+                        style={{ border: '1.5px solid #f0ebe0', color: '#1a1a2e' }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#f0ebe0'}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
-              <button onClick={addRow} className="w-full py-2.5 text-sm font-semibold flex items-center justify-center gap-1" style={{ background: '#faf8f4', borderTop: '1px solid #f0ebe0', color: '#1a1a2e' }}>
-                <Plus size={14} /> Ajouter une ligne
+
+              <button
+                onClick={addRow}
+                className="w-full py-3 text-sm font-semibold flex items-center justify-center gap-1.5 rounded-xl"
+                style={{ background: '#fffbeb', border: '1.5px dashed #fcd34d', color: '#92400e' }}
+              >
+                <Plus size={16} /> Ajouter un apprenant
               </button>
             </div>
 
