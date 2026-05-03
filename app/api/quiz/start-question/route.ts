@@ -102,7 +102,23 @@ export async function POST(request: NextRequest) {
   let questionStartedAt: string
 
   if (existing) {
-    questionStartedAt = existing.question_started_at
+    // Si l'apprenant revient après expiration du timer (fermé l'onglet, repris plus tard),
+    // on lui redonne 60s frais plutôt que de le forcer à un timeout sans pouvoir répondre.
+    const elapsedMs = Date.now() - new Date(existing.question_started_at).getTime()
+    if (elapsedMs > QUIZ_SECONDS_PER_QUESTION * 1000) {
+      const now = new Date().toISOString()
+      const { error: resetErr } = await supabaseAdmin
+        .from('quiz_answers')
+        .update({ question_started_at: now })
+        .eq('attempt_id', attempt.id)
+        .eq('question_id', nextQuestion.id)
+      if (resetErr) {
+        return NextResponse.json({ error: 'Erreur reprise question' }, { status: 500 })
+      }
+      questionStartedAt = now
+    } else {
+      questionStartedAt = existing.question_started_at
+    }
   } else {
     const now = new Date().toISOString()
     const { error: ansErr } = await supabaseAdmin
