@@ -45,10 +45,12 @@ direct sur `main` possible, wipe data sans cérémonie.
 
 | Branche | Tag | État |
 |---------|-----|------|
-| `main` | **`v1.30.5`** | Production actuelle (inscription atomique + Resend transactionnels) |
-| — | `v1.30.4` | État stable juste après Resend, avant le fix inscription (cible de rollback intermédiaire) |
+| `main` | **`v1.31`** | Production actuelle (Invitation apprenants par email + QR code) |
+| — | `v1.30.6` | État stable juste avant chantier Invitation (post v1.30.5 + fix timer quiz) |
+| — | `v1.30.5` | Inscription atomique livrée (post Resend) |
+| — | `v1.30.4` | État stable post-Resend, avant fix inscription |
 | — | `v1.30.3` | Prod stable d'avant Resend (ancien point de retour fiable) |
-| `feature/v1.31` | — | Preview Lift Gradient (Stripe/Vercel) + notifs formateur. Pas en prod, rolled back après échec déploiement v1.31.x |
+| `feature/v1.31` | — | ⚠️ NE PAS confondre avec le tag `v1.31`. Branche design Lift Gradient (Stripe/Vercel), pas en prod, rolled back après échec déploiement |
 | `feature/v1.30` | `v1.30` | Milestone design system (HeaderNavy, ActionItem, LevelAvatar, Chip, ActivityGauge) |
 | `feature/v1.29.4` | `v1.29.4` | Quiz bimensuel (mergée) |
 | `docs/landing-yapluka` | — | Landing HTML h3O standalone |
@@ -231,6 +233,7 @@ Tables principales (migrations dans `supabase/migrations/`) :
 | `messages` | Messagerie (sender_id, recipient_id, content, **is_read** — pas `read`) |
 | `prompt_dismissals` | Skip 1×/jour modales (learner_id, prompt_type, skipped_at) |
 | `team_news_cache` | Cache narratives équipe (group_id, generated_at, news jsonb) |
+| `group_invite_tokens` | Tokens QR code d'invitation par groupe (group_id, token unique, expires_at, max_uses, uses_count). RLS sans policy = bypass admin uniquement. Rotation = delete + insert. v1.31 |
 
 **RLS active partout.** Les API routes utilisent `supabaseAdmin` quand elles ont besoin
 de bypass (e.g. lookup formateur depuis un trigger apprenant).

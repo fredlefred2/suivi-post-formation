@@ -8,28 +8,7 @@
 
 ## 🔵 En cours
 
-### Email transactionnel Resend
-- **Zone** : emails
-- **Avancée** : pilote actif sur le groupe "GROUPE CONNEXION". Template "tip" en mode teaser livré le 2026-05-01.
-- **Reste à faire** : valider le pilote, puis étendre aux autres groupes (retirer la variable `EMAIL_PILOT_GROUP`).
-- **Dernière session** : 2026-05-01
-
-### Invitation apprenants par email + QR code
-- **Zone** : auth / formateur (groupes) / Resend
-- **Pourquoi** : tue à la racine le bug démo "6 inscriptions simultanées plantent l'app" en remplaçant le flux self-signup par 3 voies pilotées par le formateur. Bonus : onboarding apprenant en 1 clic (Magic Link) ou 3 champs (QR), positionne YAPLUKA comme formation premium. Complète naturellement le chantier Resend.
-- **Branche** : `feature/invite-learners` (pas de touche à `main` avant validation Fred)
-- **Plan en 7 étapes** :
-  1. Migration DB : table `group_invite_tokens` (additive, conforme règle d'or)
-  2. Server actions backend : `inviteLearnersByEmail` (batch + Resend), `generateGroupInviteToken` (QR), `joinGroupViaToken`
-  3. Template email Resend (Magic Link d'invitation)
-  4. Route publique `/join/[token]` (page d'atterrissage QR : 3 champs + connexion immédiate)
-  5. Composant `InviteModal` à 3 onglets (Email / QR / Existant)
-  6. Intégration 4e bouton "Inviter" dans `GroupsClient` (à côté de Brief / Quiz / Paramètres)
-  7. Tests preview Vercel par Fred sur les 3 voies
-- **Maquette validée** : `maquette-group-detail.html` (auto-gitignored)
-- **Estimation** : ~2.5j
-- **Avancée** : chantier ouvert 2026-05-03, démarrage étape 1.
-- **Dernière session** : 2026-05-03
+*(aucun chantier actif — Email Resend généralisé via le chantier Invitation, plus de filtre EMAIL_PILOT_GROUP requis sur les invitations qui bypassent volontairement)*
 
 ---
 
@@ -72,6 +51,8 @@
 
 ## ✅ Récemment fini
 
+- **v1.31** (2026-05-03) — **Invitation apprenants par email + QR code** : 4e bouton "Inviter" sur chaque card de groupe → modale 3 onglets (Email Magic Link / QR code de secours / Apprenant existant). Page publique `/join/[token]` pour scan QR. Magic link de reconnexion sur `/login` pour les apprenants invités sans mdp. Migration DB additive `group_invite_tokens`. Lib `qrcode` ajoutée (SVG server-side).
+- **v1.30.6** (2026-05-03) — Tag de rollback : état stable juste avant chantier Invitation (post v1.30.5 + fix timer quiz).
 - **v1.30.5** (2026-05-01) — Inscription atomique : `register()` "tout ou rien" + rollback complet en cas d'échec post-Auth + salle d'attente créée à l'inscription du formateur. Bug d'origine : démo 6 apprenants 25-27/04. Purge prod : 9 comptes fantômes (313 rows).
 - **v1.30.4** (2026-05-01) — Tag intermédiaire capturant l'état "post-Resend, avant fix inscription" (cible de rollback intermédiaire).
 - **2026-05-01** — Template email "tip" en mode teaser (axe seulement, contenu masqué)
