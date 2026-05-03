@@ -59,8 +59,11 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Routes publiques
-  const publicRoutes = ['/login', '/register']
+  // Routes publiques (accessibles sans session)
+  // - /login, /register : pages d'auth standard
+  // - /join : page d'atterrissage d'un QR code d'invitation (PUBLIC)
+  // - /auth/confirm : callback magic link Supabase (PUBLIC)
+  const publicRoutes = ['/login', '/register', '/join', '/auth/confirm']
   const isPublic = publicRoutes.some(r => pathname.startsWith(r))
 
   // Rediriger vers login si non connecté

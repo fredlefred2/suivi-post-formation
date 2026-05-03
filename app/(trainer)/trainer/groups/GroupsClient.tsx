@@ -2,10 +2,11 @@
 
 import { useState, useTransition, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Plus, X, ChevronDown, MoreVertical, Sparkles, Loader2, FileText, HelpCircle, Settings, Trash2 } from 'lucide-react'
+import { Plus, X, ChevronDown, MoreVertical, Sparkles, Loader2, FileText, HelpCircle, Settings, Trash2, Mail } from 'lucide-react'
 import { createGroup, deleteGroup, removeLearnerFromGroup } from './actions'
 import { assignToGroup, deleteLearner } from '@/app/(trainer)/trainer/apprenants/actions'
 import GroupBriefModal from '@/app/components/GroupBriefModal'
+import InviteModal from './InviteModal'
 import { useRouter } from 'next/navigation'
 
 type Group = {
@@ -44,6 +45,7 @@ export default function GroupsClient({
   const [rewritingTheme, setRewritingTheme] = useState(false)
   const [createThemeValue, setCreateThemeValue] = useState('')
   const [briefGroupId, setBriefGroupId] = useState<string | null>(null)
+  const [invitingGroup, setInvitingGroup] = useState<{ id: string; name: string } | null>(null)
 
   async function handleRewriteTheme(currentValue: string, setter: (v: string) => void) {
     if (!currentValue.trim() || currentValue.trim().length < 5) return
@@ -250,8 +252,8 @@ export default function GroupsClient({
                     </div>
                   </div>
 
-                  {/* ── 3 boutons : Brief / Quiz / Paramètres ── */}
-                  <div className="flex gap-2.5 mt-4">
+                  {/* ── 4 boutons : Brief / Quiz / Inviter / Paramètres ── */}
+                  <div className="flex gap-2 mt-4">
                     {/* Brief */}
                     <button
                       onClick={() => setBriefGroupId(group.id)}
@@ -306,6 +308,31 @@ export default function GroupsClient({
                         {hasTheme ? 'voir résultats' : 'brief requis'}
                       </span>
                     </Link>
+
+                    {/* Inviter */}
+                    <button
+                      onClick={() => setInvitingGroup({ id: group.id, name: group.name })}
+                      className="flex-1 min-w-0 flex flex-col items-center gap-1.5 py-3 px-2 rounded-[18px] transition-all hover:-translate-y-0.5 relative"
+                      style={{
+                        background: '#fffbeb',
+                        border: '2px solid #fcd34d',
+                        color: '#1a1a2e',
+                      }}
+                    >
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: 'linear-gradient(135deg, #fde68a 0%, #fbbf24 100%)',
+                          color: '#fff',
+                        }}
+                      >
+                        <Mail size={18} strokeWidth={2.3} />
+                      </div>
+                      <span className="text-[12px] font-extrabold leading-tight">Inviter</span>
+                      <span className="text-[10px] font-semibold leading-tight" style={{ color: '#a0937c' }}>
+                        email · QR
+                      </span>
+                    </button>
 
                     {/* Paramètres */}
                     <button
@@ -464,6 +491,14 @@ export default function GroupsClient({
           />
         )
       })()}
+
+      {invitingGroup && (
+        <InviteModal
+          groupId={invitingGroup.id}
+          groupName={invitingGroup.name}
+          onClose={() => { setInvitingGroup(null); router.refresh() }}
+        />
+      )}
 
       {/* Popup confirmation suppression apprenant */}
       {deletingLearnerId && deletingLearner && (

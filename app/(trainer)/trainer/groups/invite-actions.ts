@@ -149,7 +149,7 @@ export async function inviteLearnersByEmail(
       const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
         type: 'magiclink',
         email,
-        options: { redirectTo: `${APP_URL}/dashboard` },
+        options: { redirectTo: `${APP_URL}/auth/confirm?next=/dashboard` },
       })
       if (linkErr || !linkData.properties?.action_link) {
         // Le compte est créé mais on n'a pas pu envoyer le lien — on signale
