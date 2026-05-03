@@ -14,15 +14,22 @@
 - **Reste à faire** : valider le pilote, puis étendre aux autres groupes (retirer la variable `EMAIL_PILOT_GROUP`).
 - **Dernière session** : 2026-05-01
 
-### Inscription multiple — bug démo 6 apprenants (Option B)
-- **Zone** : auth / inscription / middleware / polling
-- **Pourquoi** : démo du ~25-27 avril avec 6 apprenants → plantages à l'inscription (cas Armelle = compte créé sans rattachement salle d'attente), lenteur pendant l'usage, déconnexions. Causes : code `register()` non atomique + middleware bavard (2 calls Supabase par clic) + polling agressif (4 timers actifs).
-- **Plan en 3 phases** :
-  1. ✅ **Inscription atomique** — livrée en `v1.30.5` (2026-05-01). `register()` "tout ou rien" + salle d'attente créée à l'inscription du formateur + 9 comptes fantômes purgés (313 rows).
-  2. ⏳ **Cache du middleware** — cookie signé 10 min, sauter `SELECT role FROM profiles` quand le cookie est valide. Invalidation au logout. ~1.5j, risque modéré (touche toutes les routes).
-  3. ⏳ **Polling intelligent** — Page Visibility API (5 min en arrière-plan au lieu de 60s), ChatView 60s au lieu de 30s quand inactif. ~½j, risque très faible.
-- **Avancée** : Phase 1 livrée + taggée `v1.30.5`. Phase 2 + 3 à attaquer dans une prochaine session.
-- **Dernière session** : 2026-05-01
+### Invitation apprenants par email + QR code
+- **Zone** : auth / formateur (groupes) / Resend
+- **Pourquoi** : tue à la racine le bug démo "6 inscriptions simultanées plantent l'app" en remplaçant le flux self-signup par 3 voies pilotées par le formateur. Bonus : onboarding apprenant en 1 clic (Magic Link) ou 3 champs (QR), positionne YAPLUKA comme formation premium. Complète naturellement le chantier Resend.
+- **Branche** : `feature/invite-learners` (pas de touche à `main` avant validation Fred)
+- **Plan en 7 étapes** :
+  1. Migration DB : table `group_invite_tokens` (additive, conforme règle d'or)
+  2. Server actions backend : `inviteLearnersByEmail` (batch + Resend), `generateGroupInviteToken` (QR), `joinGroupViaToken`
+  3. Template email Resend (Magic Link d'invitation)
+  4. Route publique `/join/[token]` (page d'atterrissage QR : 3 champs + connexion immédiate)
+  5. Composant `InviteModal` à 3 onglets (Email / QR / Existant)
+  6. Intégration 4e bouton "Inviter" dans `GroupsClient` (à côté de Brief / Quiz / Paramètres)
+  7. Tests preview Vercel par Fred sur les 3 voies
+- **Maquette validée** : `maquette-group-detail.html` (auto-gitignored)
+- **Estimation** : ~2.5j
+- **Avancée** : chantier ouvert 2026-05-03, démarrage étape 1.
+- **Dernière session** : 2026-05-03
 
 ---
 
@@ -43,6 +50,14 @@
 - **Zone** : design system
 - **État** : preview validée sur la branche `feature/v1.31`, rolled back de la prod après échec déploiement.
 - **Décision en attente** : on retente le passage en prod ? Quand ?
+
+### Cache middleware + polling intelligent (ex Phases 2/3 inscription multiple)
+- **Zone** : middleware / perf
+- **État** : déprio après livraison Phase 1 (inscription atomique) + ouverture chantier Invitation. Le bug démo est attaqué à la racine par l'invitation, donc cette optim devient un nice-to-have.
+- **À évaluer après** la 1ère vraie formation : si l'app rame ou si les apprenants se plaignent → on fait. Sinon on enterre.
+- **Détails techniques préservés** :
+  - Cache middleware = cookie signé 10 min pour le rôle, sauter `SELECT role FROM profiles` quand cookie valide
+  - Polling intelligent = Page Visibility API (5 min en arrière-plan au lieu de 60s)
 
 ---
 

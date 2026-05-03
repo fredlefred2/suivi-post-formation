@@ -73,3 +73,21 @@ export async function sendEmail({ userId, subject, html }: SendEmailParams): Pro
     return { sent: false, error: err }
   }
 }
+
+// Envoi à un email brut, sans userId. Utilisé par le flux d'invitation où
+// l'email est envoyé en même temps qu'on crée le compte (le userId existe
+// déjà mais on a aussi l'email sous la main, donc on évite un round-trip).
+// Bypasse volontairement le filtre EMAIL_PILOT_GROUP : les invitations sont
+// par essence ciblées par le formateur, pas un envoi de masse cron.
+export async function sendEmailToAddress({ email, subject, html }: { email: string; subject: string; html: string }): Promise<SendEmailResult> {
+  if (!resend) {
+    return { sent: false, skipped: 'no-resend-key' }
+  }
+  try {
+    await resend.emails.send({ from: EMAIL_FROM, to: email, subject, html })
+    return { sent: true }
+  } catch (err) {
+    console.error(`[Email] Erreur envoi à ${email}:`, err)
+    return { sent: false, error: err }
+  }
+}

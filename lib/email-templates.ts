@@ -119,6 +119,38 @@ export function weeklyTipEmail(opts: { firstName: string; axeSubject: string; ap
   }
 }
 
+export function invitationEmail(opts: { firstName: string; groupName: string; trainerName: string; magicLinkUrl: string }): { subject: string; html: string } {
+  const { firstName, groupName, trainerName, magicLinkUrl } = opts
+  const safeName = escapeHtml(firstName)
+  const safeGroup = escapeHtml(groupName)
+  const safeTrainer = escapeHtml(trainerName)
+
+  const bodyHtml = `
+    <div style="font-size:13px;font-weight:600;color:${COLORS.amberDark};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">📨 Invitation</div>
+    <div style="font-size:24px;font-weight:700;line-height:1.3;color:${COLORS.navy};margin:0 0 12px 0;">Bienvenue ${safeName}</div>
+    <p style="font-size:16px;line-height:1.6;color:${COLORS.navy};margin:0 0 12px 0;">
+      <strong>${safeTrainer}</strong> t'invite à rejoindre la formation <strong style="color:${COLORS.navy};">${safeGroup}</strong> sur YAPLUKA.
+    </p>
+    <p style="font-size:15px;line-height:1.6;color:${COLORS.navySoft};margin:0 0 12px 0;">
+      Pas de mot de passe à créer : clique sur le bouton ci-dessous, tu seras directement connecté(e) sur ton espace.
+    </p>
+    <p style="font-size:13px;line-height:1.5;color:${COLORS.textMuted};margin:16px 0 0 0;font-style:italic;">
+      Ce lien est valable 1 heure et utilisable une seule fois. Si tu le rates, demande à ton formateur de te renvoyer une invitation.
+    </p>
+  `
+
+  return {
+    subject: `Bienvenue dans la formation ${groupName}`,
+    html: layout({
+      title: `Invitation à la formation ${groupName}`,
+      preheader: `${trainerName} t'invite à rejoindre ${groupName} sur YAPLUKA.`,
+      bodyHtml,
+      ctaLabel: 'Démarrer ma formation',
+      ctaUrl: magicLinkUrl,
+    }),
+  }
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
 }
