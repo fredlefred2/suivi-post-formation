@@ -147,19 +147,21 @@ export async function inviteLearnersByEmail(
 
       // 4. Générer le magic link et envoyer l'email
       const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
-        email,
-        options: { redirectTo: `${APP_URL}/auth/confirm?next=/dashboard` },
+        type: 'magiclink', email,
       })
-      if (linkErr || !linkData.properties?.action_link) {
-        // Le compte est créé mais on n'a pas pu envoyer le lien — on signale
+      if (linkErr || !linkData.properties?.hashed_token) {
         results.push({ email, status: 'failed', message: `Magic link : ${linkErr?.message ?? 'inconnu'}` })
         continue
       }
 
+      // On construit l'URL nous-mêmes avec token_hash → notre route /auth/confirm
+      // utilise verifyOtp (le bon mécanisme pour les liens envoyés par email,
+      // sans dépendance à un code_verifier PKCE côté navigateur).
+      const magicLinkUrl = `${APP_URL}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=magiclink&next=${encodeURIComponent('/dashboard')}`
+
       const tpl = invitationEmail({
         firstName, groupName: group.name, trainerName,
-        magicLinkUrl: linkData.properties.action_link,
+        magicLinkUrl,
       })
       const sendResult = await sendEmailToAddress({ email, subject: tpl.subject, html: tpl.html })
 
@@ -348,11 +350,12 @@ export async function joinGroupViaToken(
   // 5. Générer un magic link pour connexion immédiate
   const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
     type: 'magiclink', email: cleanEmail,
-    options: { redirectTo: `${APP_URL}/dashboard` },
   })
-  if (linkErr || !linkData.properties?.action_link) {
+  if (linkErr || !linkData.properties?.hashed_token) {
     return { error: `Connexion : ${linkErr?.message ?? 'inconnu'}` }
   }
 
-  return { magicLinkUrl: linkData.properties.action_link }
+  // URL via notre route /auth/confirm (verifyOtp côté serveur)
+  const magicLinkUrl = `${APP_URL}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=magiclink&next=${encodeURIComponent('/dashboard')}`
+  return { magicLinkUrl }
 }
