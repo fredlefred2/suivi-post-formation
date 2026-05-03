@@ -3,8 +3,21 @@
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+import { sendEmailToAddress, APP_URL } from '@/lib/send-email'
+import { loginMagicLinkEmail } from '@/lib/email-templates'
 
 const TRAINER_KEY_FALLBACK = 'theatre'
+
+// Origine dynamique (cf. invite-actions.ts) — pour que le magic link
+// pointe sur l'environnement qui envoie l'email (preview/prod).
+function getOrigin(): string {
+  const h = headers()
+  const host = h.get('x-forwarded-host') || h.get('host')
+  const proto = h.get('x-forwarded-proto') || 'https'
+  if (host) return `${proto}://${host}`
+  return APP_URL
+}
 
 function normalizeKey(key: string) {
   return key.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -166,4 +179,48 @@ export async function logout() {
   const supabase = createClient()
   await supabase.auth.signOut()
   redirect('/login')
+}
+
+// Envoie un magic link de connexion à un email donné. Utilisé par les
+// apprenants invités (sans mot de passe) ou par n'importe qui qui a oublié
+// son mot de passe.
+//
+// Sécurité : on retourne toujours un succès (qu'un compte existe ou non)
+// pour ne pas permettre l'énumération d'emails.
+export async function sendLoginMagicLink(email: string): Promise<{ success?: boolean; error?: string }> {
+  const cleanEmail = email.trim().toLowerCase()
+  if (!cleanEmail) return { error: 'Email obligatoire.' }
+
+  // Vérifier qu'un compte existe avec cet email
+  const { data: usersList } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 })
+  const user = usersList?.users.find(u => u.email?.toLowerCase() === cleanEmail)
+
+  // Si pas de compte : on retourne success silencieusement (anti-énumération)
+  if (!user) return { success: true }
+
+  // Récupérer le prénom pour personnaliser
+  const { data: profile } = await supabaseAdmin
+    .from('profiles').select('first_name').eq('id', user.id).single()
+  const firstName = profile?.first_name?.trim() || 'là'
+
+  // Générer le magic link via verifyOtp (token_hash)
+  const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+    type: 'magiclink', email: cleanEmail,
+  })
+  if (linkErr || !linkData.properties?.hashed_token) {
+    console.error('[sendLoginMagicLink] generateLink failed:', linkErr?.message)
+    return { error: 'Erreur technique. Réessayez dans quelques instants.' }
+  }
+
+  const magicLinkUrl = `${getOrigin()}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=magiclink&next=${encodeURIComponent('/dashboard')}`
+
+  const tpl = loginMagicLinkEmail({ firstName, magicLinkUrl })
+  const sendResult = await sendEmailToAddress({ email: cleanEmail, subject: tpl.subject, html: tpl.html })
+
+  if (!sendResult.sent) {
+    console.error('[sendLoginMagicLink] send failed:', sendResult.skipped ?? sendResult.error)
+    return { error: 'Erreur lors de l\'envoi du mail. Réessayez dans quelques instants.' }
+  }
+
+  return { success: true }
 }

@@ -119,6 +119,36 @@ export function weeklyTipEmail(opts: { firstName: string; axeSubject: string; ap
   }
 }
 
+export function loginMagicLinkEmail(opts: { firstName: string; magicLinkUrl: string }): { subject: string; html: string } {
+  const { firstName, magicLinkUrl } = opts
+  const safeName = escapeHtml(firstName)
+
+  const bodyHtml = `
+    <div style="font-size:13px;font-weight:600;color:${COLORS.amberDark};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">🔑 Connexion</div>
+    <div style="font-size:24px;font-weight:700;line-height:1.3;color:${COLORS.navy};margin:0 0 12px 0;">Salut ${safeName}</div>
+    <p style="font-size:16px;line-height:1.6;color:${COLORS.navy};margin:0 0 12px 0;">
+      Voici ton lien pour te connecter à YAPLUKA.
+    </p>
+    <p style="font-size:15px;line-height:1.6;color:${COLORS.navySoft};margin:0 0 12px 0;">
+      Pas de mot de passe à saisir : clique sur le bouton et tu seras directement connecté(e).
+    </p>
+    <p style="font-size:13px;line-height:1.5;color:${COLORS.textMuted};margin:16px 0 0 0;font-style:italic;">
+      Ce lien est valable 1 heure et utilisable une seule fois. Si tu n'as pas demandé ce mail, tu peux l'ignorer.
+    </p>
+  `
+
+  return {
+    subject: 'Ton lien de connexion YAPLUKA',
+    html: layout({
+      title: 'Lien de connexion YAPLUKA',
+      preheader: `${firstName}, ton lien pour te reconnecter à YAPLUKA.`,
+      bodyHtml,
+      ctaLabel: 'Me connecter',
+      ctaUrl: magicLinkUrl,
+    }),
+  }
+}
+
 export function invitationEmail(opts: { firstName: string; groupName: string; trainerName: string; magicLinkUrl: string }): { subject: string; html: string } {
   const { firstName, groupName, trainerName, magicLinkUrl } = opts
   const safeName = escapeHtml(firstName)
