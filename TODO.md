@@ -14,7 +14,24 @@
 
 ## 🟡 À faire (prochainement)
 
-*(à remplir par Fred — exemples : nouvelle inscription, page de remerciement, refonte coaching, etc.)*
+### Brouillons d'invitation par groupe (v1.32 prévu)
+- **Zone** : invitation (extension du chantier v1.31)
+- **Pourquoi** : aujourd'hui la liste d'invitations dans la modale est éphémère (perdue à la fermeture). Fred veut pouvoir préparer une liste à l'avance et l'envoyer plus tard.
+- **Plan** :
+  1. Migration DB additive : table `group_invite_drafts(group_id, email, first_name, last_name)`
+  2. Server actions : `saveInviteDraft`, `listInviteDrafts`, `deleteInviteDraft`
+  3. UI dans `InviteModal` onglet Email :
+     - Charger les brouillons du groupe à l'ouverture
+     - 2 boutons : "Sauvegarder pour plus tard" / "Envoyer les invitations"
+     - À l'envoi : succès → vidé du brouillon, échecs → restent visibles avec message
+  4. Indicateur sur la card du groupe : badge "X en attente" sur le bouton Inviter
+- **Branche** : `feature/invite-drafts` (nouvelle, pas sur main avant validation)
+- **Estimation** : ~2-3h, risque faible (additif)
+- **4 questions ouvertes à trancher avant de coder** :
+  1. Une seule liste par groupe (mon vote oui) vs plusieurs ?
+  2. Badge "X en attente" sur le bouton Inviter (mon vote oui) ?
+  3. À l'envoi : succès vidés du brouillon, échecs restent (mon vote oui) ?
+  4. Lignes brouillonnées modifiables (mon vote oui) ?
 
 ---
 
