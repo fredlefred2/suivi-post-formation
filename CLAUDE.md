@@ -274,9 +274,34 @@ Conventions des scripts :
 | `VAPID_PRIVATE_KEY` | ❌ | Web push (envoi côté serveur) |
 | `CRON_SECRET` | ❌ | Bearer token de protection des crons Vercel |
 | `TRAINER_REGISTRATION_KEY` | ❌ | Clé pour permettre nouvelle inscription formateur |
+| `RESEND_API_KEY` | ❌ | Clé Resend (envoi des emails transactionnels) |
+| `EMAIL_FROM` | ❌ | Adresse expéditeur, ex: `YAPLUKA <coach@yapluka-formation.fr>` |
+| `NEXT_PUBLIC_APP_URL` | ✅ | URL publique de l'app (CTA emails) |
+| `EMAIL_PILOT_GROUP` | ❌ | Si défini, email envoyé uniquement aux membres du groupe nommé. Retirer pour mode généralisé |
 
 `.env.local` (dev) / Vercel env (prod). `.env.local.prod` peut exister localement pour
 exécuter des scripts contre la prod — **jamais commit**.
+
+### 🔑 Secrets à régénérer avant ouverture aux vrais apprenants
+
+Le 2026-05-01, lors de la mise en place de Resend, deux secrets ont transité par le
+chat avec Claude (donc loggés côté Anthropic et lisibles par toute personne ayant
+accès aux transcripts) :
+
+- `RESEND_API_KEY` (commence par `re_FtscTCtP_…`)
+- `CRON_SECRET` (= `tips-cron-secret-prod`)
+
+**Aujourd'hui** : pas de risque réel (l'app n'a que des comptes fictifs).
+**Avant** que Fred ouvre l'app à de vrais apprenants payants, faire la checklist :
+
+1. Resend dashboard → supprimer la clé actuelle, en créer une nouvelle
+2. Mettre à jour `RESEND_API_KEY` sur Vercel + `.env.local`
+3. Régénérer `CRON_SECRET` (`openssl rand -base64 32`) et l'écraser sur Vercel
+4. Redéployer
+
+**Triggers** à reconnaître côté Claude pour rappeler la checklist : "on signe avec
+un client", "première session avec un vrai groupe", "on ouvre l'app", "déploiement
+chez les apprenants", etc.
 
 ---
 
