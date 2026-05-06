@@ -103,6 +103,16 @@ export async function inviteLearnersByEmail(
       const existing = await findUserByEmail(email)
 
       if (existing) {
+        // Verrou : une adresse formateur ne peut pas être ajoutée comme apprenant.
+        // Sans ça, group_members référence un profil role=trainer, et un clic sur
+        // "supprimer apprenant" cascade-supprime ses groupes (incident 2026-05-06).
+        const { data: existingProfile } = await supabaseAdmin
+          .from('profiles').select('role').eq('id', existing.id).maybeSingle()
+        if (existingProfile?.role === 'trainer') {
+          results.push({ email, status: 'failed', message: 'Adresse déjà utilisée par un formateur — invitation refusée.' })
+          continue
+        }
+
         // Vérifier s'il est déjà dans ce groupe
         const { data: membership } = await supabaseAdmin
           .from('group_members')
@@ -314,6 +324,13 @@ export async function joinGroupViaToken(
 
   if (existing) {
     userId = existing.id
+    // Verrou : un formateur ne peut pas rejoindre un groupe via QR comme apprenant
+    // (cf. inviteLearnersByEmail — même raison, même cascade dévastatrice).
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles').select('role').eq('id', userId).maybeSingle()
+    if (existingProfile?.role === 'trainer') {
+      return { error: 'Cette adresse est déjà utilisée par un compte formateur. Connecte-toi avec une autre adresse.' }
+    }
     // Ajouter au groupe si pas déjà membre
     const { data: membership } = await supabaseAdmin
       .from('group_members')

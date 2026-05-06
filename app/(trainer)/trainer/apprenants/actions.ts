@@ -68,6 +68,13 @@ export async function deleteLearner(learnerId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Non authentifié' }
 
+  // Verrou : un formateur ne peut pas se supprimer lui-même via cette route
+  // (cf. incident 2026-05-06 : Fred s'était retrouvé en group_members et un clic
+  // a cascade-supprimé tous ses groupes).
+  if (learnerId === user.id) {
+    return { error: 'Tu ne peux pas te supprimer toi-même via cette action.' }
+  }
+
   // Vérifier que l'utilisateur est formateur
   const { data: profile } = await supabase
     .from('profiles')
@@ -82,6 +89,15 @@ export async function deleteLearner(learnerId: string) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+
+  // Verrou : la cible doit être un apprenant. Sans ça, supprimer un profil
+  // formateur cascade tous ses groupes via groups.trainer_id (incident 2026-05-06).
+  const { data: targetProfile } = await admin
+    .from('profiles').select('role').eq('id', learnerId).maybeSingle()
+  if (!targetProfile) return { error: 'Profil introuvable.' }
+  if (targetProfile.role !== 'learner') {
+    return { error: 'Cette action ne peut cibler qu\'un profil apprenant.' }
+  }
 
   // Récupérer les axes de l'apprenant pour supprimer les actions liées
   const { data: axes } = await admin
